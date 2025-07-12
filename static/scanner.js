@@ -61,5 +61,29 @@ async function onScan(text){
   stop();
 }
 
+async function saveToDB(data) {
+  try {
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        serial: data.serial,
+        order : data.order,
+        size  : data.size
+      })
+    });
+
+    if (res.status === 201)  toast("✅ Saved",   true);
+    else if (res.status === 409) toast("⚠️  Duplicate serial", false);
+    else {
+      const j = await res.json().catch(() => ({}));
+      toast(j.error || "DB error", false);
+    }
+
+  } catch {
+    toast("Network error", false);
+  }
+}
+
 /* ---------- wire up ---------- */
 document.getElementById("start-btn").onclick = () => running ? stop() : start();
