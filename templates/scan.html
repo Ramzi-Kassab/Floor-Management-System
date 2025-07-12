@@ -39,6 +39,18 @@
     #toast.error{background:var(--danger)}
   </style>
 
+  <!-- ①  pull a pinned, working build of html5-qrcode -->
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+  
+  <!-- ②  OPTIONAL: tiny inline shim to warn if camera blocked -->
+  <script>
+    navigator.mediaDevices?.getUserMedia({video:true})
+      .catch(()=>alert("Camera access denied – enable it in browser settings"));
+  </script>
+  
+  <!-- ③  our scanner logic (unchanged file path) -->
+  <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
+  
   <!-- html5-qrcode cdn -->
   <script src="https://unpkg.com/html5-qrcode"></script>
   <!-- custom scanner -->
