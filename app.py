@@ -44,6 +44,7 @@ def scan_page():
 @app.route("/api/products", methods=["POST"])
 def add_product():
     data = request.get_json(force=True)
+    app.logger.info("incoming: %s", data)
     serial = data.get("serial", "").strip()
     order  = data.get("order",  "").strip()
     size   = data.get("size",   "").strip()
