@@ -1,88 +1,65 @@
 /* ---------- helpers ---------- */
-function toast(txt, ok = true) {
-  const t = document.getElementById("toast");
-  t.textContent = txt;
-  t.style.background = ok ? "var(--accent)" : "var(--danger)";
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3000);
-}
-function btn(running) {
+const toast = (msg, ok=true) => {
+  const box = document.getElementById("toast");
+  box.textContent = msg;
+  box.style.background = ok ? "var(--accent)" : "var(--danger)";
+  box.classList.add("show");
+  setTimeout(() => box.classList.remove("show"), 2500);
+};
+
+const setBtn = running => {
   const b = document.getElementById("start-btn");
-  b.textContent = running ? "✖ Stop Scanner" : "📷 Start Scanner";
+  b.textContent  = running ? "✖ Stop Scanner" : "📷 Start Scanner";
   b.style.background = running ? "var(--danger)" : "var(--accent)";
-  b.onclick = running ? stopScan : startScan;
-}
+};
 
-/* ---------- globals ---------- */
-let reader, scanning = false;
+/* ---------- scanner ---------- */
+let reader, running=false;
 
-/* ---------- main flow ---------- */
-async function startScan() {
-  if (scanning) return;
-  scanning = true; btn(true);
-
+async function start() {
+  if (running) return;
   try {
-    /* 1️⃣  enumerate cameras first */
-    const cams = await Html5Qrcode.getCameras();
-    if (!cams.length) throw "No camera device found";
-
-    /* 2️⃣  request permission explicitly (helps on Samsung / Mi browser) */
-    await navigator.mediaDevices.getUserMedia({ video: true });
-
-    /* 3️⃣  lazily create reader */
+    /* let html5-qrcode handle permission prompt */
     reader ??= new Html5Qrcode("reader");
 
-    /* choose back-camera if we can */
-    const camId = cams.find(c => /back|rear|environment/i.test(c.label))
-                 ?.id || cams[0].id;
+    const cams  = await Html5Qrcode.getCameras();
+    if (!cams.length) throw new Error("No camera found");
+
+    const back  = cams.find(c=>/back|rear|environment/i.test(c.label)) || cams[0];
 
     await reader.start(
-      { deviceId: { exact: camId } },
-      { fps: 10, qrbox: { width: 240, height: 240 } },
+      { deviceId:{ exact: back.id } },
+      { fps:10, qrbox:{width:240,height:240} },
       onScan
     );
-    /* live! */
+    running=true; setBtn(true);
   } catch (e) {
-    console.warn(e);                      // <-- tiny debug
-    toast(typeof e === "string" ? e : "Camera start failed", false);
-    scanning = false; btn(false);
+    toast(e.message || e, false);
   }
 }
 
-async function stopScan() {
-  if (!reader || !scanning) return;
+async function stop(){
+  if (!running) return;
   await reader.stop();
-  scanning = false; btn(false);
+  running=false; setBtn(false);
 }
 
-async function onScan(qrText) {
-  const obj = Object.fromEntries(
-    qrText.split(";").map(p => p.split("=").map(s => s.trim()))
-  );
-  serial.value = obj.serial ?? "";
-  order.value  = obj.order  ?? "";
-  size.value   = obj.size  ?? "";
+async function onScan(text){
+  const obj = Object.fromEntries(text.split(";").map(p=>p.split("=")));
+  serial.value=obj.serial??""; order.value=obj.order??""; size.value=obj.size??"";
 
-  await saveToDB(obj);
-  await stopScan();
-}
-
-async function saveToDB(row) {
-  try {
-    const r = await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
+  /* POST row */
+  try{
+    const r = await fetch("/api/products",{
+      method:"POST",headers:{ "Content-Type":"application/json"},
       body: JSON.stringify({
-        serial: row.serial,
-        order : row.order,
-        size  : row.size
+        serial:obj.serial,order:obj.order,size:obj.size
       })
     });
-    toast(r.status === 201 ? "Saved!" : "DB error", r.status === 201);
-  } catch {
-    toast("Network error", false);
-  }
+    toast(r.status===201?"Saved":"DB error", r.status===201);
+  }catch{toast("Network error", false);}
+  stop();
 }
 
-/* ---------- wire up once DOM is parsed (script is defer-loaded) ---------- */
-document.getElementById("start-btn").onclick = startScan;
+/* ---------- wire up ---------- */
+document.getElementById("start-btn").onclick = () => running ? stop() : start();
