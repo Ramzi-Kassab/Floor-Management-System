@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QR Scanner Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="scanner.js" defer></script>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #reader { width: 100%; max-width: 400px; margin: auto; }
+    input { display: block; margin-bottom: 10px; width: 100%; padding: 8px; }
+    button { padding: 10px; font-size: 16px; width: 100%; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Scan QR</h2>
+  <div id="reader"></div>
+  <input id="serial" placeholder="Serial" />
+  <input id="order" placeholder="Order" />
+  <input id="size" placeholder="Size" />
+  <button onclick="startScan()">📷 Scan QR</button>
+  <button onclick="submitForm()">✅ Submit</button>
+</body>
+</html>
