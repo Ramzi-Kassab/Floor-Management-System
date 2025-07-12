@@ -8,6 +8,14 @@ app = Flask(__name__)
 def home():
     return "Backend is running!"
 
+@app.route('/')
+def home():
+    return "Backend is running!"
+
+@app.route('/scan')
+def scan_page():
+    return render_template('scan.html')  # This should exist in templates folder
+    
 @app.route('/test-db')
 def test_db():
     try:
