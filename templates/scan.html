@@ -30,7 +30,7 @@
 </style>
 
 <!-- html5-qrcode – single pinned copy -->
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+<script src="{{ url_for('static', filename='html5-qrcode.min.js') }}"></script>
 
 <!-- your logic -->
 <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
