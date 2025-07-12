@@ -44,28 +44,32 @@ def scan_page():
 @app.route("/api/products", methods=["POST"])
 def add_product():
     data = request.get_json(force=True)
-    app.logger.info("incoming: %s", data)
-    serial = data.get("serial", "").strip()
-    order  = data.get("order",  "").strip()
-    size   = data.get("size",   "").strip()
+    serial = (data.get("serial") or "").strip()
+    order  = (data.get("order")  or "").strip()
+    size   = (data.get("size")   or "").strip()
 
     if not serial:
         return jsonify(error="serial is required"), 400
 
     try:
         with engine.begin() as conn:
-            conn.execute(
+            # INSERT … ON CONFLICT returns a row only when it was NEW
+            row = conn.execute(
                 text("""
                     INSERT INTO products (serial_number, order_number, size)
                     VALUES (:serial, :order, :size)
+                    ON CONFLICT (serial_number) DO NOTHING
+                    RETURNING id
                 """),
                 {"serial": serial, "order": order, "size": size}
-            )
-        return "", 201                       # success → JS shows green toast
-    except IntegrityError as e:
-        # duplicate serial? tell the user
-        if "unique" in str(e).lower():
+            ).first()
+
+        if row:                         # we really inserted a new row
+            return "", 201
+        else:                           # conflict ⇒ serial existed already
             return jsonify(error="duplicate serial"), 409
+
+    except Exception as e:
         app.logger.exception(e)
         return jsonify(error="db error"), 500
 
