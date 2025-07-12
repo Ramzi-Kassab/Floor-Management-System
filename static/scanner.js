@@ -1,9 +1,20 @@
+/* same as before … only add this at the very top */
+if (typeof Html5Qrcode === "undefined") {
+  alert("Camera library failed to load – check network or CSP");
+}
+
 /*  html5-qrcode glue  –  keeps the UI small & mobile friendly  */
 let reader = null, scanning = false;
 
+/* and replace startScan with one extra await – forces permission prompt */
 async function startScan() {
   if (scanning) return;
   scanning = true;
+
+  // 👉 Ensure we actually have camera permission before creating Html5Qrcode
+  try { await navigator.mediaDevices.getUserMedia({ video:true }); }
+  catch (e) { toast("Camera permission required", false); scanning=false; return; }
+
   reader ??= new Html5Qrcode("reader");
 
   // nice square frame
