@@ -1,5 +1,5 @@
 Flask
 flask-cors
 gunicorn
-psycopg2-binary
-SQLAlchemy
+sqlalchemy>=2.0
+psycopg2-binary>=2.9
