@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, jsonify
 from sqlalchemy import create_engine, text
 import os, psycopg2
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 
@@ -57,12 +58,17 @@ def add_product():
     try:
         with engine.begin() as conn:
             conn.execute(
-                text("INSERT INTO products (serial_number, order_number, size) "
-                     "VALUES (:s,:o,:z) "
-                     "ON CONFLICT (serial_number) DO NOTHING"),
+                text("""
+                    INSERT INTO products (serial_number, order_number, size)
+                    VALUES (:s, :o, :z)
+                """),
                 {"s": serial, "o": order, "z": size}
             )
-        return jsonify({"status": "ok"}), 201
+        return jsonify({"status": "saved"}), 201
+
+    except IntegrityError:
+        # duplicate serial – not fatal; tell UI so it can highlight
+        return jsonify({"error": "duplicate"}), 409            # 409 = Conflict
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
