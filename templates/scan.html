@@ -47,10 +47,7 @@
     navigator.mediaDevices?.getUserMedia({video:true})
       .catch(()=>alert("Camera access denied – enable it in browser settings"));
   </script>
-  
-  <!-- ③  our scanner logic (unchanged file path) -->
-  <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
-  
+   
   <!-- custom scanner -->
   <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
 </head>
