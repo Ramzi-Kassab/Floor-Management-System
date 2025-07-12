@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-import os, psycopg2
+import os, psycopg2, logging
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 
@@ -43,29 +43,30 @@ def scan_page():
 # API → insert product row
 @app.route("/api/products", methods=["POST"])
 def add_product():
-    data = request.get_json(force=True, silent=True) or {}
+    data = request.get_json(force=True)
     serial = data.get("serial", "").strip()
     order  = data.get("order",  "").strip()
     size   = data.get("size",   "").strip()
 
-    if not serial:                             # fast validation
-        return jsonify({"error": "serial is required"}), 400
+    if not serial:
+        return jsonify(error="serial is required"), 400
 
     try:
         with engine.begin() as conn:
             conn.execute(
-                text("""INSERT INTO public.products
-                        (serial_number, order_number, size)
-                        VALUES (:sn, :on, :sz)
+                text("""
+                    INSERT INTO products (serial_number, order_number, size)
+                    VALUES (:serial, :order, :size)
                 """),
-                {"sn": serial, "on": order, "sz": size}
+                {"serial": serial, "order": order, "size": size}
             )
-        return jsonify({"status": "ok"}), 201
-
-    except IntegrityError:                     # duplicate serial
-        return jsonify({"error": "duplicate"}), 409
-    except Exception as e:                     # anything else
-        return jsonify({"error": str(e)}), 500
+        return "", 201                       # success → JS shows green toast
+    except IntegrityError as e:
+        # duplicate serial? tell the user
+        if "unique" in str(e).lower():
+            return jsonify(error="duplicate serial"), 409
+        app.logger.exception(e)
+        return jsonify(error="db error"), 500
 
 
 # (Optional) keep the old mobile URL working
