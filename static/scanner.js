@@ -1,88 +1,83 @@
-/* same as before … only add this at the very top */
-if (typeof Html5Qrcode === "undefined") {
-  alert("Camera library failed to load – check network or CSP");
+// ---------- helpers ----------
+function toast(msg, ok = true) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.background = ok ? "var(--accent)" : "var(--danger)";
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
 }
 
-/*  html5-qrcode glue  –  keeps the UI small & mobile friendly  */
-let reader = null, scanning = false;
+function toggleBtn(running) {
+  const btn = document.getElementById("start-btn");
+  btn.textContent = running ? "✖ Stop Scanner" : "📷 Start Scanner";
+  btn.style.background = running ? "var(--danger)" : "var(--accent)";
+}
 
-/* and replace startScan with one extra await – forces permission prompt */
+// ---------- scanner ----------
+let reader, scanning = false;
+
 async function startScan() {
   if (scanning) return;
   scanning = true;
+  toggleBtn(true);
 
-  // 👉 Ensure we actually have camera permission before creating Html5Qrcode
+  // ask for cam permission first
   try { await navigator.mediaDevices.getUserMedia({ video:true }); }
-  catch (e) { toast("Camera permission required", false); scanning=false; return; }
+  catch {
+    toast("Enable camera permission", false);
+    scanning = false;
+    toggleBtn(false);
+    return;
+  }
 
   reader ??= new Html5Qrcode("reader");
-
-  // nice square frame
-  const config = { fps: 10, qrbox: { width: 240, height: 240 } };
+  const cfg = { fps: 10, qrbox:{ width:240, height:240 } };
 
   try {
-    await reader.start({ facingMode: "environment" }, config, onScan);
-    toggleBtn(true);
-  } catch (e) {
-    alert("Camera start failed:\n" + e);
+    await reader.start({ facingMode:"environment" }, cfg, onScan);
+  } catch (err) {
+    toast("Camera start failed", false);
     scanning = false;
+    toggleBtn(false);
   }
 }
 
 async function stopScan() {
   if (!reader || !scanning) return;
   await reader.stop();
-  toggleBtn(false);
   scanning = false;
+  toggleBtn(false);
 }
 
-function toggleBtn(active) {
-  const btn = document.querySelector("button");
-  btn.textContent = active ? "✖ Stop Scanner" : "📷 Start Scanner";
-  btn.style.background = active ? "#d9534f" : "#24c663";
-  btn.onclick = active ? stopScan : startScan;
-}
-
-function onScan(msg) {
-  // expected QR payload:  serial=123;order=ORD99;size=10x5
-  const parts = Object.fromEntries(
-    msg.split(";").map(p => p.split("=").map(s => s.trim()))
+async function onScan(text) {
+  // serial=123;order=ORD1;size=8x5
+  const obj = Object.fromEntries(
+    text.split(";").map(p=>p.split("=").map(s=>s.trim()))
   );
-  // populate form
-  serial.value = parts.serial ?? "";
-  order.value  = parts.order  ?? "";
-  size.value   = parts.size   ?? "";
+  serial.value = obj.serial ?? "";
+  order.value  = obj.order  ?? "";
+  size.value   = obj.size   ?? "";
 
-  // send to server
-  saveToDB(parts);
-  stopScan();
+  await saveToDB(obj);
+  await stopScan();
 }
 
 async function saveToDB(data) {
   try {
-    const r = await fetch("/api/products", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
+    const res = await fetch("/api/products", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
-        serial: data.serial,
-        order : data.order,
-        size  : data.size
+        serial:data.serial,
+        order :data.order,
+        size  :data.size
       })
     });
-    const ok = r.status === 201;
-    toast(ok ? "DB save ok" : "DB save failed", ok);
-  } catch (e) {
-    toast("network error", false);
+    toast(res.status===201 ? "Saved!" : "DB save failed", res.status===201);
+  } catch {
+    toast("Network error", false);
   }
 }
 
-function toast(txt, good) {
-  const t = document.createElement("div");
-  t.textContent = txt;
-  t.style.cssText = `
-    position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
-    background:${good ? "#24c663" : "#d9534f"};color:#fff;padding:.6rem 1.2rem;
-    border-radius:.75rem;font-weight:600;z-index:999;`;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
+// ---------- wire up ----------
+document.getElementById("start-btn").onclick = startScan;
