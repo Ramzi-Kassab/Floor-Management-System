@@ -1,18 +1,25 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask
+import os
+import psycopg2
 
 app = Flask(__name__)
-CORS(app)
 
-@app.route("/")
+@app.route('/')
 def home():
     return "Backend is running!"
 
-@app.route("/submit", methods=["POST"])
-def submit():
-    data = request.json
-    print("Received data:", data)
-    return jsonify({"status": "success", "message": "Data received", "data": data})
+@app.route('/test-db')
+def test_db():
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        cur = conn.cursor()
+        cur.execute('SELECT version();')
+        db_version = cur.fetchone()
+        cur.close()
+        conn.close()
+        return f"Database Connected Successfully!<br>PostgreSQL version: {db_version[0]}"
+    except Exception as e:
+        return f"Database connection failed: {e}"
 
-if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
+if __name__ == '__main__':
+    app.run(debug=True)
