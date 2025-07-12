@@ -3,24 +3,47 @@
 <head>
   <meta charset="utf-8">
   <title>QR Scanner</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <!-- load our JS from /static -->
-  <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
+
+  <!-- ①  A modern dark theme & responsive layout ------------------------->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body{font-family:sans-serif;padding:20px}
-    #reader{width:100%;max-width:350px;margin:auto}
-    input,button{width:100%;padding:8px;margin:6px 0}
+    :root {
+      --accent:#24c663;
+      --bg:#0c0c0c;
+      --fg:#f5f5f5;
+      --ui:#1e1e1e;
+      --radius:.75rem;
+    }
+    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,sans-serif}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:1rem;gap:1.35rem}
+    h1{font-size:1.25rem;font-weight:600;margin:.25rem 0}
+    #reader{width:100%;max-width:340px;aspect-ratio:1/1;border-radius:var(--radius);overflow:hidden;background:#000;box-shadow:0 0 .5rem #0008}
+    .field{width:100%;max-width:340px;display:flex;flex-direction:column;gap:.3rem}
+    input{padding:.68rem .8rem;border:none;border-radius:var(--radius);background:var(--ui);color:var(--fg);font-size:.95rem}
+    button{padding:.75rem;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;font-weight:600;font-size:1rem;cursor:pointer;transition:.2s}
+    button:active{transform:scale(.97)}
+    footer{margin-top:auto;font-size:.75rem;color:#888}
   </style>
+
+  <!-- ②  html5-qrcode library ------------------------------------------->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- ③  Your scanner logic (unchanged) ---------------------------------->
+  <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
 </head>
 <body>
-  <h2>Scan QR to Fill Form</h2>
+  <h1>Scan QR to Fill Form</h1>
 
+  <!-- camera viewport -->
   <div id="reader"></div>
 
-  <input id="serial" placeholder="Serial Number">
-  <input id="order"  placeholder="Order Number">
-  <input id="size"   placeholder="Size">
+  <!-- form -->
+  <div class="field">
+    <input id="serial" placeholder="Serial Number">
+    <input id="order"  placeholder="Order Number">
+    <input id="size"   placeholder="Size">
+    <button onclick="startScan()">📷 Start Scanner</button>
+  </div>
 
-  <button onclick="startScan()">📷 Start Scanner</button>
+  <footer>&copy; {{ 2025 }} Floor Management System</footer>
 </body>
 </html>
