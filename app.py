@@ -1,32 +1,31 @@
 # app.py  ──────────────────────────────────────────────────────────────
 from flask import Flask, render_template, request, jsonify
-import os, psycopg2
 from sqlalchemy import create_engine, text
+import os, psycopg2
 
 app = Flask(__name__)
 
-# --- normalise DATABASE_URL ---
+# ── 1. Normalise DATABASE_URL ────────────────────────────────────────
 raw_url = os.getenv("DATABASE_URL", "")
-if raw_url.startswith("postgres://"):         # older render string
-    raw_url = raw_url.replace(
-        "postgres://", "postgresql+psycopg2://", 1
-    )
+if raw_url.startswith("postgres://"):                      # Render’s short form
+    raw_url = raw_url.replace("postgres://",
+                              "postgresql+psycopg2://", 1)
 
 engine = create_engine(raw_url, pool_pre_ping=True)
 
-# Make sure the table exists (no-op after first run)
+# ── 2. Make sure the table exists (one-off) ───────────────────────────
 with engine.begin() as conn:
     conn.execute(text("""
-    CREATE TABLE IF NOT EXISTS scans (
-        id            SERIAL PRIMARY KEY,
-        serial_number TEXT UNIQUE NOT NULL,
-        order_number  TEXT,
-        size          TEXT,
-        scanned_at    TIMESTAMPTZ DEFAULT now()
-    );
+        CREATE TABLE IF NOT EXISTS products (
+            id            SERIAL PRIMARY KEY,
+            serial_number TEXT UNIQUE NOT NULL,
+            order_number  TEXT,
+            size          TEXT,
+            scanned_at    TIMESTAMPTZ DEFAULT now()
+        );
     """))
 
-# ── ROUTES ───────────────────────────────────────────────────────────
+# ── 3. Routes ────────────────────────────────────────────────────────
 @app.route("/")
 def home():
     return "Backend is running!"
@@ -44,48 +43,31 @@ def db_check():
     except Exception as e:
         return f"❌ Database error: {e}"
 
-@app.post("/api/scan")
-def save_scan():
-    """
-    Expects JSON body like:
-    {
-      "serial_number": "123456",
-      "order_number" : "ORD1009",
-      "size"         : "8.5"
-    }
-    """
-    data = request.get_json(silent=True) or {}
-    required = {"serial_number"}
-    if not required.issubset(data):
+# Optional: API endpoint the scanner page can POST to
+@app.route("/api/products", methods=["POST"])
+def add_product():
+    data = request.get_json(force=True, silent=True) or {}
+    serial = data.get("serial_number")
+    order  = data.get("order_number")
+    size   = data.get("size")
+
+    if not serial:
         return jsonify({"error": "serial_number is required"}), 400
 
-    stmt = text("""
-        INSERT INTO scans (serial_number, order_number, size)
-        VALUES (:serial, :order, :size)
-        ON CONFLICT (serial_number) DO UPDATE
-          SET order_number = EXCLUDED.order_number,
-              size         = EXCLUDED.size;
-    """)
     try:
         with engine.begin() as conn:
-            conn.execute(stmt, {
-                "serial": data["serial_number"],
-                "order" : data.get("order_number"),
-                "size"  : data.get("size")
-            })
-        return jsonify({"status": "ok"})
+            conn.execute(
+                text("INSERT INTO products (serial_number, order_number, size) "
+                     "VALUES (:s,:o,:z) "
+                     "ON CONFLICT (serial_number) DO NOTHING"),
+                {"s": serial, "o": order, "z": size}
+            )
+        return jsonify({"status": "ok"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Optional crude admin viewer  (protect with auth if you keep it)
-@app.route("/admin")
-def admin():
-    rows = []
-    with engine.begin() as conn:
-        res = conn.execute(text("SELECT * FROM scans ORDER BY scanned_at DESC"))
-        rows = [dict(r) for r in res]
-    return render_template("admin.html", rows=rows)
-
-# ── ENTRYPOINT FOR RENDER/GUNICORN ───────────────────────────────────
-if __name__ == "__main__":                       # local dev only
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8000)), debug=True)
+# ── 4. Run locally (Render ignores this) ─────────────────────────────
+if __name__ == "__main__":
+    app.run(host="0.0.0.0",
+            port=int(os.environ.get("PORT", 10000)),
+            debug=True)
