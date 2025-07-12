@@ -1,12 +1,11 @@
-from flask import Flask
-import os
+from flask import Flask, render_template
 import psycopg2
+import os
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return "Backend is running!"
+# Environment variable for database connection
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 @app.route('/')
 def home():
@@ -14,20 +13,20 @@ def home():
 
 @app.route('/scan')
 def scan_page():
-    return render_template('scan.html')  # This should exist in templates folder
-    
-@app.route('/test-db')
-def test_db():
+    return render_template('scan.html')
+
+@app.route('/db-check')
+def db_check():
     try:
-        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
-        cur.execute('SELECT version();')
-        db_version = cur.fetchone()
+        cur.execute("SELECT 1;")
+        cur.fetchone()
         cur.close()
         conn.close()
-        return f"Database Connected Successfully!<br>PostgreSQL version: {db_version[0]}"
+        return "✅ Database connection is working!"
     except Exception as e:
-        return f"Database connection failed: {e}"
+        return f"❌ Database error: {str(e)}"
 
 if __name__ == '__main__':
     app.run(debug=True)
