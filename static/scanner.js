@@ -1,33 +1,71 @@
-function startScan() {
-  const reader = new Html5Qrcode("reader");
-  const config = { fps: 10, qrbox: 250 };
-  reader.start({ facingMode: "environment" }, config,
-    msg => {
-      let pairs = msg.split(";");
-      pairs.forEach(p => {
-        let [key, val] = p.split("=");
-        let el = document.getElementById(key);
-        if (el) el.value = val;
-      });
-      reader.stop();
-    },
-    err => console.warn("QR Error:", err)
-  ).catch(err => console.error("Start Error:", err));
-}
+/* eslint-env browser */
+(() => {
+  const readerDiv = document.getElementById("reader");
+  const btn       = document.getElementById("start-btn");
+  const toast     = document.getElementById("toast");
 
-function submitForm() {
-  const data = {
-    serial: document.getElementById("serial").value,
-    order: document.getElementById("order").value,
-    size: document.getElementById("size").value
+  const inputs = {
+    serial: document.getElementById("serial"),
+    order : document.getElementById("order"),
+    size  : document.getElementById("size")
   };
 
-  fetch("https://your-backend-url.onrender.com/submit", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  })
-  .then(res => res.json())
-  .then(res => alert("Submitted: " + JSON.stringify(res)))
-  .catch(err => console.error("Submit error:", err));
-}
+  let scanner;
+
+  function showToast(msg, ok = true) {
+    toast.textContent = msg;
+    toast.className   = ok ? "" : "error";
+    toast.style.opacity = 1;
+    setTimeout(() => (toast.style.opacity = 0), 2500);
+  }
+
+  async function sendToServer(payload) {
+    try {
+      const res = await fetch("/api/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const js = await res.json();
+      if (!res.ok) throw js.error || "API error";
+      showToast("✓ Saved to DB");
+    } catch (err) {
+      console.error(err);
+      showToast("DB save failed", false);
+    }
+  }
+
+  function handleDecoded(text) {
+    // Expected "serial=123;order=AB123;size=8.5"
+    text.split(";").forEach(pair => {
+      const [k, v] = pair.split("=");
+      if (k && v && inputs[k]) inputs[k].value = v;
+    });
+
+    sendToServer({
+      serial_number: inputs.serial.value,
+      order_number : inputs.order.value,
+      size         : inputs.size.value
+    });
+  }
+
+  btn.addEventListener("click", async () => {
+    if (scanner) {
+      await scanner.stop(); scanner = null;
+      btn.textContent = "📷 Start Scanner";
+      readerDiv.innerHTML = "";
+      return;
+    }
+
+    scanner = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 250 };
+    try {
+      await scanner.start({ facingMode: "environment" }, config, handleDecoded);
+      btn.textContent = "✖ Stop Scanner";
+    } catch (err) {
+      console.error(err);
+      showToast("Camera error", false);
+      scanner = null;
+    }
+  });
+})();
