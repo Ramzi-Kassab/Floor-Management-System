@@ -1,12 +1,26 @@
-<!-- templates/scan.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>QR Scanner</title>
+  <meta charset="utf-8">
+  <title>QR Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- load our JS from /static -->
+  <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
+  <style>
+    body{font-family:sans-serif;padding:20px}
+    #reader{width:100%;max-width:350px;margin:auto}
+    input,button{width:100%;padding:8px;margin:6px 0}
+  </style>
 </head>
 <body>
-    <h1>QR Code Scanner Page</h1>
-    <p>This is the scan page. You can add the camera or JS here later.</p>
+  <h2>Scan QR to Fill Form</h2>
+
+  <div id="reader"></div>
+
+  <input id="serial" placeholder="Serial Number">
+  <input id="order"  placeholder="Order Number">
+  <input id="size"   placeholder="Size">
+
+  <button onclick="startScan()">📷 Start Scanner</button>
 </body>
 </html>
