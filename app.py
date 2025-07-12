@@ -1,17 +1,18 @@
 # app.py  ──────────────────────────────────────────────────────────────
 from flask import Flask, render_template, request, jsonify
+import os, psycopg2
 from sqlalchemy import create_engine, text
-import os
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__)
 
-# ── DB CONNECTION ────────────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL")          # set in Render
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL env-var is not set")
+# --- normalise DATABASE_URL ---
+raw_url = os.getenv("DATABASE_URL", "")
+if raw_url.startswith("postgres://"):         # older render string
+    raw_url = raw_url.replace(
+        "postgres://", "postgresql+psycopg2://", 1
+    )
 
-# pool_pre_ping=True revives stale connections automatically
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(raw_url, pool_pre_ping=True)
 
 # Make sure the table exists (no-op after first run)
 with engine.begin() as conn:
