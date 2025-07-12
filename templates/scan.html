@@ -2,32 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>QR Scanner</title>
+  <title>QR Code Scanner</title>
 
-  <!-- ①  A modern dark theme & responsive layout ------------------------->
+  <!-- mobile-first -->
   <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- 🍀 simple dark theme -->
   <style>
-    :root {
-      --accent:#24c663;
-      --bg:#0c0c0c;
-      --fg:#f5f5f5;
-      --ui:#1e1e1e;
-      --radius:.75rem;
+    :root{
+      --accent:#24c663;        /* brand green        */
+      --bg:#0d0d0d;            /* background         */
+      --fg:#f6f6f6;            /* foreground text    */
+      --ui:#1a1a1a;            /* form elements      */
+      --danger:#ff4e4e;
+      --radius:.8rem;
     }
     *{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,sans-serif}
-    body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:1rem;gap:1.35rem}
-    h1{font-size:1.25rem;font-weight:600;margin:.25rem 0}
-    #reader{width:100%;max-width:340px;aspect-ratio:1/1;border-radius:var(--radius);overflow:hidden;background:#000;box-shadow:0 0 .5rem #0008}
-    .field{width:100%;max-width:340px;display:flex;flex-direction:column;gap:.3rem}
-    input{padding:.68rem .8rem;border:none;border-radius:var(--radius);background:var(--ui);color:var(--fg);font-size:.95rem}
-    button{padding:.75rem;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;font-weight:600;font-size:1rem;cursor:pointer;transition:.2s}
-    button:active{transform:scale(.97)}
-    footer{margin-top:auto;font-size:.75rem;color:#888}
+    body{margin:0;display:flex;flex-direction:column;align-items:center;
+         min-height:100vh;background:var(--bg);color:var(--fg);padding:1.25rem;gap:1.2rem}
+    h1{font-size:1.25rem;font-weight:600;margin:.2rem 0;text-align:center}
+    #reader{width:100%;max-width:340px;aspect-ratio:1/1;
+            border-radius:var(--radius);background:#000;overflow:hidden;
+            box-shadow:0 0 .6rem #0009}
+    .field{width:100%;max-width:340px;display:flex;flex-direction:column;gap:.5rem}
+    input{padding:.75rem .9rem;font-size:.95rem;border:none;border-radius:var(--radius);
+          background:var(--ui);color:var(--fg)}
+    button{padding:.8rem;border:none;border-radius:var(--radius);cursor:pointer;
+           background:var(--accent);color:#fff;font-size:1rem;font-weight:600;
+           transition:.15s transform}
+    button:active{transform:scale(.96)}
+    footer{margin-top:auto;font-size:.72rem;color:#888;text-align:center}
+    /* toast */
+    #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+           padding:.75rem 1rem;border-radius:var(--radius);background:var(--accent);
+           color:#fff;font-size:.9rem;opacity:0;pointer-events:none;transition:.3s}
+    #toast.error{background:var(--danger)}
   </style>
 
-  <!-- ②  html5-qrcode library ------------------------------------------->
+  <!-- html5-qrcode cdn -->
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <!-- ③  Your scanner logic (unchanged) ---------------------------------->
+  <!-- custom scanner -->
   <script defer src="{{ url_for('static', filename='scanner.js') }}"></script>
 </head>
 <body>
@@ -41,8 +55,11 @@
     <input id="serial" placeholder="Serial Number">
     <input id="order"  placeholder="Order Number">
     <input id="size"   placeholder="Size">
-    <button onclick="startScan()">📷 Start Scanner</button>
+    <button id="start-btn">📷 Start Scanner</button>
   </div>
+
+  <!-- toast notification -->
+  <div id="toast"></div>
 
   <footer>&copy; {{ 2025 }} Floor Management System</footer>
 </body>
