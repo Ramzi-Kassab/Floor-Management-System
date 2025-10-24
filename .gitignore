@@ -4,5 +4,11 @@ __pycache__/
 *.pyc
 .env
 node_modules/
-db_backups/
+# replace the single line 'db_backups/' with these three lines:
+printf "\ndb_backups/*\n!db_backups/*.sql\n!db_backups/.gitkeep\n" >> .gitignore
+touch db_backups/.gitkeep
+git add .gitignore db_backups/.gitkeep
+git commit -m "Allow SQL dumps in db_backups"
 
+
+.env
