@@ -5,6 +5,7 @@ from django.db.models import Q
 from ..mixins import HRAuditMixin, HRSoftDeleteMixin
 import phonenumbers
 import pycountry
+from ...mixins import PublicIdMixin
 
 try:
     # Django 3.1+
@@ -27,7 +28,7 @@ def _country_choices():
 COUNTRY_CHOICES = _country_choices()
 
 
-class HRAddress(HRAuditMixin, HRSoftDeleteMixin):
+class HRAddress(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
     """
     Global postal address with optional geolocation.
     Supports structured fields compatible with Saudi National Address (SPL).

@@ -4,6 +4,8 @@ from django.db.models.functions import Lower
 from django.db.models import Q, Index
 
 from ..mixins import HRAuditMixin, HRSoftDeleteMixin
+from ...mixins import PublicIdMixin
+
 
 import hashlib
 import phonenumbers
@@ -32,7 +34,7 @@ COUNTRY_CHOICES = _country_choices()
 GENDER_CHOICES = (("MALE", "Male"), ("FEMALE", "Female"))
 
 
-class HRPeople(HRAuditMixin, HRSoftDeleteMixin):
+class HRPeople(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
     """
     Canonical person (identity only).
     - national_id: always present and belongs to primary_nationality_iso2

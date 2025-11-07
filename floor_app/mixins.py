@@ -44,11 +44,18 @@ class SoftDeleteMixin(models.Model):
 
 
 # ---------- Public ID ----------
+
 class PublicIdMixin(models.Model):
-    public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    public_id = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        db_index=True,
+    )
 
     class Meta:
         abstract = True
+
 
 
 # ---------- Document reference ----------
