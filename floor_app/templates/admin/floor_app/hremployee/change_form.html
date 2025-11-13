@@ -5,7 +5,7 @@
     {{ block.super }}
     {% if original.pk %}
         <li>
-            <a href="{% url 'hr_employee_setup' original.pk %}"
+            <a href="{% url 'hr:employee_setup' original.pk %}"
                class="viewsitelink"
                target="_blank">
                 🧩 Employee setup
