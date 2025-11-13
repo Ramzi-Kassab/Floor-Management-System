@@ -768,4 +768,19 @@
         }
     });
 </script>
+
+{% block extra_js %}
+<!-- Moment.js for date conversion -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"
+        integrity="sha512-RXWGoEBnX2n5pHSBC63utnAJ2rY3IenYUzjI3FFbodBgwQnHaRJHc4t3E5+4RlizzmTO+gMFyuXxQmCisNPmQQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- Moment.js Hijri Extension -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/ar-sa.min.js"
+        integrity="sha512-1vwNeYEV4HF0gC8e7xKT8TpLdTRIKHwwPNTJYXR+0gX3lzImWrHY7tWxXvuWJZTmgNEp8WkMlKBQFyh4LwQ4HA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- Custom Hijri Date Sync -->
+<script src="{% static 'hr/hr_people_dob_sync.js' %}"></script>
+{% endblock %}
 {% endblock %}
