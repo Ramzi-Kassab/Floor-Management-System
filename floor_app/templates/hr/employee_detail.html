@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ employee.person.get_full_name_en }} - Employee Profile{% endblock %}
+{% block title %}{{ employee.person.first_name_en }} {{ employee.person.last_name_en }} - Employee Profile{% endblock %}
 
 {% block breadcrumbs %}
 <div class="container-fluid pt-3 pb-2 border-bottom bg-light">
@@ -9,7 +9,7 @@
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
             <li class="breadcrumb-item"><a href="{% url 'employee_list' %}">Employees</a></li>
-            <li class="breadcrumb-item active">{{ employee.person.get_full_name_en }}</li>
+            <li class="breadcrumb-item active">{{ employee.person.first_name_en }} {{ employee.person.last_name_en }}</li>
         </ol>
     </nav>
 </div>
@@ -23,10 +23,10 @@
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                 <div class="d-flex gap-3">
                     <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
-                        {{ employee.person.get_full_name_en|truncatechars:2 }}
+                        {{ employee.person.first_name_en }} {{ employee.person.last_name_en|truncatechars:2 }}
                     </div>
                     <div>
-                        <h1 class="mb-1">{{ employee.person.get_full_name_en }}</h1>
+                        <h1 class="mb-1">{{ employee.person.first_name_en }} {{ employee.person.last_name_en }}</h1>
                         <p class="text-muted mb-1">
                             <i class="bi bi-briefcase"></i> {{ employee.team|default:"Unassigned" }}
                         </p>
@@ -118,8 +118,8 @@
                             <div class="list-group-item px-0">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <p class="mb-1">{{ phone.number }}</p>
-                                        <small class="text-muted">{{ phone.get_channel_display }} • {{ phone.get_country_display }}</small>
+                                        <p class="mb-1">{{ phone.phone_e164|default:phone.phone_no }}</p>
+                                        <small class="text-muted">{{ phone.get_channel_display|default:phone.channel }} • {{ phone.get_kind_display|default:phone.kind }}</small>
                                     </div>
                                     <span class="badge bg-light text-dark">{{ phone.channel }}</span>
                                 </div>
@@ -138,10 +138,10 @@
                         <div class="list-group list-group-flush">
                             {% for email in person.emails.all %}
                             <div class="list-group-item px-0">
-                                <a href="mailto:{{ email.address }}" class="text-decoration-none">
-                                    {{ email.address }}
+                                <a href="mailto:{{ email.email }}" class="text-decoration-none">
+                                    {{ email.email }}
                                 </a>
-                                <small class="text-muted d-block">{{ email.get_type_display }}</small>
+                                <small class="text-muted d-block">{{ email.get_kind_display|default:email.kind }}</small>
                             </div>
                             {% endfor %}
                         </div>
@@ -165,10 +165,10 @@
                         {% for address in person.addresses.all %}
                         <div class="col-md-6">
                             <div class="border rounded p-3">
-                                <h6 class="mb-2">{{ address.get_type_display }}</h6>
-                                <p class="small mb-1">{{ address.street_en }}</p>
+                                <h6 class="mb-2">{{ address.get_kind_display|default:address.kind }}</h6>
+                                <p class="small mb-1">{{ address.street_name }}</p>
                                 <p class="small mb-1">{{ address.city }} {{ address.postal_code }}</p>
-                                <p class="small text-muted">{{ address.get_country_display }}</p>
+                                <p class="small text-muted">{{ address.country_iso2 }}</p>
                             </div>
                         </div>
                         {% endfor %}
@@ -197,17 +197,6 @@
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-500">Job Title</label>
                         <p>{{ employee.job_title|default:"—" }}</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted small fw-500">Employment Type</label>
-                        <p>
-                            {% if employee.employment_type %}
-                                <span class="badge bg-info">{{ employee.get_employment_type_display }}</span>
-                            {% else %}
-                                —
-                            {% endif %}
-                        </p>
                     </div>
 
                     <div class="mb-3">
