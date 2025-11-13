@@ -96,12 +96,12 @@ def signup(request):
 @login_required
 def home(request):
     total_employees = HREmployee.objects.count()
-    active_employees = HREmployee.objects.filter(person__is_active=True).count()
+    active_employees = HREmployee.objects.filter(status='ACTIVE').count()
 
     this_month = timezone.now().date().replace(day=1)
     new_employees_this_month = HREmployee.objects.filter(created_at__gte=this_month).count()
 
-    inactive_employees = total_employees - active_employees
+    inactive_employees = HREmployee.objects.exclude(status='ACTIVE').count()
     recent_employees = HREmployee.objects.select_related('person').order_by('-created_at')[:10]
     department_stats = HREmployee.objects.values('department').annotate(count=Count('id')).order_by('-count')[:5]
 
@@ -131,11 +131,11 @@ def employee_list(request):
     if department:
         employees = employees.filter(department=department)
 
-    status = request.GET.get('status', '').strip()
-    if status == 'active':
-        employees = employees.filter(person__is_active=True)
-    elif status == 'inactive':
-        employees = employees.filter(person__is_active=False)
+    emp_status = request.GET.get('status', '').strip()
+    if emp_status == 'active':
+        employees = employees.filter(status='ACTIVE')
+    elif emp_status == 'inactive':
+        employees = employees.exclude(status='ACTIVE')
 
     sort_by = request.GET.get('sort', '-created_at')
     valid_sorts = ['person__first_name_en', '-person__first_name_en', 'department', 'created_at', '-created_at']

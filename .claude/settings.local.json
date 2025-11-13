@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python manage.py showmigrations:*)",
       "Bash(source:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(python manage.py check:*)"
     ],
     "deny": [],
     "ask": []
