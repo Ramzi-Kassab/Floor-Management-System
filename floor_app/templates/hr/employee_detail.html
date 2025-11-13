@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ employee.person.get_full_name_en }} - Employee Profile{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'employee_list' %}">Employees</a></li>
+            <li class="breadcrumb-item active">{{ employee.person.get_full_name_en }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div class="d-flex gap-3">
+                    <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ employee.person.get_full_name_en|truncatechars:2 }}
+                    </div>
+                    <div>
+                        <h1 class="mb-1">{{ employee.person.get_full_name_en }}</h1>
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-briefcase"></i> {{ employee.department|default:"Unassigned" }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            {% if employee.person.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-x-circle"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'hr:employee_setup' employee.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </a>
+                    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-person"></i> Personal Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-500">First Name (EN)</label>
+                            <p class="mb-3">{{ employee.person.first_name_en }}</p>
+
+                            <label class="form-label text-muted small fw-500">First Name (AR)</label>
+                            <p class="mb-3">{{ employee.person.first_name_ar }}</p>
+
+                            <label class="form-label text-muted small fw-500">National ID</label>
+                            <p>{{ employee.person.national_id|default:"—" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-500">Last Name (EN)</label>
+                            <p class="mb-3">{{ employee.person.last_name_en }}</p>
+
+                            <label class="form-label text-muted small fw-500">Last Name (AR)</label>
+                            <p class="mb-3">{{ employee.person.last_name_ar }}</p>
+
+                            <label class="form-label text-muted small fw-500">IQAMA Number</label>
+                            <p>{{ employee.person.iqama_number|default:"—" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-telephone"></i> Contact Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Phone Numbers -->
+                    {% if person.phones.all %}
+                    <div class="mb-4">
+                        <h6 class="mb-3">Phone Numbers</h6>
+                        <div class="list-group list-group-flush">
+                            {% for phone in person.phones.all %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="mb-1">{{ phone.number }}</p>
+                                        <small class="text-muted">{{ phone.get_channel_display }} • {{ phone.get_country_display }}</small>
+                                    </div>
+                                    <span class="badge bg-light text-dark">{{ phone.channel }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-4">No phone numbers added</p>
+                    {% endif %}
+
+                    <!-- Email Addresses -->
+                    {% if person.emails.all %}
+                    <div class="mb-4">
+                        <h6 class="mb-3">Email Addresses</h6>
+                        <div class="list-group list-group-flush">
+                            {% for email in person.emails.all %}
+                            <div class="list-group-item px-0">
+                                <a href="mailto:{{ email.address }}" class="text-decoration-none">
+                                    {{ email.address }}
+                                </a>
+                                <small class="text-muted d-block">{{ email.get_type_display }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No email addresses added</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Addresses -->
+            {% if person.addresses.all %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-geo-alt"></i> Addresses
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for address in person.addresses.all %}
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-2">{{ address.get_type_display }}</h6>
+                                <p class="small mb-1">{{ address.street_en }}</p>
+                                <p class="small mb-1">{{ address.city }} {{ address.postal_code }}</p>
+                                <p class="small text-muted">{{ address.get_country_display }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Employment Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-briefcase-fill"></i> Employment
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Department</label>
+                        <p>{{ employee.department|default:"—" }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Job Title</label>
+                        <p>{{ employee.job_title|default:"—" }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Employment Type</label>
+                        <p>
+                            {% if employee.employment_type %}
+                                <span class="badge bg-info">{{ employee.get_employment_type_display }}</span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Hire Date</label>
+                        <p>{{ employee.hire_date|date:"M d, Y"|default:"—" }}</p>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Created</label>
+                        <p>{{ employee.created_at|date:"M d, Y \a\t H:i" }}</p>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label text-muted small fw-500">Last Updated</label>
+                        <p>{{ employee.updated_at|date:"M d, Y \a\t H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Qualifications -->
+            {% if employee.qualifications.all %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-award"></i> Qualifications
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for qualification in employee.qualifications.all %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="mb-1 fw-500">{{ qualification.qualification.name }}</p>
+                                    <small class="text-muted">{{ qualification.qualification.category }}</small>
+                                </div>
+                                <span class="badge bg-success">{{ qualification.obtained_at|date:"Y" }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

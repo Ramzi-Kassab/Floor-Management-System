@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Employees - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Employees</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="mb-1">Employee Directory</h1>
+                    <p class="text-muted mb-0">Manage and view all employees ({{ total_count }} total)</p>
+                </div>
+                <div>
+                    <a href="{% url 'hr:employee_setup_new' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-lg"></i> Add New Employee
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom">
+            <h6 class="mb-0">
+                <i class="bi bi-funnel"></i> Search & Filter
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <!-- Search -->
+                <div class="col-12 col-md-4">
+                    <label class="form-label fw-500">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Name, ID, or IQAMA..."
+                            value="{{ search }}"
+                        >
+                    </div>
+                    <small class="text-muted">Search by name, national ID, or IQAMA number</small>
+                </div>
+
+                <!-- Department Filter -->
+                <div class="col-12 col-md-4">
+                    <label class="form-label fw-500">Department</label>
+                    <select name="department" class="form-select">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept }}" {% if dept == department %}selected{% endif %}>
+                                {{ dept|default:"Unassigned" }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-12 col-md-4">
+                    <label class="form-label fw-500">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status == 'active' %}selected{% endif %}>
+                            <i class="bi bi-check-circle"></i> Active
+                        </option>
+                        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>
+                            <i class="bi bi-x-circle"></i> Inactive
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                        <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    <div class="mb-3">
+        <p class="text-muted">
+            {% if search %}
+                <strong>Results for "{{ search }}":</strong>
+            {% endif %}
+            Showing <strong>{{ page_obj.start_index|default:0 }}-{{ page_obj.end_index|default:0 }}</strong> of <strong>{{ total_count }}</strong> employees
+        </p>
+    </div>
+
+    <!-- Employees Table (Desktop) -->
+    <div class="d-none d-md-block">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>
+                            <a href="?{% if sort_by != 'person__first_name_en' %}sort=person__first_name_en{% else %}sort=-person__first_name_en{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-decoration-none text-dark">
+                                Name {% if sort_by in 'person__first_name_en,-person__first_name_en' %}<i class="bi bi-arrow-down"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>National ID</th>
+                        <th>
+                            <a href="?{% if sort_by != 'department' %}sort=department{% else %}sort=-department{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-decoration-none text-dark">
+                                Department {% if sort_by in 'department,-department' %}<i class="bi bi-arrow-down"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>Status</th>
+                        <th>
+                            <a href="?{% if sort_by != 'created_at' %}sort=created_at{% else %}sort=-created_at{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-decoration-none text-dark">
+                                Created {% if sort_by in 'created_at,-created_at' %}<i class="bi bi-arrow-down"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in page_obj %}
+                    <tr>
+                        <td class="fw-500">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            {{ employee.person.get_full_name_en }}
+                        </td>
+                        <td>
+                            {{ employee.person.national_id|default:"—" }}
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">
+                                {{ employee.department|default:"Unassigned" }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if employee.person.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-x-circle"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ employee.created_at|date:"M d, Y" }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-outline-primary" title="View details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'hr:employee_setup' employee.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                <p class="mt-2">No employees found</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Employees Cards (Mobile) -->
+    <div class="row g-3 d-md-none">
+        {% for employee in page_obj %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex gap-3">
+                        <div class="flex-shrink-0">
+                            <div class="avatar avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                {{ employee.person.get_full_name_en|truncatechars:2 }}
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ employee.person.get_full_name_en }}</h6>
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-briefcase"></i> {{ employee.department|default:"Unassigned" }}
+                            </p>
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-hash"></i> {{ employee.person.national_id|default:"—" }}
+                            </p>
+                            <div>
+                                {% if employee.person.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="btn-group-vertical btn-group-sm w-100">
+                                <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-outline-primary btn-sm">
+                                    View
+                                </a>
+                                <a href="{% url 'hr:employee_setup' employee.pk %}" class="btn btn-outline-secondary btn-sm">
+                                    Edit
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center" role="alert">
+                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                <p class="mt-2">No employees found</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                        <i class="bi bi-chevron-double-left"></i> First
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i> Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                        Next <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                        Last <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

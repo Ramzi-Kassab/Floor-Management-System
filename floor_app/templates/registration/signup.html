@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign Up - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-4 px-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="w-100" style="max-width: 450px;">
+        <!-- Card -->
+        <div class="card border-0 shadow-lg">
+            <!-- Header -->
+            <div class="card-body px-4 py-5">
+                <div class="text-center mb-4">
+                    <h2 class="card-title mb-1">Create Account</h2>
+                    <p class="text-muted">Join Floor Management System</p>
+                </div>
+
+                <!-- Messages -->
+                {% if messages %}
+                <div class="mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Form -->
+                <form method="post" novalidate class="needs-validation">
+                    {% csrf_token %}
+
+                    <!-- Full Name Row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="first_name"
+                                name="first_name"
+                                placeholder="John"
+                                value="{{ first_name }}"
+                                required
+                            >
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="last_name"
+                                name="last_name"
+                                placeholder="Doe"
+                                value="{{ last_name }}"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-at"></i>
+                            </span>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="username"
+                                name="username"
+                                placeholder="john_doe"
+                                value="{{ username }}"
+                                required
+                            >
+                        </div>
+                        <small class="text-muted">Letters, numbers, and @/./+/-/_ only</small>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <input
+                                type="email"
+                                class="form-control"
+                                id="email"
+                                name="email"
+                                placeholder="john@example.com"
+                                value="{{ email }}"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label for="password1" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="password1"
+                                name="password1"
+                                placeholder="••••••••"
+                                required
+                            >
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword1">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">At least 8 characters</small>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <label for="password2" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="password2"
+                                name="password2"
+                                placeholder="••••••••"
+                                required
+                            >
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Terms -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                        <i class="bi bi-person-plus"></i> Create Account
+                    </button>
+
+                    <!-- Login Link -->
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            Already have an account?
+                            <a href="{% url 'login' %}" class="text-decoration-none fw-500">Sign In</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-4">
+            <p class="text-white-50 small">
+                &copy; {% now "Y" %} Floor Management System. All rights reserved.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Password Toggle Script -->
+<script>
+    document.getElementById('togglePassword1').addEventListener('click', function() {
+        const input = document.getElementById('password1');
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+    });
+
+    document.getElementById('togglePassword2').addEventListener('click', function() {
+        const input = document.getElementById('password2');
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+    });
+</script>
+
+<style>
+    .min-vh-100 {
+        min-height: 100vh;
+    }
+</style>
+{% endblock %}

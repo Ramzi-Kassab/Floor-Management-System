@@ -10,6 +10,7 @@ from .forms import (
     HRAddressFormSet,
 )
 
+@login_required
 def employee_setup(request, employee_id=None):
     if employee_id:
         employee = get_object_or_404(HREmployee, pk=employee_id)
