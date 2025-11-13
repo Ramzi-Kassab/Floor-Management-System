@@ -101,46 +101,15 @@
                         </div>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'hr:employee_setup_list' %}">
-                            <i class="bi bi-person-badge"></i>
-                            <span>Employee Setup</span>
+                        <a class="nav-link" href="{% url 'employee_list' %}">
+                            <i class="bi bi-list-ul"></i>
+                            <span>Employees</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-calendar-check"></i>
-                            <span>Attendance</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-clock-history"></i>
-                            <span>Time Tracking</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <div class="nav-section-title">
-                            <i class="bi bi-gear-wide-connected"></i>
-                            Production
-                        </div>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-clipboard-data"></i>
-                            <span>Work Orders</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-diagram-3"></i>
-                            <span>Floor Layout</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-bar-chart-line"></i>
-                            <span>Production Reports</span>
+                        <a class="nav-link" href="{% url 'hr:employee_create' %}">
+                            <i class="bi bi-person-plus"></i>
+                            <span>Add Employee</span>
                         </a>
                     </li>
                     
