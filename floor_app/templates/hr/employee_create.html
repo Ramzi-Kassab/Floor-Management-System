@@ -210,23 +210,156 @@
                         </h5>
                         <p class="text-muted mb-4">Demographic and personal details</p>
 
-                        <div class="row g-4">
-                            {% for field in people_form %}
-                                <div class="col-12 col-md-6">
-                                    <div class="form-group">
-                                        <label for="{{ field.id_for_label }}" class="form-label{% if field.field.required %} required{% endif %}">
-                                            {{ field.label }}
-                                        </label>
-                                        {{ field }}
-                                        {% if field.help_text %}
-                                            <div class="form-text">{{ field.help_text }}</div>
-                                        {% endif %}
-                                        {% for err in field.errors %}
-                                            <div class="invalid-feedback d-block">{{ err }}</div>
-                                        {% endfor %}
+                        <!-- English Names Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">Names (English)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ people_form.first_name_en.id_for_label }}" class="form-label required">
+                                                {{ people_form.first_name_en.label }}
+                                            </label>
+                                            {{ people_form.first_name_en }}
+                                            {% if people_form.first_name_en.help_text %}
+                                                <div class="form-text">{{ people_form.first_name_en.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in people_form.first_name_en.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ people_form.middle_name_en.id_for_label }}" class="form-label">
+                                                {{ people_form.middle_name_en.label }}
+                                            </label>
+                                            {{ people_form.middle_name_en }}
+                                            {% if people_form.middle_name_en.help_text %}
+                                                <div class="form-text">{{ people_form.middle_name_en.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in people_form.middle_name_en.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ people_form.last_name_en.id_for_label }}" class="form-label required">
+                                                {{ people_form.last_name_en.label }}
+                                            </label>
+                                            {{ people_form.last_name_en }}
+                                            {% if people_form.last_name_en.help_text %}
+                                                <div class="form-text">{{ people_form.last_name_en.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in people_form.last_name_en.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
-                            {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Arabic Names Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">Names (Arabic) - Optional</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ people_form.first_name_ar.id_for_label }}" class="form-label">
+                                                {{ people_form.first_name_ar.label }}
+                                            </label>
+                                            {{ people_form.first_name_ar }}
+                                            {% if people_form.first_name_ar.help_text %}
+                                                <div class="form-text">{{ people_form.first_name_ar.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in people_form.first_name_ar.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ people_form.middle_name_ar.id_for_label }}" class="form-label">
+                                                {{ people_form.middle_name_ar.label }}
+                                            </label>
+                                            {{ people_form.middle_name_ar }}
+                                            {% if people_form.middle_name_ar.help_text %}
+                                                <div class="form-text">{{ people_form.middle_name_ar.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in people_form.middle_name_ar.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ people_form.last_name_ar.id_for_label }}" class="form-label">
+                                                {{ people_form.last_name_ar.label }}
+                                            </label>
+                                            {{ people_form.last_name_ar }}
+                                            {% if people_form.last_name_ar.help_text %}
+                                                <div class="form-text">{{ people_form.last_name_ar.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in people_form.last_name_ar.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Personal Details Section -->
+                        <div class="row g-4">
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ people_form.gender.id_for_label }}" class="form-label required">
+                                        {{ people_form.gender.label }}
+                                    </label>
+                                    {{ people_form.gender }}
+                                    {% if people_form.gender.help_text %}
+                                        <div class="form-text">{{ people_form.gender.help_text|safe }}</div>
+                                    {% endif %}
+                                    {% for err in people_form.gender.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ people_form.date_of_birth.id_for_label }}" class="form-label">
+                                        {{ people_form.date_of_birth.label }}
+                                    </label>
+                                    {{ people_form.date_of_birth }}
+                                    {% if people_form.date_of_birth.help_text %}
+                                        <div class="form-text">{{ people_form.date_of_birth.help_text|safe }}</div>
+                                    {% endif %}
+                                    {% for err in people_form.date_of_birth.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ people_form.date_of_birth_hijri.id_for_label }}" class="form-label">
+                                        {{ people_form.date_of_birth_hijri.label }}
+                                    </label>
+                                    {{ people_form.date_of_birth_hijri }}
+                                    {% if people_form.date_of_birth_hijri.help_text %}
+                                        <div class="form-text">{{ people_form.date_of_birth_hijri.help_text|safe }}</div>
+                                    {% endif %}
+                                    {% for err in people_form.date_of_birth_hijri.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
                     </div>
 

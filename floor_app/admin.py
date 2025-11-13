@@ -32,20 +32,56 @@ class HRAddressInline(admin.TabularInline):
 class HRPeopleAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "preferred_name_en",
-        "first_name_en",
-        "last_name_en",
+        "get_full_name_en",
+        "gender",
+        "primary_nationality_iso2",
         "national_id",
         "iqama_number",
+    )
+    list_filter = (
+        "gender",
+        "primary_nationality_iso2",
     )
     search_fields = (
-        "preferred_name_en",
         "first_name_en",
         "last_name_en",
+        "first_name_ar",
+        "last_name_ar",
         "national_id",
         "iqama_number",
     )
-    # if your HRPeople fields are called something else, tweak these names
+    readonly_fields = (
+        "public_id",
+        "name_dob_hash",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+    )
+    inlines = [HRPhoneInline, HREmailInline, HRAddressInline]
+
+    fieldsets = (
+        ("Names (English)", {
+            "fields": ("first_name_en", "middle_name_en", "last_name_en"),
+        }),
+        ("Names (Arabic)", {
+            "fields": ("first_name_ar", "middle_name_ar", "last_name_ar"),
+            "classes": ("collapse",),
+        }),
+        ("Personal Information", {
+            "fields": ("gender", "date_of_birth", "date_of_birth_hijri"),
+        }),
+        ("Nationality & Identification", {
+            "fields": ("primary_nationality_iso2", "national_id", "iqama_number", "iqama_expiry"),
+        }),
+        ("Photo", {
+            "fields": ("photo",),
+        }),
+        ("System Information", {
+            "fields": ("public_id", "name_dob_hash", "created_at", "created_by", "updated_at", "updated_by"),
+            "classes": ("collapse",),
+        }),
+    )
 
 
 @admin.register(HRPhone)
@@ -76,16 +112,37 @@ class HRAddressAdmin(admin.ModelAdmin):
 class HREmployeeAdmin(admin.ModelAdmin):
     change_form_template = "admin/floor_app/hremployee/change_form.html"
     change_list_template = "admin/floor_app/hremployee/change_list.html"
-    list_display = ("employee_no", "person", "job_title", "team", "status", "is_operator")
-    list_filter = ("status", "team", "is_operator")
+    list_display = ("employee_no", "person", "job_title", "team", "status", "employee_type")
+    list_filter = ("status", "team", "employee_type")
     search_fields = (
         "employee_no",
-        "person__preferred_name_en",
         "person__first_name_en",
         "person__last_name_en",
+        "person__first_name_ar",
+        "person__last_name_ar",
     )
 
     autocomplete_fields = ("person", "user")
+    readonly_fields = ("public_id", "created_at", "updated_at", "created_by", "updated_by")
+
+    fieldsets = (
+        ("Person & User", {
+            "fields": ("person", "user"),
+        }),
+        ("Employee Details", {
+            "fields": ("employee_no", "status", "employee_type"),
+        }),
+        ("Job Information", {
+            "fields": ("job_title", "team"),
+        }),
+        ("Employment Dates", {
+            "fields": ("hire_date", "termination_date"),
+        }),
+        ("System Information", {
+            "fields": ("public_id", "created_at", "created_by", "updated_at", "updated_by"),
+            "classes": ("collapse",),
+        }),
+    )
 
 
 @admin.register(HRQualification)

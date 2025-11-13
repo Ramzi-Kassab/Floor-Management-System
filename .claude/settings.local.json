@@ -5,7 +5,10 @@
       "Bash(source:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(python manage.py check:*)"
+      "Bash(python manage.py check:*)",
+      "Bash(python -m venv:*)",
+      "Bash(dir:*)",
+      "Bash(python manage.py makemigrations:*)"
     ],
     "deny": [],
     "ask": []

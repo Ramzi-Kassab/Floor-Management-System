@@ -41,18 +41,14 @@ class HRPeople(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
     - iqama_number: required for non-Saudis; must be empty for Saudis
     """
     # Legal names (English)
-    first_name_en  = models.CharField(max_length=120)
-    middle_name_en = models.CharField(max_length=120, blank=True, default="")
-    last_name_en   = models.CharField(max_length=120)
+    first_name_en  = models.CharField(max_length=120, help_text="First name in English")
+    middle_name_en = models.CharField(max_length=120, blank=True, default="", help_text="Middle name in English (optional)")
+    last_name_en   = models.CharField(max_length=120, help_text="Last name in English")
 
     # Legal names (Arabic)
-    first_name_ar  = models.CharField(max_length=120, blank=True, default="")
-    middle_name_ar = models.CharField(max_length=120, blank=True, default="")
-    last_name_ar   = models.CharField(max_length=120, blank=True, default="")
-
-    # Preferred
-    preferred_name_en = models.CharField(max_length=120, blank=True, default="")
-    preferred_name_ar = models.CharField(max_length=120, blank=True, default="")
+    first_name_ar  = models.CharField(max_length=120, blank=True, default="", help_text="First name in Arabic (optional)")
+    middle_name_ar = models.CharField(max_length=120, blank=True, default="", help_text="Middle name in Arabic (optional)")
+    last_name_ar   = models.CharField(max_length=120, blank=True, default="", help_text="Last name in Arabic (optional)")
 
     # DoB (either can be entered; the other is auto-converted)
     date_of_birth       = models.DateField(null=True, blank=True)             # Gregorian
@@ -188,4 +184,9 @@ class HRPeople(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return (self.preferred_name_en or f"{self.first_name_en} {self.last_name_en}").strip()
+        return f"{self.first_name_en} {self.last_name_en}".strip()
+
+    def get_full_name_en(self):
+        """Get full English name"""
+        parts = [self.first_name_en, self.middle_name_en, self.last_name_en]
+        return " ".join(p for p in parts if p).strip()

@@ -13,6 +13,15 @@ class HREmployee(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
         ("TERMINATED", "Terminated"),
     )
 
+    EMPLOYEE_TYPE = (
+        ("OPERATOR", "Floor Operator"),
+        ("SUPERVISOR", "Supervisor"),
+        ("MANAGER", "Manager"),
+        ("ENGINEER", "Engineer"),
+        ("ADMIN", "Administrative Staff"),
+        ("OTHER", "Other"),
+    )
+
     person = models.OneToOneField(
         "HRPeople",
         on_delete=models.PROTECT,
@@ -32,7 +41,7 @@ class HREmployee(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
 
     job_title = models.CharField(max_length=120, blank=True, default="")
     team = models.CharField(max_length=64, blank=True, default="")        # e.g. PDC_BRAZING, QC, LOGISTICS
-    is_operator = models.BooleanField(default=True)                       # can be assigned to floor ops
+    employee_type = models.CharField(max_length=16, choices=EMPLOYEE_TYPE, default="OPERATOR", help_text="Employee role/type")
 
     hire_date = models.DateField(null=True, blank=True)
     termination_date = models.DateField(null=True, blank=True)
