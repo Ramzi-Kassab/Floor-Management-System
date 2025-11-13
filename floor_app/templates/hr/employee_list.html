@@ -60,14 +60,14 @@
                     <small class="text-muted">Search by name, national ID, or IQAMA number</small>
                 </div>
 
-                <!-- Department Filter -->
+                <!-- Team Filter -->
                 <div class="col-12 col-md-4">
                     <label class="form-label fw-500">Department</label>
-                    <select name="department" class="form-select">
+                    <select name="team" class="form-select">
                         <option value="">All Departments</option>
-                        {% for dept in departments %}
-                            <option value="{{ dept }}" {% if dept == department %}selected{% endif %}>
-                                {{ dept|default:"Unassigned" }}
+                        {% for team_name in teams %}
+                            <option value="{{ team_name }}" {% if team_name == team %}selected{% endif %}>
+                                {{ team_name|default:"Unassigned" }}
                             </option>
                         {% endfor %}
                     </select>
@@ -125,8 +125,8 @@
                         </th>
                         <th>National ID</th>
                         <th>
-                            <a href="?{% if sort_by != 'department' %}sort=department{% else %}sort=-department{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-decoration-none text-dark">
-                                Department {% if sort_by in 'department,-department' %}<i class="bi bi-arrow-down"></i>{% endif %}
+                            <a href="?{% if sort_by != 'team' %}sort=team{% else %}sort=-department{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-decoration-none text-dark">
+                                Team {% if sort_by in 'team,-team' %}<i class="bi bi-arrow-down"></i>{% endif %}
                             </a>
                         </th>
                         <th>Status</th>
@@ -150,7 +150,7 @@
                         </td>
                         <td>
                             <span class="badge bg-info text-dark">
-                                {{ employee.department|default:"Unassigned" }}
+                                {{ employee.team|default:"Unassigned" }}
                             </span>
                         </td>
                         <td>
@@ -222,7 +222,7 @@
                         <div class="flex-grow-1">
                             <h6 class="mb-1">{{ employee.person.get_full_name_en }}</h6>
                             <p class="small text-muted mb-2">
-                                <i class="bi bi-briefcase"></i> {{ employee.department|default:"Unassigned" }}
+                                <i class="bi bi-briefcase"></i> {{ employee.team|default:"Unassigned" }}
                             </p>
                             <p class="small text-muted mb-2">
                                 <i class="bi bi-hash"></i> {{ employee.person.national_id|default:"—" }}
@@ -271,12 +271,12 @@
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if team %}&team={{ team }}{% endif %}{% if status %}&status={{ emp_status }}{% endif %}">
                         <i class="bi bi-chevron-double-left"></i> First
                     </a>
                 </li>
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if team %}&team={{ team }}{% endif %}{% if status %}&status={{ emp_status }}{% endif %}">
                         <i class="bi bi-chevron-left"></i> Previous
                     </a>
                 </li>
@@ -289,7 +289,7 @@
                     </li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if team %}&team={{ team }}{% endif %}{% if status %}&status={{ emp_status }}{% endif %}">
                             {{ num }}
                         </a>
                     </li>
@@ -298,12 +298,12 @@
 
             {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if team %}&team={{ team }}{% endif %}{% if status %}&status={{ emp_status }}{% endif %}">
                         Next <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if department %}&department={{ department }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if team %}&team={{ team }}{% endif %}{% if status %}&status={{ emp_status }}{% endif %}">
                         Last <i class="bi bi-chevron-double-right"></i>
                     </a>
                 </li>

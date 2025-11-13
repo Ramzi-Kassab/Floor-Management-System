@@ -103,7 +103,7 @@ def home(request):
 
     inactive_employees = HREmployee.objects.exclude(status='ACTIVE').count()
     recent_employees = HREmployee.objects.select_related('person').order_by('-created_at')[:10]
-    department_stats = HREmployee.objects.values('department').annotate(count=Count('id')).order_by('-count')[:5]
+    team_stats = HREmployee.objects.values('team').annotate(count=Count('id')).order_by('-count')[:5]
 
     return render(request, "home.html", {
         'total_employees': total_employees,
@@ -111,7 +111,7 @@ def home(request):
         'inactive_employees': inactive_employees,
         'new_employees_this_month': new_employees_this_month,
         'recent_employees': recent_employees,
-        'department_stats': department_stats,
+        'team_stats': team_stats,
     })
 
 
@@ -127,9 +127,9 @@ def employee_list(request):
             Q(person__national_id__icontains=search)
         )
 
-    department = request.GET.get('department', '').strip()
-    if department:
-        employees = employees.filter(department=department)
+    team = request.GET.get('team', '').strip()
+    if team:
+        employees = employees.filter(team=team)
 
     emp_status = request.GET.get('status', '').strip()
     if emp_status == 'active':
@@ -138,22 +138,22 @@ def employee_list(request):
         employees = employees.exclude(status='ACTIVE')
 
     sort_by = request.GET.get('sort', '-created_at')
-    valid_sorts = ['person__first_name_en', '-person__first_name_en', 'department', 'created_at', '-created_at']
+    valid_sorts = ['person__first_name_en', '-person__first_name_en',  'team', 'created_at', '-created_at']
     if sort_by in valid_sorts:
         employees = employees.order_by(sort_by)
 
     paginator = Paginator(employees, 25)
     page_obj = paginator.get_page(request.GET.get('page'))
 
-    departments = sorted(HREmployee.objects.values_list('department', flat=True).distinct())
+    teams = sorted(HREmployee.objects.values_list('team', flat=True).distinct())
 
     return render(request, 'hr/employee_list.html', {
         'page_obj': page_obj,
         'search': search,
-        'department': department,
-        'status': status,
+        'team': team,
+        'emp_status': emp_status,
         'sort_by': sort_by,
-        'departments': departments,
+        'teams': teams,
         'total_count': paginator.count,
     })
 
