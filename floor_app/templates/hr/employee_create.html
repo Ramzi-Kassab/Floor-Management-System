@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}New Employee - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'employee_list' %}">Employees</a></li>
+            <li class="breadcrumb-item active">New Employee</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-person-plus-fill text-primary me-2"></i>
+                        Create New Employee
+                    </h2>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Complete all tabs to create a comprehensive employee profile
+                    </p>
+                </div>
+                <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="card border-0 shadow-sm">
+            <!-- Tabs Header -->
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <ul class="nav nav-tabs nav-tabs-custom border-0" id="empTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-emp"
+                                data-bs-toggle="tab" data-bs-target="#pane-emp"
+                                type="button" role="tab">
+                            <i class="bi bi-briefcase-fill me-2"></i>
+                            <span>Employee</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-person"
+                                data-bs-toggle="tab" data-bs-target="#pane-person"
+                                type="button" role="tab">
+                            <i class="bi bi-person-fill me-2"></i>
+                            <span>Person</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-phones"
+                                data-bs-toggle="tab" data-bs-target="#pane-phones"
+                                type="button" role="tab">
+                            <i class="bi bi-telephone-fill me-2"></i>
+                            <span>Phones</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-emails"
+                                data-bs-toggle="tab" data-bs-target="#pane-emails"
+                                type="button" role="tab">
+                            <i class="bi bi-envelope-fill me-2"></i>
+                            <span>Emails</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-addresses"
+                                data-bs-toggle="tab" data-bs-target="#pane-addresses"
+                                type="button" role="tab">
+                            <i class="bi bi-geo-alt-fill me-2"></i>
+                            <span>Addresses</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tabs Content -->
+            <div class="card-body p-4">
+                {% if people_form.non_field_errors or employee_form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ people_form.non_field_errors }}
+                        {{ employee_form.non_field_errors }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+
+                <div class="tab-content" id="empTabsContent">
+                    <!-- Employee Tab -->
+                    <div class="tab-pane fade show active" id="pane-emp" role="tabpanel">
+                        <h5 class="section-title">
+                            <i class="bi bi-briefcase text-primary me-2"></i>
+                            Employee Information
+                        </h5>
+                        <p class="text-muted mb-4">Basic employment details and organizational assignment</p>
+
+                        <div class="row g-4">
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ employee_form.employee_no.id_for_label }}" class="form-label required">
+                                        {{ employee_form.employee_no.label }}
+                                    </label>
+                                    {{ employee_form.employee_no }}
+                                    {% if employee_form.employee_no.help_text %}
+                                        <div class="form-text">{{ employee_form.employee_no.help_text }}</div>
+                                    {% endif %}
+                                    {% for err in employee_form.employee_no.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ employee_form.status.id_for_label }}" class="form-label required">
+                                        {{ employee_form.status.label }}
+                                    </label>
+                                    {{ employee_form.status }}
+                                    {% if employee_form.status.help_text %}
+                                        <div class="form-text">{{ employee_form.status.help_text }}</div>
+                                    {% endif %}
+                                    {% for err in employee_form.status.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ employee_form.job_title.id_for_label }}" class="form-label">
+                                        {{ employee_form.job_title.label }}
+                                    </label>
+                                    {{ employee_form.job_title }}
+                                    {% if employee_form.job_title.help_text %}
+                                        <div class="form-text">{{ employee_form.job_title.help_text }}</div>
+                                    {% endif %}
+                                    {% for err in employee_form.job_title.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ employee_form.team.id_for_label }}" class="form-label">
+                                        {{ employee_form.team.label }}
+                                    </label>
+                                    {{ employee_form.team }}
+                                    {% if employee_form.team.help_text %}
+                                        <div class="form-text">{{ employee_form.team.help_text }}</div>
+                                    {% endif %}
+                                    {% for err in employee_form.team.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ employee_form.hire_date.id_for_label }}" class="form-label">
+                                        {{ employee_form.hire_date.label }}
+                                    </label>
+                                    {{ employee_form.hire_date }}
+                                    {% if employee_form.hire_date.help_text %}
+                                        <div class="form-text">{{ employee_form.hire_date.help_text }}</div>
+                                    {% endif %}
+                                    {% for err in employee_form.hire_date.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="form-check form-switch form-switch-lg">
+                                        {{ employee_form.is_operator }}
+                                        <label class="form-check-label" for="{{ employee_form.is_operator.id_for_label }}">
+                                            {{ employee_form.is_operator.label }}
+                                        </label>
+                                    </div>
+                                    {% for err in employee_form.is_operator.errors %}
+                                        <div class="invalid-feedback d-block">{{ err }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Person Tab -->
+                    <div class="tab-pane fade" id="pane-person" role="tabpanel">
+                        <h5 class="section-title">
+                            <i class="bi bi-person text-primary me-2"></i>
+                            Personal Information
+                        </h5>
+                        <p class="text-muted mb-4">Demographic and personal details</p>
+
+                        <div class="row g-4">
+                            {% for field in people_form %}
+                                <div class="col-12 col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ field.id_for_label }}" class="form-label{% if field.field.required %} required{% endif %}">
+                                            {{ field.label }}
+                                        </label>
+                                        {{ field }}
+                                        {% if field.help_text %}
+                                            <div class="form-text">{{ field.help_text }}</div>
+                                        {% endif %}
+                                        {% for err in field.errors %}
+                                            <div class="invalid-feedback d-block">{{ err }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Phones Tab -->
+                    <div class="tab-pane fade" id="pane-phones" role="tabpanel">
+                        <h5 class="section-title">
+                            <i class="bi bi-telephone text-primary me-2"></i>
+                            Phone Numbers
+                        </h5>
+                        <p class="text-muted mb-4">Add personal and business phone numbers for contact purposes</p>
+
+                        {{ phone_formset.management_form }}
+
+                        <div class="formset-container">
+                            {% for form in phone_formset %}
+                                <div class="formset-card">
+                                    <div class="formset-card-header">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-telephone-fill text-primary me-2"></i>
+                                            <span>Phone #{{ forloop.counter }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-success">New</span>
+                                        </div>
+                                    </div>
+                                    <div class="formset-card-body">
+                                        <div class="row g-3">
+                                            {% for field in form.visible_fields %}
+                                                <div class="col-12 col-sm-6 col-lg-4">
+                                                    <div class="form-group">
+                                                        <label for="{{ field.id_for_label }}" class="form-label{% if field.field.required %} required{% endif %}">
+                                                            {{ field.label }}
+                                                        </label>
+                                                        {{ field }}
+                                                        {% for err in field.errors %}
+                                                            <div class="invalid-feedback d-block">{{ err }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            {% if form.DELETE %}
+                                                <div class="col-12">
+                                                    <div class="form-check form-check-danger">
+                                                        {{ form.DELETE }}
+                                                        <label class="form-check-label text-danger" for="{{ form.DELETE.id_for_label }}">
+                                                            <i class="bi bi-trash me-1"></i>
+                                                            Mark for deletion
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Emails Tab -->
+                    <div class="tab-pane fade" id="pane-emails" role="tabpanel">
+                        <h5 class="section-title">
+                            <i class="bi bi-envelope text-primary me-2"></i>
+                            Email Addresses
+                        </h5>
+                        <p class="text-muted mb-4">Work and personal email addresses</p>
+
+                        {{ email_formset.management_form }}
+
+                        <div class="formset-container">
+                            {% for form in email_formset %}
+                                <div class="formset-card">
+                                    <div class="formset-card-header">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-envelope-fill text-primary me-2"></i>
+                                            <span>Email #{{ forloop.counter }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-success">New</span>
+                                        </div>
+                                    </div>
+                                    <div class="formset-card-body">
+                                        <div class="row g-3">
+                                            {% for field in form.visible_fields %}
+                                                <div class="col-12 col-sm-6 col-lg-4">
+                                                    <div class="form-group">
+                                                        <label for="{{ field.id_for_label }}" class="form-label{% if field.field.required %} required{% endif %}">
+                                                            {{ field.label }}
+                                                        </label>
+                                                        {{ field }}
+                                                        {% for err in field.errors %}
+                                                            <div class="invalid-feedback d-block">{{ err }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            {% if form.DELETE %}
+                                                <div class="col-12">
+                                                    <div class="form-check form-check-danger">
+                                                        {{ form.DELETE }}
+                                                        <label class="form-check-label text-danger" for="{{ form.DELETE.id_for_label }}">
+                                                            <i class="bi bi-trash me-1"></i>
+                                                            Mark for deletion
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Addresses Tab -->
+                    <div class="tab-pane fade" id="pane-addresses" role="tabpanel">
+                        <h5 class="section-title">
+                            <i class="bi bi-geo-alt text-primary me-2"></i>
+                            Addresses
+                        </h5>
+                        <p class="text-muted mb-4">Home, company, or delivery addresses</p>
+
+                        {{ address_formset.management_form }}
+
+                        <div class="formset-container">
+                            {% for form in address_formset %}
+                                <div class="formset-card">
+                                    <div class="formset-card-header">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                                            <span>Address #{{ forloop.counter }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-success">New</span>
+                                        </div>
+                                    </div>
+                                    <div class="formset-card-body">
+                                        <div class="row g-3">
+                                            {% for field in form.visible_fields %}
+                                                <div class="col-12 col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ field.id_for_label }}" class="form-label{% if field.field.required %} required{% endif %}">
+                                                            {{ field.label }}
+                                                        </label>
+                                                        {{ field }}
+                                                        {% for err in field.errors %}
+                                                            <div class="invalid-feedback d-block">{{ err }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            {% if form.DELETE %}
+                                                <div class="col-12">
+                                                    <div class="form-check form-check-danger">
+                                                        {{ form.DELETE }}
+                                                        <label class="form-check-label text-danger" for="{{ form.DELETE.id_for_label }}">
+                                                            <i class="bi bi-trash me-1"></i>
+                                                            Mark for deletion
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Footer with Actions -->
+            <div class="card-footer bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-3 py-3">
+                <div class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Fields marked with <span class="text-danger">*</span> are required
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i> Create Employee
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Tab Memory Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabKey = "hr-employee-create-active-tab";
+        const triggerTabList = [].slice.call(document.querySelectorAll('#empTabs button[data-bs-toggle="tab"]'));
+
+        triggerTabList.forEach(function (triggerEl) {
+            triggerEl.addEventListener('shown.bs.tab', function (event) {
+                localStorage.setItem(tabKey, event.target.getAttribute('data-bs-target'));
+            });
+        });
+
+        const activeTarget = localStorage.getItem(tabKey);
+        if (activeTarget) {
+            const someTabTriggerEl = document.querySelector(`#empTabs button[data-bs-target="${activeTarget}"]`);
+            if (someTabTriggerEl) {
+                const tab = new bootstrap.Tab(someTabTriggerEl);
+                tab.show();
+            }
+        }
+    });
+</script>
+{% endblock %}

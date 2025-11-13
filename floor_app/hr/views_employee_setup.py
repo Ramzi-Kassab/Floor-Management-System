@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.urls import reverse
 from .models import HREmployee, HRPeople
 from .forms import (
@@ -10,17 +11,11 @@ from .forms import (
     HRAddressFormSet,
 )
 
-@login_required
-def employee_setup(request, employee_id=None):
-    if employee_id:
-        employee = get_object_or_404(HREmployee, pk=employee_id)
-        person = employee.person
-        is_new = False
-    else:
-        employee = None
-        person = HRPeople()  # empty instance
-        is_new = True
 
+def _render_employee_form(request, employee=None, person=None, is_new=True, template_name="hr/employee_create.html"):
+    """
+    Helper function to handle employee form rendering for both create and edit views.
+    """
     if request.method == "POST":
         # include FILES for the photo field
         people_form = HRPeopleForm(request.POST, request.FILES, instance=person)
@@ -52,7 +47,9 @@ def employee_setup(request, employee_id=None):
                 email_formset.save()
                 address_formset.save()
 
-                return redirect("hr_employee_setup", employee_id=employee_obj.pk)
+                action = "created" if is_new else "updated"
+                messages.success(request, f'Employee "{person_obj.get_full_name_en()}" has been {action} successfully.')
+                return redirect("employee_detail", pk=employee_obj.pk)
         else:
             phone_formset = HRPhoneFormSet(request.POST, instance=person, prefix="phones")
             email_formset = HREmailFormSet(request.POST, instance=person, prefix="emails")
@@ -67,14 +64,6 @@ def employee_setup(request, employee_id=None):
         email_formset = HREmailFormSet(instance=person, prefix="emails")
         address_formset = HRAddressFormSet(instance=person, prefix="addresses")
 
-    # 🔹 these are what the template needs for the buttons
-    admin_list_url = reverse("admin:floor_app_hremployee_changelist")
-    admin_change_url = (
-        reverse("admin:floor_app_hremployee_change", args=[employee.pk])
-        if employee
-        else None
-    )
-
     context = {
         "employee": employee,
         "is_new": is_new,
@@ -83,16 +72,58 @@ def employee_setup(request, employee_id=None):
         "phone_formset": phone_formset,
         "email_formset": email_formset,
         "address_formset": address_formset,
-        "admin_list_url": admin_list_url,
-        "admin_change_url": admin_change_url,
     }
-    return render(request, "hr/employee_setup.html", context)
+    return render(request, template_name, context)
+
+
+@login_required
+def employee_create(request):
+    """
+    Create a new employee record with personal information and contact details.
+    """
+    person = HRPeople()
+    employee = None
+    return _render_employee_form(
+        request,
+        employee=employee,
+        person=person,
+        is_new=True,
+        template_name="hr/employee_create.html"
+    )
+
+
+@login_required
+def employee_edit(request, pk):
+    """
+    Edit an existing employee record with personal information and contact details.
+    """
+    employee = get_object_or_404(HREmployee, pk=pk)
+    person = employee.person
+    return _render_employee_form(
+        request,
+        employee=employee,
+        person=person,
+        is_new=False,
+        template_name="hr/employee_edit.html"
+    )
+
+
+@login_required
+def employee_setup(request, employee_id=None):
+    """
+    DEPRECATED: Use employee_create() or employee_edit() instead.
+    Kept for backward compatibility during transition.
+    """
+    if employee_id:
+        return redirect("hr:employee_edit", pk=employee_id)
+    else:
+        return redirect("hr:employee_create")
+
 
 @login_required
 def employee_setup_list(request):
     """
-    Entry point for the Employee Setup menu item.
-    For now this simply redirects to the 'new' setup wizard.
-    Later you can replace this with a proper list of employees, if you like.
+    DEPRECATED: Use employee_list view instead.
+    Kept for backward compatibility during transition.
     """
-    return redirect("hr:employee_setup_new")
+    return redirect("employee_list")
