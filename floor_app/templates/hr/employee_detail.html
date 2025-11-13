@@ -76,28 +76,96 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small fw-500">First Name (EN)</label>
-                            <p class="mb-3">{{ employee.person.first_name_en }}</p>
-
-                            <label class="form-label text-muted small fw-500">First Name (AR)</label>
-                            <p class="mb-3">{{ employee.person.first_name_ar }}</p>
-
-                            <label class="form-label text-muted small fw-500">National ID</label>
-                            <p>{{ employee.person.national_id|default:"—" }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small fw-500">Last Name (EN)</label>
-                            <p class="mb-3">{{ employee.person.last_name_en }}</p>
-
-                            <label class="form-label text-muted small fw-500">Last Name (AR)</label>
-                            <p class="mb-3">{{ employee.person.last_name_ar }}</p>
-
-                            <label class="form-label text-muted small fw-500">IQAMA Number</label>
-                            <p>{{ employee.person.iqama_number|default:"—" }}</p>
+                    <!-- English Names -->
+                    <div class="mb-4">
+                        <h6 class="small text-muted mb-3">Names (English)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-500">First Name</label>
+                                <p class="mb-0">{{ employee.person.first_name_en }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-500">Middle Name</label>
+                                <p class="mb-0">{{ employee.person.middle_name_en|default:"—" }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-500">Last Name</label>
+                                <p class="mb-0">{{ employee.person.last_name_en }}</p>
+                            </div>
                         </div>
                     </div>
+
+                    {% if employee.person.first_name_ar or employee.person.last_name_ar %}
+                    <!-- Arabic Names -->
+                    <div class="mb-4">
+                        <h6 class="small text-muted mb-3">Names (Arabic)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-500">First Name</label>
+                                <p class="mb-0">{{ employee.person.first_name_ar|default:"—" }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-500">Middle Name</label>
+                                <p class="mb-0">{{ employee.person.middle_name_ar|default:"—" }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-500">Last Name</label>
+                                <p class="mb-0">{{ employee.person.last_name_ar|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <hr class="my-3">
+
+                    <!-- Personal Details -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-500">Gender</label>
+                            <p class="mb-0">{{ employee.person.get_gender_display|default:"—" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-500">Date of Birth</label>
+                            <p class="mb-0">{{ employee.person.date_of_birth|date:"M d, Y"|default:"—" }}</p>
+                        </div>
+                    </div>
+
+                    {% if employee.person.date_of_birth_hijri %}
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-500">Hijri Date</label>
+                            <p class="mb-0">{{ employee.person.date_of_birth_hijri }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <hr class="my-3">
+
+                    <!-- Nationality & IDs -->
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Nationality</label>
+                        <p class="mb-0">{{ employee.person.get_primary_nationality_iso2_display|default:"—" }}</p>
+                    </div>
+
+                    {% if employee.person.primary_nationality_iso2 == "SA" %}
+                        <!-- Saudi: Show National ID only -->
+                        <div class="mb-0">
+                            <label class="form-label text-muted small fw-500">National ID</label>
+                            <p class="mb-0">{{ employee.person.national_id }}</p>
+                        </div>
+                    {% else %}
+                        <!-- Non-Saudi: Show Iqama Number -->
+                        <div class="mb-0">
+                            <label class="form-label text-muted small fw-500">IQAMA Number</label>
+                            <p class="mb-0">{{ employee.person.iqama_number|default:"—" }}</p>
+                        </div>
+                        {% if employee.person.iqama_expiry %}
+                        <div class="mt-3">
+                            <label class="form-label text-muted small fw-500">IQAMA Expiry</label>
+                            <p class="mb-0">{{ employee.person.iqama_expiry|date:"M d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -190,6 +258,20 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Employee Number</label>
+                        <p>{{ employee.employee_no }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Employee Type</label>
+                        <p>
+                            <span class="badge bg-info text-dark">
+                                {{ employee.get_employee_type_display|default:"—" }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label text-muted small fw-500">Department</label>
                         <p>{{ employee.team|default:"—" }}</p>
                     </div>
@@ -203,6 +285,13 @@
                         <label class="form-label text-muted small fw-500">Hire Date</label>
                         <p>{{ employee.hire_date|date:"M d, Y"|default:"—" }}</p>
                     </div>
+
+                    {% if employee.termination_date %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-500">Termination Date</label>
+                        <p>{{ employee.termination_date|date:"M d, Y" }}</p>
+                    </div>
+                    {% endif %}
 
                     <hr>
 
