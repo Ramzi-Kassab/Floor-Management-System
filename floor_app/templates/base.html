@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Floor Management System{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-link text-dark d-lg-none me-2" id="sidebarToggle" type="button">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            
+            <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{% url 'home' %}">
+                <i class="bi bi-building me-2"></i>
+                <span class="d-none d-md-inline">Floor Management System</span>
+                <span class="d-inline d-md-none">FMS</span>
+            </a>
+            
+            <div class="ms-auto d-flex align-items-center">
+                {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-link text-decoration-none text-dark dropdown-toggle d-flex align-items-center" 
+                                type="button" 
+                                id="userMenuDropdown" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false">
+                            <div class="user-avatar me-2">
+                                <i class="bi bi-person-circle fs-5"></i>
+                            </div>
+                            <span class="d-none d-md-inline">{{ user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userMenuDropdown">
+                            <li>
+                                <span class="dropdown-item-text small text-muted">
+                                    <i class="bi bi-person me-1"></i> {{ user.get_full_name|default:user.username }}
+                                </span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-gear me-2"></i>Settings
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar bg-white border-end" id="sidebar">
+            <div class="sidebar-sticky">
+                <div class="sidebar-header">
+                    <h6 class="sidebar-heading">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>
+                        Navigation
+                    </h6>
+                </div>
+                
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="bi bi-house-door"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <div class="nav-section-title">
+                            <i class="bi bi-people"></i>
+                            Human Resources
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'hr:employee_setup_list' %}">
+                            <i class="bi bi-person-badge"></i>
+                            <span>Employee Setup</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-calendar-check"></i>
+                            <span>Attendance</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Time Tracking</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <div class="nav-section-title">
+                            <i class="bi bi-gear-wide-connected"></i>
+                            Production
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-clipboard-data"></i>
+                            <span>Work Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Floor Layout</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-bar-chart-line"></i>
+                            <span>Production Reports</span>
+                        </a>
+                    </li>
+                    
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <div class="nav-section-title">
+                            <i class="bi bi-shield-lock"></i>
+                            Administration
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">
+                            <i class="bi bi-gear"></i>
+                            <span>Django Admin</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            {% block breadcrumbs %}
+            {% endblock %}
+            
+            {% if messages %}
+                <div class="container-fluid mt-3">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+    
+    <!-- Sidebar toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+            
+            // Close sidebar on mobile when clicking outside
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 992) {
+                    if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                        sidebar.classList.remove('show');
+                    }
+                }
+            });
+            
+            // Highlight active nav link
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

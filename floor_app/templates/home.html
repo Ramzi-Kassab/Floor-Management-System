@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item active">
+                <i class="bi bi-house-door me-1"></i>Dashboard
+            </li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Welcome back, {{ user.get_full_name|default:user.username }}! 👋</h2>
+                    <p class="text-muted mb-0">Here's what's happening in your floor management system today.</p>
+                </div>
+                <div class="text-muted small d-none d-md-block">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    {% now "l, F j, Y" %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Key Metrics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-primary-soft text-primary">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Total Employees</div>
+                    <div class="metric-value">125</div>
+                    <div class="metric-change positive">
+                        <i class="bi bi-arrow-up"></i> 3 this month
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-success-soft text-success">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Active Operators</div>
+                    <div class="metric-value">88</div>
+                    <div class="metric-change positive">
+                        <i class="bi bi-arrow-up"></i> 5.2% from last week
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-warning-soft text-warning">
+                    <i class="bi bi-clipboard-data-fill"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Pending Work Orders</div>
+                    <div class="metric-value">14</div>
+                    <div class="metric-change">
+                        <i class="bi bi-dash"></i> No change
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-info-soft text-info">
+                    <i class="bi bi-bar-chart-fill"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Production Rate</div>
+                    <div class="metric-value">94%</div>
+                    <div class="metric-change positive">
+                        <i class="bi bi-arrow-up"></i> 2% from yesterday
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <a href="{% url 'hr:employee_setup_create' %}" class="quick-action-btn">
+                                <div class="quick-action-icon bg-primary-soft text-primary">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                </div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Add Employee</div>
+                                    <div class="quick-action-desc">Create new employee record</div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-action-arrow"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <a href="{% url 'hr:employee_setup_list' %}" class="quick-action-btn">
+                                <div class="quick-action-icon bg-success-soft text-success">
+                                    <i class="bi bi-list-ul"></i>
+                                </div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">View Employees</div>
+                                    <div class="quick-action-desc">Browse employee directory</div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-action-arrow"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <a href="#" class="quick-action-btn">
+                                <div class="quick-action-icon bg-warning-soft text-warning">
+                                    <i class="bi bi-clipboard-check-fill"></i>
+                                </div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Work Orders</div>
+                                    <div class="quick-action-desc">Manage production tasks</div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-action-arrow"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <a href="#" class="quick-action-btn">
+                                <div class="quick-action-icon bg-info-soft text-info">
+                                    <i class="bi bi-calendar-check-fill"></i>
+                                </div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Attendance</div>
+                                    <div class="quick-action-desc">Track employee presence</div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-action-arrow"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <a href="#" class="quick-action-btn">
+                                <div class="quick-action-icon bg-danger-soft text-danger">
+                                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                                </div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Reports</div>
+                                    <div class="quick-action-desc">View analytics & insights</div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-action-arrow"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <a href="#" class="quick-action-btn">
+                                <div class="quick-action-icon bg-secondary-soft text-secondary">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                </div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Floor Layout</div>
+                                    <div class="quick-action-desc">View production floor</div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-action-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history text-primary me-2"></i>
+                        Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon bg-success-soft text-success">
+                                <i class="bi bi-person-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">New employee added</div>
+                                <div class="activity-time">2 hours ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-primary-soft text-primary">
+                                <i class="bi bi-pencil-square"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Work order updated</div>
+                                <div class="activity-time">5 hours ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-warning-soft text-warning">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Pending approvals</div>
+                                <div class="activity-time">1 day ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon bg-info-soft text-info">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Report generated</div>
+                                <div class="activity-time">2 days ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item border-0">
+                            <div class="activity-icon bg-secondary-soft text-secondary">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">System updated</div>
+                                <div class="activity-time">3 days ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap">
+                        <div class="d-flex align-items-center mb-2 mb-md-0">
+                            <div class="status-indicator bg-success"></div>
+                            <span class="ms-2">
+                                <strong>System Status:</strong> All systems operational
+                            </span>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-hdd-fill me-1"></i>
+                            Last backup: {% now "M j, Y g:i A" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,14 +1,34 @@
+# Python
 .venv/
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Environment variables
 .env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node (if used for frontend later)
 node_modules/
-# replace the single line 'db_backups/' with these three lines:
-printf "\ndb_backups/*\n!db_backups/*.sql\n!db_backups/.gitkeep\n" >> .gitignore
-touch db_backups/.gitkeep
-git add .gitignore db_backups/.gitkeep
-git commit -m "Allow SQL dumps in db_backups"
 
+# Database backups (keep SQL files)
+db_backups/*
+!db_backups/*.sql
+!db_backups/.gitkeep
 
-.env
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log

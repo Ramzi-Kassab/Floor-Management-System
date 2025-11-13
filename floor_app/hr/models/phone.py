@@ -39,6 +39,13 @@ class HRPhone(HRAuditMixin, HRSoftDeleteMixin):
 
     is_primary_hint = models.BooleanField(default=False)
     label = models.CharField(max_length=32, blank=True, default="")
+    person = models.ForeignKey(
+        "HRPeople",
+        on_delete=models.PROTECT,
+        related_name="phones",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "hr_phone"

@@ -1,0 +1,288 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - Floor Management System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-dark: #0056b3;
+            --primary-light: #e7f1ff;
+        }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 15px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2.5rem 2rem 2rem;
+            text-align: center;
+        }
+        
+        .login-logo {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .login-logo i {
+            font-size: 2rem;
+        }
+        
+        .login-body {
+            padding: 2.5rem 2rem;
+        }
+        
+        .welcome-text {
+            color: #64748b;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .form-floating > label {
+            color: #94a3b8;
+        }
+        
+        .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            color: white;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 1rem;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 123, 255, 0.3);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #003d82 100%);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .input-icon {
+            position: relative;
+        }
+        
+        .input-icon i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            z-index: 10;
+        }
+        
+        .input-icon .form-control {
+            padding-left: 3rem;
+        }
+        
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 10px;
+            }
+            
+            .login-header {
+                padding: 2rem 1.5rem 1.5rem;
+            }
+            
+            .login-body {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="bi bi-building"></i>
+                </div>
+                <h4 class="mb-0 fw-bold">Floor Management System</h4>
+            </div>
+            
+            <div class="login-body">
+                <div class="welcome-text">
+                    <h5 class="mb-1">Welcome back!</h5>
+                    <p class="mb-0 small">Please sign in to your account</p>
+                </div>
+                
+                {% if form.errors or form.non_field_errors %}
+                    <div class="alert alert-danger d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>
+                            {% if form.non_field_errors %}
+                                {{ form.non_field_errors }}
+                            {% else %}
+                                <strong>Login failed.</strong> Please check your username and password.
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <div class="input-icon">
+                            <i class="bi bi-person"></i>
+                            <input type="text" 
+                                   class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                                   id="id_username" 
+                                   name="username" 
+                                   placeholder="Username"
+                                   value="{{ form.username.value|default:'' }}"
+                                   required 
+                                   autofocus>
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.username.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="input-icon">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" 
+                                   class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                                   id="id_password" 
+                                   name="password" 
+                                   placeholder="Password"
+                                   required>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+                            <label class="form-check-label small text-muted" for="remember_me">
+                                Remember me
+                            </label>
+                        </div>
+                        <a href="#" class="small text-decoration-none">Forgot password?</a>
+                    </div>
+                    
+                    <input type="hidden" name="next" value="{{ next }}">
+                    
+                    <button type="submit" class="btn btn-login">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="form-footer">
+                    <p class="mb-0">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Secure access to Floor Management System
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4 text-white">
+            <small>© 2025 Floor Management System. All rights reserved.</small>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

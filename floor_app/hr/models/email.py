@@ -29,6 +29,13 @@ class HREmail(HRAuditMixin, HRSoftDeleteMixin):
 
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True, blank=True)
+    person = models.ForeignKey(
+        "HRPeople",
+        on_delete=models.PROTECT,
+        related_name="emails",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "hr_email"

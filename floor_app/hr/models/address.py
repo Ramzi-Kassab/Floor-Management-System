@@ -53,6 +53,13 @@ class HRAddress(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
     use  = models.CharField(max_length=8, choices=USE, default="BUSINESS")
     is_primary_hint = models.BooleanField(default=False)
     label           = models.CharField(max_length=64, blank=True, default="")
+    person = models.ForeignKey(
+        "HRPeople",
+        on_delete=models.PROTECT,
+        related_name="addresses",
+        null=True,
+        blank=True,
+    )
 
     # === Structured (global) + KSA fields ===
     address_kind = models.CharField(
