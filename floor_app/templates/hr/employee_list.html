@@ -123,7 +123,7 @@
                                 Name {% if sort_by in 'person__first_name_en,-person__first_name_en' %}<i class="bi bi-arrow-down"></i>{% endif %}
                             </a>
                         </th>
-                        <th>National ID</th>
+                        <th>Employee Type</th>
                         <th>
                             <a href="?{% if sort_by != 'team' %}sort=team{% else %}sort=-department{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-decoration-none text-dark">
                                 Team {% if sort_by in 'team,-team' %}<i class="bi bi-arrow-down"></i>{% endif %}
@@ -146,7 +146,9 @@
                             {{ employee.person.get_full_name_en }}
                         </td>
                         <td>
-                            {{ employee.person.national_id|default:"—" }}
+                            <span class="badge bg-secondary">
+                                {{ employee.get_employee_type_display|default:"—" }}
+                            </span>
                         </td>
                         <td>
                             <span class="badge bg-info text-dark">
@@ -222,10 +224,10 @@
                         <div class="flex-grow-1">
                             <h6 class="mb-1">{{ employee.person.get_full_name_en }}</h6>
                             <p class="small text-muted mb-2">
-                                <i class="bi bi-briefcase"></i> {{ employee.team|default:"Unassigned" }}
+                                <i class="bi bi-person-badge"></i> {{ employee.get_employee_type_display|default:"—" }}
                             </p>
                             <p class="small text-muted mb-2">
-                                <i class="bi bi-hash"></i> {{ employee.person.national_id|default:"—" }}
+                                <i class="bi bi-briefcase"></i> {{ employee.team|default:"Unassigned" }}
                             </p>
                             <div>
                                 {% if employee.status == 'ACTIVE' %}
