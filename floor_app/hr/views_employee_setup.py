@@ -22,10 +22,19 @@ def _render_employee_form(request, employee=None, person=None, is_new=True, temp
         employee_form = HREmployeeForm(request.POST, instance=employee)
 
         if people_form.is_valid() and employee_form.is_valid():
-            person_obj = people_form.save()
+            # Save person with audit tracking
+            person_obj = people_form.save(commit=False)
+            person_obj.updated_by = request.user
+            if is_new:
+                person_obj.created_by = request.user
+            person_obj.save()
 
+            # Save employee with audit tracking
             employee_obj = employee_form.save(commit=False)
             employee_obj.person = person_obj
+            employee_obj.updated_by = request.user
+            if is_new:
+                employee_obj.created_by = request.user
             employee_obj.save()
 
             phone_formset = HRPhoneFormSet(
@@ -43,6 +52,25 @@ def _render_employee_form(request, employee=None, person=None, is_new=True, temp
                 and email_formset.is_valid()
                 and address_formset.is_valid()
             ):
+                # Save formsets with audit tracking
+                for phone_form in phone_formset:
+                    if phone_form.instance:
+                        phone_form.instance.updated_by = request.user
+                        if not phone_form.instance.pk:
+                            phone_form.instance.created_by = request.user
+
+                for email_form in email_formset:
+                    if email_form.instance:
+                        email_form.instance.updated_by = request.user
+                        if not email_form.instance.pk:
+                            email_form.instance.created_by = request.user
+
+                for address_form in address_formset:
+                    if address_form.instance:
+                        address_form.instance.updated_by = request.user
+                        if not address_form.instance.pk:
+                            address_form.instance.created_by = request.user
+
                 phone_formset.save()
                 email_formset.save()
                 address_formset.save()
