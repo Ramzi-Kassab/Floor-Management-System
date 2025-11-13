@@ -42,58 +42,57 @@
                 </div>
                 <div class="metric-content">
                     <div class="metric-label">Total Employees</div>
-                    <div class="metric-value">125</div>
+                    <div class="metric-value">{{ total_employees }}</div>
+                    {% if new_employees_this_month > 0 %}
                     <div class="metric-change positive">
-                        <i class="bi bi-arrow-up"></i> 3 this month
+                        <i class="bi bi-arrow-up"></i> {{ new_employees_this_month }} this month
                     </div>
+                    {% else %}
+                    <div class="metric-change">
+                        <i class="bi bi-dash"></i> No change this month
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="metric-card">
                 <div class="metric-icon bg-success-soft text-success">
                     <i class="bi bi-person-check-fill"></i>
                 </div>
                 <div class="metric-content">
-                    <div class="metric-label">Active Operators</div>
-                    <div class="metric-value">88</div>
-                    <div class="metric-change positive">
-                        <i class="bi bi-arrow-up"></i> 5.2% from last week
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="metric-card">
-                <div class="metric-icon bg-warning-soft text-warning">
-                    <i class="bi bi-clipboard-data-fill"></i>
-                </div>
-                <div class="metric-content">
-                    <div class="metric-label">Pending Work Orders</div>
-                    <div class="metric-value">14</div>
+                    <div class="metric-label">Active Employees</div>
+                    <div class="metric-value">{{ active_employees }}</div>
+                    {% if inactive_employees > 0 %}
                     <div class="metric-change">
-                        <i class="bi bi-dash"></i> No change
+                        <i class="bi bi-dash"></i> {{ inactive_employees }} not active
                     </div>
+                    {% else %}
+                    <div class="metric-change positive">
+                        <i class="bi bi-check-circle"></i> All active
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        
+
+        {% if team_stats %}
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="metric-card">
                 <div class="metric-icon bg-info-soft text-info">
-                    <i class="bi bi-bar-chart-fill"></i>
+                    <i class="bi bi-diagram-3-fill"></i>
                 </div>
                 <div class="metric-content">
-                    <div class="metric-label">Production Rate</div>
-                    <div class="metric-value">94%</div>
-                    <div class="metric-change positive">
-                        <i class="bi bi-arrow-up"></i> 2% from yesterday
+                    <div class="metric-label">Largest Team</div>
+                    <div class="metric-value">{{ team_stats.0.team|default:"—" }}</div>
+                    <div class="metric-change">
+                        <i class="bi bi-people"></i> {{ team_stats.0.count }} members
                     </div>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
     
     <!-- Quick Actions -->
@@ -108,7 +107,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-12 col-md-6 col-xl-4">
+                        <div class="col-12 col-md-6">
                             <a href="{% url 'hr:employee_setup_new' %}" class="quick-action-btn">
                                 <div class="quick-action-icon bg-primary-soft text-primary">
                                     <i class="bi bi-person-plus-fill"></i>
@@ -120,9 +119,9 @@
                                 <i class="bi bi-chevron-right quick-action-arrow"></i>
                             </a>
                         </div>
-                        
-                        <div class="col-12 col-md-6 col-xl-4">
-                            <a href="{% url 'hr:employee_setup_list' %}" class="quick-action-btn">
+
+                        <div class="col-12 col-md-6">
+                            <a href="{% url 'employee_list' %}" class="quick-action-btn">
                                 <div class="quick-action-icon bg-success-soft text-success">
                                     <i class="bi bi-list-ul"></i>
                                 </div>
@@ -133,146 +132,50 @@
                                 <i class="bi bi-chevron-right quick-action-arrow"></i>
                             </a>
                         </div>
-                        
-                        <div class="col-12 col-md-6 col-xl-4">
-                            <a href="#" class="quick-action-btn">
-                                <div class="quick-action-icon bg-warning-soft text-warning">
-                                    <i class="bi bi-clipboard-check-fill"></i>
-                                </div>
-                                <div class="quick-action-content">
-                                    <div class="quick-action-title">Work Orders</div>
-                                    <div class="quick-action-desc">Manage production tasks</div>
-                                </div>
-                                <i class="bi bi-chevron-right quick-action-arrow"></i>
-                            </a>
-                        </div>
-                        
-                        <div class="col-12 col-md-6 col-xl-4">
-                            <a href="#" class="quick-action-btn">
-                                <div class="quick-action-icon bg-info-soft text-info">
-                                    <i class="bi bi-calendar-check-fill"></i>
-                                </div>
-                                <div class="quick-action-content">
-                                    <div class="quick-action-title">Attendance</div>
-                                    <div class="quick-action-desc">Track employee presence</div>
-                                </div>
-                                <i class="bi bi-chevron-right quick-action-arrow"></i>
-                            </a>
-                        </div>
-                        
-                        <div class="col-12 col-md-6 col-xl-4">
-                            <a href="#" class="quick-action-btn">
-                                <div class="quick-action-icon bg-danger-soft text-danger">
-                                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                                </div>
-                                <div class="quick-action-content">
-                                    <div class="quick-action-title">Reports</div>
-                                    <div class="quick-action-desc">View analytics & insights</div>
-                                </div>
-                                <i class="bi bi-chevron-right quick-action-arrow"></i>
-                            </a>
-                        </div>
-                        
-                        <div class="col-12 col-md-6 col-xl-4">
-                            <a href="#" class="quick-action-btn">
-                                <div class="quick-action-icon bg-secondary-soft text-secondary">
-                                    <i class="bi bi-diagram-3-fill"></i>
-                                </div>
-                                <div class="quick-action-content">
-                                    <div class="quick-action-title">Floor Layout</div>
-                                    <div class="quick-action-desc">View production floor</div>
-                                </div>
-                                <i class="bi bi-chevron-right quick-action-arrow"></i>
-                            </a>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Recent Activity -->
+        <!-- Recent Employees -->
         <div class="col-12 col-lg-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom">
                     <h5 class="card-title mb-0">
                         <i class="bi bi-clock-history text-primary me-2"></i>
-                        Recent Activity
+                        Recently Added
                     </h5>
                 </div>
                 <div class="card-body p-0">
+                    {% if recent_employees %}
                     <div class="activity-list">
-                        <div class="activity-item">
+                        {% for employee in recent_employees %}
+                        <div class="activity-item {% if forloop.last %}border-0{% endif %}">
                             <div class="activity-icon bg-success-soft text-success">
                                 <i class="bi bi-person-plus"></i>
                             </div>
                             <div class="activity-content">
-                                <div class="activity-title">New employee added</div>
-                                <div class="activity-time">2 hours ago</div>
+                                <div class="activity-title">
+                                    <a href="{% url 'employee_detail' employee.pk %}" class="text-decoration-none text-dark">
+                                        {{ employee.person.first_name_en }} {{ employee.person.last_name_en }}
+                                    </a>
+                                </div>
+                                <div class="activity-time">
+                                    {% if employee.team %}
+                                        {{ employee.team }} •
+                                    {% endif %}
+                                    <small>{{ employee.created_at|date:"M d, Y" }}</small>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="activity-item">
-                            <div class="activity-icon bg-primary-soft text-primary">
-                                <i class="bi bi-pencil-square"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-title">Work order updated</div>
-                                <div class="activity-time">5 hours ago</div>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-item">
-                            <div class="activity-icon bg-warning-soft text-warning">
-                                <i class="bi bi-exclamation-triangle"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-title">Pending approvals</div>
-                                <div class="activity-time">1 day ago</div>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-item">
-                            <div class="activity-icon bg-info-soft text-info">
-                                <i class="bi bi-file-earmark-text"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-title">Report generated</div>
-                                <div class="activity-time">2 days ago</div>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-item border-0">
-                            <div class="activity-icon bg-secondary-soft text-secondary">
-                                <i class="bi bi-gear"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-title">System updated</div>
-                                <div class="activity-time">3 days ago</div>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- System Status -->
-    <div class="row g-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap">
-                        <div class="d-flex align-items-center mb-2 mb-md-0">
-                            <div class="status-indicator bg-success"></div>
-                            <span class="ms-2">
-                                <strong>System Status:</strong> All systems operational
-                            </span>
-                        </div>
-                        <div class="text-muted small">
-                            <i class="bi bi-hdd-fill me-1"></i>
-                            Last backup: {% now "M j, Y g:i A" %}
-                        </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">No employees added yet</p>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
