@@ -3,8 +3,8 @@ from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower
 from django.db.models import Q, Index
 
-from ..mixins import HRAuditMixin, HRSoftDeleteMixin
-from ...mixins import PublicIdMixin
+from floor_app.mixins import HRAuditMixin, HRSoftDeleteMixin
+from floor_app.mixins import PublicIdMixin
 
 
 import hashlib

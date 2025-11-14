@@ -3,7 +3,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.db.models import Q
 from django.core.exceptions import ValidationError
-from ..mixins import HRAuditMixin, HRSoftDeleteMixin
+from floor_app.mixins import HRAuditMixin, HRSoftDeleteMixin
 
 _cc_validator = RegexValidator(r"^\+\d{1,4}$", "Use a valid country calling code like +966, +1, +44")
 _digits = RegexValidator(r"^\d{2,20}$", "Digits only")

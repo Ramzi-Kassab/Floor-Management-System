@@ -3,6 +3,36 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
+
+
+# ---------- Audit Mixin (for tracking creation/update metadata) ----------
+class AuditMixin(models.Model):
+    """
+    Generic audit mixin that tracks creation and updates.
+    Use for any model needing audit trail functionality.
+    """
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="%(app_label)s_%(class)s_created"
+    )
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="%(app_label)s_%(class)s_updated"
+    )
+    remarks = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        abstract = True
+
+
+# Keep backward compatibility with HR-specific naming
+class HRAuditMixin(AuditMixin):
+    """Deprecated: Use AuditMixin instead. Kept for backward compatibility."""
+    class Meta:
+        abstract = True
 
 
 # ---------- Soft delete ----------
@@ -19,6 +49,10 @@ class AllObjectsManager(models.Manager):
         return SoftDeleteQuerySet(self.model, using=self._db)
 
 class SoftDeleteMixin(models.Model):
+    """
+    Generic soft delete mixin.
+    Provides soft delete functionality with hidden-by-default manager.
+    """
     is_deleted = models.BooleanField(default=False, db_index=True, editable=False)
     deleted_at = models.DateTimeField(null=True, blank=True, editable=False)
 
@@ -41,6 +75,13 @@ class SoftDeleteMixin(models.Model):
             self.is_deleted = False
             self.deleted_at = None
             self.save(update_fields=['is_deleted', 'deleted_at'])
+
+
+# Keep backward compatibility with HR-specific naming
+class HRSoftDeleteMixin(SoftDeleteMixin):
+    """Deprecated: Use SoftDeleteMixin instead. Kept for backward compatibility."""
+    class Meta:
+        abstract = True
 
 
 # ---------- Public ID ----------

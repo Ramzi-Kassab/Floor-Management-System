@@ -3,7 +3,7 @@ from django.core.validators import EmailValidator
 from django.db.models.functions import Lower
 from django.core.exceptions import ValidationError
 
-from ..mixins import HRAuditMixin, HRSoftDeleteMixin
+from floor_app.mixins import HRAuditMixin, HRSoftDeleteMixin
 
 # Optional: pypi.org/project/email-validator (more robust RFC/IDN validation)
 try:

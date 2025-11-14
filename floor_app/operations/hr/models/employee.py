@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.db import models
 
-from ..mixins import HRAuditMixin, HRSoftDeleteMixin
-from ...mixins import PublicIdMixin  # from floor_app.mixins
+from floor_app.mixins import HRAuditMixin, HRSoftDeleteMixin
+from floor_app.mixins import PublicIdMixin  # from floor_app.mixins
 
 
 class HREmployee(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):

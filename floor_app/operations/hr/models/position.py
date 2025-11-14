@@ -1,5 +1,5 @@
 from django.db import models
-from ..mixins import HRAuditMixin, HRSoftDeleteMixin
+from floor_app.mixins import HRAuditMixin, HRSoftDeleteMixin
 
 
 class Position(HRAuditMixin, HRSoftDeleteMixin):
