@@ -30,10 +30,15 @@ class CustomLoginView(LoginView):
 
 class CustomLogoutView(LogoutView):
     template_name = 'logout.html'
+    http_method_names = ['get', 'post', 'options']
 
     def dispatch(self, request, *args, **kwargs):
         messages.info(request, 'You have been logged out successfully.')
         return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Allow GET requests to logout"""
+        return self.post(request, *args, **kwargs)
 
 
 class CustomPasswordResetView(PasswordResetView):
