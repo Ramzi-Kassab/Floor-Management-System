@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from .models import HRPeople, HREmployee, HRPhone, HREmail, HRAddress
+from ..models import HRPeople, HREmployee, HRPhone, HREmail, HRAddress
 
 
 class HRPeopleForm(forms.ModelForm):
