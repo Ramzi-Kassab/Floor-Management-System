@@ -1,6 +1,4 @@
-# floor_app/hr/admin/__init__.py
-from .phone import *
-from .email import *
-from .address import *
-from .people import *
-
+# floor_app/operations/hr/admin/__init__.py
+# Admin registrations are centralized in floor_app/admin.py
+# This prevents duplicate registration errors
+# If you need to add HR admin classes, update them in floor_app/admin.py instead
