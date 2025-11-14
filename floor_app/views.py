@@ -29,7 +29,7 @@ class CustomLoginView(LoginView):
 
 
 class CustomLogoutView(LogoutView):
-    next_page = 'login'
+    template_name = 'logout.html'
 
     def dispatch(self, request, *args, **kwargs):
         messages.info(request, 'You have been logged out successfully.')

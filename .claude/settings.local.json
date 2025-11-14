@@ -1,15 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python manage.py showmigrations:*)",
-      "Bash(source:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(python manage.py check:*)",
-      "Bash(python -m venv:*)",
-      "Bash(dir:*)",
-      "Bash(python manage.py makemigrations:*)",
-      "Bash(based on the nationality, Saudis have National ID\"\n\nThe form now dynamically adapts:\n- Saudis see: National ID (required)\n- Non-Saudis see: Iqama Number (required), Iqama Expiry (optional)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(python manage.py migrate:*)"
     ],
     "deny": [],
     "ask": []

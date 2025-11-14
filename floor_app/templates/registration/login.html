@@ -3,280 +3,543 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - Floor Management System</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <title>Sign In - Floor Management System</title>
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
           crossorigin="anonymous">
-    
+
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --primary: #007bff;
-            --primary-dark: #0056b3;
-            --primary-light: #e7f1ff;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-soft: rgba(99, 102, 241, 0.08);
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-900: #0f172a;
+            --danger: #ef4444;
+            --danger-soft: rgba(239, 68, 68, 0.08);
         }
-        
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow-x: hidden;
         }
-        
+
+        /* Glassmorphism background overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
         .login-container {
             width: 100%;
-            max-width: 440px;
-            padding: 15px;
+            max-width: 480px;
         }
-        
+
         .login-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
             overflow: hidden;
+            animation: slideUp 0.6s ease-out;
         }
-        
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .login-header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 2.5rem 2rem 2rem;
+            padding: 3rem 2.5rem 2.5rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
         .login-logo {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+            animation: float 3s ease-in-out infinite;
         }
-        
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
         .login-logo i {
-            font-size: 2rem;
+            font-size: 2.5rem;
         }
-        
+
+        .login-header h4 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
         .login-body {
-            padding: 2.5rem 2rem;
+            padding: 3rem 2.5rem;
         }
-        
+
         .welcome-text {
-            color: #64748b;
             margin-bottom: 2rem;
             text-align: center;
         }
-        
-        .form-floating > label {
-            color: #94a3b8;
+
+        .welcome-text h5 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
         }
-        
-        .form-control {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
+
+        .welcome-text p {
+            color: var(--gray-600);
             font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+
+        .form-control {
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 0.875rem 1.25rem 0.875rem 3.25rem;
+            font-size: 0.95rem;
+            color: var(--gray-900);
+            background: var(--gray-50);
             transition: all 0.3s ease;
+            font-family: inherit;
         }
-        
+
+        .form-control::placeholder {
+            color: var(--gray-400);
+        }
+
         .form-control:focus {
+            outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px var(--primary-light);
+            background: white;
+            box-shadow: 0 0 0 4px var(--primary-soft);
         }
-        
+
+        .form-control.is-invalid {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.02);
+        }
+
+        .form-control.is-invalid:focus {
+            box-shadow: 0 0 0 4px var(--danger-soft);
+        }
+
+        .invalid-feedback {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--danger);
+            font-weight: 500;
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+
+        .alert i {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-check {
+            margin-bottom: 0;
+        }
+
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--gray-300);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .form-check-input:checked {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .form-check-label {
+            color: var(--gray-600);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .forgot-password {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .forgot-password:hover {
+            color: var(--primary-dark);
+        }
+
         .btn-login {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             border: none;
             color: white;
-            padding: 0.875rem 2rem;
+            padding: 1rem 2rem;
             border-radius: 12px;
             font-weight: 600;
             font-size: 1rem;
             width: 100%;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            margin-top: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 123, 255, 0.3);
-            background: linear-gradient(135deg, var(--primary-dark) 0%, #003d82 100%);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3);
         }
-        
+
         .btn-login:active {
             transform: translateY(0);
         }
-        
-        .alert {
-            border-radius: 12px;
-            border: none;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
+
+        .btn-login:active::before {
+            width: 300px;
+            height: 300px;
         }
-        
-        .alert-danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
+
         .form-footer {
             text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e2e8f0;
-            color: #64748b;
-            font-size: 0.875rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
+            color: var(--gray-600);
+            font-size: 0.85rem;
         }
-        
-        .form-footer a {
+
+        .form-footer i {
             color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
+            margin-right: 0.5rem;
         }
-        
-        .form-footer a:hover {
-            text-decoration: underline;
+
+        .copyright {
+            text-align: center;
+            margin-top: 3rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
         }
-        
-        .input-icon {
-            position: relative;
-        }
-        
-        .input-icon i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            z-index: 10;
-        }
-        
-        .input-icon .form-control {
-            padding-left: 3rem;
-        }
-        
+
         @media (max-width: 576px) {
-            .login-container {
-                padding: 10px;
-            }
-            
             .login-header {
-                padding: 2rem 1.5rem 1.5rem;
+                padding: 2.5rem 1.75rem 2rem;
             }
-            
+
+            .login-header h4 {
+                font-size: 1.5rem;
+            }
+
             .login-body {
-                padding: 2rem 1.5rem;
+                padding: 2rem 1.75rem;
+            }
+
+            .login-logo {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 1rem;
+            }
+
+            .login-logo i {
+                font-size: 2rem;
+            }
+
+            .welcome-text h5 {
+                font-size: 1.15rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-logo">
-                    <i class="bi bi-building"></i>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="login-card">
+                <!-- Header -->
+                <div class="login-header">
+                    <div class="login-logo">
+                        <i class="bi bi-building-fill"></i>
+                    </div>
+                    <h4>Floor Management System</h4>
+                    <p>Secure Access Portal</p>
                 </div>
-                <h4 class="mb-0 fw-bold">Floor Management System</h4>
-            </div>
-            
-            <div class="login-body">
-                <div class="welcome-text">
-                    <h5 class="mb-1">Welcome back!</h5>
-                    <p class="mb-0 small">Please sign in to your account</p>
-                </div>
-                
-                {% if form.errors or form.non_field_errors %}
-                    <div class="alert alert-danger d-flex align-items-center">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div>
-                            {% if form.non_field_errors %}
-                                {{ form.non_field_errors }}
-                            {% else %}
-                                <strong>Login failed.</strong> Please check your username and password.
+
+                <!-- Body -->
+                <div class="login-body">
+                    <div class="welcome-text">
+                        <h5>Welcome Back</h5>
+                        <p>Sign in to access your dashboard</p>
+                    </div>
+
+                    <!-- Error Alert -->
+                    {% if form.errors or form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <div>
+                                {% if form.non_field_errors %}
+                                    {{ form.non_field_errors }}
+                                {% else %}
+                                    <strong>Authentication Failed</strong>
+                                    Please check your username and password.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Login Form -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Username Field -->
+                        <div class="form-group">
+                            <label for="id_username" class="form-label">Username</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-person-fill"></i>
+                                <input type="text"
+                                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                                       id="id_username"
+                                       name="username"
+                                       placeholder="Enter your username"
+                                       value="{{ form.username.value|default:'' }}"
+                                       required
+                                       autofocus>
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.username.errors.0 }}
+                                </div>
                             {% endif %}
                         </div>
-                    </div>
-                {% endif %}
-                
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <div class="input-icon">
-                            <i class="bi bi-person"></i>
-                            <input type="text" 
-                                   class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
-                                   id="id_username" 
-                                   name="username" 
-                                   placeholder="Username"
-                                   value="{{ form.username.value|default:'' }}"
-                                   required 
-                                   autofocus>
-                        </div>
-                        {% if form.username.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ form.username.errors }}
+
+                        <!-- Password Field -->
+                        <div class="form-group">
+                            <label for="id_password" class="form-label">Password</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-lock-fill"></i>
+                                <input type="password"
+                                       class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                                       id="id_password"
+                                       name="password"
+                                       placeholder="Enter your password"
+                                       required>
                             </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="input-icon">
-                            <i class="bi bi-lock"></i>
-                            <input type="password" 
-                                   class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
-                                   id="id_password" 
-                                   name="password" 
-                                   placeholder="Password"
-                                   required>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.password.errors.0 }}
+                                </div>
+                            {% endif %}
                         </div>
-                        {% if form.password.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ form.password.errors }}
+
+                        <!-- Remember & Forgot -->
+                        <div class="form-actions">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+                                <label class="form-check-label" for="remember_me">
+                                    Remember me
+                                </label>
                             </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
-                            <label class="form-check-label small text-muted" for="remember_me">
-                                Remember me
-                            </label>
+                            <a href="#" class="forgot-password">
+                                <i class="bi bi-question-circle"></i> Forgot password?
+                            </a>
                         </div>
-                        <a href="#" class="small text-decoration-none">Forgot password?</a>
+
+                        <!-- Hidden Next Field -->
+                        <input type="hidden" name="next" value="{{ next }}">
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-login">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Sign In
+                        </button>
+                    </form>
+
+                    <!-- Footer -->
+                    <div class="form-footer">
+                        <i class="bi bi-shield-check"></i>
+                        Secure & encrypted access
                     </div>
-                    
-                    <input type="hidden" name="next" value="{{ next }}">
-                    
-                    <button type="submit" class="btn btn-login">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>
-                        Sign In
-                    </button>
-                </form>
-                
-                <div class="form-footer">
-                    <p class="mb-0">
-                        <i class="bi bi-shield-check me-1"></i>
-                        Secure access to Floor Management System
-                    </p>
                 </div>
             </div>
-        </div>
-        
-        <div class="text-center mt-4 text-white">
-            <small>© 2025 Floor Management System. All rights reserved.</small>
+
+            <!-- Copyright -->
+            <div class="copyright">
+                <p>© 2025 Floor Management System. All rights reserved.</p>
+            </div>
         </div>
     </div>
 
