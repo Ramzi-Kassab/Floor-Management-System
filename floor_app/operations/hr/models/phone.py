@@ -22,10 +22,10 @@ COUNTRY_CHOICES = _country_choices()
 
 
 class HRPhone(HRAuditMixin, HRSoftDeleteMixin):
-    country_iso2    = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=True, default="")
-    calling_code    = models.CharField(max_length=5, validators=[_cc_validator], blank=True, default="")
-    national_number = models.CharField(max_length=20, validators=[_digits], blank=True, default="")
-    phone_e164      = models.CharField(max_length=20, db_index=True, editable=False)
+    country_iso2  = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=True, default="")
+    calling_code  = models.CharField(max_length=5, validators=[_cc_validator], blank=True, default="")
+    phone_number  = models.CharField(max_length=20, validators=[_digits], blank=True, default="", help_text="Phone number digits without country calling code")
+    phone_e164    = models.CharField(max_length=20, db_index=True, editable=False)
 
     CHANNEL = (("CALL", "Call"), ("WHATS", "Whats"), ("BOTH", "Call/Whats"))
     channel = models.CharField(max_length=8, choices=CHANNEL, default="CALL")
@@ -70,10 +70,10 @@ class HRPhone(HRAuditMixin, HRSoftDeleteMixin):
                 pass
 
         # Compute & validate E.164
-        if not self.national_number:
+        if not self.phone_number:
             return  # allow blank legacy rows
 
-        raw = (self.calling_code or "") + self.national_number
+        raw = (self.calling_code or "") + self.phone_number
         try:
             pn = phonenumbers.parse(raw, region)
             if not phonenumbers.is_valid_number(pn):
@@ -90,7 +90,7 @@ class HRPhone(HRAuditMixin, HRSoftDeleteMixin):
         clone = HRPhone(
             country_iso2=self.country_iso2,
             calling_code=self.calling_code,
-            national_number=self.national_number,
+            phone_number=self.phone_number,
             channel=self.channel,
             kind=self.kind,
             extension=extension_value,
@@ -103,5 +103,5 @@ class HRPhone(HRAuditMixin, HRSoftDeleteMixin):
 
     def __str__(self):
         ext = f" ext {self.extension}" if self.extension else ""
-        base = self.phone_e164 or (self.calling_code + self.national_number)
+        base = self.phone_e164 or (self.calling_code + self.phone_number)
         return f"{base}{ext}"

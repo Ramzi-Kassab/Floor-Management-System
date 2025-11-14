@@ -4,15 +4,16 @@ from .operations.hr.models import (
     HRPeople,
     HRPhone,
     HREmail,
-    HRAddress,
     HREmployee,
     HRQualification,
     HREmployeeQualification,
     Position,
     Department,
+    Address,
 )
 from django.utils.html import format_html
 from django.urls import reverse
+
 class HRPhoneInline(admin.TabularInline):
     model = HRPhone
     extra = 0
@@ -25,10 +26,10 @@ class HREmailInline(admin.TabularInline):
     autocomplete_fields = ("person",)
 
 
-class HRAddressInline(admin.TabularInline):
-    model = HRAddress
+class AddressInline(admin.TabularInline):
+    model = Address
     extra = 0
-    autocomplete_fields = ("person",)
+    fields = ("address_line1", "city", "hr_kind", "hr_use", "is_primary_hint")
 
 @admin.register(HRPeople)
 class HRPeopleAdmin(admin.ModelAdmin):
@@ -60,7 +61,7 @@ class HRPeopleAdmin(admin.ModelAdmin):
         "created_by",
         "updated_by",
     )
-    inlines = [HRPhoneInline, HREmailInline, HRAddressInline]
+    inlines = [HRPhoneInline, HREmailInline, AddressInline]
 
     fieldsets = (
         ("Names (English)", {
@@ -71,10 +72,14 @@ class HRPeopleAdmin(admin.ModelAdmin):
             "classes": ("collapse",),
         }),
         ("Personal Information", {
-            "fields": ("gender", "date_of_birth", "date_of_birth_hijri"),
+            "fields": ("gender", "date_of_birth", "date_of_birth_hijri", "marital_status"),
         }),
         ("Nationality & Identification", {
             "fields": ("primary_nationality_iso2", "national_id", "iqama_number", "iqama_expiry"),
+        }),
+        ("Identity Verification", {
+            "fields": ("identity_verified", "identity_verified_at", "identity_verified_by"),
+            "classes": ("collapse",),
         }),
         ("Photo", {
             "fields": ("photo",),
@@ -99,14 +104,6 @@ class HREmailAdmin(admin.ModelAdmin):
     list_display = ("email", "kind", "is_verified", "person")
     list_filter = ("kind", "is_verified")
     search_fields = ("email",)
-    autocomplete_fields = ("person",)
-
-
-@admin.register(HRAddress)
-class HRAddressAdmin(admin.ModelAdmin):
-    list_display = ("address_line1", "city", "country_iso2", "kind", "use", "person")
-    list_filter = ("kind", "use", "country_iso2")
-    search_fields = ("address_line1", "city", "postal_code")
     autocomplete_fields = ("person",)
 
 
@@ -224,4 +221,42 @@ class PositionAdmin(admin.ModelAdmin):
         }),
     )
 
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ("address_line1", "city", "country_iso2", "verification_status")
+    list_filter = ("country_iso2", "verification_status", "address_kind")
+    search_fields = ("address_line1", "address_line2", "city", "postal_code")
+    readonly_fields = ("public_id", "created_at", "updated_at", "created_by", "updated_by")
+
+    fieldsets = (
+        ("Address Lines", {
+            "fields": ("address_line1", "address_line2"),
+        }),
+        ("Location Details", {
+            "fields": ("city", "state_region", "postal_code", "country_iso2"),
+        }),
+        ("Address Type", {
+            "fields": ("address_kind", "po_box", "street_name", "building_number", "unit_number", "neighborhood", "additional_number"),
+        }),
+        ("Geolocation", {
+            "fields": ("latitude", "longitude"),
+            "classes": ("collapse",),
+        }),
+        ("Verification", {
+            "fields": ("verification_status", "label", "accessibility_notes"),
+        }),
+        ("HR Person Address", {
+            "fields": ("hr_person", "hr_kind", "hr_use", "is_primary_hint"),
+            "classes": ("collapse",),
+        }),
+        ("Additional", {
+            "fields": ("components",),
+            "classes": ("collapse",),
+        }),
+        ("System Information", {
+            "fields": ("public_id", "created_at", "created_by", "updated_at", "updated_by"),
+            "classes": ("collapse",),
+        }),
+    )
 

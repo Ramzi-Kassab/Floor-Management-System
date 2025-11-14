@@ -33,7 +33,7 @@ class HRPhoneAdmin(admin.ModelAdmin):
     form = HRPhoneForm
     list_display = ("phone_e164", "country_iso2", "calling_code", "kind", "channel", "use", "is_primary_hint", "is_deleted")
     list_filter  = ("kind", "channel", "use", "is_deleted", "country_iso2")
-    search_fields = ("phone_e164", "national_number", "calling_code")
+    search_fields = ("phone_e164", "phone_number", "calling_code")
     readonly_fields = ("phone_e164", "created_at", "created_by", "updated_at", "updated_by")
 
     class Media:

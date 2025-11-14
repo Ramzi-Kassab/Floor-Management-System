@@ -5,7 +5,7 @@ from django.db.models import Q, Index
 
 from floor_app.mixins import HRAuditMixin, HRSoftDeleteMixin
 from floor_app.mixins import PublicIdMixin
-
+from django.conf import settings
 
 import hashlib
 import phonenumbers
@@ -67,6 +67,42 @@ class HRPeople(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
 
     # Photo
     photo = models.ImageField(upload_to="hr/people/photos/", blank=True, null=True)
+
+    # === Identity Verification ===
+    MARITAL_STATUS = (
+        ("SINGLE", "Single"),
+        ("MARRIED", "Married"),
+        ("DIVORCED", "Divorced"),
+        ("WIDOWED", "Widowed"),
+    )
+    marital_status = models.CharField(
+        max_length=16,
+        choices=MARITAL_STATUS,
+        blank=True,
+        default="",
+        help_text="Marital status"
+    )
+
+    identity_verified = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Has the identity been verified and authenticated?"
+    )
+    identity_verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Timestamp of identity verification"
+    )
+    identity_verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verified_hr_people",
+        editable=False,
+        help_text="User who verified the identity"
+    )
 
     # Dedupe helper (normalized names + DOB), SHA1 hex
     name_dob_hash = models.CharField(max_length=40, editable=False, db_index=True)

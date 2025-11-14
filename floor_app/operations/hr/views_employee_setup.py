@@ -8,7 +8,7 @@ from .forms import (
     HREmployeeForm,
     HRPhoneFormSet,
     HREmailFormSet,
-    HRAddressFormSet,
+    AddressFormSet,
 )
 
 
@@ -43,7 +43,7 @@ def _render_employee_form(request, employee=None, person=None, is_new=True, temp
             email_formset = HREmailFormSet(
                 request.POST, instance=person_obj, prefix="emails"
             )
-            address_formset = HRAddressFormSet(
+            address_formset = AddressFormSet(
                 request.POST, instance=person_obj, prefix="addresses"
             )
 
@@ -81,7 +81,7 @@ def _render_employee_form(request, employee=None, person=None, is_new=True, temp
         else:
             phone_formset = HRPhoneFormSet(request.POST, instance=person, prefix="phones")
             email_formset = HREmailFormSet(request.POST, instance=person, prefix="emails")
-            address_formset = HRAddressFormSet(
+            address_formset = AddressFormSet(
                 request.POST, instance=person, prefix="addresses"
             )
 
@@ -90,7 +90,7 @@ def _render_employee_form(request, employee=None, person=None, is_new=True, temp
         employee_form = HREmployeeForm(instance=employee)
         phone_formset = HRPhoneFormSet(instance=person, prefix="phones")
         email_formset = HREmailFormSet(instance=person, prefix="emails")
-        address_formset = HRAddressFormSet(instance=person, prefix="addresses")
+        address_formset = AddressFormSet(instance=person, prefix="addresses")
 
     context = {
         "employee": employee,

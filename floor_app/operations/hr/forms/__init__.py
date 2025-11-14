@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from ..models import HRPeople, HREmployee, HRPhone, HREmail, HRAddress
+from ..models import HRPeople, HREmployee, HRPhone, HREmail, Address
 
 
 class HRPeopleForm(forms.ModelForm):
@@ -93,11 +93,11 @@ HREmailFormSet = inlineformset_factory(
     can_delete=True,
 )
 
-HRAddressFormSet = inlineformset_factory(
+AddressFormSet = inlineformset_factory(
     HRPeople,
-    HRAddress,
+    Address,
     fields="__all__",
-    exclude=("person", "created_at", "created_by", "updated_at", "updated_by", "is_deleted", "deleted_at"),
+    exclude=("hr_person", "created_at", "created_by", "updated_at", "updated_by", "is_deleted", "deleted_at"),
     extra=1,
     can_delete=True,
 )

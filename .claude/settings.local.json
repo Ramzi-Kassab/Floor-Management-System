@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python manage.py migrate:*)"
+      "Bash(python manage.py migrate:*)",
+      "Bash(cmd /c:*)"
     ],
     "deny": [],
     "ask": []
