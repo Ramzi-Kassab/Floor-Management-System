@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.utils import timezone
 
-from floor_app.hr.models import HREmployee, HRPeople
+from floor_app.operations.hr.models import HREmployee, HRPeople, Department
 from django.contrib.auth.models import User
 
 
@@ -110,6 +110,9 @@ def home(request):
     recent_employees = HREmployee.objects.select_related('person').order_by('-created_at')[:10]
     team_stats = HREmployee.objects.values('team').annotate(count=Count('id')).order_by('-count')[:5]
 
+    # Get all departments for the Departments Hub
+    departments = Department.objects.all().prefetch_related('employees', 'positions')
+
     return render(request, "home.html", {
         'total_employees': total_employees,
         'active_employees': active_employees,
@@ -117,6 +120,7 @@ def home(request):
         'new_employees_this_month': new_employees_this_month,
         'recent_employees': recent_employees,
         'team_stats': team_stats,
+        'departments': departments,
     })
 
 

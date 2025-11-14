@@ -25,6 +25,6 @@ urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
 
-    # HR App
-    path("hr/", include("floor_app.hr.urls")),
+    # Operations (HR) App
+    path("hr/", include("floor_app.operations.hr.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

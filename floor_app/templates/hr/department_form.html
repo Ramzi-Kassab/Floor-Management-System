@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_new %}Create Department{% else %}Edit {{ object.name }}{% endif %} - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <!-- Breadcrumb & Header -->
+    <div class="row mb-5">
+        <div class="col-12 fade-in">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'home' %}" class="text-decoration-none" style="color: var(--primary);">
+                            <i class="bi bi-house me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'hr:department_list' %}" class="text-decoration-none" style="color: var(--primary);">
+                            <i class="bi bi-diagram-3 me-1"></i>Departments
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">
+                        {% if is_new %}Create{% else %}Edit{% endif %}
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- Header Section -->
+            <div class="mb-4">
+                <h1 class="h2 fw-bold text-dark mb-2">
+                    {% if is_new %}
+                        <i class="bi bi-plus-circle me-2" style="color: var(--primary)"></i>Create New Department
+                    {% else %}
+                        <i class="bi bi-pencil me-2" style="color: var(--primary)"></i>Edit {{ object.name }}
+                    {% endif %}
+                </h1>
+                <p class="text-muted">
+                    {% if is_new %}
+                        Add a new department to your organization
+                    {% else %}
+                        Update department information
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card glassmorphism fade-in" style="animation-delay: 0.1s">
+                <div class="card-body p-5">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Department Name -->
+                        <div class="form-group mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-600">
+                                <i class="bi bi-tag me-2" style="color: var(--primary)"></i>{{ form.name.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   id="{{ form.name.id_for_label }}"
+                                   name="name"
+                                   class="form-control form-control-lg {% if form.name.errors %}is-invalid{% endif %}"
+                                   placeholder="Enter department name (e.g., Production, HR, Sales)"
+                                   value="{{ form.name.value|default:'' }}"
+                                   required>
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Department name must be unique and descriptive
+                            </small>
+                        </div>
+
+                        <!-- Department Type -->
+                        <div class="form-group mb-4">
+                            <label for="{{ form.department_type.id_for_label }}" class="form-label fw-600">
+                                <i class="bi bi-diagram-3 me-2" style="color: var(--primary)"></i>{{ form.department_type.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select id="{{ form.department_type.id_for_label }}"
+                                    name="department_type"
+                                    class="form-select form-select-lg {% if form.department_type.errors %}is-invalid{% endif %}"
+                                    required>
+                                <option value="">Select Department Type</option>
+                                {% for value, label in department_types %}
+                                    <option value="{{ value }}" {% if form.department_type.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.department_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.department_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Choose the category that best describes this department
+                            </small>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group mb-5">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-600">
+                                <i class="bi bi-file-text me-2" style="color: var(--primary)"></i>{{ form.description.label }}
+                            </label>
+                            <textarea id="{{ form.description.id_for_label }}"
+                                      name="description"
+                                      class="form-control form-control-lg {% if form.description.errors %}is-invalid{% endif %}"
+                                      placeholder="Enter department description, responsibilities, and key information..."
+                                      rows="5">{{ form.description.value|default:'' }}</textarea>
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Provide a detailed description of the department's purpose and functions
+                            </small>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-3 pt-4 border-top" style="border-color: rgba(99, 102, 241, 0.1);">
+                            <button type="submit" class="btn btn-primary btn-lg hover-lift">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {% if is_new %}Create Department{% else %}Save Changes{% endif %}
+                            </button>
+                            <a href="{% url 'hr:department_list' %}" class="btn btn-outline-secondary btn-lg hover-lift">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Help -->
+        <div class="col-lg-4">
+            <!-- Tips Card -->
+            <div class="card glassmorphism fade-in mb-4" style="animation-delay: 0.15s">
+                <div class="card-body p-4">
+                    <h5 class="h6 fw-700 text-dark mb-3">
+                        <i class="bi bi-lightbulb me-2" style="color: var(--primary)"></i>Tips
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <small>
+                                <i class="bi bi-check-circle me-2" style="color: #10b981"></i>
+                                <strong>Be specific:</strong> Use clear, descriptive names
+                            </small>
+                        </li>
+                        <li class="mb-3">
+                            <small>
+                                <i class="bi bi-check-circle me-2" style="color: #10b981"></i>
+                                <strong>Categorize:</strong> Select the appropriate department type
+                            </small>
+                        </li>
+                        <li class="mb-3">
+                            <small>
+                                <i class="bi bi-check-circle me-2" style="color: #10b981"></i>
+                                <strong>Document:</strong> Add description for clarity
+                            </small>
+                        </li>
+                        <li>
+                            <small>
+                                <i class="bi bi-check-circle me-2" style="color: #10b981"></i>
+                                <strong>Organize:</strong> Keep similar departments together
+                            </small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Department Types Reference -->
+            <div class="card metric-card glassmorphism fade-in" style="animation-delay: 0.2s">
+                <div class="card-body p-4">
+                    <h5 class="h6 fw-700 text-dark mb-3">
+                        <i class="bi bi-tag me-2" style="color: var(--primary)"></i>Department Types
+                    </h5>
+                    <div class="type-item mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div style="width: 32px; height: 32px;
+                                        background: rgba(245, 158, 11, 0.15);
+                                        border-radius: 6px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: #f59e0b;
+                                        font-size: 0.9rem;
+                                        margin-right: 10px;">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <strong class="small text-dark">Production</strong>
+                        </div>
+                        <small class="text-muted ps-5">Manufacturing and production teams</small>
+                    </div>
+                    <div class="type-item mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div style="width: 32px; height: 32px;
+                                        background: rgba(16, 185, 129, 0.15);
+                                        border-radius: 6px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: #10b981;
+                                        font-size: 0.9rem;
+                                        margin-right: 10px;">
+                                <i class="bi bi-headset"></i>
+                            </div>
+                            <strong class="small text-dark">Support</strong>
+                        </div>
+                        <small class="text-muted ps-5">Support and service departments</small>
+                    </div>
+                    <div class="type-item mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div style="width: 32px; height: 32px;
+                                        background: rgba(99, 102, 241, 0.15);
+                                        border-radius: 6px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: var(--primary);
+                                        font-size: 0.9rem;
+                                        margin-right: 10px;">
+                                <i class="bi bi-person-workspace"></i>
+                            </div>
+                            <strong class="small text-dark">Management</strong>
+                        </div>
+                        <small class="text-muted ps-5">Executive and management divisions</small>
+                    </div>
+                    <div class="type-item">
+                        <div class="d-flex align-items-center mb-2">
+                            <div style="width: 32px; height: 32px;
+                                        background: rgba(139, 92, 246, 0.15);
+                                        border-radius: 6px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: #8b5cf6;
+                                        font-size: 0.9rem;
+                                        margin-right: 10px;">
+                                <i class="bi bi-diagram-3"></i>
+                            </div>
+                            <strong class="small text-dark">Other</strong>
+                        </div>
+                        <small class="text-muted ps-5">Miscellaneous departments</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .glassmorphism {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .metric-card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: #334155;
+        font-size: 0.95rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid rgba(99, 102, 241, 0.2);
+        border-radius: 10px;
+        padding: 0.875rem 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .form-control::placeholder {
+        color: #cbd5e1;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #ef4444;
+        background-color: rgba(239, 68, 68, 0.02);
+    }
+
+    .form-control.is-invalid:focus, .form-select.is-invalid:focus {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    }
+
+    .invalid-feedback {
+        font-size: 0.875rem;
+        color: #ef4444;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3f3aa5 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-outline-secondary {
+        color: #64748b;
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+    }
+
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-4px);
+    }
+
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 0;
+    }
+
+    .breadcrumb-item a {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        text-decoration: underline !important;
+    }
+
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    .fw-700 {
+        font-weight: 700;
+    }
+
+    .text-danger {
+        color: #ef4444;
+    }
+
+    .type-item {
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .type-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+</style>
+{% endblock %}

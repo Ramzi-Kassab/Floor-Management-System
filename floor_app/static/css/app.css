@@ -1765,3 +1765,115 @@ body::before {
     background: var(--primary-light);
     color: var(--primary-dark);
 }
+
+/* ======================================
+   Collapsible Navigation Styles
+   ====================================== */
+
+.nav-section {
+    position: relative;
+}
+
+.nav-section-toggle {
+    background: none;
+    border: none;
+    padding: 0.75rem 1rem !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--gray-700);
+    transition: all var(--transition-base) ease;
+    border-radius: var(--radius);
+    margin: 0.25rem 0;
+}
+
+.nav-section-toggle:hover {
+    background-color: var(--primary-soft);
+    color: var(--primary);
+}
+
+.nav-section-toggle i:first-child {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.nav-section-toggle .toggle-icon {
+    transition: transform var(--transition-base) ease;
+    font-size: 1rem;
+    color: var(--gray-500);
+    margin-left: auto !important;
+}
+
+.nav-section-items {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--primary-soft);
+    margin-left: 1rem;
+    transition: all var(--transition-base) ease;
+    animation: slideDown var(--transition-base) ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.nav-sub-item {
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    margin: 0.25rem 0;
+    transition: all var(--transition-fast) ease;
+    position: relative;
+    padding-left: 2rem !important;
+}
+
+.nav-sub-item::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    opacity: 0;
+    transition: all var(--transition-fast) ease;
+}
+
+.nav-sub-item:hover {
+    background-color: var(--primary-soft);
+    color: var(--primary);
+    padding-left: 2.25rem !important;
+}
+
+.nav-sub-item:hover::before {
+    opacity: 1;
+}
+
+.nav-sub-item.active {
+    background-color: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 600;
+    border-left: 3px solid var(--primary);
+    padding-left: 1.75rem !important;
+}
+
+.nav-sub-item.active::before {
+    opacity: 1;
+    background-color: var(--primary);
+}

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete {{ object.name }} - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <!-- Breadcrumb -->
+    <div class="row mb-5">
+        <div class="col-12 fade-in">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'home' %}" class="text-decoration-none" style="color: var(--primary);">
+                            <i class="bi bi-house me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'hr:department_list' %}" class="text-decoration-none" style="color: var(--primary);">
+                            <i class="bi bi-diagram-3 me-1"></i>Departments
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'hr:department_detail' object.pk %}" class="text-decoration-none" style="color: var(--primary);">
+                            {{ object.name }}
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card glassmorphism fade-in" style="animation-delay: 0.1s">
+                <div class="card-body p-5 text-center">
+                    <!-- Warning Icon -->
+                    <div style="width: 100px; height: 100px;
+                                background: rgba(239, 68, 68, 0.15);
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin: 0 auto 2rem;
+                                font-size: 2.5rem;
+                                color: #ef4444;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+
+                    <!-- Title -->
+                    <h2 class="h3 fw-700 text-dark mb-2">Delete Department?</h2>
+
+                    <!-- Message -->
+                    <p class="text-muted mb-4">
+                        Are you sure you want to delete the department <strong>"{{ object.name }}"</strong>?
+                    </p>
+
+                    <!-- Department Info -->
+                    <div class="alert alert-warning mb-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; border-radius: 10px;">
+                        <i class="bi bi-info-circle me-2" style="color: #f59e0b;"></i>
+                        <small class="text-warning">
+                            This action cannot be undone. Please make sure you have backed up any necessary information.
+                        </small>
+                    </div>
+
+                    <!-- Department Details -->
+                    <div class="card mb-4" style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px;">
+                        <div class="card-body p-3 text-start">
+                            <div class="mb-3">
+                                <small class="text-muted">Department Name</small>
+                                <p class="text-dark fw-600 mb-0">{{ object.name }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">Department Type</small>
+                                <p class="text-dark fw-600 mb-0">
+                                    <span class="badge" style="background: {% if object.department_type == 'PRODUCTION' %}#f59e0b{% elif object.department_type == 'SUPPORT' %}#10b981{% elif object.department_type == 'MANAGEMENT' %}#6366f1{% else %}#8b5cf6{% endif %}; color: white;">
+                                        {{ object.get_department_type_display }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <small class="text-muted">Created</small>
+                                <p class="text-dark fw-600 mb-0">
+                                    {{ object.created_at|date:"M d, Y H:i A" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warning Message -->
+                    <div class="mb-5 p-3" style="background: rgba(239, 68, 68, 0.05); border-left: 4px solid #ef4444; border-radius: 6px;">
+                        <strong class="text-danger" style="display: block; margin-bottom: 0.5rem;">⚠️ Warning:</strong>
+                        <small class="text-dark">
+                            Deleting this department may affect associated data. Proceed only if you are certain.
+                        </small>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <form method="post" style="margin-bottom: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger hover-lift w-100" style="background: #ef4444; border: none; border-radius: 10px; padding: 0.75rem; font-weight: 600;">
+                                <i class="bi bi-trash me-2"></i>Yes, Delete Department
+                            </button>
+                        </form>
+                        <a href="{% url 'hr:department_detail' object.pk %}" class="btn btn-outline-secondary hover-lift">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+
+                    <!-- Footer Note -->
+                    <div class="mt-4 pt-4 border-top" style="border-color: rgba(99, 102, 241, 0.1);">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Your data is protected. Review before confirming deletion.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .glassmorphism {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-outline-secondary {
+        color: #64748b;
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+    }
+
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-4px);
+    }
+
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 0;
+    }
+
+    .breadcrumb-item a {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        text-decoration: underline !important;
+    }
+
+    .badge {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .alert-warning {
+        padding: 1rem;
+        margin-bottom: 0;
+    }
+
+    .text-warning {
+        color: #f59e0b;
+    }
+
+    .text-danger {
+        color: #ef4444;
+    }
+
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    .fw-700 {
+        font-weight: 700;
+    }
+</style>
+{% endblock %}

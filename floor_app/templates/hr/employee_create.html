@@ -103,100 +103,526 @@
                 <div class="tab-content" id="empTabsContent">
                     <!-- Employee Tab -->
                     <div class="tab-pane fade show active" id="pane-emp" role="tabpanel">
-                        <h5 class="section-title">
-                            <i class="bi bi-briefcase text-primary me-2"></i>
-                            Employee Information
-                        </h5>
-                        <p class="text-muted mb-4">Basic employment details and organizational assignment</p>
-
-                        <div class="row g-4">
-                            <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label for="{{ employee_form.employee_no.id_for_label }}" class="form-label required">
-                                        {{ employee_form.employee_no.label }}
-                                    </label>
-                                    {{ employee_form.employee_no }}
-                                    {% if employee_form.employee_no.help_text %}
-                                        <div class="form-text">{{ employee_form.employee_no.help_text }}</div>
-                                    {% endif %}
-                                    {% for err in employee_form.employee_no.errors %}
-                                        <div class="invalid-feedback d-block">{{ err }}</div>
-                                    {% endfor %}
-                                </div>
+                        <!-- Basic Information Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-person-badge text-primary me-2"></i>
+                                    Basic Information
+                                </h6>
                             </div>
-
-                            <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label for="{{ employee_form.status.id_for_label }}" class="form-label required">
-                                        {{ employee_form.status.label }}
-                                    </label>
-                                    {{ employee_form.status }}
-                                    {% if employee_form.status.help_text %}
-                                        <div class="form-text">{{ employee_form.status.help_text }}</div>
-                                    {% endif %}
-                                    {% for err in employee_form.status.errors %}
-                                        <div class="invalid-feedback d-block">{{ err }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label for="{{ employee_form.job_title.id_for_label }}" class="form-label">
-                                        {{ employee_form.job_title.label }}
-                                    </label>
-                                    {{ employee_form.job_title }}
-                                    {% if employee_form.job_title.help_text %}
-                                        <div class="form-text">{{ employee_form.job_title.help_text }}</div>
-                                    {% endif %}
-                                    {% for err in employee_form.job_title.errors %}
-                                        <div class="invalid-feedback d-block">{{ err }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label for="{{ employee_form.team.id_for_label }}" class="form-label">
-                                        {{ employee_form.team.label }}
-                                    </label>
-                                    {{ employee_form.team }}
-                                    {% if employee_form.team.help_text %}
-                                        <div class="form-text">{{ employee_form.team.help_text }}</div>
-                                    {% endif %}
-                                    {% for err in employee_form.team.errors %}
-                                        <div class="invalid-feedback d-block">{{ err }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label for="{{ employee_form.hire_date.id_for_label }}" class="form-label">
-                                        {{ employee_form.hire_date.label }}
-                                    </label>
-                                    {{ employee_form.hire_date }}
-                                    {% if employee_form.hire_date.help_text %}
-                                        <div class="form-text">{{ employee_form.hire_date.help_text }}</div>
-                                    {% endif %}
-                                    {% for err in employee_form.hire_date.errors %}
-                                        <div class="invalid-feedback d-block">{{ err }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">&nbsp;</label>
-                                    <div class="form-check form-switch form-switch-lg">
-                                        {{ employee_form.is_operator }}
-                                        <label class="form-check-label" for="{{ employee_form.is_operator.id_for_label }}">
-                                            {{ employee_form.is_operator.label }}
-                                        </label>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.person.id_for_label }}" class="form-label required">
+                                                {{ employee_form.person.label }}
+                                            </label>
+                                            {{ employee_form.person }}
+                                            {% if employee_form.person.help_text %}
+                                                <div class="form-text">{{ employee_form.person.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.person.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
                                     </div>
-                                    {% for err in employee_form.is_operator.errors %}
-                                        <div class="invalid-feedback d-block">{{ err }}</div>
-                                    {% endfor %}
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.user.id_for_label }}" class="form-label">
+                                                {{ employee_form.user.label }}
+                                            </label>
+                                            {{ employee_form.user }}
+                                            {% if employee_form.user.help_text %}
+                                                <div class="form-text">{{ employee_form.user.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.user.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.employee_no.id_for_label }}" class="form-label required">
+                                                {{ employee_form.employee_no.label }}
+                                            </label>
+                                            {{ employee_form.employee_no }}
+                                            {% if employee_form.employee_no.help_text %}
+                                                <div class="form-text">{{ employee_form.employee_no.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.employee_no.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.status.id_for_label }}" class="form-label required">
+                                                {{ employee_form.status.label }}
+                                            </label>
+                                            {{ employee_form.status }}
+                                            {% if employee_form.status.help_text %}
+                                                <div class="form-text">{{ employee_form.status.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.status.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Job Assignment Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-briefcase text-primary me-2"></i>
+                                    Job Assignment
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.position.id_for_label }}" class="form-label">
+                                                {{ employee_form.position.label }}
+                                            </label>
+                                            {{ employee_form.position }}
+                                            {% if employee_form.position.help_text %}
+                                                <div class="form-text">{{ employee_form.position.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.position.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.department.id_for_label }}" class="form-label">
+                                                {{ employee_form.department.label }}
+                                            </label>
+                                            {{ employee_form.department }}
+                                            {% if employee_form.department.help_text %}
+                                                <div class="form-text">{{ employee_form.department.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.department.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.report_to.id_for_label }}" class="form-label">
+                                                {{ employee_form.report_to.label }}
+                                            </label>
+                                            {{ employee_form.report_to }}
+                                            {% if employee_form.report_to.help_text %}
+                                                <div class="form-text">{{ employee_form.report_to.help_text|safe }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.report_to.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.cost_center.id_for_label }}" class="form-label">
+                                                {{ employee_form.cost_center.label }}
+                                            </label>
+                                            {{ employee_form.cost_center }}
+                                            {% if employee_form.cost_center.help_text %}
+                                                <div class="form-text">{{ employee_form.cost_center.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.cost_center.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contract Information Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-file-earmark-contract text-primary me-2"></i>
+                                    Contract Information
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.contract_type.id_for_label }}" class="form-label">
+                                                {{ employee_form.contract_type.label }}
+                                            </label>
+                                            {{ employee_form.contract_type }}
+                                            {% if employee_form.contract_type.help_text %}
+                                                <div class="form-text">{{ employee_form.contract_type.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.contract_type.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.employment_status.id_for_label }}" class="form-label">
+                                                {{ employee_form.employment_status.label }}
+                                            </label>
+                                            {{ employee_form.employment_status }}
+                                            {% if employee_form.employment_status.help_text %}
+                                                <div class="form-text">{{ employee_form.employment_status.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.employment_status.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.contract_start_date.id_for_label }}" class="form-label">
+                                                {{ employee_form.contract_start_date.label }}
+                                            </label>
+                                            {{ employee_form.contract_start_date }}
+                                            {% if employee_form.contract_start_date.help_text %}
+                                                <div class="form-text">{{ employee_form.contract_start_date.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.contract_start_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.contract_end_date.id_for_label }}" class="form-label">
+                                                {{ employee_form.contract_end_date.label }}
+                                            </label>
+                                            {{ employee_form.contract_end_date }}
+                                            {% if employee_form.contract_end_date.help_text %}
+                                                <div class="form-text">{{ employee_form.contract_end_date.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.contract_end_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.contract_renewal_date.id_for_label }}" class="form-label">
+                                                {{ employee_form.contract_renewal_date.label }}
+                                            </label>
+                                            {{ employee_form.contract_renewal_date }}
+                                            {% if employee_form.contract_renewal_date.help_text %}
+                                                <div class="form-text">{{ employee_form.contract_renewal_date.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.contract_renewal_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.employment_category.id_for_label }}" class="form-label">
+                                                {{ employee_form.employment_category.label }}
+                                            </label>
+                                            {{ employee_form.employment_category }}
+                                            {% if employee_form.employment_category.help_text %}
+                                                <div class="form-text">{{ employee_form.employment_category.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.employment_category.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Probation Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-calendar-check text-primary me-2"></i>
+                                    Probation Information
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.probation_end_date.id_for_label }}" class="form-label">
+                                                {{ employee_form.probation_end_date.label }}
+                                            </label>
+                                            {{ employee_form.probation_end_date }}
+                                            {% if employee_form.probation_end_date.help_text %}
+                                                <div class="form-text">{{ employee_form.probation_end_date.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.probation_end_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.probation_status.id_for_label }}" class="form-label">
+                                                {{ employee_form.probation_status.label }}
+                                            </label>
+                                            {{ employee_form.probation_status }}
+                                            {% if employee_form.probation_status.help_text %}
+                                                <div class="form-text">{{ employee_form.probation_status.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.probation_status.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employment Dates Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-calendar text-primary me-2"></i>
+                                    Employment Dates
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.hire_date.id_for_label }}" class="form-label">
+                                                {{ employee_form.hire_date.label }}
+                                            </label>
+                                            {{ employee_form.hire_date }}
+                                            {% if employee_form.hire_date.help_text %}
+                                                <div class="form-text">{{ employee_form.hire_date.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.hire_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.termination_date.id_for_label }}" class="form-label">
+                                                {{ employee_form.termination_date.label }}
+                                            </label>
+                                            {{ employee_form.termination_date }}
+                                            {% if employee_form.termination_date.help_text %}
+                                                <div class="form-text">{{ employee_form.termination_date.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.termination_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Work Schedule Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-clock text-primary me-2"></i>
+                                    Work Schedule
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.work_days_per_week.id_for_label }}" class="form-label">
+                                                {{ employee_form.work_days_per_week.label }}
+                                            </label>
+                                            {{ employee_form.work_days_per_week }}
+                                            {% if employee_form.work_days_per_week.help_text %}
+                                                <div class="form-text">{{ employee_form.work_days_per_week.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.work_days_per_week.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.hours_per_week.id_for_label }}" class="form-label">
+                                                {{ employee_form.hours_per_week.label }}
+                                            </label>
+                                            {{ employee_form.hours_per_week }}
+                                            {% if employee_form.hours_per_week.help_text %}
+                                                <div class="form-text">{{ employee_form.hours_per_week.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.hours_per_week.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.shift_pattern.id_for_label }}" class="form-label">
+                                                {{ employee_form.shift_pattern.label }}
+                                            </label>
+                                            {{ employee_form.shift_pattern }}
+                                            {% if employee_form.shift_pattern.help_text %}
+                                                <div class="form-text">{{ employee_form.shift_pattern.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.shift_pattern.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Compensation Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-cash-coin text-primary me-2"></i>
+                                    Compensation
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.salary_grade.id_for_label }}" class="form-label">
+                                                {{ employee_form.salary_grade.label }}
+                                            </label>
+                                            {{ employee_form.salary_grade }}
+                                            {% if employee_form.salary_grade.help_text %}
+                                                <div class="form-text">{{ employee_form.salary_grade.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.salary_grade.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.monthly_salary.id_for_label }}" class="form-label">
+                                                {{ employee_form.monthly_salary.label }}
+                                            </label>
+                                            {{ employee_form.monthly_salary }}
+                                            {% if employee_form.monthly_salary.help_text %}
+                                                <div class="form-text">{{ employee_form.monthly_salary.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.monthly_salary.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">&nbsp;</label>
+                                            <div class="form-check form-switch form-switch-lg">
+                                                {{ employee_form.benefits_eligible }}
+                                                <label class="form-check-label" for="{{ employee_form.benefits_eligible.id_for_label }}">
+                                                    {{ employee_form.benefits_eligible.label }}
+                                                </label>
+                                            </div>
+                                            {% for err in employee_form.benefits_eligible.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">&nbsp;</label>
+                                            <div class="form-check form-switch form-switch-lg">
+                                                {{ employee_form.overtime_eligible }}
+                                                <label class="form-check-label" for="{{ employee_form.overtime_eligible.id_for_label }}">
+                                                    {{ employee_form.overtime_eligible.label }}
+                                                </label>
+                                            </div>
+                                            {% for err in employee_form.overtime_eligible.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Leave Entitlements Section -->
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-calendar2-check text-primary me-2"></i>
+                                    Leave Entitlements
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.annual_leave_days.id_for_label }}" class="form-label">
+                                                {{ employee_form.annual_leave_days.label }}
+                                            </label>
+                                            {{ employee_form.annual_leave_days }}
+                                            {% if employee_form.annual_leave_days.help_text %}
+                                                <div class="form-text">{{ employee_form.annual_leave_days.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.annual_leave_days.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.sick_leave_days.id_for_label }}" class="form-label">
+                                                {{ employee_form.sick_leave_days.label }}
+                                            </label>
+                                            {{ employee_form.sick_leave_days }}
+                                            {% if employee_form.sick_leave_days.help_text %}
+                                                <div class="form-text">{{ employee_form.sick_leave_days.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.sick_leave_days.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ employee_form.special_leave_days.id_for_label }}" class="form-label">
+                                                {{ employee_form.special_leave_days.label }}
+                                            </label>
+                                            {{ employee_form.special_leave_days }}
+                                            {% if employee_form.special_leave_days.help_text %}
+                                                <div class="form-text">{{ employee_form.special_leave_days.help_text }}</div>
+                                            {% endif %}
+                                            {% for err in employee_form.special_leave_days.errors %}
+                                                <div class="invalid-feedback d-block">{{ err }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

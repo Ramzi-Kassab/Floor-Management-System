@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views_employee_setup
+from . import views_department
 
 # 🔹 This line defines the namespace for this urls file
 app_name = "hr"
@@ -38,5 +39,41 @@ urlpatterns = [
         "employees/setup/",
         views_employee_setup.employee_setup_list,
         name="employee_setup_list",
+    ),
+
+    # ========== DEPARTMENTS ==========
+    # List all departments
+    path(
+        "departments/",
+        views_department.DepartmentListView.as_view(),
+        name="department_list",
+    ),
+
+    # Create new department
+    path(
+        "departments/create/",
+        views_department.DepartmentCreateView.as_view(),
+        name="department_create",
+    ),
+
+    # View department details
+    path(
+        "departments/<int:pk>/",
+        views_department.DepartmentDetailView.as_view(),
+        name="department_detail",
+    ),
+
+    # Edit department
+    path(
+        "departments/<int:pk>/edit/",
+        views_department.DepartmentUpdateView.as_view(),
+        name="department_update",
+    ),
+
+    # Delete department
+    path(
+        "departments/<int:pk>/delete/",
+        views_department.DepartmentDeleteView.as_view(),
+        name="department_delete",
     ),
 ]

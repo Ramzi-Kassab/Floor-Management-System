@@ -152,6 +152,7 @@
                 </div>
                 
                 <ul class="nav flex-column">
+                    <!-- Dashboard Link -->
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">
                             <i class="bi bi-speedometer2"></i>
@@ -159,103 +160,112 @@
                             <span class="badge badge-primary badge-pill ms-auto">New</span>
                         </a>
                     </li>
-                    
+
                     <li class="nav-item">
                         <a class="nav-link" href="#">
                             <i class="bi bi-graph-up-arrow"></i>
                             <span>Analytics</span>
                         </a>
                     </li>
-                    
-                    <!-- HR Section -->
-                    <li class="nav-item">
-                        <div class="nav-section-title">
+
+                    <!-- Human Resources Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="hr-section">
                             <i class="fas fa-users"></i>
-                            Human Resources
-                        </div>
+                            <span>Human Resources</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="hr-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'employee_list' %}">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>All Employees</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:employee_create' %}">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                    <span>Add Employee</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:department_list' %}">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                    <span>Departments</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-calendar3-week"></i>
+                                    <span>Attendance</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-cash-stack"></i>
+                                    <span>Payroll</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'employee_list' %}">
-                            <i class="bi bi-people-fill"></i>
-                            <span>All Employees</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'hr:employee_create' %}">
-                            <i class="bi bi-person-plus-fill"></i>
-                            <span>Add Employee</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-diagram-3-fill"></i>
-                            <span>Departments</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-calendar3-week"></i>
-                            <span>Attendance</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-cash-stack"></i>
-                            <span>Payroll</span>
-                        </a>
-                    </li>
-                    
-                    <!-- Operations Section -->
-                    <li class="nav-item">
-                        <div class="nav-section-title">
+
+                    <!-- Operations Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="ops-section">
                             <i class="fas fa-cogs"></i>
-                            Operations
-                        </div>
+                            <span>Operations</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="ops-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-clipboard2-check"></i>
+                                    <span>Tasks</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Schedule</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Reports</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-clipboard2-check"></i>
-                            <span>Tasks</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-calendar-event"></i>
-                            <span>Schedule</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span>Reports</span>
-                        </a>
-                    </li>
-                    
-                    <!-- Settings Section -->
+
+                    <!-- Administration Section (Collapsible) -->
                     {% if user.is_staff %}
-                    <li class="nav-item">
-                        <div class="nav-section-title">
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="admin-section">
                             <i class="fas fa-shield-alt"></i>
-                            Administration
-                        </div>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/">
-                            <i class="bi bi-gear-fill"></i>
-                            <span>Admin Panel</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-person-lock"></i>
-                            <span>User Management</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-database-fill"></i>
-                            <span>System Settings</span>
-                        </a>
+                            <span>Administration</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="admin-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/admin/">
+                                    <i class="bi bi-gear-fill"></i>
+                                    <span>Admin Panel</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-person-lock"></i>
+                                    <span>User Management</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-database-fill"></i>
+                                    <span>System Settings</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% endif %}
                 </ul>
@@ -418,6 +428,37 @@
                 });
             });
             
+            // Collapsible section navigation
+            const sectionToggles = document.querySelectorAll('.nav-section-toggle');
+            sectionToggles.forEach(toggle => {
+                const sectionId = toggle.getAttribute('data-section');
+                const sectionContent = document.getElementById(sectionId);
+                const toggleIcon = toggle.querySelector('.toggle-icon');
+
+                // Load saved state from localStorage
+                const savedState = localStorage.getItem(`nav-section-${sectionId}`);
+                if (savedState === 'expanded') {
+                    sectionContent.style.display = 'flex';
+                    toggleIcon.style.transform = 'rotate(180deg)';
+                }
+
+                // Toggle section on click
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const isVisible = sectionContent.style.display !== 'none';
+
+                    if (isVisible) {
+                        sectionContent.style.display = 'none';
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                        localStorage.setItem(`nav-section-${sectionId}`, 'collapsed');
+                    } else {
+                        sectionContent.style.display = 'flex';
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                        localStorage.setItem(`nav-section-${sectionId}`, 'expanded');
+                    }
+                });
+            });
+
             // Auto-hide alerts after 5 seconds
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');

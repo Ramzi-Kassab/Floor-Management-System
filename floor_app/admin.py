@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .hr.models import (
+from .operations.hr.models import (
     HRPeople,
     HRPhone,
     HREmail,
@@ -8,6 +8,8 @@ from .hr.models import (
     HREmployee,
     HRQualification,
     HREmployeeQualification,
+    Position,
+    Department,
 )
 from django.utils.html import format_html
 from django.urls import reverse
@@ -112,8 +114,8 @@ class HRAddressAdmin(admin.ModelAdmin):
 class HREmployeeAdmin(admin.ModelAdmin):
     change_form_template = "admin/floor_app/hremployee/change_form.html"
     change_list_template = "admin/floor_app/hremployee/change_list.html"
-    list_display = ("employee_no", "person", "job_title", "team", "status", "employee_type")
-    list_filter = ("status", "team", "employee_type")
+    list_display = ("employee_no", "person", "position", "department", "status", "contract_type")
+    list_filter = ("status", "contract_type", "department", "employment_status")
     search_fields = (
         "employee_no",
         "person__first_name_en",
@@ -122,7 +124,7 @@ class HREmployeeAdmin(admin.ModelAdmin):
         "person__last_name_ar",
     )
 
-    autocomplete_fields = ("person", "user")
+    autocomplete_fields = ("person", "user", "position", "department", "report_to")
     readonly_fields = ("public_id", "created_at", "updated_at", "created_by", "updated_by")
 
     fieldsets = (
@@ -130,13 +132,31 @@ class HREmployeeAdmin(admin.ModelAdmin):
             "fields": ("person", "user"),
         }),
         ("Employee Details", {
-            "fields": ("employee_no", "status", "employee_type"),
+            "fields": ("employee_no", "status", "employment_status"),
         }),
-        ("Job Information", {
-            "fields": ("job_title", "team"),
+        ("Job Assignment", {
+            "fields": ("position", "department"),
+        }),
+        ("Contract Information", {
+            "fields": ("contract_type", "contract_start_date", "contract_end_date", "contract_renewal_date"),
+        }),
+        ("Probation", {
+            "fields": ("probation_end_date", "probation_status"),
         }),
         ("Employment Dates", {
             "fields": ("hire_date", "termination_date"),
+        }),
+        ("Work Schedule", {
+            "fields": ("work_days_per_week", "hours_per_week", "shift_pattern"),
+        }),
+        ("Compensation", {
+            "fields": ("salary_grade", "monthly_salary", "benefits_eligible", "overtime_eligible"),
+        }),
+        ("Leave Entitlements", {
+            "fields": ("annual_leave_days", "sick_leave_days", "special_leave_days"),
+        }),
+        ("Employment Details", {
+            "fields": ("employment_category", "report_to", "cost_center"),
         }),
         ("System Information", {
             "fields": ("public_id", "created_at", "created_by", "updated_at", "updated_by"),
@@ -163,5 +183,45 @@ class HREmployeeQualificationAdmin(admin.ModelAdmin):
         "qualification__code",
     )
     autocomplete_fields = ("employee", "qualification")
+
+
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ("name", "department_type", "created_at")
+    list_filter = ("department_type",)
+    search_fields = ("name", "description")
+    readonly_fields = ("created_at", "updated_at")
+
+    fieldsets = (
+        ("Department Information", {
+            "fields": ("name", "description", "department_type"),
+        }),
+        ("System Information", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",),
+        }),
+    )
+
+
+@admin.register(Position)
+class PositionAdmin(admin.ModelAdmin):
+    list_display = ("name", "department", "position_level", "salary_grade", "is_active")
+    list_filter = ("department", "position_level", "salary_grade", "is_active")
+    search_fields = ("name", "description")
+    autocomplete_fields = ("department",)
+    readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
+
+    fieldsets = (
+        ("Basic Information", {
+            "fields": ("name", "description", "department"),
+        }),
+        ("Position Details", {
+            "fields": ("position_level", "salary_grade", "is_active"),
+        }),
+        ("System Information", {
+            "fields": ("created_at", "created_by", "updated_at", "updated_by"),
+            "classes": ("collapse",),
+        }),
+    )
 
 

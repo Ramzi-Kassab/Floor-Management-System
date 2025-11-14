@@ -34,15 +34,44 @@ class HREmployeeForm(forms.ModelForm):
     class Meta:
         model = HREmployee
         fields = [
+            # Basic Information
             "person",
             "user",
             "employee_no",
             "status",
-            "employee_type",
-            "job_title",
-            "team",
+            # Job Assignment
+            "position",
+            "department",
+            # Contract Type
+            "contract_type",
+            # Contract Duration (for fixed-term contracts)
+            "contract_start_date",
+            "contract_end_date",
+            "contract_renewal_date",
+            # Probation
+            "probation_end_date",
+            "probation_status",
+            # Employment Dates
             "hire_date",
             "termination_date",
+            # Work Schedule
+            "work_days_per_week",
+            "hours_per_week",
+            "shift_pattern",
+            # Compensation
+            "salary_grade",
+            "monthly_salary",
+            "benefits_eligible",
+            "overtime_eligible",
+            # Leave Entitlements
+            "annual_leave_days",
+            "sick_leave_days",
+            "special_leave_days",
+            # Employment Details
+            "employment_category",
+            "employment_status",
+            "report_to",
+            "cost_center",
         ]
 
 
