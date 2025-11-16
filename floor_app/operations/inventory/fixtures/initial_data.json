@@ -1,0 +1,586 @@
+[
+  {
+    "model": "inventory.conditiontype",
+    "pk": 1,
+    "fields": {
+      "code": "NEW",
+      "name": "New",
+      "description": "Brand new purchased stock, never used",
+      "sort_order": 10,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.conditiontype",
+    "pk": 2,
+    "fields": {
+      "code": "RECLAIM_AS_NEW",
+      "name": "Reclaimed As New",
+      "description": "Reclaimed from unused bits, physically as good as new",
+      "sort_order": 20,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.conditiontype",
+    "pk": 3,
+    "fields": {
+      "code": "USED_REGRINDABLE",
+      "name": "Used Regrindable",
+      "description": "From used bits, can be reground",
+      "sort_order": 30,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.conditiontype",
+    "pk": 4,
+    "fields": {
+      "code": "REGROUND",
+      "name": "Reground",
+      "description": "Already reground and qualified for reuse",
+      "sort_order": 40,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.conditiontype",
+    "pk": 5,
+    "fields": {
+      "code": "UNDER_INSPECTION",
+      "name": "Under Inspection",
+      "description": "Being evaluated/tested",
+      "sort_order": 50,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.conditiontype",
+    "pk": 6,
+    "fields": {
+      "code": "SCRAP",
+      "name": "Scrap",
+      "description": "End of life, to be disposed",
+      "sort_order": 90,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.ownershiptype",
+    "pk": 1,
+    "fields": {
+      "code": "ARDT",
+      "name": "ARDT Company",
+      "is_internal": true,
+      "is_consignment": false,
+      "description": "Company-owned stock",
+      "sort_order": 10,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.ownershiptype",
+    "pk": 2,
+    "fields": {
+      "code": "ENO",
+      "name": "ENO Internal Reclaim",
+      "is_internal": true,
+      "is_consignment": false,
+      "description": "Internal reclaimed from obsolete/unused bits",
+      "sort_order": 20,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.ownershiptype",
+    "pk": 3,
+    "fields": {
+      "code": "LSTK",
+      "name": "Long-term Stock Partner",
+      "is_internal": false,
+      "is_consignment": true,
+      "description": "Long-term stock keeping partner owned",
+      "sort_order": 30,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.ownershiptype",
+    "pk": 4,
+    "fields": {
+      "code": "JV_PARTNER",
+      "name": "Joint Venture Partner",
+      "is_internal": false,
+      "is_consignment": true,
+      "description": "Joint venture partner owned stock",
+      "sort_order": 40,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.ownershiptype",
+    "pk": 5,
+    "fields": {
+      "code": "CUSTOMER_ARAMCO",
+      "name": "Customer - ARAMCO",
+      "is_internal": false,
+      "is_consignment": true,
+      "description": "ARAMCO customer-owned consignment stock",
+      "sort_order": 50,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 1,
+    "fields": {
+      "code": "PC",
+      "name": "Piece",
+      "uom_type": "COUNT",
+      "base_uom": null,
+      "conversion_factor": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 2,
+    "fields": {
+      "code": "SET",
+      "name": "Set",
+      "uom_type": "COUNT",
+      "base_uom": null,
+      "conversion_factor": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 3,
+    "fields": {
+      "code": "BOX",
+      "name": "Box",
+      "uom_type": "COUNT",
+      "base_uom": null,
+      "conversion_factor": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 4,
+    "fields": {
+      "code": "KG",
+      "name": "Kilogram",
+      "uom_type": "WEIGHT",
+      "base_uom": null,
+      "conversion_factor": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 5,
+    "fields": {
+      "code": "G",
+      "name": "Gram",
+      "uom_type": "WEIGHT",
+      "base_uom": 4,
+      "conversion_factor": "0.001000",
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 6,
+    "fields": {
+      "code": "L",
+      "name": "Liter",
+      "uom_type": "VOLUME",
+      "base_uom": null,
+      "conversion_factor": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 7,
+    "fields": {
+      "code": "ML",
+      "name": "Milliliter",
+      "uom_type": "VOLUME",
+      "base_uom": 6,
+      "conversion_factor": "0.001000",
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 8,
+    "fields": {
+      "code": "M",
+      "name": "Meter",
+      "uom_type": "LENGTH",
+      "base_uom": null,
+      "conversion_factor": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.unitofmeasure",
+    "pk": 9,
+    "fields": {
+      "code": "PAIR",
+      "name": "Pair",
+      "uom_type": "COUNT",
+      "base_uom": null,
+      "conversion_factor": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.bitdesignlevel",
+    "pk": 1,
+    "fields": {
+      "code": "L3",
+      "name": "Bit Head Only",
+      "description": "Design of the bit head only - cutting structure and blade geometry without upper section or complete cutter definition",
+      "sort_order": 30,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.bitdesignlevel",
+    "pk": 2,
+    "fields": {
+      "code": "L4",
+      "name": "Bit Body (No Cutters)",
+      "description": "Design of bit body with upper section/shank, but without cutters. Mechanical structure ready for cutter installation",
+      "sort_order": 40,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.bitdesignlevel",
+    "pk": 3,
+    "fields": {
+      "code": "L5",
+      "name": "Complete Bit Assembly",
+      "description": "Complete PDC bit design including head geometry, upper section, specific cutter types/layout, and all components",
+      "sort_order": 50,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.bitdesigntype",
+    "pk": 1,
+    "fields": {
+      "code": "HDBS",
+      "name": "HDBS Type",
+      "description": "HDBS design family",
+      "sort_order": 10,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.bitdesigntype",
+    "pk": 2,
+    "fields": {
+      "code": "SMI",
+      "name": "SMI Type",
+      "description": "SMI design family",
+      "sort_order": 20,
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 1,
+    "fields": {
+      "code": "BIT_FULL_ASSEMBLY",
+      "name": "Complete PDC Bit Assembly",
+      "description": "Full PDC bit with all components - serialized tracking",
+      "parent_category": null,
+      "is_serialized": true,
+      "is_bit_related": true,
+      "icon": "",
+      "sort_order": 10,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 2,
+    "fields": {
+      "code": "BIT_HEAD",
+      "name": "Bit Head (L3)",
+      "description": "Bit head design without upper section",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": true,
+      "icon": "",
+      "sort_order": 20,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 3,
+    "fields": {
+      "code": "BIT_BODY_NO_CUTTERS",
+      "name": "Bit Body without Cutters (L4)",
+      "description": "Bit body with shank ready for cutters",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": true,
+      "icon": "",
+      "sort_order": 30,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 4,
+    "fields": {
+      "code": "CUTTER",
+      "name": "PDC Cutter",
+      "description": "Polycrystalline Diamond Compact cutters",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": false,
+      "icon": "",
+      "sort_order": 40,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 5,
+    "fields": {
+      "code": "CONSUMABLE",
+      "name": "Consumables",
+      "description": "Brazing powders, flux, chemicals, etc.",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": false,
+      "icon": "",
+      "sort_order": 50,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 6,
+    "fields": {
+      "code": "TOOL",
+      "name": "Tools & Equipment",
+      "description": "Impact wrenches, cameras, measurement tools",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": false,
+      "icon": "",
+      "sort_order": 60,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 7,
+    "fields": {
+      "code": "PPE",
+      "name": "Personal Protective Equipment",
+      "description": "Safety gear - gloves, aprons, goggles, etc.",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": false,
+      "icon": "",
+      "sort_order": 70,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 8,
+    "fields": {
+      "code": "SPARE_PART",
+      "name": "Spare Parts",
+      "description": "Replacement parts - sleeves, cerebro caps, erosion sleeves",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": false,
+      "icon": "",
+      "sort_order": 80,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.itemcategory",
+    "pk": 9,
+    "fields": {
+      "code": "SERVICE",
+      "name": "Service Items",
+      "description": "Non-stockable service items",
+      "parent_category": null,
+      "is_serialized": false,
+      "is_bit_related": false,
+      "icon": "",
+      "sort_order": 90,
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 1,
+    "fields": {
+      "code": "WH-MAIN",
+      "name": "Main Warehouse",
+      "location_type": "WAREHOUSE",
+      "parent_location": null,
+      "address": "",
+      "gps_coordinates": "",
+      "max_capacity": null,
+      "capacity_uom": null,
+      "is_active": true,
+      "notes": "",
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 2,
+    "fields": {
+      "code": "REPAIR-SHOP",
+      "name": "Repair Shop",
+      "location_type": "REPAIR_SHOP",
+      "parent_location": null,
+      "address": "",
+      "gps_coordinates": "",
+      "max_capacity": null,
+      "capacity_uom": null,
+      "is_active": true,
+      "notes": "",
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 3,
+    "fields": {
+      "code": "INSPECTION",
+      "name": "Inspection Area",
+      "location_type": "INSPECTION",
+      "parent_location": null,
+      "address": "",
+      "gps_coordinates": "",
+      "max_capacity": null,
+      "capacity_uom": null,
+      "is_active": true,
+      "notes": "",
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 4,
+    "fields": {
+      "code": "QUARANTINE",
+      "name": "Quarantine Area",
+      "location_type": "QUARANTINE",
+      "parent_location": null,
+      "address": "",
+      "gps_coordinates": "",
+      "max_capacity": null,
+      "capacity_uom": null,
+      "is_active": true,
+      "notes": "",
+      "is_deleted": false,
+      "deleted_at": null,
+      "created_at": "2025-01-01T00:00:00Z",
+      "created_by": null,
+      "updated_at": "2025-01-01T00:00:00Z",
+      "updated_by": null,
+      "remarks": ""
+    }
+  }
+]
