@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .department-card {
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        background: white;
+        min-height: 280px;
+        border-radius: 12px;
+    }
+
+    .department-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        border-color: #0d6efd;
+    }
+
+    .department-card.active:hover {
+        border-color: #198754;
+    }
+
+    .department-card.coming-soon {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .department-card.coming-soon:hover {
+        transform: none;
+        border-color: #e9ecef;
+    }
+
+    .department-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .coming-soon-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #6c757d;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-house-door-fill me-1"></i>Main Dashboard
+            </li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header text-center">
+        <h1 class="page-title">
+            <i class="bi bi-building text-primary me-3"></i>
+            Floor Management System
+        </h1>
+        <p class="page-subtitle">
+            Select a department workbench to manage operations
+        </p>
+    </div>
+
+    <!-- Department Workbenches -->
+    <div class="row g-4">
+        <!-- HR & Administration -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'hr:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-primary bg-gradient text-white">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            HR & Administration
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Manage employees, departments, and organizational structure
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-primary">
+                                    {{ hr_summary.employees|default:"0" }}
+                                </div>
+                                <div class="stat-label">Employees</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ hr_summary.departments|default:"0" }}
+                                </div>
+                                <div class="stat-label">Departments</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Production -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card department-card coming-soon h-100">
+                <div class="card-body p-4">
+                    <span class="coming-soon-badge">Coming Soon</span>
+
+                    <div class="department-icon bg-secondary text-white">
+                        <i class="bi bi-gear-fill"></i>
+                    </div>
+
+                    <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                        Production
+                    </h3>
+
+                    <p class="text-center mb-4" style="color: #495057;">
+                        Manage production lines, schedules, and manufacturing processes
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="row text-center border-top pt-3">
+                        <div class="col-6 border-end">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Production Lines</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Active Orders</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card department-card coming-soon h-100">
+                <div class="card-body p-4">
+                    <span class="coming-soon-badge">Coming Soon</span>
+
+                    <div class="department-icon bg-secondary text-white">
+                        <i class="bi bi-tools"></i>
+                    </div>
+
+                    <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                        Maintenance
+                    </h3>
+
+                    <p class="text-center mb-4" style="color: #495057;">
+                        Track equipment maintenance, repairs, and preventive schedules
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="row text-center border-top pt-3">
+                        <div class="col-6 border-end">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Equipment</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Work Orders</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logistics -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card department-card coming-soon h-100">
+                <div class="card-body p-4">
+                    <span class="coming-soon-badge">Coming Soon</span>
+
+                    <div class="department-icon bg-secondary text-white">
+                        <i class="bi bi-truck"></i>
+                    </div>
+
+                    <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                        Logistics
+                    </h3>
+
+                    <p class="text-center mb-4" style="color: #495057;">
+                        Manage inventory, shipments, and supply chain operations
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="row text-center border-top pt-3">
+                        <div class="col-6 border-end">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Inventory Items</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Shipments</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Control -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card department-card coming-soon h-100">
+                <div class="card-body p-4">
+                    <span class="coming-soon-badge">Coming Soon</span>
+
+                    <div class="department-icon bg-secondary text-white">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+
+                    <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                        Quality Control
+                    </h3>
+
+                    <p class="text-center mb-4" style="color: #495057;">
+                        Monitor quality metrics, inspections, and compliance standards
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="row text-center border-top pt-3">
+                        <div class="col-6 border-end">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Inspections</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Issues</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finance -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card department-card coming-soon h-100">
+                <div class="card-body p-4">
+                    <span class="coming-soon-badge">Coming Soon</span>
+
+                    <div class="department-icon bg-secondary text-white">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+
+                    <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                        Finance
+                    </h3>
+
+                    <p class="text-center mb-4" style="color: #495057;">
+                        Handle accounting, budgets, payroll, and financial reporting
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="row text-center border-top pt-3">
+                        <div class="col-6 border-end">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Transactions</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-number" style="color: #6c757d;">-</div>
+                            <div class="stat-label">Invoices</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0" style="background: #f8f9fa;">
+                <div class="card-body p-4">
+                    <h4 class="mb-3" style="color: #212529; font-weight: 600;">
+                        <i class="bi bi-lightning-fill text-warning me-2"></i>
+                        Quick Access
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'hr:employee_list' %}" class="btn btn-outline-dark w-100 py-3">
+                                <i class="bi bi-people d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">All Employees</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'hr:department_list' %}" class="btn btn-outline-dark w-100 py-3">
+                                <i class="bi bi-diagram-3 d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">Departments</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <button class="btn btn-outline-secondary w-100 py-3" disabled>
+                                <i class="bi bi-graph-up d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">Analytics</span>
+                            </button>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <button class="btn btn-outline-secondary w-100 py-3" disabled>
+                                <i class="bi bi-file-text d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">Reports</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

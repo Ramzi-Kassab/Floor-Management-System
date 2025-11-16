@@ -1,0 +1,587 @@
+[
+  {
+    "model": "floor_app.position",
+    "pk": 1,
+    "fields": {
+      "name": "Financial Manager",
+      "description": "Financial Manager in Financial department",
+      "department": 1,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 2,
+    "fields": {
+      "name": "Accountant",
+      "description": "Accountant in Financial department",
+      "department": 1,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 3,
+    "fields": {
+      "name": "Finance Officer",
+      "description": "Finance Officer in Financial department",
+      "department": 1,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 4,
+    "fields": {
+      "name": "Finance Analyst",
+      "description": "Finance Analyst in Financial department",
+      "department": 1,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 5,
+    "fields": {
+      "name": "HR Manager",
+      "description": "HR Manager in Human Resource & Administration department",
+      "department": 2,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 6,
+    "fields": {
+      "name": "HR Specialist",
+      "description": "HR Specialist in Human Resource & Administration department",
+      "department": 2,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 7,
+    "fields": {
+      "name": "Recruitment Officer",
+      "description": "Recruitment Officer in Human Resource & Administration department",
+      "department": 2,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 8,
+    "fields": {
+      "name": "HR Assistant",
+      "description": "HR Assistant in Human Resource & Administration department",
+      "department": 2,
+      "position_level": "ENTRY",
+      "salary_grade": "GRADE_D",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 9,
+    "fields": {
+      "name": "Production Supervisor (Infiltration)",
+      "description": "Production Supervisor in Infiltration department",
+      "department": 3,
+      "position_level": "SUPERVISOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 10,
+    "fields": {
+      "name": "Production Operator (Infiltration)",
+      "description": "Production Operator in Infiltration department",
+      "department": 3,
+      "position_level": "ENTRY",
+      "salary_grade": "GRADE_D",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 11,
+    "fields": {
+      "name": "Quality Inspector",
+      "description": "Quality Inspector in Infiltration department",
+      "department": 3,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 12,
+    "fields": {
+      "name": "Production Technician",
+      "description": "Production Technician in Infiltration department",
+      "department": 3,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 13,
+    "fields": {
+      "name": "Logistics Manager",
+      "description": "Logistics Manager in Logistics department",
+      "department": 4,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 14,
+    "fields": {
+      "name": "Warehouse Supervisor",
+      "description": "Warehouse Supervisor in Logistics department",
+      "department": 4,
+      "position_level": "SUPERVISOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 15,
+    "fields": {
+      "name": "Warehouse Worker",
+      "description": "Warehouse Worker in Logistics department",
+      "department": 4,
+      "position_level": "ENTRY",
+      "salary_grade": "GRADE_D",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 16,
+    "fields": {
+      "name": "Logistics Coordinator",
+      "description": "Logistics Coordinator in Logistics department",
+      "department": 4,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 17,
+    "fields": {
+      "name": "Production Supervisor (PDC Production and Repair)",
+      "description": "Production Supervisor in PDC Production and Repair department",
+      "department": 5,
+      "position_level": "SUPERVISOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 18,
+    "fields": {
+      "name": "Production Operator (PDC Production and Repair)",
+      "description": "Production Operator in PDC Production and Repair department",
+      "department": 5,
+      "position_level": "ENTRY",
+      "salary_grade": "GRADE_D",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 19,
+    "fields": {
+      "name": "Maintenance Technician",
+      "description": "Maintenance Technician in PDC Production and Repair department",
+      "department": 5,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 20,
+    "fields": {
+      "name": "Quality Manager",
+      "description": "Quality Manager in Quality department",
+      "department": 6,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 21,
+    "fields": {
+      "name": "Quality Engineer",
+      "description": "Quality Engineer in Quality department",
+      "department": 6,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 22,
+    "fields": {
+      "name": "QA Inspector",
+      "description": "QA Inspector in Quality department",
+      "department": 6,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 23,
+    "fields": {
+      "name": "Test Technician",
+      "description": "Test Technician in Quality department",
+      "department": 6,
+      "position_level": "ENTRY",
+      "salary_grade": "GRADE_D",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 24,
+    "fields": {
+      "name": "Procurement Manager",
+      "description": "Procurement Manager in Requirements department",
+      "department": 7,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 25,
+    "fields": {
+      "name": "Procurement Specialist",
+      "description": "Procurement Specialist in Requirements department",
+      "department": 7,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 26,
+    "fields": {
+      "name": "Procurement Officer",
+      "description": "Procurement Officer in Requirements department",
+      "department": 7,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 27,
+    "fields": {
+      "name": "Production Supervisor (Roller Cones)",
+      "description": "Production Supervisor in Roller Cones department",
+      "department": 8,
+      "position_level": "SUPERVISOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 28,
+    "fields": {
+      "name": "Production Operator (Roller Cones)",
+      "description": "Production Operator in Roller Cones department",
+      "department": 8,
+      "position_level": "ENTRY",
+      "salary_grade": "GRADE_D",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 29,
+    "fields": {
+      "name": "Assembly Technician",
+      "description": "Assembly Technician in Roller Cones department",
+      "department": 8,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 30,
+    "fields": {
+      "name": "Safety Manager",
+      "description": "Safety Manager in Safety department",
+      "department": 9,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 31,
+    "fields": {
+      "name": "Safety Officer",
+      "description": "Safety Officer in Safety department",
+      "department": 9,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 32,
+    "fields": {
+      "name": "Safety Inspector",
+      "description": "Safety Inspector in Safety department",
+      "department": 9,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 33,
+    "fields": {
+      "name": "Sales Manager",
+      "description": "Sales Manager in Sales department",
+      "department": 10,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 34,
+    "fields": {
+      "name": "Sales Executive",
+      "description": "Sales Executive in Sales department",
+      "department": 10,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 35,
+    "fields": {
+      "name": "Sales Representative",
+      "description": "Sales Representative in Sales department",
+      "department": 10,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 36,
+    "fields": {
+      "name": "IT Manager",
+      "description": "IT Manager in Technical department",
+      "department": 11,
+      "position_level": "MANAGER",
+      "salary_grade": "GRADE_A",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 37,
+    "fields": {
+      "name": "Systems Administrator",
+      "description": "Systems Administrator in Technical department",
+      "department": 11,
+      "position_level": "SENIOR",
+      "salary_grade": "GRADE_B",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 38,
+    "fields": {
+      "name": "Technical Support Specialist",
+      "description": "Technical Support Specialist in Technical department",
+      "department": 11,
+      "position_level": "JUNIOR",
+      "salary_grade": "GRADE_C",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  },
+  {
+    "model": "floor_app.position",
+    "pk": 39,
+    "fields": {
+      "name": "IT Support Officer",
+      "description": "IT Support Officer in Technical department",
+      "department": 11,
+      "position_level": "ENTRY",
+      "salary_grade": "GRADE_D",
+      "is_active": true,
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z",
+      "remarks": ""
+    }
+  }
+]

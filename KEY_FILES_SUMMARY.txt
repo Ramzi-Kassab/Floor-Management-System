@@ -1,0 +1,65 @@
+FLOOR MANAGEMENT SYSTEM - KEY FILES SUMMARY
+
+VIEWS (What the user sees)
+==========================
+1. floor_app/views.py
+   - home() dashboard page (login required)
+   
+2. floor_app/hr/views_employee_setup.py
+   - employee_setup() multi-step wizard (create/edit)
+   - employee_setup_list() entry point (redirects to new)
+
+TEMPLATES
+=========
+- floor_app/templates/base.html - Master layout (navbar, sidebar)
+- floor_app/templates/home.html - Dashboard
+- floor_app/templates/registration/login.html - Login page
+- floor_app/templates/hr/employee_setup.html - Employee wizard (5 tabs)
+
+STYLING
+=======
+- floor_app/static/css/app.css (942 lines of Bootstrap 5 customization)
+  - Colors, spacing, layout variables
+  - Responsive design, sidebar, forms, cards
+
+FORMS
+=====
+- floor_app/hr/forms.py
+  - HRPeopleForm - Personal information
+  - HREmployeeForm - Employment information
+  - HRPhoneFormSet - Multiple phones
+  - HREmailFormSet - Multiple emails
+  - HRAddressFormSet - Multiple addresses
+
+MODELS
+======
+- floor_app/hr/models/people.py - HRPeople (person record)
+- floor_app/hr/models/employee.py - HREmployee (employment)
+- floor_app/hr/models/phone.py - HRPhone
+- floor_app/hr/models/email.py - HREmail
+- floor_app/hr/models/address.py - HRAddress
+- floor_app/hr/models/qualification.py - Certifications
+
+KEY FEATURES
+============
+✓ Login/logout authentication
+✓ Employee creation/editing wizard
+✓ Multiple contact methods (phones, emails, addresses)
+✓ KSA support (Hijri calendar, national ID, IQAMA)
+✓ Audit trails (created_at, updated_at)
+✓ Soft delete support
+✓ UUID public IDs
+✓ Admin interface
+✓ Responsive Bootstrap 5 design
+
+NEED TO BUILD
+=============
+1. Employee list view (proper list instead of redirect)
+2. Dashboard real data integration
+3. Attendance module
+4. Work orders
+5. Production reports
+6. Time tracking
+7. Role-based access control
+8. Search and filters
+

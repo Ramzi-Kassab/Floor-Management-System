@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}HR & Administration - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        background: white;
+        min-height: 200px;
+        border-radius: 12px;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border-color: #0d6efd;
+    }
+
+    .dashboard-card .card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #495057;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.2;
+    }
+
+    .quick-action-btn {
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid;
+    }
+
+    .quick-action-btn:hover {
+        transform: translateX(5px);
+    }
+
+    .section-header {
+        border-left: 4px solid #0d6efd;
+        padding-left: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        color: #212529;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .section-description {
+        color: #495057;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">HR & Administration</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2" style="color: #212529; font-weight: 700;">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        HR & Administration
+                    </h2>
+                    <p class="mb-0" style="color: #495057;">
+                        Manage your workforce efficiently
+                    </p>
+                </div>
+
+                <div>
+                    <a href="{% url 'hr:employee_wizard_start' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-person-plus me-2"></i>New Employee
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row g-3 mb-5">
+        <!-- Total Employees -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-primary">
+                            {{ total_employees|default:"0" }}
+                        </div>
+                        <div class="stat-label">Total Employees</div>
+                    </div>
+                    <i class="bi bi-people-fill text-primary stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Employees -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-success">
+                            {{ active_employees|default:"0" }}
+                        </div>
+                        <div class="stat-label">Active Employees</div>
+                    </div>
+                    <i class="bi bi-person-check-fill text-success stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Departments -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-info">
+                            {{ departments_count|default:"0" }}
+                        </div>
+                        <div class="stat-label">Departments</div>
+                    </div>
+                    <i class="bi bi-diagram-3-fill text-info stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Positions -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-warning">
+                            {{ positions_count|default:"0" }}
+                        </div>
+                        <div class="stat-label">Total Positions</div>
+                        <small style="color: #495057;">{{ filled_positions|default:"0" }} filled</small>
+                    </div>
+                    <i class="bi bi-person-workspace text-warning stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- People Records -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number" style="color: #6610f2;">
+                            {{ people_count|default:"0" }}
+                        </div>
+                        <div class="stat-label">People Records</div>
+                    </div>
+                    <i class="bi bi-person-lines-fill stat-icon" style="color: #6610f2;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Numbers -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number" style="color: #fd7e14;">
+                            {{ phones_count|default:"0" }}
+                        </div>
+                        <div class="stat-label">Phone Numbers</div>
+                    </div>
+                    <i class="bi bi-telephone-fill stat-icon" style="color: #fd7e14;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Addresses -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-danger">
+                            {{ emails_count|default:"0" }}
+                        </div>
+                        <div class="stat-label">Email Addresses</div>
+                    </div>
+                    <i class="bi bi-envelope-fill text-danger stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Addresses -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-secondary">
+                            {{ addresses_count|default:"0" }}
+                        </div>
+                        <div class="stat-label">Physical Addresses</div>
+                    </div>
+                    <i class="bi bi-geo-alt-fill text-secondary stat-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Management Section -->
+    <div class="section-header">
+        <h4 class="section-title">Employee Management</h4>
+        <p class="section-description">Create and manage employee records</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Create New Employee Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-primary bg-gradient text-white">
+                        <i class="bi bi-person-plus-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Create New Employee</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Step-by-step employee onboarding wizard
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:employee_wizard_start' %}" class="btn btn-primary">
+                            <i class="bi bi-play-circle me-2"></i>Start Wizard
+                        </a>
+                        <small class="text-center" style="color: #6c757d;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Person → Contact → Employee Details
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- People Directory Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-info bg-gradient text-white">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">People Directory</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Manage person records and identities
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'hr:people_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>View All People
+                            <span class="badge bg-secondary float-end">{{ people_count|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'hr:person_create' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-person-plus me-2 text-success"></i>Add New Person
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-success bg-gradient text-white">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Employees</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        View and manage employee records
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'hr:employee_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>All Employees
+                            <span class="badge bg-secondary float-end">{{ total_employees|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'hr:employee_list' %}?status=ACTIVE" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-check-circle me-2 text-success"></i>Active Only
+                            <span class="badge bg-success float-end">{{ active_employees|default:"0" }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Information Section -->
+    <div class="section-header">
+        <h4 class="section-title" style="color: #0dcaf0;">Contact Information</h4>
+        <p class="section-description">Manage phones, emails, and addresses</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Phone Numbers Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%); color: white;">
+                        <i class="bi bi-telephone-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Phone Numbers</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Manage contact phone numbers
+                    </p>
+
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span style="color: #495057;">Total Records:</span>
+                        <span style="color: #212529; font-weight: 700;">{{ phones_count|default:"0" }}</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:phone_list' %}" class="btn btn-outline-warning" style="color: #212529; border-color: #ffc107;">
+                            <i class="bi bi-list me-2"></i>View All
+                        </a>
+                        <a href="{% url 'hr:phone_bulk_add' %}" class="btn btn-warning" style="color: #212529;">
+                            <i class="bi bi-plus-circle me-2"></i>Add Phones
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emails Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-danger bg-gradient text-white">
+                        <i class="bi bi-envelope-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Email Addresses</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Manage email contacts
+                    </p>
+
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span style="color: #495057;">Total Records:</span>
+                        <span style="color: #212529; font-weight: 700;">{{ emails_count|default:"0" }}</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:email_list' %}" class="btn btn-outline-danger">
+                            <i class="bi bi-list me-2"></i>View All
+                        </a>
+                        <a href="{% url 'hr:email_bulk_add' %}" class="btn btn-danger text-white">
+                            <i class="bi bi-plus-circle me-2"></i>Add Emails
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Addresses Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-secondary bg-gradient text-white">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Addresses</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Manage physical addresses
+                    </p>
+
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span style="color: #495057;">Total Records:</span>
+                        <span style="color: #212529; font-weight: 700;">{{ addresses_count|default:"0" }}</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:address_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-list me-2"></i>View All
+                        </a>
+                        <a href="{% url 'hr:address_add' %}" class="btn btn-secondary text-white">
+                            <i class="bi bi-plus-circle me-2"></i>Add Address
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Organization Structure Section -->
+    <div class="section-header">
+        <h4 class="section-title" style="color: #198754;">Organization Structure</h4>
+        <p class="section-description">Manage departments and positions</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Departments Card -->
+        <div class="col-lg-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon" style="background: #212529; color: white;">
+                        <i class="bi bi-diagram-3-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Departments</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Organizational departments and teams
+                    </p>
+
+                    <div class="row mb-3 pb-3 border-bottom">
+                        <div class="col-6">
+                            <small style="color: #495057;">Total:</small>
+                            <h5 class="mb-0" style="color: #212529;">{{ departments_count|default:"0" }}</h5>
+                        </div>
+                        <div class="col-6">
+                            <small style="color: #495057;">Active:</small>
+                            <h5 class="mb-0 text-success">{{ active_departments|default:"0" }}</h5>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="{% url 'hr:department_list' %}" class="btn btn-dark">
+                            <i class="bi bi-list me-2"></i>Manage Departments
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Positions Card -->
+        <div class="col-lg-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <i class="bi bi-person-workspace"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Positions</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Job positions and titles
+                    </p>
+
+                    <div class="row mb-3 pb-3 border-bottom">
+                        <div class="col-6">
+                            <small style="color: #495057;">Total:</small>
+                            <h5 class="mb-0" style="color: #212529;">{{ positions_count|default:"0" }}</h5>
+                        </div>
+                        <div class="col-6">
+                            <small style="color: #495057;">Filled:</small>
+                            <h5 class="mb-0 text-success">{{ filled_positions|default:"0" }}</h5>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="{% url 'hr:position_list' %}" class="btn btn-primary">
+                            <i class="bi bi-list me-2"></i>Manage Positions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="card shadow-sm border-0" style="background: #f8f9fa;">
+        <div class="card-body p-4">
+            <h5 class="mb-3" style="color: #212529; font-weight: 600;">
+                <i class="bi bi-lightning-fill text-warning me-2"></i>
+                Quick Actions
+            </h5>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'hr:employee_wizard_start' %}" class="btn quick-action-btn btn-primary">
+                    <i class="bi bi-person-plus me-2"></i>New Employee
+                </a>
+                <a href="{% url 'hr:employee_import' %}" class="btn quick-action-btn btn-success text-white">
+                    <i class="bi bi-upload me-2"></i>Import Data
+                </a>
+                <a href="{% url 'hr:reports' %}" class="btn quick-action-btn" style="background: #ffc107; color: #212529; border-color: #ffc107;">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Reports
+                </a>
+                <a href="{% url 'hr:settings' %}" class="btn quick-action-btn btn-secondary text-white">
+                    <i class="bi bi-gear me-2"></i>Settings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

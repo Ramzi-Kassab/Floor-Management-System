@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py migrate:*)",
+      "Bash(cmd /c:*)",
+      "Bash(node -c:*)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(python manage.py showmigrations:*)",
+      "Bash(.venvScriptspython.exe manage.py showmigrations floor_app hr)",
+      "Bash(.venv/Scripts/python.exe manage.py showmigrations floor_app hr)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Add Email Addresses - HR Management{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">HR & Administration</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:email_list' %}">Email Addresses</a></li>
+            <li class="breadcrumb-item active">Add Email Addresses</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-2" style="color: #212529; font-weight: 700;">
+                <i class="bi bi-envelope-plus-fill text-danger me-2"></i>
+                Add Email Addresses
+            </h2>
+            <p class="mb-0" style="color: #495057;">
+                Add email addresses for employees and contacts
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="person" class="form-label" style="color: #212529; font-weight: 500;">Select Person/Employee *</label>
+                            <select class="form-select form-select-lg" id="person" name="person" required>
+                                <option value="">Choose a person...</option>
+                                {% for person in people %}
+                                <option value="{{ person.id }}">
+                                    {{ person.get_full_name_en }}
+                                    {% if person.employee %} ({{ person.employee.employee_no }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label" style="color: #212529; font-weight: 500;">Email Address *</label>
+                            <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="name@example.com" required>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="emailType" class="form-label" style="color: #212529; font-weight: 500;">Email Type *</label>
+                                <select class="form-select" id="emailType" name="email_type" required>
+                                    <option value="PERSONAL">Personal</option>
+                                    <option value="WORK">Work</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check me-4">
+                                    <input class="form-check-input" type="checkbox" id="isPrimary" name="is_primary">
+                                    <label class="form-check-label" for="isPrimary" style="color: #495057;">
+                                        Set as primary email
+                                    </label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isVerified" name="is_verified">
+                                    <label class="form-check-label" for="isVerified" style="color: #495057;">
+                                        Mark as verified
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="notes" class="form-label" style="color: #212529; font-weight: 500;">Notes (optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any additional notes..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger text-white btn-lg px-5">
+                                <i class="bi bi-check-circle me-2"></i>Add Email Address
+                            </button>
+                            <a href="{% url 'hr:email_list' %}" class="btn btn-secondary btn-lg px-4">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help & Info -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm" style="border-left: 4px solid #dc3545;">
+                <div class="card-body p-4">
+                    <h5 class="mb-3" style="color: #212529; font-weight: 600;">
+                        <i class="bi bi-info-circle me-2"></i>Quick Help
+                    </h5>
+
+                    <div class="mb-3">
+                        <h6 style="color: #212529; font-weight: 500;">Email Format</h6>
+                        <p style="color: #495057; font-size: 0.925rem;">
+                            Enter a valid email address in the format: name@domain.com
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 style="color: #212529; font-weight: 500;">Primary Email</h6>
+                        <p style="color: #495057; font-size: 0.925rem;">
+                            The primary email address will be used for all system communications and notifications.
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 style="color: #212529; font-weight: 500;">Email Verification</h6>
+                        <p style="color: #495057; font-size: 0.925rem;">
+                            Verified emails have been confirmed to be active and reachable.
+                        </p>
+                    </div>
+
+                    <div class="alert alert-warning mb-0" style="background: #fff3cd; border-color: #ffc107; color: #212529; font-size: 0.875rem;">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <strong>Important:</strong> Ensure the email address is correct before marking it as primary or sending communications.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

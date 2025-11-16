@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ employee.employee_no }} - {{ employee.person.get_full_name_en }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .employee-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-photo-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .profile-photo-placeholder-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        border: 4px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .info-card h5 {
+        color: #28a745;
+        border-bottom: 2px solid #28a745;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        flex: 0 0 140px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+    
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-on-leave {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-terminated {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .quick-stat {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .quick-stat .number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .quick-stat .label {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">HR & Admin</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:employee_list' %}">Employees</a></li>
+            <li class="breadcrumb-item active">{{ employee.employee_no }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Employee Header -->
+    <div class="employee-header">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                {% if person.photo %}
+                <img src="{{ person.photo.url }}" class="profile-photo-large">
+                {% else %}
+                <div class="profile-photo-placeholder-large">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                <h1 class="mb-1">{{ person.get_full_name_en }}</h1>
+                <h4 class="mb-2 opacity-90">
+                    <i class="bi bi-hash"></i>{{ employee.employee_no }}
+                </h4>
+                <div class="d-flex gap-3 flex-wrap align-items-center">
+                    {% if employee.position %}
+                    <span>
+                        <i class="bi bi-briefcase me-2"></i>
+                        {{ employee.position.title }}
+                    </span>
+                    {% endif %}
+                    {% if employee.department %}
+                    <span>
+                        <i class="bi bi-building me-2"></i>
+                        {{ employee.department.name }}
+                    </span>
+                    {% endif %}
+                    <span>
+                        <i class="bi bi-calendar3 me-2"></i>
+                        Joined: {{ employee.hire_date|date:"M d, Y"|default:"Not set" }}
+                    </span>
+                </div>
+                <div class="mt-3">
+                    {% if employee.status == 'ACTIVE' %}
+                    <span class="status-badge-large status-active">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Active Employee
+                    </span>
+                    {% elif employee.status == 'ON_LEAVE' %}
+                    <span class="status-badge-large status-on-leave">
+                        <i class="bi bi-pause-circle-fill"></i>
+                        On Leave
+                    </span>
+                    {% elif employee.status == 'TERMINATED' %}
+                    <span class="status-badge-large status-terminated">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Terminated
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary">
+                        {{ employee.get_status_display }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'hr:employee_edit' employee.id %}" class="btn btn-light">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="quick-stat">
+                <div class="number">{{ years_of_service|default:"0" }}</div>
+                <div class="label">Years of Service</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="quick-stat">
+                <div class="number">{{ employee.annual_leave_days|default:"0" }}</div>
+                <div class="label">Annual Leave Days</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="quick-stat">
+                <div class="number">{{ employee.work_days_per_week|default:"5" }}</div>
+                <div class="label">Work Days/Week</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="quick-stat">
+                <div class="number">{{ employee.hours_per_week|default:"40" }}</div>
+                <div class="label">Hours/Week</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-4 mb-4">
+            <!-- Personal Information -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-person-circle me-2"></i>
+                    Personal Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Full Name:</span>
+                    <span class="detail-value">{{ person.get_full_name_en }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">National ID:</span>
+                    <span class="detail-value">{{ person.national_id }}</span>
+                </div>
+                {% if person.iqama_number %}
+                <div class="detail-row">
+                    <span class="detail-label">Iqama:</span>
+                    <span class="detail-value">{{ person.iqama_number }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Gender:</span>
+                    <span class="detail-value">{{ person.get_gender_display }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date of Birth:</span>
+                    <span class="detail-value">{{ person.date_of_birth|date:"Y-m-d"|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Nationality:</span>
+                    <span class="detail-value">{{ person.get_primary_nationality_iso2_display }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Marital Status:</span>
+                    <span class="detail-value">{{ person.get_marital_status_display|default:"Not specified" }}</span>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-telephone me-2"></i>
+                    Contact Information
+                </h5>
+                <strong>Phones:</strong>
+                {% for phone in phones %}
+                <div class="detail-row">
+                    <span class="detail-label">{{ phone.get_kind_display }}:</span>
+                    <span class="detail-value">
+                        {{ phone.phone_e164 }}
+                        {% if phone.is_primary_hint %}
+                        <span class="badge bg-primary ms-1">Primary</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No phones added</p>
+                {% endfor %}
+                
+                <strong class="mt-3 d-block">Emails:</strong>
+                {% for email in emails %}
+                <div class="detail-row">
+                    <span class="detail-label">{{ email.get_kind_display }}:</span>
+                    <span class="detail-value">
+                        {{ email.email }}
+                        {% if email.is_primary_hint %}
+                        <span class="badge bg-primary ms-1">Primary</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No emails added</p>
+                {% endfor %}
+                
+                <strong class="mt-3 d-block">Addresses:</strong>
+                {% for address in addresses %}
+                <div class="mb-2">
+                    <small class="text-muted">{{ address.type }}:</small><br>
+                    {{ address.building_number }}, {{ address.street_name }}<br>
+                    {{ address.district }}, {{ address.city }}
+                    {% if address.is_primary %}
+                    <span class="badge bg-primary ms-1">Primary</span>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted small">No addresses added</p>
+                {% endfor %}
+            </div>
+
+            <!-- User Account & Permissions -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-shield-lock me-2"></i>
+                    User Account & Permissions
+                </h5>
+                {% if employee.user %}
+                <div class="detail-row">
+                    <span class="detail-label">Username:</span>
+                    <span class="detail-value">
+                        <code>{{ employee.user.username }}</code>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">{{ employee.user.email|default:"Not set" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Account Status:</span>
+                    <span class="detail-value">
+                        {% if employee.user.is_active %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i>Active
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger">
+                            <i class="bi bi-x-circle me-1"></i>Inactive
+                        </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Last Login:</span>
+                    <span class="detail-value">
+                        {{ employee.user.last_login|date:"Y-m-d H:i"|default:"Never" }}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date Joined:</span>
+                    <span class="detail-value">
+                        {{ employee.user.date_joined|date:"Y-m-d H:i" }}
+                    </span>
+                </div>
+
+                <strong class="mt-3 d-block">Groups (Roles):</strong>
+                {% for group in employee.user.groups.all %}
+                <div class="mb-1">
+                    <span class="badge bg-primary">
+                        <i class="bi bi-people me-1"></i>{{ group.name }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-muted small">No groups assigned</p>
+                {% endfor %}
+
+                <strong class="mt-3 d-block">Effective Permissions:</strong>
+                <div class="small" style="max-height: 150px; overflow-y: auto;">
+                    {% for perm in employee.user.user_permissions.all %}
+                    <span class="badge bg-secondary me-1 mb-1">{{ perm.codename }}</span>
+                    {% empty %}
+                    <p class="text-muted small mb-0">Permissions inherited from groups</p>
+                    {% endfor %}
+                </div>
+
+                {% if employee.user.is_staff %}
+                <div class="mt-2">
+                    <span class="badge bg-warning text-dark">
+                        <i class="bi bi-gear me-1"></i>Staff Access
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if employee.user.is_superuser %}
+                <div class="mt-2">
+                    <span class="badge bg-danger">
+                        <i class="bi bi-star me-1"></i>Superuser
+                    </span>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="alert alert-warning py-2">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>No User Account</strong>
+                    <p class="small mb-0">This employee does not have a linked user account.</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" disabled>
+                    <i class="bi bi-person-plus me-2"></i>Create User Account
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Middle Column -->
+        <div class="col-lg-4 mb-4">
+            <!-- Employment Details -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-briefcase me-2"></i>
+                    Employment Details
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Employee No:</span>
+                    <span class="detail-value">{{ employee.employee_no }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Department:</span>
+                    <span class="detail-value">{{ employee.department.name|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Position:</span>
+                    <span class="detail-value">{{ employee.position.title|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Reports To:</span>
+                    <span class="detail-value">
+                        {% if employee.report_to %}
+                        {{ employee.report_to.person.get_full_name_en }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-success">{{ employee.get_status_display }}</span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Hire Date:</span>
+                    <span class="detail-value">{{ employee.hire_date|date:"Y-m-d"|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Cost Center:</span>
+                    <span class="detail-value">{{ employee.cost_center|default:"-" }}</span>
+                </div>
+            </div>
+
+            <!-- Contract Information -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-file-text me-2"></i>
+                    Contract Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Contract Type:</span>
+                    <span class="detail-value">{{ employee.get_contract_type_display }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Category:</span>
+                    <span class="detail-value">{{ employee.get_employment_category_display|default:"-" }}</span>
+                </div>
+                {% if employee.contract_start_date %}
+                <div class="detail-row">
+                    <span class="detail-label">Start Date:</span>
+                    <span class="detail-value">{{ employee.contract_start_date|date:"Y-m-d" }}</span>
+                </div>
+                {% endif %}
+                {% if employee.contract_end_date %}
+                <div class="detail-row">
+                    <span class="detail-label">End Date:</span>
+                    <span class="detail-value">{{ employee.contract_end_date|date:"Y-m-d" }}</span>
+                </div>
+                {% endif %}
+                {% if employee.probation_end_date %}
+                <div class="detail-row">
+                    <span class="detail-label">Probation End:</span>
+                    <span class="detail-value">{{ employee.probation_end_date|date:"Y-m-d" }}</span>
+                </div>
+                {% endif %}
+                {% if employee.probation_status %}
+                <div class="detail-row">
+                    <span class="detail-label">Probation Status:</span>
+                    <span class="detail-value">{{ employee.get_probation_status_display }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4 mb-4">
+            <!-- Compensation & Benefits -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-cash-stack me-2"></i>
+                    Compensation & Benefits
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Salary Grade:</span>
+                    <span class="detail-value">{{ employee.salary_grade|default:"-" }}</span>
+                </div>
+                {% if employee.monthly_salary %}
+                <div class="detail-row">
+                    <span class="detail-label">Monthly Salary:</span>
+                    <span class="detail-value">SAR {{ employee.monthly_salary|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Benefits:</span>
+                    <span class="detail-value">
+                        {% if employee.benefits_eligible %}
+                        <span class="badge bg-success">Eligible</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Not Eligible</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Overtime:</span>
+                    <span class="detail-value">
+                        {% if employee.overtime_eligible %}
+                        <span class="badge bg-success">Eligible</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Not Eligible</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Work Schedule -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-clock me-2"></i>
+                    Work Schedule
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Days/Week:</span>
+                    <span class="detail-value">{{ employee.work_days_per_week }} days</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Hours/Week:</span>
+                    <span class="detail-value">{{ employee.hours_per_week }} hours</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Shift Pattern:</span>
+                    <span class="detail-value">{{ employee.get_shift_pattern_display }}</span>
+                </div>
+            </div>
+
+            <!-- Leave Entitlements -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Leave Entitlements
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Annual Leave:</span>
+                    <span class="detail-value">{{ employee.annual_leave_days }} days/year</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Sick Leave:</span>
+                    <span class="detail-value">{{ employee.sick_leave_days }} days/year</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Special Leave:</span>
+                    <span class="detail-value">{{ employee.special_leave_days }} days/year</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-lightning me-2"></i>
+                    Quick Actions
+                </h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'hr:person_detail' person.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-person me-2"></i>View Person Details
+                    </a>
+                    <button class="btn btn-outline-success">
+                        <i class="bi bi-printer me-2"></i>Print Employee Card
+                    </button>
+                    <button class="btn btn-outline-info">
+                        <i class="bi bi-file-pdf me-2"></i>Export Profile
+                    </button>
+                    <button class="btn btn-outline-warning">
+                        <i class="bi bi-clock-history me-2"></i>View History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any employee-specific JavaScript here
+</script>
+{% endblock %}

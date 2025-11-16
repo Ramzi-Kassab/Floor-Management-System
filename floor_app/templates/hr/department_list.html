@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Departments - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <!-- Header Section -->
+    <div class="fade-in" style="animation-delay: 0s">
+        <div class="row mb-5 align-items-center">
+            <div class="col-md-6">
+                <h1 class="h2 fw-bold text-dark mb-2">
+                    <i class="bi bi-diagram-3 me-2" style="color: var(--primary)"></i>Departments
+                </h1>
+                <p class="text-muted mb-0">
+                    Manage {{ total_count }} department{{ total_count|pluralize }}
+                </p>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="{% url 'hr:department_create' %}" class="btn btn-primary hover-lift">
+                    <i class="bi bi-plus-circle me-2"></i>New Department
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Section -->
+    <div class="card glassmorphism mb-4 fade-in" style="animation-delay: 0.1s">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 align-items-end">
+                <!-- Search Input -->
+                <div class="col-md-5">
+                    <label class="form-label fw-600 text-dark mb-2">
+                        <i class="bi bi-search me-2"></i>Search Departments
+                    </label>
+                    <input type="text"
+                           name="search"
+                           class="form-control form-control-lg"
+                           placeholder="Enter department name..."
+                           value="{{ search }}">
+                </div>
+
+                <!-- Type Filter -->
+                <div class="col-md-4">
+                    <label class="form-label fw-600 text-dark mb-2">
+                        <i class="bi bi-filter me-2"></i>Department Type
+                    </label>
+                    <select name="type" class="form-select form-select-lg">
+                        <option value="">All Types</option>
+                        {% for value, label in department_types %}
+                            <option value="{{ value }}" {% if dept_type == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Search Button -->
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100 hover-lift" style="padding: 0.75rem;">
+                        <i class="bi bi-search me-2"></i>Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Departments Grid -->
+    <div class="row g-4 mb-5">
+        {% if departments %}
+            {% for department in departments %}
+                <div class="col-lg-4 col-md-6 fade-in" style="animation-delay: {{ forloop.counter|add:'0.05'|stringformat:'0.2f' }}s">
+                    <a href="{% url 'hr:department_detail' department.pk %}" class="text-decoration-none">
+                        <div class="card metric-card glassmorphism hover-lift h-100"
+                             style="transition: all 0.3s ease; border: 1px solid rgba(99, 102, 241, 0.2);">
+                            <div class="card-body p-4">
+                                <!-- Department Icon & Type Badge -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div style="width: 60px; height: 60px;
+                                                background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+                                                border-radius: 12px;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                font-size: 1.75rem;
+                                                color: white;">
+                                        {% if department.department_type == 'PRODUCTION' %}
+                                            <i class="bi bi-gear"></i>
+                                        {% elif department.department_type == 'SUPPORT' %}
+                                            <i class="bi bi-headset"></i>
+                                        {% elif department.department_type == 'MANAGEMENT' %}
+                                            <i class="bi bi-person-workspace"></i>
+                                        {% else %}
+                                            <i class="bi bi-diagram-3"></i>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge" style="background: {% if department.department_type == 'PRODUCTION' %}#f59e0b{% elif department.department_type == 'SUPPORT' %}#10b981{% elif department.department_type == 'MANAGEMENT' %}#6366f1{% else %}#8b5cf6{% endif %};">
+                                        {{ department.get_department_type_display }}
+                                    </span>
+                                </div>
+
+                                <!-- Department Name -->
+                                <h3 class="h5 fw-700 text-dark mb-2">
+                                    {{ department.name }}
+                                </h3>
+
+                                <!-- Description -->
+                                {% if department.description %}
+                                    <p class="text-muted small mb-3" style="line-height: 1.5;">
+                                        {{ department.description|truncatewords:15 }}
+                                    </p>
+                                {% else %}
+                                    <p class="text-muted small mb-3 fst-italic">
+                                        No description provided
+                                    </p>
+                                {% endif %}
+
+                                <!-- Department Stats -->
+                                <div class="row g-2 my-3">
+                                    <div class="col-6">
+                                        <div class="text-center p-2" style="background: rgba(99, 102, 241, 0.05); border-radius: 8px;">
+                                            <div class="fw-bold text-dark" style="font-size: 1.25rem;">{{ department.employees.count }}</div>
+                                            <small class="text-muted">Employees</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center p-2" style="background: rgba(99, 102, 241, 0.05); border-radius: 8px;">
+                                            <div class="fw-bold text-dark" style="font-size: 1.25rem;">{{ department.positions.count }}</div>
+                                            <small class="text-muted">Positions</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer with Created Date -->
+                                <div class="pt-3 border-top" style="border-color: rgba(99, 102, 241, 0.1);">
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        Created {{ department.created_at|date:"M d, Y" }}
+                                    </small>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="mt-3 pt-3 border-top d-flex gap-2" style="border-color: rgba(99, 102, 241, 0.1);">
+                                    <a href="{% url 'hr:department_detail' department.pk %}"
+                                       class="btn btn-sm btn-outline-primary flex-grow-1">
+                                        <i class="bi bi-eye me-1"></i>View
+                                    </a>
+                                    <a href="{% url 'hr:department_update' department.pk %}"
+                                       class="btn btn-sm btn-outline-warning flex-grow-1">
+                                        <i class="bi bi-pencil me-1"></i>Edit
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="col-12">
+                <div class="card glassmorphism text-center py-5 fade-in">
+                    <div class="card-body">
+                        <div style="width: 80px; height: 80px;
+                                    background: rgba(99, 102, 241, 0.1);
+                                    border-radius: 50%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    margin: 0 auto 2rem;
+                                    font-size: 2rem;
+                                    color: var(--primary);">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                        <h4 class="text-dark fw-600 mb-2">No Departments Found</h4>
+                        <p class="text-muted mb-4">
+                            {% if search or dept_type %}
+                                No departments match your search criteria. Try adjusting your filters.
+                            {% else %}
+                                No departments have been created yet. Start by adding one!
+                            {% endif %}
+                        </p>
+                        <a href="{% url 'hr:department_create' %}" class="btn btn-primary hover-lift">
+                            <i class="bi bi-plus-circle me-2"></i>Create First Department
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Stats Section -->
+    {% if departments %}
+        <div class="row g-4">
+            <!-- Total Departments -->
+            <div class="col-md-3 fade-in" style="animation-delay: 0.5s">
+                <div class="card metric-card glassmorphism">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small mb-1">Total Departments</p>
+                                <h3 class="h2 fw-700 text-dark mb-0">{{ total_count }}</h3>
+                            </div>
+                            <div style="width: 60px; height: 60px;
+                                        background: rgba(99, 102, 241, 0.15);
+                                        border-radius: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 1.5rem;
+                                        color: var(--primary);">
+                                <i class="bi bi-diagram-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Production Departments -->
+            <div class="col-md-3 fade-in" style="animation-delay: 0.55s">
+                <div class="card metric-card glassmorphism">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small mb-1">Production</p>
+                                <h3 class="h2 fw-700 text-dark mb-0">
+                                    {% with production_count=departments|dictsort:"department_type"|length %}
+                                        {{ production_count }}
+                                    {% endwith %}
+                                </h3>
+                            </div>
+                            <div style="width: 60px; height: 60px;
+                                        background: rgba(245, 158, 11, 0.15);
+                                        border-radius: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 1.5rem;
+                                        color: #f59e0b;">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Departments -->
+            <div class="col-md-3 fade-in" style="animation-delay: 0.6s">
+                <div class="card metric-card glassmorphism">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small mb-1">Support</p>
+                                <h3 class="h2 fw-700 text-dark mb-0">
+                                    {% with support_count=departments|dictsort:"department_type"|length %}
+                                        {{ support_count }}
+                                    {% endwith %}
+                                </h3>
+                            </div>
+                            <div style="width: 60px; height: 60px;
+                                        background: rgba(16, 185, 129, 0.15);
+                                        border-radius: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 1.5rem;
+                                        color: #10b981;">
+                                <i class="bi bi-headset"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management Departments -->
+            <div class="col-md-3 fade-in" style="animation-delay: 0.65s">
+                <div class="card metric-card glassmorphism">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small mb-1">Management</p>
+                                <h3 class="h2 fw-700 text-dark mb-0">
+                                    {% with mgmt_count=departments|dictsort:"department_type"|length %}
+                                        {{ mgmt_count }}
+                                    {% endwith %}
+                                </h3>
+                            </div>
+                            <div style="width: 60px; height: 60px;
+                                        background: rgba(99, 102, 241, 0.15);
+                                        border-radius: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 1.5rem;
+                                        color: var(--primary);">
+                                <i class="bi bi-person-workspace"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .glassmorphism {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+    }
+
+    .metric-card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2);
+    }
+
+    .badge {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+    }
+
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    .fw-700 {
+        font-weight: 700;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid rgba(99, 102, 241, 0.2);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3f3aa5 100%);
+    }
+
+    .btn-outline-primary {
+        color: var(--primary);
+        border: 2px solid var(--primary);
+        border-radius: 8px;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-outline-warning {
+        color: #f59e0b;
+        border: 2px solid #f59e0b;
+        border-radius: 8px;
+    }
+
+    .btn-outline-warning:hover {
+        background: #f59e0b;
+        color: white;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,24 @@
+floor_management_system-B/
+	requirements.txt
+	manage.py
+	floor_app/
+		__init__.py
+		admin.py
+		apps.py
+		managers.py
+		mixins.py
+		models.py
+		signals.py
+		tests.py
+		utils.py
+		views.py
+		services/
+			__init__.py
+			inventory.py
+			manufacturing.py
+	floor_mgmt/
+		__init__.py
+		asgi.py
+		settings.py
+		urls.py
+		wsgi.py

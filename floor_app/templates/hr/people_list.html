@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}People Directory - HR Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .people-table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+    
+    .person-photo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .person-photo-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #6c757d;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .nationality-flag {
+        width: 20px;
+        height: 15px;
+        margin-right: 0.5rem;
+    }
+    
+    .verification-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .verified {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .not-verified {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card .number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    
+    .stats-card .label {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">HR & Admin</a></li>
+            <li class="breadcrumb-item active">People Directory</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        People Directory
+                    </h2>
+                    <p class="text-muted mb-0">Manage all person records in the system</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'hr:person_create' %}" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-2"></i>Add New Person
+                    </a>
+                    <button class="btn btn-success" onclick="exportData()">
+                        <i class="bi bi-download me-2"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="number">{{ total_count }}</div>
+                <div class="label">Total People</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="number">{{ people|length }}</div>
+                <div class="label">Showing</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="number">{{ verified_count|default:"0" }}</div>
+                <div class="label">Verified</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="number">{{ with_employee_count|default:"0" }}</div>
+                <div class="label">Employees</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="Search...">
+                        <label for="search">Search by name or ID</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="nationality" name="nationality">
+                            <option value="">All</option>
+                            <option value="SA" {% if request.GET.nationality == 'SA' %}selected{% endif %}>Saudi</option>
+                            <option value="EG" {% if request.GET.nationality == 'EG' %}selected{% endif %}>Egypt</option>
+                            <option value="IN" {% if request.GET.nationality == 'IN' %}selected{% endif %}>India</option>
+                            <option value="PK" {% if request.GET.nationality == 'PK' %}selected{% endif %}>Pakistan</option>
+                        </select>
+                        <label for="nationality">Nationality</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="gender" name="gender">
+                            <option value="">All</option>
+                            <option value="MALE" {% if request.GET.gender == 'MALE' %}selected{% endif %}>Male</option>
+                            <option value="FEMALE" {% if request.GET.gender == 'FEMALE' %}selected{% endif %}>Female</option>
+                        </select>
+                        <label for="gender">Gender</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="verified" name="verified">
+                            <option value="">All</option>
+                            <option value="yes" {% if request.GET.verified == 'yes' %}selected{% endif %}>Verified</option>
+                            <option value="no" {% if request.GET.verified == 'no' %}selected{% endif %}>Not Verified</option>
+                        </select>
+                        <label for="verified">Verification</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="-created_at">Newest First</option>
+                            <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                            <option value="first_name_en" {% if request.GET.sort == 'first_name_en' %}selected{% endif %}>Name A-Z</option>
+                            <option value="-first_name_en" {% if request.GET.sort == '-first_name_en' %}selected{% endif %}>Name Z-A</option>
+                        </select>
+                        <label for="sort">Sort By</label>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary h-100 w-100">
+                        <i class="bi bi-funnel"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- People Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover people-table mb-0">
+                    <thead>
+                        <tr>
+                            <th width="50">Photo</th>
+                            <th>Name</th>
+                            <th>National ID</th>
+                            <th>Iqama</th>
+                            <th>Nationality</th>
+                            <th>Gender</th>
+                            <th>DOB</th>
+                            <th>Status</th>
+                            <th>Employee</th>
+                            <th width="150">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for person in people %}
+                        <tr>
+                            <td>
+                                {% if person.photo %}
+                                <img src="{{ person.photo.url }}" class="person-photo">
+                                {% else %}
+                                <div class="person-photo-placeholder">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ person.get_full_name_en }}</strong>
+                                {% if person.first_name_ar %}
+                                <br>
+                                <small class="text-muted">{{ person.first_name_ar }} {{ person.last_name_ar }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ person.national_id }}</td>
+                            <td>{{ person.iqama_number|default:"-" }}</td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ person.get_primary_nationality_iso2_display }}
+                                </span>
+                            </td>
+                            <td>{{ person.get_gender_display }}</td>
+                            <td>{{ person.date_of_birth|date:"Y-m-d"|default:"-" }}</td>
+                            <td>
+                                {% if person.identity_verified %}
+                                <span class="verification-badge verified">
+                                    <i class="bi bi-check-circle me-1"></i>Verified
+                                </span>
+                                {% else %}
+                                <span class="verification-badge not-verified">
+                                    <i class="bi bi-x-circle me-1"></i>Not Verified
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if person.employee %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check me-1"></i>Yes
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'hr:person_detail' person.id %}" class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'hr:person_edit' person.id %}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if not person.employee %}
+                                <a href="{% url 'hr:employee_wizard_start' %}?person={{ person.id }}" 
+                                   class="btn btn-sm btn-outline-success" title="Create Employee">
+                                    <i class="bi bi-person-badge"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No people found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if people.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if people.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ people.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in people.paginator.page_range %}
+                    <li class="page-item {% if people.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if people.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ people.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportData() {
+    const params = new URLSearchParams(window.location.search);
+    params.append('export', 'excel');
+    window.location.href = '{% url "hr:people_list" %}?' + params.toString();
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "hr:people_list" %}';
+}
+</script>
+{% endblock %}

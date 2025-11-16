@@ -1,0 +1,112 @@
+[
+  {
+    "model": "floor_app.department",
+    "pk": 1,
+    "fields": {
+      "name": "PDC Production and Repair",
+      "description": "Responsible for production and repair operations in the PDC facility. Manages manufacturing processes, quality control, and maintenance activities.",
+      "department_type": "PRODUCTION",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 2,
+    "fields": {
+      "name": "Roller Cones",
+      "description": "Specialized production unit focused on roller cone manufacturing and assembly. Handles precision components and quality assurance.",
+      "department_type": "PRODUCTION",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 3,
+    "fields": {
+      "name": "Infiltration",
+      "description": "Production department responsible for infiltration system manufacturing, testing, and installation support.",
+      "department_type": "PRODUCTION",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 4,
+    "fields": {
+      "name": "Quality",
+      "description": "Quality assurance and control department. Ensures all products and services meet company standards and regulatory requirements.",
+      "department_type": "SUPPORT",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 5,
+    "fields": {
+      "name": "Safety",
+      "description": "Health and safety department. Develops and implements safety policies, conducts training, and monitors workplace safety compliance.",
+      "department_type": "SUPPORT",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 6,
+    "fields": {
+      "name": "Human Resource",
+      "description": "Human Resources department. Manages recruitment, employee relations, training, payroll, and organizational development.",
+      "department_type": "MANAGEMENT",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 7,
+    "fields": {
+      "name": "Sales",
+      "description": "Sales and marketing department. Responsible for customer acquisition, relationship management, and revenue generation.",
+      "department_type": "MANAGEMENT",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 8,
+    "fields": {
+      "name": "Requirements",
+      "description": "Requirements management department. Handles planning, procurement, inventory management, and supply chain coordination.",
+      "department_type": "SUPPORT",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 9,
+    "fields": {
+      "name": "Logistics",
+      "description": "Logistics and distribution department. Manages shipping, warehouse operations, and delivery coordination.",
+      "department_type": "SUPPORT",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "floor_app.department",
+    "pk": 10,
+    "fields": {
+      "name": "Technical",
+      "description": "Technical support and IT department. Provides technical support, system administration, and infrastructure management.",
+      "department_type": "SUPPORT",
+      "created_at": "2025-11-14T00:00:00Z",
+      "updated_at": "2025-11-14T00:00:00Z"
+    }
+  }
+]

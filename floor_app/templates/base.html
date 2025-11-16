@@ -1,0 +1,480 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <title>{% block title %}Floor Management System{% endblock %}</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18'>🏢</text></svg>">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navbar with Glassmorphism -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid">
+            <!-- Mobile Menu Toggle -->
+			<a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'core:home' %}">
+				<i class="bi bi-building-fill me-2"></i>
+				<span class="d-none d-md-inline">Floor Management</span>
+				<span class="d-inline d-md-none">FMS</span>
+			</a>
+            
+            <!-- Center Search Bar (Desktop) -->
+            <div class="mx-auto d-none d-lg-block">
+                <div class="search-box">
+                    <input type="search" class="search-input" placeholder="Search employees, teams, departments...">
+                    <button class="search-btn">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Right Side Actions -->
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <!-- Dark Mode Toggle -->
+                <button class="btn btn-link text-dark p-0" id="darkModeToggle" type="button" title="Toggle theme">
+                    <i class="bi bi-moon-stars fs-5"></i>
+                </button>
+                
+                <!-- Notifications -->
+                <div class="notification-bell">
+                    <i class="bi bi-bell bell-icon"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                
+                <!-- User Menu -->
+                {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-link text-decoration-none text-dark dropdown-toggle d-flex align-items-center p-0" 
+                                type="button" 
+                                id="userMenuDropdown" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false">
+                            <div class="user-avatar">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <span class="d-none d-md-inline ms-2 fw-medium">{{ user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
+                            <li class="px-3 py-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-3">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-person-circle me-2"></i>My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-gear me-2"></i>Settings
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-question-circle me-2"></i>Help & Support
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Backdrop for Mobile -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="d-flex">
+        <!-- Enhanced Sidebar -->
+        <div class="sidebar glassmorphism" id="sidebar">
+            <div class="sidebar-sticky">
+                <!-- Mobile Search -->
+                <div class="d-lg-none px-3 mb-3">
+                    <div class="search-box">
+                        <input type="search" class="search-input" placeholder="Search...">
+                        <button class="search-btn">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="sidebar-header">
+                    <h6 class="sidebar-heading">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        Main Menu
+                    </h6>
+                </div>
+
+                <ul class="nav flex-column">
+                    <!-- Main Dashboard Link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">
+                            <i class="bi bi-house-door-fill"></i>
+                            <span>Main Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+
+                    <!-- Departments Section Header -->
+                    <li class="nav-item mt-3">
+                        <div class="sidebar-section-title" style="padding: 0.5rem 1rem; color: #6c757d; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Departments
+                        </div>
+                    </li>
+
+                    <!-- HR & Administration Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="hr-section">
+                            <i class="bi bi-people-fill"></i>
+                            <span>HR & Administration</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="hr-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>HR Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:people_list' %}">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                    <span>People</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:employee_list' %}">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>Employees</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:department_list' %}">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                    <span>Departments</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:position_list' %}">
+                                    <i class="bi bi-person-workspace"></i>
+                                    <span>Positions</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Production Section (Coming Soon) -->
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="bi bi-gear-fill"></i>
+                            <span>Production</span>
+                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
+                        </a>
+                    </li>
+
+                    <!-- Maintenance Section (Coming Soon) -->
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="bi bi-tools"></i>
+                            <span>Maintenance</span>
+                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
+                        </a>
+                    </li>
+
+                    <!-- Logistics Section (Coming Soon) -->
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="bi bi-truck"></i>
+                            <span>Logistics</span>
+                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
+                        </a>
+                    </li>
+
+                    <!-- System Administration Section -->
+                    {% if user.is_staff %}
+                    <li class="nav-item mt-3">
+                        <div class="sidebar-section-title" style="padding: 0.5rem 1rem; color: #6c757d; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            System
+                        </div>
+                    </li>
+
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="admin-section">
+                            <i class="bi bi-shield-lock-fill"></i>
+                            <span>Administration</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="admin-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/admin/">
+                                    <i class="bi bi-gear-fill"></i>
+                                    <span>Admin Panel</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-person-lock"></i>
+                                    <span>User Management</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-database-fill"></i>
+                                    <span>System Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- Sidebar Footer -->
+                <div class="sidebar-footer mt-auto p-3 border-top">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 14px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <div class="small fw-semibold">{{ user.username }}</div>
+                            <div class="small text-muted">Online</div>
+                        </div>
+                        <button class="btn btn-sm btn-link text-muted p-0">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            {% block breadcrumbs %}
+            {% endblock %}
+            
+            {% if messages %}
+                <div class="container-fluid mt-3">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="alert-icon bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'danger' %}exclamation-triangle-fill{% elif message.tags == 'warning' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %}"></i>
+                            <div class="alert-content">
+                                <div class="alert-title">{{ message.tags|title }}</div>
+                                {{ message }}
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}
+            {% endblock %}
+            
+            <!-- Footer -->
+            <footer class="mt-auto py-3 border-top bg-white">
+                <div class="container-fluid">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-0">© 2025 Floor Management System. All rights reserved.</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="#" class="text-muted text-decoration-none me-3">Privacy</a>
+                            <a href="#" class="text-muted text-decoration-none me-3">Terms</a>
+                            <a href="#" class="text-muted text-decoration-none">Contact</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+    
+    <!-- Chart.js for Dashboard Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- ApexCharts for Advanced Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                    sidebarBackdrop.classList.toggle('show');
+                });
+            }
+            
+            // Close sidebar on backdrop click (mobile)
+            if (sidebarBackdrop) {
+                sidebarBackdrop.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarBackdrop.classList.remove('show');
+                });
+            }
+            
+            // Close sidebar on mobile when clicking outside
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 992) {
+                    if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                        sidebar.classList.remove('show');
+                        sidebarBackdrop.classList.remove('show');
+                    }
+                }
+            });
+            
+            // Highlight active nav link
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const darkModeIcon = darkModeToggle.querySelector('i');
+            
+            // Check for saved dark mode preference
+            const darkMode = localStorage.getItem('darkMode');
+            if (darkMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeIcon.classList.remove('bi-moon-stars');
+                darkModeIcon.classList.add('bi-sun-fill');
+            }
+            
+            darkModeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('darkMode', 'enabled');
+                    darkModeIcon.classList.remove('bi-moon-stars');
+                    darkModeIcon.classList.add('bi-sun-fill');
+                } else {
+                    localStorage.setItem('darkMode', null);
+                    darkModeIcon.classList.remove('bi-sun-fill');
+                    darkModeIcon.classList.add('bi-moon-stars');
+                }
+            });
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Add smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+            
+            // Collapsible section navigation
+            const sectionToggles = document.querySelectorAll('.nav-section-toggle');
+            sectionToggles.forEach(toggle => {
+                const sectionId = toggle.getAttribute('data-section');
+                const sectionContent = document.getElementById(sectionId);
+                const toggleIcon = toggle.querySelector('.toggle-icon');
+
+                // Load saved state from localStorage
+                const savedState = localStorage.getItem(`nav-section-${sectionId}`);
+                if (savedState === 'expanded') {
+                    sectionContent.style.display = 'flex';
+                    toggleIcon.style.transform = 'rotate(180deg)';
+                }
+
+                // Toggle section on click
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const isVisible = sectionContent.style.display !== 'none';
+
+                    if (isVisible) {
+                        sectionContent.style.display = 'none';
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                        localStorage.setItem(`nav-section-${sectionId}`, 'collapsed');
+                    } else {
+                        sectionContent.style.display = 'flex';
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                        localStorage.setItem(`nav-section-${sectionId}`, 'expanded');
+                    }
+                });
+            });
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
