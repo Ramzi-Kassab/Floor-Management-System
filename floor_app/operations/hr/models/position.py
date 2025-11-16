@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import Group
 from floor_app.mixins import HRAuditMixin, HRSoftDeleteMixin
 
 
@@ -66,6 +67,23 @@ class Position(HRAuditMixin, HRSoftDeleteMixin):
     is_active = models.BooleanField(
         default=True,
         help_text="Whether this position is currently available"
+    )
+
+    # RBAC: Link to Django auth Group
+    auth_group = models.ForeignKey(
+        Group,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='positions',
+        help_text='Django auth Group linked to this position for RBAC'
+    )
+
+    # Additional permissions as comma-separated codenames
+    permission_codenames = models.TextField(
+        blank=True,
+        default='',
+        help_text='Comma-separated list of additional permission codenames for this position'
     )
 
     class Meta:

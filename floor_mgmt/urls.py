@@ -5,10 +5,11 @@ from django.conf.urls.static import static
 from floor_app import views as floor_views
 
 urlpatterns = [
-    # Home/Dashboard
-    path("", floor_views.home, name="home"),
+    # === Main global dashboard (CORE) ===
+    # "/" will now use core.main_dashboard and namespace "core"
+    path("", include(("core.urls", "core"), namespace="core")),
 
-    # Authentication
+    # === Authentication ===
     path("signup/", floor_views.signup, name="signup"),
     path("accounts/login/", floor_views.CustomLoginView.as_view(), name="login"),
     path("accounts/logout/", floor_views.CustomLogoutView.as_view(), name="logout"),
@@ -18,13 +19,17 @@ urlpatterns = [
     path("accounts/reset/done/", include("django.contrib.auth.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
 
-    # Employee Management
+    # === (Legacy) Employee Management at /employees/ ===
+    # These are your old floor_app views; you can keep them for now
+    # while we migrate everything into the HR module.
     path("employees/", floor_views.employee_list, name="employee_list"),
     path("employees/<int:pk>/", floor_views.employee_detail, name="employee_detail"),
 
-    # Admin
+    # === Admin ===
     path("admin/", admin.site.urls),
 
-    # Operations (HR) App
-    path("hr/", include("floor_app.operations.hr.urls")),
+    # === HR / Operations module ===
+    # All HR URLs under "/hr/" and namespaced as "hr"
+    path("hr/", include(("floor_app.operations.hr.urls", "hr"), namespace="hr")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

@@ -83,6 +83,15 @@ class HREmployee(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
         help_text="Job position/title"
     )
 
+    # Legacy job_title field (deprecated - use position instead)
+    # Kept for backward compatibility with existing database
+    job_title = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text="DEPRECATED: Use position field instead. Kept for backward compatibility."
+    )
+
     department = models.ForeignKey(
         "Department",
         on_delete=models.SET_NULL,
@@ -98,6 +107,15 @@ class HREmployee(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
         choices=CONTRACT_TYPE,
         default="PERMANENT",
         help_text="Type of employment contract"
+    )
+
+    # Legacy employee_type field (deprecated - use contract_type instead)
+    # Kept for backward compatibility with existing database
+    employee_type = models.CharField(
+        max_length=16,
+        null=True,
+        blank=True,
+        help_text="DEPRECATED: Use contract_type field instead. Kept for backward compatibility."
     )
 
     # Contract Duration Fields (NEW)

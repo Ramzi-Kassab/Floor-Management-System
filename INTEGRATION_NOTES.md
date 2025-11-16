@@ -224,7 +224,7 @@ For any other templates you create, extend `base.html`:
 <div class="container-fluid pt-3 pb-2 border-bottom bg-light">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
             <li class="breadcrumb-item active">Your Page</li>
         </ol>
     </nav>

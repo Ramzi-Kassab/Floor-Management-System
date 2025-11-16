@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if address %}Edit Address{% else %}Add New Address{% endif %} - HR Management{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="" />
+<style>
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        color: #212529;
+        font-weight: 600;
+        font-size: 1.125rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #667eea;
+    }
+
+    .map-container {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+
+    .map-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.25rem;
+    }
+
+    .map-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    #address-map {
+        height: 400px;
+        width: 100%;
+    }
+
+    .map-controls {
+        background: #f8f9fa;
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .coordinates-display {
+        background: #e9ecef;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-family: monospace;
+        font-size: 0.875rem;
+    }
+
+    .required-field label::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .field-hint {
+        font-size: 0.8125rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .sticky-sidebar {
+        position: sticky;
+        top: 1rem;
+    }
+
+    .ksa-fields {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .ksa-fields .form-label {
+        color: #664d03;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">HR & Administration</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:address_list' %}">Addresses</a></li>
+            <li class="breadcrumb-item active">{% if address %}Edit Address{% else %}Add New Address{% endif %}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2" style="color: #212529; font-weight: 700;">
+                        <i class="bi bi-geo-alt-fill text-secondary me-2"></i>
+                        {% if address %}Edit Address{% else %}Add New Address{% endif %}
+                    </h2>
+                    <p class="mb-0" style="color: #495057;">
+                        {% if address %}
+                        Update address information and location coordinates
+                        {% else %}
+                        Create a new address with optional GPS coordinates
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'hr:address_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="addressForm" novalidate>
+        {% csrf_token %}
+
+        <div class="row">
+            <!-- Left Column: Form Fields -->
+            <div class="col-lg-7">
+                <!-- Person Selection -->
+                <div class="form-section">
+                    <h5 class="section-title">
+                        <i class="bi bi-person me-2"></i>Person Assignment
+                    </h5>
+                    <div class="row">
+                        <div class="col-12 required-field">
+                            <label for="{{ form.hr_person.id_for_label }}" class="form-label">Person</label>
+                            {{ form.hr_person }}
+                            {% if form.hr_person.errors %}
+                            <div class="text-danger small mt-1">{{ form.hr_person.errors }}</div>
+                            {% endif %}
+                            <div class="field-hint">Select the person this address belongs to</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Type & Label -->
+                <div class="form-section">
+                    <h5 class="section-title">
+                        <i class="bi bi-tag me-2"></i>Address Classification
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.hr_kind.id_for_label }}" class="form-label">Address Type</label>
+                            {{ form.hr_kind }}
+                            {% if form.hr_kind.errors %}
+                            <div class="text-danger small mt-1">{{ form.hr_kind.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.hr_use.id_for_label }}" class="form-label">Usage Type</label>
+                            {{ form.hr_use }}
+                            {% if form.hr_use.errors %}
+                            <div class="text-danger small mt-1">{{ form.hr_use.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.label.id_for_label }}" class="form-label">Custom Label</label>
+                            {{ form.label }}
+                            {% if form.label.errors %}
+                            <div class="text-danger small mt-1">{{ form.label.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.is_primary_hint }}
+                                <label class="form-check-label" for="{{ form.is_primary_hint.id_for_label }}">
+                                    Set as Primary Address
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core Address Fields -->
+                <div class="form-section">
+                    <h5 class="section-title">
+                        <i class="bi bi-house me-2"></i>Address Details
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.address_kind.id_for_label }}" class="form-label">Address Format</label>
+                            {{ form.address_kind }}
+                            {% if form.address_kind.errors %}
+                            <div class="text-danger small mt-1">{{ form.address_kind.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 required-field">
+                            <label for="{{ form.country_iso2.id_for_label }}" class="form-label">Country</label>
+                            {{ form.country_iso2 }}
+                            {% if form.country_iso2.errors %}
+                            <div class="text-danger small mt-1">{{ form.country_iso2.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 required-field">
+                            <label for="{{ form.address_line1.id_for_label }}" class="form-label">Address Line 1</label>
+                            {{ form.address_line1 }}
+                            {% if form.address_line1.errors %}
+                            <div class="text-danger small mt-1">{{ form.address_line1.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.address_line2.id_for_label }}" class="form-label">Address Line 2</label>
+                            {{ form.address_line2 }}
+                            {% if form.address_line2.errors %}
+                            <div class="text-danger small mt-1">{{ form.address_line2.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                            {{ form.city }}
+                            {% if form.city.errors %}
+                            <div class="text-danger small mt-1">{{ form.city.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.state_region.id_for_label }}" class="form-label">State/Province/Region</label>
+                            {{ form.state_region }}
+                            {% if form.state_region.errors %}
+                            <div class="text-danger small mt-1">{{ form.state_region.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.postal_code.id_for_label }}" class="form-label">Postal Code</label>
+                            {{ form.postal_code }}
+                            {% if form.postal_code.errors %}
+                            <div class="text-danger small mt-1">{{ form.postal_code.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.po_box.id_for_label }}" class="form-label">P.O. Box</label>
+                            {{ form.po_box }}
+                            {% if form.po_box.errors %}
+                            <div class="text-danger small mt-1">{{ form.po_box.errors }}</div>
+                            {% endif %}
+                            <div class="field-hint">Required for P.O. Box address format</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saudi National Address Fields (Optional) -->
+                <div class="form-section">
+                    <h5 class="section-title">
+                        <i class="bi bi-building me-2"></i>Structured Address (Saudi National Address)
+                    </h5>
+                    <div class="ksa-fields">
+                        <p class="small mb-3" style="color: #664d03;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            These fields are for Saudi National Address (SPL) compliance. Fill if applicable.
+                        </p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.street_name.id_for_label }}" class="form-label">Street Name</label>
+                                {{ form.street_name }}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="{{ form.building_number.id_for_label }}" class="form-label">Building No.</label>
+                                {{ form.building_number }}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="{{ form.unit_number.id_for_label }}" class="form-label">Unit No.</label>
+                                {{ form.unit_number }}
+                            </div>
+                            <div class="col-md-8">
+                                <label for="{{ form.neighborhood.id_for_label }}" class="form-label">Neighborhood</label>
+                                {{ form.neighborhood }}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.additional_number.id_for_label }}" class="form-label">Additional No.</label>
+                                {{ form.additional_number }}
+                                <div class="field-hint">4-digit secondary number</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accessibility Notes -->
+                <div class="form-section">
+                    <h5 class="section-title">
+                        <i class="bi bi-info-circle me-2"></i>Additional Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-12">
+                            <label for="{{ form.accessibility_notes.id_for_label }}" class="form-label">Accessibility Notes</label>
+                            {{ form.accessibility_notes }}
+                            {% if form.accessibility_notes.errors %}
+                            <div class="text-danger small mt-1">{{ form.accessibility_notes.errors }}</div>
+                            {% endif %}
+                            <div class="field-hint">Notes about parking, wheelchair access, elevator, etc.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Map -->
+            <div class="col-lg-5">
+                <div class="sticky-sidebar">
+                    <div class="map-container">
+                        <div class="map-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5><i class="bi bi-map me-2"></i>Location Map</h5>
+                                <span id="gpsStatusBadge" class="badge bg-secondary">
+                                    <i class="bi bi-geo-alt me-1"></i>No GPS
+                                </span>
+                            </div>
+                        </div>
+
+                        <div id="mapNotificationArea"></div>
+
+                        <div id="address-map"></div>
+
+                        <div class="map-controls">
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label for="{{ form.latitude.id_for_label }}" class="form-label small fw-medium">Latitude</label>
+                                    {{ form.latitude }}
+                                </div>
+                                <div class="col-6">
+                                    <label for="{{ form.longitude.id_for_label }}" class="form-label small fw-medium">Longitude</label>
+                                    {{ form.longitude }}
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="button" id="findOnMapBtn" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-search me-2"></i>Find on Map (Geocode Address)
+                                </button>
+                                <button type="button" id="clearCoordsBtn" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-x-circle me-2"></i>Clear Coordinates
+                                </button>
+                            </div>
+
+                            <div class="mt-3">
+                                <p class="small text-muted mb-0">
+                                    <i class="bi bi-lightbulb me-1"></i>
+                                    <strong>Tips:</strong> Click on the map to set location, or drag the marker to adjust.
+                                    Use "Find on Map" to search based on address fields above.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-section mt-3">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {% if address %}Update Address{% else %}Save Address{% endif %}
+                            </button>
+                            <a href="{% url 'hr:address_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<!-- HR Address Map Integration -->
+<script src="{% static 'hr/hr_address_map.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the map
+    const addressMap = new HRAddressMap({
+        mapContainerId: 'address-map',
+        latFieldId: 'id_latitude',
+        lngFieldId: 'id_longitude',
+        addressLine1Id: 'id_address_line1',
+        cityId: 'id_city',
+        stateRegionId: 'id_state_region',
+        postalCodeId: 'id_postal_code',
+        countryId: 'id_country_iso2',
+        streetNameId: 'id_street_name',
+        neighborhoodId: 'id_neighborhood',
+        defaultCenter: [24.7136, 46.6753], // Riyadh, Saudi Arabia
+        defaultZoom: 6,
+        readOnly: false
+    });
+
+    // Update GPS status badge on load
+    const lat = document.getElementById('id_latitude').value;
+    const lng = document.getElementById('id_longitude').value;
+    if (lat && lng) {
+        document.getElementById('gpsStatusBadge').innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>GPS Set';
+        document.getElementById('gpsStatusBadge').className = 'badge bg-success';
+    }
+
+    // Form validation
+    document.getElementById('addressForm').addEventListener('submit', function(e) {
+        const personSelect = document.getElementById('id_hr_person');
+        const addressLine1 = document.getElementById('id_address_line1');
+        const countrySelect = document.getElementById('id_country_iso2');
+
+        let isValid = true;
+
+        // Check required fields
+        if (!personSelect.value) {
+            isValid = false;
+            personSelect.classList.add('is-invalid');
+        } else {
+            personSelect.classList.remove('is-invalid');
+        }
+
+        if (!addressLine1.value.trim()) {
+            isValid = false;
+            addressLine1.classList.add('is-invalid');
+        } else {
+            addressLine1.classList.remove('is-invalid');
+        }
+
+        if (!countrySelect.value) {
+            isValid = false;
+            countrySelect.classList.add('is-invalid');
+        } else {
+            countrySelect.classList.remove('is-invalid');
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            addressMap.showNotification('Please fill in all required fields', 'danger');
+        }
+    });
+
+    // Show/hide PO Box field based on address kind
+    const addressKindSelect = document.getElementById('id_address_kind');
+    const poBoxField = document.getElementById('id_po_box').closest('.col-md-6');
+
+    if (addressKindSelect) {
+        addressKindSelect.addEventListener('change', function() {
+            if (this.value === 'PO_BOX') {
+                poBoxField.style.display = 'block';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

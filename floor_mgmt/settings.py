@@ -36,8 +36,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'floor_app.apps.FloorAppConfig',
-    'floor_app.operations.hr',
-
+    'floor_app.operations.hr.apps.HRConfig',
+    "core",
+    "widget_tweaks",
 ]
 
 MIDDLEWARE = [

@@ -35,16 +35,11 @@
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
             <!-- Mobile Menu Toggle -->
-            <button class="btn btn-link text-dark d-lg-none me-2" id="sidebarToggle" type="button">
-                <i class="bi bi-list fs-3"></i>
-            </button>
-            
-            <!-- Logo and Brand -->
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'home' %}">
-                <i class="bi bi-building-fill me-2"></i>
-                <span class="d-none d-md-inline">Floor Management</span>
-                <span class="d-inline d-md-none">FMS</span>
-            </a>
+			<a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'core:home' %}">
+				<i class="bi bi-building-fill me-2"></i>
+				<span class="d-none d-md-inline">Floor Management</span>
+				<span class="d-inline d-md-none">FMS</span>
+			</a>
             
             <!-- Center Search Bar (Desktop) -->
             <div class="mx-auto d-none d-lg-block">
@@ -150,14 +145,13 @@
                         Main Menu
                     </h6>
                 </div>
-                
+
                 <ul class="nav flex-column">
-                    <!-- Dashboard Link -->
+                    <!-- Main Dashboard Link -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">
-                            <i class="bi bi-speedometer2"></i>
-                            <span>Dashboard</span>
-                            <span class="badge badge-primary badge-pill ms-auto">New</span>
+                        <a class="nav-link" href="{% url 'core:home' %}">
+                            <i class="bi bi-house-door-fill"></i>
+                            <span>Main Dashboard</span>
                         </a>
                     </li>
 
@@ -168,24 +162,37 @@
                         </a>
                     </li>
 
-                    <!-- Human Resources Section (Collapsible) -->
+                    <!-- Departments Section Header -->
+                    <li class="nav-item mt-3">
+                        <div class="sidebar-section-title" style="padding: 0.5rem 1rem; color: #6c757d; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Departments
+                        </div>
+                    </li>
+
+                    <!-- HR & Administration Section (Collapsible) -->
                     <li class="nav-item nav-section">
                         <button class="nav-link nav-section-toggle" data-section="hr-section">
-                            <i class="fas fa-users"></i>
-                            <span>Human Resources</span>
+                            <i class="bi bi-people-fill"></i>
+                            <span>HR & Administration</span>
                             <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
                         </button>
                         <ul class="nav flex-column nav-section-items" id="hr-section" style="display: none;">
                             <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="{% url 'employee_list' %}">
-                                    <i class="bi bi-people-fill"></i>
-                                    <span>All Employees</span>
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>HR Dashboard</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="{% url 'hr:employee_create' %}">
-                                    <i class="bi bi-person-plus-fill"></i>
-                                    <span>Add Employee</span>
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:people_list' %}">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                    <span>People</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:employee_list' %}">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>Employees</span>
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -195,54 +202,52 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="#">
-                                    <i class="bi bi-calendar3-week"></i>
-                                    <span>Attendance</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="#">
-                                    <i class="bi bi-cash-stack"></i>
-                                    <span>Payroll</span>
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:position_list' %}">
+                                    <i class="bi bi-person-workspace"></i>
+                                    <span>Positions</span>
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                    <!-- Operations Section (Collapsible) -->
-                    <li class="nav-item nav-section">
-                        <button class="nav-link nav-section-toggle" data-section="ops-section">
-                            <i class="fas fa-cogs"></i>
-                            <span>Operations</span>
-                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
-                        </button>
-                        <ul class="nav flex-column nav-section-items" id="ops-section" style="display: none;">
-                            <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="#">
-                                    <i class="bi bi-clipboard2-check"></i>
-                                    <span>Tasks</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="#">
-                                    <i class="bi bi-calendar-event"></i>
-                                    <span>Schedule</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="#">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                    <span>Reports</span>
-                                </a>
-                            </li>
-                        </ul>
+                    <!-- Production Section (Coming Soon) -->
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="bi bi-gear-fill"></i>
+                            <span>Production</span>
+                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
+                        </a>
                     </li>
 
-                    <!-- Administration Section (Collapsible) -->
+                    <!-- Maintenance Section (Coming Soon) -->
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="bi bi-tools"></i>
+                            <span>Maintenance</span>
+                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
+                        </a>
+                    </li>
+
+                    <!-- Logistics Section (Coming Soon) -->
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="bi bi-truck"></i>
+                            <span>Logistics</span>
+                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
+                        </a>
+                    </li>
+
+                    <!-- System Administration Section -->
                     {% if user.is_staff %}
+                    <li class="nav-item mt-3">
+                        <div class="sidebar-section-title" style="padding: 0.5rem 1rem; color: #6c757d; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            System
+                        </div>
+                    </li>
+
                     <li class="nav-item nav-section">
                         <button class="nav-link nav-section-toggle" data-section="admin-section">
-                            <i class="fas fa-shield-alt"></i>
+                            <i class="bi bi-shield-lock-fill"></i>
                             <span>Administration</span>
                             <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
                         </button>

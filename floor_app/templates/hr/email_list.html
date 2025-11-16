@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Email Addresses - HR Management{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">HR & Administration</a></li>
+            <li class="breadcrumb-item active">Email Addresses</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2" style="color: #212529; font-weight: 700;">
+                        <i class="bi bi-envelope-fill text-danger me-2"></i>
+                        Email Addresses
+                    </h2>
+                    <p class="mb-0" style="color: #495057;">
+                        Manage all contact email addresses
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'hr:email_bulk_add' %}" class="btn btn-danger text-white">
+                        <i class="bi bi-plus-circle me-2"></i>Add Email Addresses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-4" style="background: #f8f9fa;">
+        <div class="card-body p-3">
+            <form method="get" class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" class="form-control" name="search" placeholder="Search by email, person name..." value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="type">
+                        <option value="">All Types</option>
+                        <option value="PERSONAL">Personal</option>
+                        <option value="WORK">Work</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="verified">
+                        <option value="">All Status</option>
+                        <option value="1">Verified</option>
+                        <option value="0">Not Verified</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-danger text-white w-100">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Addresses Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead style="background: linear-gradient(135deg, #dc3545 0%, #e85d6a 100%); color: white;">
+                        <tr>
+                            <th>Person/Employee</th>
+                            <th>Email Address</th>
+                            <th>Type</th>
+                            <th>Primary</th>
+                            <th>Verified</th>
+                            <th>Added Date</th>
+                            <th width="100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: #495057;">
+                        {% for email in emails %}
+                        <tr>
+                            <td>
+                                <strong style="color: #212529;">{{ email.person.get_full_name_en }}</strong>
+                                {% if email.person.employee %}
+                                <br><small style="color: #6c757d;">{{ email.person.employee.employee_no }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="mailto:{{ email.email }}" style="color: #0d6efd; text-decoration: none;">
+                                    <i class="bi bi-envelope-fill me-1"></i>{{ email.email }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge" style="background: #e9ecef; color: #212529;">
+                                    {{ email.get_email_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if email.is_primary %}
+                                <span class="badge bg-success">Primary</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Secondary</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if email.is_verified %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Verified
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning" style="color: #212529;">
+                                    <i class="bi bi-exclamation-circle me-1"></i>Unverified
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td style="color: #495057;">{{ email.created_at|date:"Y-m-d" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="bi bi-envelope-x display-1" style="color: #dee2e6;"></i>
+                                <p class="mt-3 mb-0" style="color: #6c757d;">No email addresses found</p>
+                                <a href="{% url 'hr:email_bulk_add' %}" class="btn btn-danger text-white mt-3">
+                                    <i class="bi bi-plus-circle me-2"></i>Add First Email Address
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

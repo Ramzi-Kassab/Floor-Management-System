@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}HR Reports - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">HR & Administration</a></li>
+            <li class="breadcrumb-item active">Reports</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-2" style="color: #212529; font-weight: 700;">
+                <i class="bi bi-file-earmark-bar-graph text-warning me-2"></i>
+                HR Reports & Analytics
+            </h2>
+            <p class="mb-0" style="color: #495057;">
+                Generate comprehensive reports on employee data, attendance, and organizational metrics
+            </p>
+        </div>
+    </div>
+
+    <!-- Report Categories -->
+    <div class="row g-4">
+        <!-- Employee Reports -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm" style="border-left: 4px solid #0d6efd;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-people-fill text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <h5 class="mb-0" style="color: #212529; font-weight: 600;">Employee Reports</h5>
+                    </div>
+
+                    <ul class="list-unstyled mb-3" style="color: #495057;">
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-primary me-2"></i>Employee Roster
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-primary me-2"></i>Active Employees List
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-primary me-2"></i>New Hires Report
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-primary me-2"></i>Terminated Employees
+                        </li>
+                    </ul>
+
+                    <button class="btn btn-primary w-100">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Department Reports -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm" style="border-left: 4px solid #198754;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-diagram-3-fill text-success" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <h5 class="mb-0" style="color: #212529; font-weight: 600;">Department Reports</h5>
+                    </div>
+
+                    <ul class="list-unstyled mb-3" style="color: #495057;">
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-success me-2"></i>Department Summary
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-success me-2"></i>Headcount by Department
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-success me-2"></i>Department Org Chart
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right text-success me-2"></i>Position Vacancy Report
+                        </li>
+                    </ul>
+
+                    <button class="btn btn-success w-100 text-white">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Reports -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm" style="border-left: 4px solid #fd7e14;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-opacity-10 p-3 me-3" style="background: rgba(253, 126, 20, 0.1);">
+                            <i class="bi bi-calendar-check-fill" style="font-size: 1.5rem; color: #fd7e14;"></i>
+                        </div>
+                        <h5 class="mb-0" style="color: #212529; font-weight: 600;">Attendance Reports</h5>
+                    </div>
+
+                    <ul class="list-unstyled mb-3" style="color: #495057;">
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #fd7e14;"></i>Daily Attendance
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #fd7e14;"></i>Monthly Summary
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #fd7e14;"></i>Absence Report
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #fd7e14;"></i>Leave Balance
+                        </li>
+                    </ul>
+
+                    <button class="btn w-100 text-white" style="background: #fd7e14; border-color: #fd7e14;">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payroll Reports -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm" style="border-left: 4px solid #20c997;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-opacity-10 p-3 me-3" style="background: rgba(32, 201, 151, 0.1);">
+                            <i class="bi bi-cash-stack" style="font-size: 1.5rem; color: #20c997;"></i>
+                        </div>
+                        <h5 class="mb-0" style="color: #212529; font-weight: 600;">Payroll Reports</h5>
+                    </div>
+
+                    <ul class="list-unstyled mb-3" style="color: #495057;">
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #20c997;"></i>Payroll Summary
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #20c997;"></i>Salary Report
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #20c997;"></i>Deductions Report
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #20c997;"></i>Tax Report
+                        </li>
+                    </ul>
+
+                    <button class="btn w-100 text-white" style="background: #20c997; border-color: #20c997;">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Reports -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm" style="border-left: 4px solid #6610f2;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-opacity-10 p-3 me-3" style="background: rgba(102, 16, 242, 0.1);">
+                            <i class="bi bi-graph-up-arrow" style="font-size: 1.5rem; color: #6610f2;"></i>
+                        </div>
+                        <h5 class="mb-0" style="color: #212529; font-weight: 600;">Performance Reports</h5>
+                    </div>
+
+                    <ul class="list-unstyled mb-3" style="color: #495057;">
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #6610f2;"></i>Performance Reviews
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #6610f2;"></i>Goals & Objectives
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #6610f2;"></i>Training Records
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chevron-right me-2" style="color: #6610f2;"></i>Skills Matrix
+                        </li>
+                    </ul>
+
+                    <button class="btn w-100 text-white" style="background: #6610f2; border-color: #6610f2;">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Reports -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm" style="border-left: 4px solid #dc3545;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-sliders text-danger" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <h5 class="mb-0" style="color: #212529; font-weight: 600;">Custom Reports</h5>
+                    </div>
+
+                    <p style="color: #495057; font-size: 0.925rem;">
+                        Create custom reports with your own filters and parameters to analyze specific data sets.
+                    </p>
+
+                    <button class="btn btn-danger w-100 text-white">
+                        <i class="bi bi-plus-circle me-2"></i>Create Custom Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scheduled Reports -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0" style="color: #212529; font-weight: 600;">
+                            <i class="bi bi-clock-history me-2"></i>Scheduled Reports
+                        </h5>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Schedule New Report
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead style="background: #f8f9fa;">
+                                <tr style="color: #212529;">
+                                    <th>Report Name</th>
+                                    <th>Type</th>
+                                    <th>Frequency</th>
+                                    <th>Last Run</th>
+                                    <th>Next Run</th>
+                                    <th>Recipients</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody style="color: #495057;">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="bi bi-calendar-x display-4" style="color: #dee2e6;"></i>
+                                        <p class="mt-2 mb-0" style="color: #6c757d;">No scheduled reports yet</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
