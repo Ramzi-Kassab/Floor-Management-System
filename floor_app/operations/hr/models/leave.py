@@ -10,6 +10,11 @@ from django.utils import timezone
 from floor_app.mixins import AuditMixin, SoftDeleteMixin
 
 
+def get_current_year():
+    """Get current year for default value."""
+    return timezone.now().year
+
+
 class LeaveType:
     """Types of leave"""
     ANNUAL = 'ANNUAL'
@@ -167,7 +172,7 @@ class LeaveBalance(AuditMixin):
         related_name='balances'
     )
     year = models.IntegerField(
-        default=lambda: timezone.now().year,
+        default=get_current_year,
         db_index=True
     )
 

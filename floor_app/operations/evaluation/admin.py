@@ -12,7 +12,7 @@ from .models import (
     NDTInspection,
     TechnicalInstructionInstance,
     RequirementInstance,
-    EvaluationSessionHistory,
+    EvaluationChangeLog,
 )
 
 
@@ -20,26 +20,26 @@ from .models import (
 
 @admin.register(BitType)
 class BitTypeAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'is_active', 'sort_order']
+    list_display = ['code', 'name', 'manufacturer', 'is_active', 'sort_order']
     list_filter = ['is_active']
-    search_fields = ['code', 'name', 'description']
+    search_fields = ['code', 'name', 'description', 'manufacturer']
     ordering = ['sort_order', 'name']
     list_editable = ['is_active', 'sort_order']
 
 
 @admin.register(BitSection)
 class BitSectionAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'is_active', 'sort_order']
+    list_display = ['code', 'name', 'sequence', 'is_active']
     list_filter = ['is_active']
     search_fields = ['code', 'name', 'description']
-    ordering = ['sort_order', 'name']
-    list_editable = ['is_active', 'sort_order']
+    ordering = ['sequence']
+    list_editable = ['is_active']
 
 
 @admin.register(FeatureCode)
 class FeatureCodeAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'category', 'is_active', 'sort_order']
-    list_filter = ['category', 'is_active']
+    list_display = ['code', 'name', 'geometry_type', 'is_active', 'sort_order']
+    list_filter = ['geometry_type', 'is_active']
     search_fields = ['code', 'name', 'description']
     ordering = ['sort_order', 'code']
     list_editable = ['is_active', 'sort_order']
@@ -47,302 +47,161 @@ class FeatureCodeAdmin(admin.ModelAdmin):
 
 @admin.register(CutterEvaluationCode)
 class CutterEvaluationCodeAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'action_required', 'color', 'is_active', 'sort_order']
-    list_filter = ['action_required', 'is_active']
+    list_display = ['code', 'name', 'action', 'color_code', 'is_active', 'sort_order']
+    list_filter = ['action', 'is_active']
     search_fields = ['code', 'name', 'description']
     ordering = ['sort_order', 'code']
     list_editable = ['is_active', 'sort_order']
-    fieldsets = (
-        ('Code Information', {
-            'fields': ('code', 'name', 'description')
-        }),
-        ('Display', {
-            'fields': ('color', 'sort_order')
-        }),
-        ('Action', {
-            'fields': ('action_required',)
-        }),
-        ('Status', {
-            'fields': ('is_active',)
-        }),
-    )
 
 
-# ========== Template Models ==========
-
-@admin.register(TechnicalInstructionTemplate)
-class TechnicalInstructionTemplateAdmin(admin.ModelAdmin):
-    list_display = [
-        'code', 'title', 'applies_to_bit_type', 'applies_to_section',
-        'priority', 'is_mandatory', 'auto_apply', 'is_active'
-    ]
-    list_filter = [
-        'is_mandatory', 'requires_engineer_override', 'auto_apply',
-        'is_active', 'applies_to_bit_type', 'applies_to_section'
-    ]
-    search_fields = ['code', 'title', 'description']
-    ordering = ['-priority', 'code']
-    list_editable = ['priority', 'is_mandatory', 'auto_apply', 'is_active']
-    readonly_fields = ['created_at', 'updated_at', 'created_by']
-    fieldsets = (
-        ('Instruction Details', {
-            'fields': ('code', 'title', 'description')
-        }),
-        ('Application', {
-            'fields': ('applies_to_bit_type', 'applies_to_section', 'auto_apply')
-        }),
-        ('Priority & Requirements', {
-            'fields': ('priority', 'is_mandatory', 'requires_engineer_override')
-        }),
-        ('Status', {
-            'fields': ('is_active',)
-        }),
-        ('Audit', {
-            'fields': ('created_by', 'created_at', 'updated_at'),
-            'classes': ['collapse']
-        }),
-    )
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            obj.created_by = request.user
-        super().save_model(request, obj, form, change)
-
-
-@admin.register(RequirementTemplate)
-class RequirementTemplateAdmin(admin.ModelAdmin):
-    list_display = [
-        'code', 'title', 'category', 'applies_to_bit_type',
-        'is_mandatory', 'auto_apply', 'is_active'
-    ]
-    list_filter = ['category', 'is_mandatory', 'auto_apply', 'is_active', 'applies_to_bit_type']
-    search_fields = ['code', 'title', 'description', 'verification_method']
-    ordering = ['category', 'code']
-    list_editable = ['is_mandatory', 'auto_apply', 'is_active']
-    readonly_fields = ['created_at', 'updated_at', 'created_by']
-    fieldsets = (
-        ('Requirement Details', {
-            'fields': ('code', 'title', 'description', 'category')
-        }),
-        ('Application', {
-            'fields': ('applies_to_bit_type', 'verification_method', 'auto_apply')
-        }),
-        ('Priority', {
-            'fields': ('is_mandatory',)
-        }),
-        ('Status', {
-            'fields': ('is_active',)
-        }),
-        ('Audit', {
-            'fields': ('created_by', 'created_at', 'updated_at'),
-            'classes': ['collapse']
-        }),
-    )
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            obj.created_by = request.user
-        super().save_model(request, obj, form, change)
-
-
-# ========== Main Evaluation Session ==========
+# ========== Core Evaluation Models ==========
 
 class EvaluationCellInline(admin.TabularInline):
     model = EvaluationCell
     extra = 0
-    fields = [
-        'pocket_number', 'row', 'column', 'blade_number',
-        'evaluation_code', 'feature_code', 'section', 'condition_description'
-    ]
-    ordering = ['row', 'column']
-    can_delete = True
-    show_change_link = False
+    fields = ['blade_number', 'section', 'position_index', 'cutter_code', 'notes']
+    ordering = ['blade_number', 'position_index']
 
 
-class ThreadInspectionInline(admin.StackedInline):
+class ThreadInspectionInline(admin.TabularInline):
     model = ThreadInspection
     extra = 0
-    fields = [
-        'thread_type', 'thread_size', 'result', 'damage_type',
-        'pitch_diameter', 'lead', 'taper',
-        'description', 'repair_action', 'repair_completed', 'inspected_by'
-    ]
-    readonly_fields = ['inspection_date', 'created_at']
+    fields = ['connection_type', 'thread_type', 'result', 'description']
+    readonly_fields = ['inspected_at']
 
 
-class NDTInspectionInline(admin.StackedInline):
+class NDTInspectionInline(admin.TabularInline):
     model = NDTInspection
     extra = 0
-    fields = [
-        'test_type', 'test_procedure', 'test_area',
-        'result', 'defect_severity',
-        'defects_found', 'defect_locations', 'recommendations',
-        'report_number', 'performed_by'
-    ]
-    readonly_fields = ['test_date', 'created_at']
+    fields = ['method', 'result', 'areas_inspected', 'recommendations']
+    readonly_fields = ['inspected_at']
 
 
 class TechnicalInstructionInstanceInline(admin.TabularInline):
     model = TechnicalInstructionInstance
     extra = 0
-    fields = ['code', 'title', 'is_mandatory', 'status', 'actioned_by', 'actioned_at']
-    readonly_fields = ['code', 'title', 'is_mandatory', 'actioned_at']
+    fields = ['template', 'stage', 'status', 'override_reason']
+    readonly_fields = ['template', 'stage']
 
 
 class RequirementInstanceInline(admin.TabularInline):
     model = RequirementInstance
     extra = 0
-    fields = ['code', 'title', 'category', 'is_mandatory', 'status', 'satisfied_by', 'satisfied_at']
-    readonly_fields = ['code', 'title', 'category', 'is_mandatory', 'satisfied_at']
+    fields = ['template', 'status', 'notes']
+    readonly_fields = ['template']
 
 
 @admin.register(EvaluationSession)
 class EvaluationSessionAdmin(admin.ModelAdmin):
-    list_display = [
-        'session_number', 'job_card', 'bit_type', 'status',
-        'total_cutters', 'replace_count', 'repair_count', 'ok_count',
-        'revision_number', 'is_locked', 'created_at'
-    ]
-    list_filter = ['status', 'bit_type', 'is_locked', 'evaluation_date']
-    search_fields = [
-        'session_number', 'job_card__job_card_number',
-        'serial_unit__serial_number', 'evaluation_notes'
-    ]
+    list_display = ['id', 'serial_unit', 'context', 'status', 'total_cells', 'replace_count', 'evaluator', 'created_at']
+    list_filter = ['status', 'context', 'created_at']
+    search_fields = ['serial_unit__serial_number', 'customer_name', 'project_name']
     date_hierarchy = 'created_at'
-    readonly_fields = [
-        'total_cutters', 'replace_count', 'repair_count', 'ok_count', 'rotate_count',
-        'created_at', 'updated_at', 'locked_at'
-    ]
-    inlines = [
-        EvaluationCellInline,
-        ThreadInspectionInline,
-        NDTInspectionInline,
-        TechnicalInstructionInstanceInline,
-        RequirementInstanceInline,
-    ]
+    readonly_fields = ['total_cells', 'replace_count', 'ok_count', 'braze_count', 'rotate_count', 'lost_count', 'created_at', 'updated_at']
+    inlines = [EvaluationCellInline, ThreadInspectionInline, NDTInspectionInline, TechnicalInstructionInstanceInline, RequirementInstanceInline]
+
     fieldsets = (
-        ('Session Information', {
-            'fields': (
-                'session_number', 'job_card', 'serial_unit', 'bit_type',
-                'revision_number', 'status'
-            )
+        ('Session Info', {
+            'fields': ('serial_unit', 'mat_revision', 'job_card', 'batch_order', 'context')
         }),
-        ('Grid Configuration', {
-            'fields': ('total_pockets', 'total_rows', 'total_columns')
+        ('Customer/Project', {
+            'fields': ('customer_name', 'project_name')
         }),
-        ('Evaluation Details', {
-            'fields': ('evaluated_by', 'evaluation_date', 'evaluation_notes')
+        ('Status & Personnel', {
+            'fields': ('status', 'evaluator', 'reviewing_engineer')
         }),
         ('Summary Statistics', {
-            'fields': (
-                'total_cutters', 'replace_count', 'repair_count',
-                'ok_count', 'rotate_count'
-            ),
-            'classes': ['collapse']
+            'fields': ('total_cells', 'replace_count', 'ok_count', 'braze_count', 'rotate_count', 'lost_count'),
+            'classes': ('collapse',)
         }),
-        ('Review & Approval', {
-            'fields': (
-                'reviewed_by', 'review_date', 'review_notes',
-                'approved_by', 'approval_date', 'approval_notes'
-            ),
-            'classes': ['collapse']
+        ('Notes', {
+            'fields': ('general_notes', 'wear_pattern_notes', 'damage_assessment', 'recommendations'),
+            'classes': ('collapse',)
         }),
-        ('Lock Status', {
-            'fields': ('is_locked', 'locked_at', 'locked_by'),
-            'classes': ['collapse']
+        ('Workflow', {
+            'fields': ('submitted_at', 'approved_at', 'approved_by', 'locked_at', 'locked_by', 'is_last_known_state'),
+            'classes': ('collapse',)
         }),
         ('Audit', {
-            'fields': ('created_by', 'updated_by', 'created_at', 'updated_at'),
-            'classes': ['collapse']
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
         }),
     )
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            obj.created_by = request.user
-        obj.updated_by = request.user
-        super().save_model(request, obj, form, change)
 
 
 @admin.register(EvaluationCell)
 class EvaluationCellAdmin(admin.ModelAdmin):
-    list_display = [
-        'session', 'pocket_number', 'row', 'column',
-        'evaluation_code', 'feature_code', 'section', 'wear_percentage'
-    ]
-    list_filter = ['evaluation_code', 'feature_code', 'section']
-    search_fields = ['session__session_number', 'condition_description', 'notes']
-    ordering = ['session', 'row', 'column']
+    list_display = ['evaluation_session', 'blade_number', 'section', 'position_index', 'cutter_code', 'is_primary']
+    list_filter = ['cutter_code', 'section', 'is_primary']
+    search_fields = ['evaluation_session__serial_unit__serial_number', 'notes']
+    ordering = ['evaluation_session', 'blade_number', 'position_index']
 
-
-# ========== Inspection Models ==========
 
 @admin.register(ThreadInspection)
 class ThreadInspectionAdmin(admin.ModelAdmin):
-    list_display = [
-        'session', 'thread_type', 'thread_size', 'result',
-        'damage_type', 'repair_completed', 'inspected_by', 'inspection_date'
-    ]
-    list_filter = ['result', 'damage_type', 'repair_completed', 'thread_type']
-    search_fields = ['session__session_number', 'description', 'repair_action']
-    date_hierarchy = 'inspection_date'
-    readonly_fields = ['inspection_date', 'created_at', 'updated_at']
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            obj.created_by = request.user
-        obj.updated_by = request.user
-        super().save_model(request, obj, form, change)
+    list_display = ['evaluation_session', 'thread_type', 'connection_type', 'result', 'inspected_by', 'inspected_at']
+    list_filter = ['thread_type', 'connection_type', 'result']
+    search_fields = ['evaluation_session__serial_unit__serial_number', 'description']
+    date_hierarchy = 'inspected_at'
+    readonly_fields = ['inspected_at']
 
 
 @admin.register(NDTInspection)
 class NDTInspectionAdmin(admin.ModelAdmin):
-    list_display = [
-        'session', 'test_type', 'test_area', 'result',
-        'defect_severity', 'report_number', 'performed_by', 'test_date'
-    ]
-    list_filter = ['test_type', 'result', 'defect_severity']
-    search_fields = ['session__session_number', 'report_number', 'defects_found']
-    date_hierarchy = 'test_date'
-    readonly_fields = ['test_date', 'created_at', 'updated_at']
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            obj.created_by = request.user
-        obj.updated_by = request.user
-        super().save_model(request, obj, form, change)
+    list_display = ['evaluation_session', 'method', 'result', 'meets_acceptance_criteria', 'inspector', 'inspected_at']
+    list_filter = ['method', 'result', 'meets_acceptance_criteria']
+    search_fields = ['evaluation_session__serial_unit__serial_number', 'areas_inspected', 'recommendations']
+    date_hierarchy = 'inspected_at'
+    readonly_fields = ['inspected_at']
 
 
-# ========== Instance Models ==========
+# ========== Templates ==========
+
+@admin.register(TechnicalInstructionTemplate)
+class TechnicalInstructionTemplateAdmin(admin.ModelAdmin):
+    list_display = ['code', 'name', 'scope', 'stage', 'severity', 'priority', 'auto_generate', 'is_active']
+    list_filter = ['scope', 'stage', 'severity', 'auto_generate', 'is_active']
+    search_fields = ['code', 'name', 'description', 'output_template']
+    ordering = ['-priority', 'code']
+    readonly_fields = ['created_at', 'updated_at']
+    list_editable = ['priority', 'auto_generate', 'is_active']
+
+
+@admin.register(RequirementTemplate)
+class RequirementTemplateAdmin(admin.ModelAdmin):
+    list_display = ['code', 'name', 'stage', 'requirement_type', 'is_mandatory', 'can_be_waived', 'is_active']
+    list_filter = ['stage', 'requirement_type', 'is_mandatory', 'can_be_waived', 'is_active']
+    search_fields = ['code', 'name', 'description']
+    ordering = ['stage', 'sort_order', 'code']
+    readonly_fields = ['created_at', 'updated_at']
+    list_editable = ['is_mandatory', 'is_active']
+
+
+# ========== Instances ==========
 
 @admin.register(TechnicalInstructionInstance)
 class TechnicalInstructionInstanceAdmin(admin.ModelAdmin):
-    list_display = [
-        'session', 'code', 'title', 'is_mandatory',
-        'status', 'actioned_by', 'actioned_at'
-    ]
-    list_filter = ['status', 'is_mandatory']
-    search_fields = ['session__session_number', 'code', 'title', 'description']
-    readonly_fields = ['actioned_at', 'created_at', 'updated_at']
+    list_display = ['evaluation_session', 'template', 'stage', 'severity', 'status', 'acknowledged_by', 'acknowledged_at']
+    list_filter = ['status', 'stage', 'severity']
+    search_fields = ['evaluation_session__serial_unit__serial_number', 'resolved_text', 'override_reason']
+    readonly_fields = ['acknowledged_at', 'generated_at', 'resolved_at']
 
 
 @admin.register(RequirementInstance)
 class RequirementInstanceAdmin(admin.ModelAdmin):
-    list_display = [
-        'session', 'code', 'title', 'category', 'is_mandatory',
-        'status', 'satisfied_by', 'satisfied_at'
-    ]
-    list_filter = ['status', 'category', 'is_mandatory']
-    search_fields = ['session__session_number', 'code', 'title', 'description']
+    list_display = ['evaluation_session', 'template', 'status', 'satisfied_by', 'satisfied_at']
+    list_filter = ['status']
+    search_fields = ['evaluation_session__serial_unit__serial_number', 'notes', 'waiver_reason']
     readonly_fields = ['satisfied_at', 'created_at', 'updated_at']
 
 
 # ========== History ==========
 
-@admin.register(EvaluationSessionHistory)
-class EvaluationSessionHistoryAdmin(admin.ModelAdmin):
-    list_display = ['session', 'action', 'description', 'performed_by', 'performed_at']
-    list_filter = ['action']
-    search_fields = ['session__session_number', 'description']
-    date_hierarchy = 'performed_at'
-    readonly_fields = ['session', 'action', 'description', 'old_value', 'new_value', 'performed_by', 'performed_at']
+@admin.register(EvaluationChangeLog)
+class EvaluationChangeLogAdmin(admin.ModelAdmin):
+    list_display = ['evaluation_session', 'change_type', 'change_stage', 'field_changed', 'changed_by', 'changed_at']
+    list_filter = ['change_type', 'change_stage']
+    search_fields = ['evaluation_session__serial_unit__serial_number', 'reason', 'field_changed']
+    date_hierarchy = 'changed_at'
+    readonly_fields = ['evaluation_session', 'evaluation_cell', 'change_type', 'change_stage', 'model_name',
+                      'field_changed', 'old_value', 'new_value', 'reason', 'changed_by', 'changed_at']

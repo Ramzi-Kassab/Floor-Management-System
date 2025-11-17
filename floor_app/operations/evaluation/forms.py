@@ -21,48 +21,54 @@ class EvaluationSessionForm(forms.ModelForm):
     class Meta:
         model = EvaluationSession
         fields = [
-            'session_number', 'job_card', 'serial_unit', 'bit_type',
-            'total_pockets', 'total_rows', 'total_columns',
-            'evaluation_date', 'evaluation_notes'
+            'serial_unit', 'mat_revision', 'job_card', 'batch_order',
+            'context', 'customer_name', 'project_name', 'evaluator',
+            'general_notes', 'wear_pattern_notes', 'damage_assessment', 'recommendations'
         ]
         widgets = {
-            'session_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., EVAL-2025-001'
-            }),
-            'job_card': forms.Select(attrs={'class': 'form-select'}),
             'serial_unit': forms.Select(attrs={'class': 'form-select'}),
-            'bit_type': forms.Select(attrs={'class': 'form-select'}),
-            'total_pockets': forms.NumberInput(attrs={
+            'mat_revision': forms.Select(attrs={'class': 'form-select'}),
+            'job_card': forms.Select(attrs={'class': 'form-select'}),
+            'batch_order': forms.Select(attrs={'class': 'form-select'}),
+            'context': forms.Select(attrs={'class': 'form-select'}),
+            'customer_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'min': 0
+                'placeholder': 'Customer name'
             }),
-            'total_rows': forms.NumberInput(attrs={
+            'project_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'min': 1,
-                'value': 10
+                'placeholder': 'Project/Well/Field name'
             }),
-            'total_columns': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1,
-                'value': 20
-            }),
-            'evaluation_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'evaluation_notes': forms.Textarea(attrs={
+            'evaluator': forms.Select(attrs={'class': 'form-select'}),
+            'general_notes': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'Additional notes about this evaluation...'
+                'placeholder': 'General notes about this evaluation...'
+            }),
+            'wear_pattern_notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Notes about observed wear patterns...'
+            }),
+            'damage_assessment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Overall damage assessment...'
+            }),
+            'recommendations': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Recommendations for repair/action...'
             }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['serial_unit'].required = False
-        self.fields['bit_type'].required = False
-        self.fields['evaluation_date'].required = False
+        # Make some fields optional for easier form entry
+        self.fields['job_card'].required = False
+        self.fields['batch_order'].required = False
+        self.fields['customer_name'].required = False
+        self.fields['project_name'].required = False
 
 
 class EvaluationCellForm(forms.ModelForm):
@@ -71,58 +77,55 @@ class EvaluationCellForm(forms.ModelForm):
     class Meta:
         model = EvaluationCell
         fields = [
-            'pocket_number', 'row', 'column', 'blade_number', 'position_on_blade',
-            'evaluation_code', 'feature_code', 'section',
-            'condition_description', 'notes', 'wear_percentage'
+            'blade_number', 'section', 'position_index', 'is_primary',
+            'cutter_item', 'cutter_code', 'notes',
+            'has_fin_build_up', 'fin_number', 'has_pocket_damage',
+            'has_impact_arrestor_issue', 'has_body_build_up',
+            'pocket_diameter', 'pocket_depth'
         ]
         widgets = {
-            'pocket_number': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1
-            }),
-            'row': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1
-            }),
-            'column': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1
-            }),
             'blade_number': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': 1
             }),
-            'position_on_blade': forms.NumberInput(attrs={
+            'section': forms.Select(attrs={'class': 'form-select'}),
+            'position_index': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': 1
             }),
-            'evaluation_code': forms.Select(attrs={'class': 'form-select'}),
-            'feature_code': forms.Select(attrs={'class': 'form-select'}),
-            'section': forms.Select(attrs={'class': 'form-select'}),
-            'condition_description': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Describe condition...'
-            }),
+            'is_primary': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'cutter_item': forms.Select(attrs={'class': 'form-select'}),
+            'cutter_code': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 2,
                 'placeholder': 'Additional notes...'
             }),
-            'wear_percentage': forms.NumberInput(attrs={
+            'has_fin_build_up': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'fin_number': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'step': '0.01',
-                'min': 0,
-                'max': 100
+                'min': 1
+            }),
+            'has_pocket_damage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'has_impact_arrestor_issue': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'has_body_build_up': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'pocket_diameter': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.001'
+            }),
+            'pocket_depth': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.001'
             }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['blade_number'].required = False
-        self.fields['position_on_blade'].required = False
-        self.fields['feature_code'].required = False
-        self.fields['section'].required = False
-        self.fields['wear_percentage'].required = False
+        self.fields['cutter_item'].required = False
+        self.fields['cutter_code'].required = False
+        self.fields['fin_number'].required = False
+        self.fields['pocket_diameter'].required = False
+        self.fields['pocket_depth'].required = False
 
 
 class ThreadInspectionForm(forms.ModelForm):
@@ -131,51 +134,55 @@ class ThreadInspectionForm(forms.ModelForm):
     class Meta:
         model = ThreadInspection
         fields = [
-            'thread_type', 'thread_size', 'result', 'damage_type',
-            'pitch_diameter', 'lead', 'taper',
-            'description', 'repair_action'
+            'thread_type', 'connection_type', 'thread_size', 'result',
+            'description', 'thread_crest_condition', 'thread_root_condition',
+            'shoulder_condition', 'galling_observed', 'corrosion_observed',
+            'repair_recommendation', 'requires_recut', 'requires_replacement',
+            'inspected_by'
         ]
         widgets = {
-            'thread_type': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., API REG, IF, FH'
-            }),
+            'thread_type': forms.Select(attrs={'class': 'form-select'}),
+            'connection_type': forms.Select(attrs={'class': 'form-select'}),
             'thread_size': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g., 4-1/2 REG'
             }),
             'result': forms.Select(attrs={'class': 'form-select'}),
-            'damage_type': forms.Select(attrs={'class': 'form-select'}),
-            'pitch_diameter': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.0001'
-            }),
-            'lead': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.0001'
-            }),
-            'taper': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.0001'
-            }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'Describe any issues found...'
             }),
-            'repair_action': forms.Textarea(attrs={
+            'thread_crest_condition': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Condition of thread crests'
+            }),
+            'thread_root_condition': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Condition of thread roots'
+            }),
+            'shoulder_condition': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Condition of thread shoulder'
+            }),
+            'galling_observed': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'corrosion_observed': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'repair_recommendation': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'Repair actions taken or required...'
+                'placeholder': 'Recommended repair actions...'
             }),
+            'requires_recut': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'requires_replacement': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'inspected_by': forms.Select(attrs={'class': 'form-select'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['thread_size'].required = False
-        self.fields['pitch_diameter'].required = False
-        self.fields['lead'].required = False
-        self.fields['taper'].required = False
+        self.fields['thread_crest_condition'].required = False
+        self.fields['thread_root_condition'].required = False
+        self.fields['shoulder_condition'].required = False
 
 
 class NDTInspectionForm(forms.ModelForm):
@@ -184,46 +191,57 @@ class NDTInspectionForm(forms.ModelForm):
     class Meta:
         model = NDTInspection
         fields = [
-            'test_type', 'test_procedure', 'test_area',
-            'result', 'defect_severity',
-            'defects_found', 'defect_locations', 'recommendations',
-            'equipment_used', 'calibration_ref', 'report_number'
+            'method', 'result', 'areas_inspected', 'indications_description',
+            'crack_indications', 'porosity_indications', 'inclusion_indications',
+            'max_indication_size', 'indication_count', 'acceptance_standard',
+            'meets_acceptance_criteria', 'recommendations', 'requires_retest',
+            'equipment_used', 'inspector_certification', 'inspector', 'report_number'
         ]
         widgets = {
-            'test_type': forms.Select(attrs={'class': 'form-select'}),
-            'test_procedure': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., ASTM E1417'
-            }),
-            'test_area': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., Pin Thread, Body, Gauge Area'
-            }),
+            'method': forms.Select(attrs={'class': 'form-select'}),
             'result': forms.Select(attrs={'class': 'form-select'}),
-            'defect_severity': forms.Select(attrs={'class': 'form-select'}),
-            'defects_found': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'List any defects found...'
-            }),
-            'defect_locations': forms.Textarea(attrs={
+            'areas_inspected': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 2,
-                'placeholder': 'Describe defect locations...'
+                'placeholder': 'e.g., Body, Blades, Shank...'
             }),
+            'indications_description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Description of any indications/defects found...'
+            }),
+            'crack_indications': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'porosity_indications': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'inclusion_indications': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'max_indication_size': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.001',
+                'placeholder': 'mm'
+            }),
+            'indication_count': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0
+            }),
+            'acceptance_standard': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., ASME, API, company standard'
+            }),
+            'meets_acceptance_criteria': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'recommendations': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'Recommendations for repair or further inspection...'
+                'placeholder': 'Recommendations based on findings...'
             }),
+            'requires_retest': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'equipment_used': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Equipment make/model'
+                'placeholder': 'Equipment/instrument used'
             }),
-            'calibration_ref': forms.TextInput(attrs={
+            'inspector_certification': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Calibration reference number'
+                'placeholder': 'e.g., Level II'
             }),
+            'inspector': forms.Select(attrs={'class': 'form-select'}),
             'report_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'NDT Report Number'
@@ -232,10 +250,11 @@ class NDTInspectionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['test_procedure'].required = False
-        self.fields['test_area'].required = False
+        self.fields['indications_description'].required = False
+        self.fields['max_indication_size'].required = False
+        self.fields['acceptance_standard'].required = False
         self.fields['equipment_used'].required = False
-        self.fields['calibration_ref'].required = False
+        self.fields['inspector_certification'].required = False
         self.fields['report_number'].required = False
 
 
@@ -323,17 +342,16 @@ class SessionFilterForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
-    bit_type = forms.ModelChoiceField(
-        queryset=BitType.objects.filter(is_active=True),
+    context = forms.ChoiceField(
+        choices=[('', 'All Contexts')] + list(EvaluationSession.CONTEXT_CHOICES),
         required=False,
-        empty_label='All Bit Types',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     search = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Search session number, job card...'
+            'placeholder': 'Search customer, project name...'
         })
     )
     date_from = forms.DateField(
@@ -359,11 +377,12 @@ class BitTypeForm(forms.ModelForm):
 
     class Meta:
         model = BitType
-        fields = ['code', 'name', 'description', 'is_active', 'sort_order']
+        fields = ['code', 'name', 'description', 'manufacturer', 'is_active', 'sort_order']
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'manufacturer': forms.TextInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'sort_order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
@@ -374,13 +393,14 @@ class BitSectionForm(forms.ModelForm):
 
     class Meta:
         model = BitSection
-        fields = ['code', 'name', 'description', 'is_active', 'sort_order']
+        fields = ['code', 'name', 'description', 'sequence', 'color_code', 'is_active']
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'sequence': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'color_code': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'sort_order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
 
@@ -389,12 +409,13 @@ class FeatureCodeForm(forms.ModelForm):
 
     class Meta:
         model = FeatureCode
-        fields = ['code', 'name', 'description', 'category', 'is_active', 'sort_order']
+        fields = ['code', 'name', 'description', 'geometry_type', 'color_code', 'is_active', 'sort_order']
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'category': forms.TextInput(attrs={'class': 'form-control'}),
+            'geometry_type': forms.Select(attrs={'class': 'form-select'}),
+            'color_code': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'sort_order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
@@ -405,13 +426,13 @@ class CutterEvaluationCodeForm(forms.ModelForm):
 
     class Meta:
         model = CutterEvaluationCode
-        fields = ['code', 'name', 'description', 'color', 'action_required', 'is_active', 'sort_order']
+        fields = ['code', 'name', 'description', 'action', 'color_code', 'is_active', 'sort_order']
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
-            'action_required': forms.Select(attrs={'class': 'form-select'}),
+            'action': forms.Select(attrs={'class': 'form-select'}),
+            'color_code': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'sort_order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
@@ -423,27 +444,25 @@ class TechnicalInstructionTemplateForm(forms.ModelForm):
     class Meta:
         model = TechnicalInstructionTemplate
         fields = [
-            'code', 'title', 'description', 'applies_to_bit_type',
-            'applies_to_section', 'priority', 'is_mandatory',
-            'requires_engineer_override', 'auto_apply', 'is_active'
+            'code', 'name', 'description', 'scope', 'stage', 'severity',
+            'output_template', 'auto_generate', 'requires_acknowledgment',
+            'can_be_overridden', 'override_requires_approval', 'priority', 'is_active'
         ]
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'applies_to_bit_type': forms.Select(attrs={'class': 'form-select'}),
-            'applies_to_section': forms.Select(attrs={'class': 'form-select'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'scope': forms.Select(attrs={'class': 'form-select'}),
+            'stage': forms.Select(attrs={'class': 'form-select'}),
+            'severity': forms.Select(attrs={'class': 'form-select'}),
+            'output_template': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'auto_generate': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'requires_acknowledgment': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_be_overridden': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'override_requires_approval': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'priority': forms.NumberInput(attrs={'class': 'form-control'}),
-            'is_mandatory': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'requires_engineer_override': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'auto_apply': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['applies_to_bit_type'].required = False
-        self.fields['applies_to_section'].required = False
 
 
 class RequirementTemplateForm(forms.ModelForm):
@@ -452,23 +471,26 @@ class RequirementTemplateForm(forms.ModelForm):
     class Meta:
         model = RequirementTemplate
         fields = [
-            'code', 'title', 'description', 'category',
-            'applies_to_bit_type', 'verification_method',
-            'is_mandatory', 'auto_apply', 'is_active'
+            'code', 'name', 'description', 'stage', 'requirement_type',
+            'is_mandatory', 'can_be_waived', 'waiver_authority',
+            'satisfaction_instructions', 'lead_time_hours', 'sort_order', 'is_active'
         ]
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'category': forms.Select(attrs={'class': 'form-select'}),
-            'applies_to_bit_type': forms.Select(attrs={'class': 'form-select'}),
-            'verification_method': forms.TextInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'stage': forms.Select(attrs={'class': 'form-select'}),
+            'requirement_type': forms.Select(attrs={'class': 'form-select'}),
             'is_mandatory': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'auto_apply': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_be_waived': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'waiver_authority': forms.TextInput(attrs={'class': 'form-control'}),
+            'satisfaction_instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'lead_time_hours': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'sort_order': forms.NumberInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['applies_to_bit_type'].required = False
-        self.fields['verification_method'].required = False
+        self.fields['waiver_authority'].required = False
+        self.fields['satisfaction_instructions'].required = False
