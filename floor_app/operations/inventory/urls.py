@@ -24,6 +24,7 @@ urlpatterns = [
     # Serial Units
     path('serial-units/', views.SerialUnitListView.as_view(), name='serialunit_list'),
     path('serial-units/create/', views.SerialUnitCreateView.as_view(), name='serialunit_create'),
+    path('serial-units/create/', views.SerialUnitCreateView.as_view(), name='serial_unit_create'),  # Alias
     path('serial-units/<int:pk>/', views.SerialUnitDetailView.as_view(), name='serialunit_detail'),
     path('serial-units/<int:pk>/edit/', views.SerialUnitUpdateView.as_view(), name='serialunit_edit'),
 
@@ -49,4 +50,5 @@ urlpatterns = [
     path('settings/ownership/', views.OwnershipTypeListView.as_view(), name='ownership_list'),
     path('settings/categories/', views.ItemCategoryListView.as_view(), name='category_list'),
     path('settings/locations/', views.LocationListView.as_view(), name='location_list'),
+    path('settings/uom/', views.UOMListView.as_view(), name='uom_list'),
 ]

@@ -46,19 +46,19 @@ def dashboard(request):
     # Summary stats
     total_sessions = EvaluationSession.objects.count()
     draft_sessions = EvaluationSession.objects.filter(status='DRAFT').count()
-    pending_review = EvaluationSession.objects.filter(status='PENDING_REVIEW').count()
+    pending_review = EvaluationSession.objects.filter(status='UNDER_REVIEW').count()
     approved_sessions = EvaluationSession.objects.filter(status='APPROVED').count()
-    locked_sessions = EvaluationSession.objects.filter(is_locked=True).count()
+    locked_sessions = EvaluationSession.objects.filter(status='LOCKED').count()
 
     # Recent sessions
     recent_sessions = EvaluationSession.objects.select_related(
-        'job_card', 'bit_type', 'evaluated_by'
+        'job_card', 'serial_unit', 'evaluator'
     ).order_by('-created_at')[:10]
 
     # Sessions requiring attention
     attention_sessions = EvaluationSession.objects.filter(
-        status__in=['PENDING_REVIEW', 'IN_PROGRESS']
-    ).select_related('job_card', 'evaluated_by').order_by('-updated_at')[:10]
+        status__in=['UNDER_REVIEW', 'IN_PROGRESS']
+    ).select_related('job_card', 'evaluator').order_by('-updated_at')[:10]
 
     # Statistics by status
     status_stats = EvaluationSession.objects.values('status').annotate(
@@ -88,7 +88,7 @@ class EvaluationSessionListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = EvaluationSession.objects.select_related(
-            'job_card', 'bit_type', 'evaluated_by'
+            'job_card', 'serial_unit', 'evaluator', 'mat_revision'
         )
 
         # Apply filters
@@ -96,16 +96,17 @@ class EvaluationSessionListView(LoginRequiredMixin, ListView):
         if status:
             qs = qs.filter(status=status)
 
+        # Filter by serial unit's bit type if provided
         bit_type = self.request.GET.get('bit_type')
         if bit_type:
-            qs = qs.filter(bit_type_id=bit_type)
+            qs = qs.filter(serial_unit__item__bit_design_revision__design__bit_type_id=bit_type)
 
         search = self.request.GET.get('search')
         if search:
             qs = qs.filter(
-                Q(session_number__icontains=search) |
+                Q(serial_unit__serial_number__icontains=search) |
                 Q(job_card__job_card_number__icontains=search) |
-                Q(evaluation_notes__icontains=search)
+                Q(customer_name__icontains=search)
             )
 
         date_from = self.request.GET.get('date_from')
@@ -122,7 +123,7 @@ class EvaluationSessionListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filter_form'] = SessionFilterForm(self.request.GET)
         context['status_choices'] = EvaluationSession.STATUS_CHOICES
-        context['bit_types'] = BitType.objects.filter(is_active=True)
+        context['bit_types'] = BitType.objects.filter(is_active=True) if hasattr(BitType._meta, 'model') else []
         return context
 
 
@@ -143,7 +144,7 @@ class EvaluationSessionDetailView(LoginRequiredMixin, DetailView):
         context['ndt_inspections'] = session.ndt_inspections.all()
         context['instructions'] = session.instruction_instances.all()
         context['requirements'] = session.requirement_instances.all()
-        context['history'] = session.history.all().order_by('-performed_at')[:20]
+        context['history'] = session.change_logs.all().order_by('-changed_at')[:20]
 
         # Build grid data for visualization
         grid_data = {}
@@ -685,7 +686,7 @@ def print_summary(request, pk):
 
     context = {
         'session': session,
-        'history': session.history.all().order_by('performed_at'),
+        'history': session.change_logs.all().order_by('changed_at'),
     }
     return render(request, 'evaluation/sessions/print_summary.html', context)
 
@@ -696,13 +697,13 @@ def print_summary(request, pk):
 def history_view(request, pk):
     """View evaluation session history."""
     session = get_object_or_404(EvaluationSession, pk=pk)
-    history = session.history.all().order_by('-performed_at')
+    history = session.change_logs.all().order_by('-changed_at')
 
     context = {
         'session': session,
         'history': history,
     }
-    return render(request, 'evaluation/sessions/history.html', context)
+    return render(request, 'evaluation/history/timeline.html', context)
 
 
 # ========== Settings Views ==========

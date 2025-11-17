@@ -46,5 +46,8 @@ urlpatterns = [
 
     # === Purchasing & Logistics ===
     path("purchasing/", include(("floor_app.operations.purchasing.urls", "purchasing"), namespace="purchasing")),
+
+    # === Knowledge & Instructions ===
+    path("knowledge/", include(("floor_app.operations.knowledge.urls", "knowledge"), namespace="knowledge")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

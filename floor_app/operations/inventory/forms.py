@@ -48,8 +48,8 @@ class SerialUnitForm(forms.ModelForm):
         fields = [
             'item', 'serial_number', 'current_mat', 'location',
             'condition', 'ownership', 'status', 'manufacture_date',
-            'received_date', 'warranty_expiry', 'acquisition_cost',
-            'current_customer', 'notes'
+            'received_date', 'last_run_date', 'warranty_expiry', 'acquisition_cost',
+            'current_book_value', 'current_customer', 'current_job_reference', 'notes'
         ]
         widgets = {
             'item': forms.Select(attrs={'class': 'form-select'}),
@@ -61,9 +61,12 @@ class SerialUnitForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
             'manufacture_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'received_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'last_run_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'warranty_expiry': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'acquisition_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'current_book_value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'current_customer': forms.TextInput(attrs={'class': 'form-control'}),
+            'current_job_reference': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 

@@ -598,3 +598,12 @@ class LocationListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Location.objects.filter(is_deleted=False).order_by('code')
+
+
+class UOMListView(LoginRequiredMixin, ListView):
+    model = UnitOfMeasure
+    template_name = 'inventory/settings/uom_list.html'
+    context_object_name = 'uoms'
+
+    def get_queryset(self):
+        return UnitOfMeasure.objects.filter(is_active=True).order_by('code')

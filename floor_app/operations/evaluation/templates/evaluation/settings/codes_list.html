@@ -40,7 +40,7 @@
     <!-- Search and Filter Section -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
-            <form method="get" action="{% url 'evaluation:codes_list' %}" class="row g-3">
+            <form method="get" action="{% url 'evaluation:code_list' %}" class="row g-3">
                 <div class="col-md-4">
                     <input type="text"
                            class="form-control"
@@ -60,7 +60,7 @@
                         <button type="submit" class="btn btn-outline-primary">
                             <i class="bi bi-search"></i> Search
                         </button>
-                        <a href="{% url 'evaluation:codes_list' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'evaluation:code_list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-clockwise"></i> Reset
                         </a>
                     </div>

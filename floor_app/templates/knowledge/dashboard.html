@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Knowledge Center - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Knowledge & Instructions Center</h1>
+            <p class="text-muted mb-0">Central hub for procedures, guidelines, instructions, and training</p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'knowledge:article_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-journal-text me-1"></i> Articles
+            </a>
+            <a href="{% url 'knowledge:instruction_list' %}" class="btn btn-outline-warning">
+                <i class="bi bi-lightning me-1"></i> Instructions
+            </a>
+            <a href="{% url 'knowledge:training_dashboard' %}" class="btn btn-outline-success">
+                <i class="bi bi-mortarboard me-1"></i> Training
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Published Articles</h6>
+                            <h2 class="mb-0">{{ article_stats.published }}</h2>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded p-3">
+                            <i class="bi bi-journal-text text-primary fs-4"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ article_stats.draft }} drafts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Active Instructions</h6>
+                            <h2 class="mb-0">{{ active_instructions }}</h2>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded p-3">
+                            <i class="bi bi-lightning text-warning fs-4"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Automated business rules</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Training Courses</h6>
+                            <h2 class="mb-0">{{ published_courses }}</h2>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded p-3">
+                            <i class="bi bi-mortarboard text-success fs-4"></i>
+                        </div>
+                    </div>
+                    {% if user_training %}
+                    <small class="text-muted">{{ user_training.in_progress }} in progress</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Needs Review</h6>
+                            <h2 class="mb-0">{{ article_stats.needs_review }}</h2>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 rounded p-3">
+                            <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Articles due for review</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <!-- Featured Articles -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-star-fill text-warning me-2"></i>Featured Articles</h5>
+                    <a href="{% url 'knowledge:article_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if featured_articles %}
+                    <div class="row g-3">
+                        {% for article in featured_articles %}
+                        <div class="col-md-4">
+                            <div class="card h-100 border">
+                                <div class="card-body">
+                                    <span class="badge bg-{{ article.article_type|lower }} mb-2">
+                                        {{ article.get_article_type_display }}
+                                    </span>
+                                    <h6 class="card-title">
+                                        <a href="{% url 'knowledge:article_detail' article.slug %}" class="text-decoration-none">
+                                            {{ article.title|truncatechars:50 }}
+                                        </a>
+                                    </h6>
+                                    <p class="card-text small text-muted">{{ article.summary|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">{{ article.code }}</small>
+                                        <small class="text-muted">
+                                            <i class="bi bi-eye"></i> {{ article.view_count }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No featured articles yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Articles -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Articles</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for article in recent_articles %}
+                    <a href="{% url 'knowledge:article_detail' article.slug %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ article.title }}</h6>
+                            <small class="text-muted">{{ article.published_at|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1 small text-muted">{{ article.summary|truncatechars:150 }}</p>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-secondary">{{ article.code }}</span>
+                            <span class="badge bg-info">{{ article.get_article_type_display }}</span>
+                            {% if article.category %}
+                            <span class="badge bg-light text-dark">{{ article.category.name }}</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted">No recent articles.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- My Training (if employee) -->
+            {% if user_training %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>My Training</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-around text-center mb-3">
+                        <div>
+                            <h4 class="mb-0 text-warning">{{ user_training.in_progress }}</h4>
+                            <small class="text-muted">In Progress</small>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 text-success">{{ user_training.completed }}</h4>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 text-danger">{{ user_training.expiring_soon }}</h4>
+                            <small class="text-muted">Expiring</small>
+                        </div>
+                    </div>
+                    <a href="{% url 'knowledge:my_training' %}" class="btn btn-outline-success w-100">
+                        View My Training
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Expiring Instructions -->
+            {% if expiring_instructions %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Expiring Instructions</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for inst in expiring_instructions %}
+                    <a href="{% url 'knowledge:instruction_detail' inst.code %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ inst.code }}</h6>
+                            <span class="badge bg-danger">{{ inst.days_until_expiry }}d left</span>
+                        </div>
+                        <p class="mb-0 small">{{ inst.title }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Categories -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-folder me-2"></i>Categories</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for cat in categories %}
+                    <a href="{% url 'knowledge:category_detail' cat.slug %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>
+                            {% if cat.icon %}<i class="{{ cat.icon }} me-2"></i>{% endif %}
+                            {{ cat.name }}
+                        </span>
+                        <span class="badge bg-primary rounded-pill">{{ cat.article_count }}</span>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted">No categories yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Popular FAQs -->
+            {% if popular_faqs %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Popular FAQs</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for faq in popular_faqs %}
+                    <div class="list-group-item">
+                        <strong class="d-block mb-1">{{ faq.question|truncatechars:80 }}</strong>
+                        <small class="text-muted">{{ faq.short_answer|default:faq.answer|truncatechars:100 }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{% url 'knowledge:faq_list' %}" class="btn btn-sm btn-outline-primary w-100">
+                        View All FAQs
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    {% if perms.knowledge.add_article or perms.knowledge.add_instructionrule %}
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="row g-3">
+                {% if perms.knowledge.add_article %}
+                <div class="col-md-3">
+                    <a href="{% url 'knowledge:article_create' %}" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-circle me-2"></i>New Article
+                    </a>
+                </div>
+                {% endif %}
+                {% if perms.knowledge.add_instructionrule %}
+                <div class="col-md-3">
+                    <a href="{% url 'knowledge:instruction_create' %}" class="btn btn-warning w-100">
+                        <i class="bi bi-lightning me-2"></i>New Instruction
+                    </a>
+                </div>
+                {% endif %}
+                {% if perms.knowledge.add_document %}
+                <div class="col-md-3">
+                    <a href="{% url 'knowledge:document_upload' %}" class="btn btn-info w-100">
+                        <i class="bi bi-upload me-2"></i>Upload Document
+                    </a>
+                </div>
+                {% endif %}
+                <div class="col-md-3">
+                    <a href="{% url 'knowledge:search' %}" class="btn btn-secondary w-100">
+                        <i class="bi bi-search me-2"></i>Global Search
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.badge.bg-procedure { background-color: #3b82f6 !important; }
+.badge.bg-work_instruction { background-color: #10b981 !important; }
+.badge.bg-guideline { background-color: #6366f1 !important; }
+.badge.bg-policy { background-color: #8b5cf6 !important; }
+.badge.bg-faq { background-color: #f59e0b !important; }
+.badge.bg-checklist { background-color: #06b6d4 !important; }
+.badge.bg-safety { background-color: #ef4444 !important; }
+.badge.bg-quality { background-color: #14b8a6 !important; }
+</style>
+{% endblock %}
