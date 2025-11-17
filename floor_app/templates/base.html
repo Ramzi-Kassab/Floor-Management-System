@@ -210,6 +210,53 @@
                         </ul>
                     </li>
 
+                    <!-- Knowledge & Instructions Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="knowledge-section">
+                            <i class="bi bi-book-fill"></i>
+                            <span>Knowledge & Instructions</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="knowledge-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Knowledge Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:article_list' %}">
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Articles</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:instruction_list' %}">
+                                    <i class="bi bi-lightning-fill"></i>
+                                    <span>Instructions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:training_dashboard' %}">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                    <span>Training Center</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:faq_list' %}">
+                                    <i class="bi bi-question-circle-fill"></i>
+                                    <span>FAQs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:document_list' %}">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    <span>Documents</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Production Section (Coming Soon) -->
                     <li class="nav-item">
                         <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">

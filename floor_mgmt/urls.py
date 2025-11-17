@@ -31,5 +31,9 @@ urlpatterns = [
     # === HR / Operations module ===
     # All HR URLs under "/hr/" and namespaced as "hr"
     path("hr/", include(("floor_app.operations.hr.urls", "hr"), namespace="hr")),
+
+    # === Knowledge & Instructions module ===
+    # All Knowledge URLs under "/knowledge/" and namespaced as "knowledge"
+    path("knowledge/", include(("floor_app.operations.knowledge.urls", "knowledge"), namespace="knowledge")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

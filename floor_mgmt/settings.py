@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'floor_app.apps.FloorAppConfig',
     'floor_app.operations.hr.apps.HRConfig',
+    'floor_app.operations.knowledge.apps.KnowledgeConfig',
     "core",
     "widget_tweaks",
 ]
