@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ batch.code }} - Batch Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .batch-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #0d6efd;
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 160px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-planned {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .status-in_progress {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .status-complete {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .status-on_hold {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .batch-code {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .progress-container {
+        margin: 1.5rem 0;
+    }
+
+    .progress-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .progress-bar-large {
+        height: 30px;
+        background: #e9ecef;
+        border-radius: 15px;
+        overflow: hidden;
+        font-size: 0.85rem;
+        font-weight: 600;
+        position: relative;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: width 0.3s ease;
+    }
+
+    .stat-box {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #0d6efd;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .jobcard-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .jobcard-table td {
+        font-size: 0.9rem;
+    }
+
+    .job-status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .job-status-new {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .job-status-in_production {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .job-status-complete {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .job-status-on_hold {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .flag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin: 0.2rem;
+    }
+
+    .flag-overdue {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .family-tag {
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        background: #e7f3ff;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:batch_list' %}">Production Batches</a></li>
+            <li class="breadcrumb-item active">{{ batch.code }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Batch Header -->
+    <div class="batch-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="batch-code">{{ batch.code }}</span>
+                    <span class="status-badge-large status-{{ batch.status|lower }}">
+                        <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                        {{ batch.get_status_display }}
+                    </span>
+                </div>
+                <h1 class="mb-2">{{ batch.customer_name|default:"Customer Unknown" }}</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    <span>
+                        <i class="bi bi-box me-2"></i>
+                        {{ batch.get_bit_family_display }}
+                    </span>
+                    <span>
+                        <i class="bi bi-list-check me-2"></i>
+                        {{ batch.target_quantity }} units
+                    </span>
+                    {% if batch.due_date %}
+                    <span>
+                        <i class="bi bi-calendar-event me-2"></i>
+                        Due: {{ batch.due_date|date:"Y-m-d" }}
+                    </span>
+                    {% endif %}
+                    {% if batch.is_overdue and batch.status != 'COMPLETE' and batch.status != 'CANCELLED' %}
+                    <span class="flag-badge flag-overdue">
+                        <i class="bi bi-exclamation-circle"></i> Overdue
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'production:batch_edit' batch.pk %}" class="btn btn-light">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <a href="{% url 'production:batch_list' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Batch Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Batch Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Code:</span>
+                    <span class="detail-value"><code>{{ batch.code }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Customer:</span>
+                    <span class="detail-value">{{ batch.customer_name|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Bit Family:</span>
+                    <span class="detail-value">
+                        <span class="family-tag">{{ batch.get_bit_family_display }}</span>
+                    </span>
+                </div>
+                {% if batch.main_order_number %}
+                <div class="detail-row">
+                    <span class="detail-label">Order Number:</span>
+                    <span class="detail-value"><code>{{ batch.main_order_number }}</code></span>
+                </div>
+                {% endif %}
+                {% if batch.customer_reference %}
+                <div class="detail-row">
+                    <span class="detail-label">Customer Ref:</span>
+                    <span class="detail-value">{{ batch.customer_reference }}</span>
+                </div>
+                {% endif %}
+                {% if batch.description %}
+                <div class="detail-row">
+                    <span class="detail-label">Description:</span>
+                    <span class="detail-value">{{ batch.description }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Priority:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-{{ batch.priority|lower }}">
+                            {{ batch.get_priority_display }}
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Status Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-traffic-light me-2"></i>
+                    Status
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Current Status:</span>
+                    <span class="detail-value">{{ batch.get_status_display }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value">{{ batch.created_date|date:"Y-m-d" }}</span>
+                </div>
+                {% if batch.start_date %}
+                <div class="detail-row">
+                    <span class="detail-label">Started:</span>
+                    <span class="detail-value">{{ batch.start_date|date:"Y-m-d" }}</span>
+                </div>
+                {% endif %}
+                {% if batch.due_date %}
+                <div class="detail-row">
+                    <span class="detail-label">Due Date:</span>
+                    <span class="detail-value">
+                        {% if batch.is_overdue and batch.status != 'COMPLETE' and batch.status != 'CANCELLED' %}
+                        <span class="text-danger"><strong>{{ batch.due_date|date:"Y-m-d" }} (Overdue)</strong></span>
+                        {% else %}
+                        {{ batch.due_date|date:"Y-m-d" }}
+                        {% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                {% if batch.completion_date %}
+                <div class="detail-row">
+                    <span class="detail-label">Completed:</span>
+                    <span class="detail-value">{{ batch.completion_date|date:"Y-m-d" }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Location Information -->
+            {% if batch.current_location %}
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-geo-alt me-2"></i>
+                    Location
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Current Location:</span>
+                    <span class="detail-value">{{ batch.current_location }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Progress Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-progress-chart me-2"></i>
+                    Production Progress
+                </h5>
+
+                <!-- Statistics -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <div class="stat-number">{{ batch.target_quantity }}</div>
+                            <div class="stat-label">Target Units</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <div class="stat-number">{{ batch.completed_quantity }}</div>
+                            <div class="stat-label">Completed Units</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Overall Progress</span>
+                        <span><strong>{{ batch.completion_percentage }}%</strong></span>
+                    </div>
+                    <div class="progress-bar-large">
+                        <div class="progress-fill" style="width: {{ batch.completion_percentage }}%;">
+                            {% if batch.completion_percentage > 10 %}
+                            {{ batch.completion_percentage }}%
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remaining Units -->
+                <div class="detail-row" style="padding-top: 1rem; padding-bottom: 0;">
+                    <span class="detail-label">Remaining:</span>
+                    <span class="detail-value"><strong>{{ batch.remaining_quantity }} units</strong></span>
+                </div>
+            </div>
+
+            <!-- Special Instructions -->
+            {% if batch.notes or batch.special_instructions %}
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-card-text me-2"></i>
+                    Notes & Instructions
+                </h5>
+                {% if batch.notes %}
+                <div style="margin-bottom: 1rem;">
+                    <p class="text-muted mb-1"><strong>Internal Notes:</strong></p>
+                    <p class="mb-0">{{ batch.notes|linebreaks }}</p>
+                </div>
+                {% endif %}
+                {% if batch.special_instructions %}
+                <div>
+                    <p class="text-muted mb-1"><strong>Special Instructions:</strong></p>
+                    <p class="mb-0">{{ batch.special_instructions|linebreaks }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Associated Job Cards -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-card-checklist me-2"></i>
+            Associated Job Cards ({{ batch.job_cards.count }})
+        </h5>
+        {% if batch.job_cards.exists %}
+        <div class="table-responsive">
+            <table class="table table-hover jobcard-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Job Card #</th>
+                        <th>Serial Unit</th>
+                        <th>Bit Size</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Start Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job_card in batch.job_cards.all %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'production:jobcard_detail' job_card.pk %}" class="text-decoration-none">
+                                <code>{{ job_card.job_card_number }}</code>
+                            </a>
+                        </td>
+                        <td>{{ job_card.serial_unit.serial_number|default:"-" }}</td>
+                        <td>{{ job_card.bit_size|default:"-" }}</td>
+                        <td>
+                            <span class="job-status-badge job-status-{{ job_card.status|lower|truncatewords:1 }}">
+                                {{ job_card.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ job_card.priority|lower }}">
+                                {{ job_card.get_priority_display }}
+                            </span>
+                        </td>
+                        <td>{{ job_card.planned_start_date|date:"Y-m-d"|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'production:jobcard_detail' job_card.pk %}"
+                               class="btn btn-sm btn-outline-primary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No job cards associated with this batch</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any batch detail-specific JavaScript here
+</script>
+{% endblock %}

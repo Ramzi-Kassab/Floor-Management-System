@@ -1,0 +1,558 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Evaluation - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .evaluation-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+    .evaluation-header h5 {
+        margin-bottom: 1rem;
+    }
+    .header-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+    }
+    .header-info-item {
+        padding-bottom: 0.5rem;
+    }
+    .header-info-label {
+        color: #64748b;
+        font-size: 0.813rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    .header-info-value {
+        color: #1e293b;
+        font-size: 0.938rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+    .cutter-grid-container {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+        overflow-x: auto;
+    }
+    .cutter-grid-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .cutter-grid {
+        display: grid;
+        gap: 0.5rem;
+        width: fit-content;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+    .cutter-cell {
+        position: relative;
+        min-width: 50px;
+        min-height: 50px;
+    }
+    .cutter-cell select {
+        width: 100%;
+        height: 100%;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        background: white;
+        transition: all 0.2s;
+    }
+    .cutter-cell select:hover {
+        border-color: #9ca3af;
+    }
+    .cutter-cell select:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .cutter-cell.symbol-ok select {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+    }
+    .cutter-cell.symbol-replace select {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fca5a5;
+    }
+    .cutter-cell.symbol-repair select {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fcd34d;
+    }
+    .cutter-cell.symbol-scrap select {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+    .cutter-cell.symbol-empty select {
+        background: #ffffff;
+        color: #9ca3af;
+        border-color: #d1d5db;
+    }
+    .grid-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f0fdf4;
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+    .grid-control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .grid-control-label {
+        font-size: 0.813rem;
+        font-weight: 500;
+        color: #166534;
+    }
+    .grid-control-value {
+        background: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 600;
+        color: #166534;
+        border: 1px solid #86efac;
+        min-width: 40px;
+        text-align: center;
+    }
+    .grid-control-input {
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.813rem;
+    }
+    .legend {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+    .legend-title {
+        font-size: 0.938rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
+    .legend-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .legend-symbol {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    .legend-symbol.ok {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .legend-symbol.replace {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .legend-symbol.repair {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .legend-symbol.scrap {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    .legend-symbol.empty {
+        background: #ffffff;
+        color: #9ca3af;
+        border: 2px solid #d1d5db;
+    }
+    .summary-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+    .summary-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .summary-counts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+    .summary-count {
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .summary-count-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    .summary-count-label {
+        font-size: 0.813rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .summary-count.ok {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .summary-count.replace {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .summary-count.repair {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .summary-count.scrap {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    .summary-count.total {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="container-fluid mt-4" aria-label="breadcrumb">
+    <ol class="breadcrumb bg-transparent px-0 mb-3">
+        <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'production:jobcard_list' %}">Job Cards</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'production:evaluation_list' job_card.id %}">Cutter Evaluations</a></li>
+        <li class="breadcrumb-item active">Edit Evaluation</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Edit Evaluation</h1>
+            <p class="text-muted mb-0">{{ evaluation.get_type_display }} - Revision {{ evaluation.revision }}</p>
+        </div>
+    </div>
+
+    <!-- Evaluation Header Info -->
+    <div class="evaluation-header">
+        <h5 class="mb-3">Evaluation Information</h5>
+        <div class="header-info">
+            <div class="header-info-item">
+                <div class="header-info-label">Job Card</div>
+                <div class="header-info-value">{{ job_card.job_card_number }}</div>
+            </div>
+            <div class="header-info-item">
+                <div class="header-info-label">Evaluation Type</div>
+                <div class="header-info-value">{{ evaluation.get_type_display }}</div>
+            </div>
+            <div class="header-info-item">
+                <div class="header-info-label">Revision</div>
+                <div class="header-info-value">#{{ evaluation.revision }}</div>
+            </div>
+            <div class="header-info-item">
+                <div class="header-info-label">Status</div>
+                <div class="header-info-value">
+                    <span class="badge bg-primary">{{ evaluation.get_status_display }}</span>
+                </div>
+            </div>
+            <div class="header-info-item">
+                <div class="header-info-label">Layout</div>
+                <div class="header-info-value">{{ evaluation.layout.rows }}x{{ evaluation.layout.columns }}</div>
+            </div>
+            <div class="header-info-item">
+                <div class="header-info-label">Created</div>
+                <div class="header-info-value">{{ evaluation.created_at|date:"Y-m-d" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-items">
+            <div class="legend-item">
+                <div class="legend-symbol ok">O</div>
+                <span>OK - Good Condition</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-symbol replace">X</div>
+                <span>Replace - Needs Replacement</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-symbol repair">S</div>
+                <span>Repair - Needs Repair</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-symbol scrap">-</div>
+                <span>Scrap - Unusable</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-symbol empty"></div>
+                <span>Empty - Not Evaluated</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cutter Grid Container -->
+    <div class="cutter-grid-container">
+        <div class="cutter-grid-title">Cutter Position Grid</div>
+
+        <!-- Grid Controls -->
+        <div class="grid-controls">
+            <div class="grid-control-group">
+                <span class="grid-control-label">Grid: {{ evaluation.layout.rows }}x{{ evaluation.layout.columns }}</span>
+            </div>
+            <div class="grid-control-group">
+                <span class="grid-control-label">Total Positions:</span>
+                <span class="grid-control-value" id="totalPositions">{{ evaluation.layout.rows|add:evaluation.layout.columns|mul:evaluation.layout.rows }}</span>
+            </div>
+        </div>
+
+        <!-- Cutter Grid -->
+        <form method="post" id="evaluationGridForm">
+            {% csrf_token %}
+
+            <div class="cutter-grid" id="cutterGrid" style="grid-template-columns: repeat({{ evaluation.layout.columns }}, 1fr);">
+                {% for i in evaluation.grid_data %}
+                    <div class="cutter-cell" data-row="{{ forloop.counter|add:'-1'|divisibleby:evaluation.layout.columns|yesno:'0,1' }}" data-col="{{ forloop.counter0|divisibleby:evaluation.layout.columns|yesno:'0,1' }}">
+                        <select name="grid_{{ forloop.counter0 }}" class="grid-cell-select" data-position="{{ forloop.counter0 }}">
+                            <option value="">-</option>
+                            <option value="O" {% if i == 'O' %}selected{% endif %}>O - OK</option>
+                            <option value="X" {% if i == 'X' %}selected{% endif %}>X - Replace</option>
+                            <option value="S" {% if i == 'S' %}selected{% endif %}>S - Repair</option>
+                            <option value="D" {% if i == 'D' %}selected{% endif %}>D - Scrap</option>
+                        </select>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Hidden input to store grid data -->
+            <input type="hidden" id="gridData" name="grid_data">
+
+            <!-- Summary Section -->
+            <div class="summary-section">
+                <div class="summary-title">Summary Counts</div>
+                <div class="summary-counts">
+                    <div class="summary-count ok">
+                        <div class="summary-count-value" id="countOK">0</div>
+                        <div class="summary-count-label">OK (O)</div>
+                    </div>
+                    <div class="summary-count replace">
+                        <div class="summary-count-value" id="countReplace">0</div>
+                        <div class="summary-count-label">Replace (X)</div>
+                    </div>
+                    <div class="summary-count repair">
+                        <div class="summary-count-value" id="countRepair">0</div>
+                        <div class="summary-count-label">Repair (S)</div>
+                    </div>
+                    <div class="summary-count scrap">
+                        <div class="summary-count-value" id="countScrap">0</div>
+                        <div class="summary-count-label">Scrap (D)</div>
+                    </div>
+                    <div class="summary-count total">
+                        <div class="summary-count-value" id="countTotal">0</div>
+                        <div class="summary-count-label">Total Evaluated</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'production:evaluation_list' job_card.id %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Save Grid
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const gridCells = document.querySelectorAll('.grid-cell-select');
+        const gridData = document.getElementById('gridData');
+        const form = document.getElementById('evaluationGridForm');
+
+        // Symbol colors mapping
+        const symbolColors = {
+            'O': 'symbol-ok',
+            'X': 'symbol-replace',
+            'S': 'symbol-repair',
+            'D': 'symbol-scrap',
+            '': 'symbol-empty'
+        };
+
+        // Update cell styling based on selection
+        function updateCellStyle(selectElement) {
+            const cell = selectElement.closest('.cutter-cell');
+            const value = selectElement.value;
+
+            // Remove all symbol classes
+            Object.values(symbolColors).forEach(className => {
+                cell.classList.remove(className);
+            });
+
+            // Add the appropriate class
+            if (symbolColors[value]) {
+                cell.classList.add(symbolColors[value]);
+            }
+
+            // Update counts
+            updateCounts();
+        }
+
+        // Initialize cell styles on page load
+        gridCells.forEach(cell => {
+            updateCellStyle(cell);
+        });
+
+        // Handle cell change
+        gridCells.forEach(cell => {
+            cell.addEventListener('change', function() {
+                updateCellStyle(this);
+            });
+        });
+
+        // Update summary counts
+        function updateCounts() {
+            let countOK = 0;
+            let countReplace = 0;
+            let countRepair = 0;
+            let countScrap = 0;
+
+            gridCells.forEach(cell => {
+                const value = cell.value;
+                if (value === 'O') countOK++;
+                else if (value === 'X') countReplace++;
+                else if (value === 'S') countRepair++;
+                else if (value === 'D') countScrap++;
+            });
+
+            const total = countOK + countReplace + countRepair + countScrap;
+
+            document.getElementById('countOK').textContent = countOK;
+            document.getElementById('countReplace').textContent = countReplace;
+            document.getElementById('countRepair').textContent = countRepair;
+            document.getElementById('countScrap').textContent = countScrap;
+            document.getElementById('countTotal').textContent = total;
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Collect grid data
+            const gridValues = [];
+            gridCells.forEach(cell => {
+                gridValues.push(cell.value || '');
+            });
+
+            // Set the hidden input
+            gridData.value = JSON.stringify(gridValues);
+
+            // Show confirmation
+            const total = document.getElementById('countTotal').textContent;
+            if (!confirm(`Save evaluation with ${total} evaluated cutters?`)) {
+                return false;
+            }
+
+            // Submit the form
+            this.submit();
+        });
+
+        // Add keyboard support for quick grid entry
+        gridCells.forEach((cell, index) => {
+            cell.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    if (index < gridCells.length - 1) {
+                        gridCells[index + 1].focus();
+                    }
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    if (index > 0) {
+                        gridCells[index - 1].focus();
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const cols = {{ evaluation.layout.columns }};
+                    const nextIndex = index + cols;
+                    if (nextIndex < gridCells.length) {
+                        gridCells[nextIndex].focus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const cols = {{ evaluation.layout.columns }};
+                    const prevIndex = index - cols;
+                    if (prevIndex >= 0) {
+                        gridCells[prevIndex].focus();
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

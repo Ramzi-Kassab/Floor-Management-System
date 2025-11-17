@@ -1,0 +1,769 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ job_card.job_card_number }} - Job Card Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        border: 1px solid #e9ecef;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-item {
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #6c757d;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .info-value.secondary {
+        color: #6c757d;
+    }
+
+    .status-badge {
+        display: inline-block;
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .priority-critical { background-color: #dc3545; color: white; }
+    .priority-rush { background-color: #fd7e14; color: white; }
+    .priority-high { background-color: #ffc107; color: #000; }
+    .priority-normal { background-color: #17a2b8; color: white; }
+    .priority-low { background-color: #6c757d; color: white; }
+
+    .status-new { background-color: #e7f3ff; color: #0c5aa0; }
+    .status-evaluation_in_progress { background-color: #fff3e0; color: #e65100; }
+    .status-awaiting_approval { background-color: #f3e5f5; color: #6a1b9a; }
+    .status-awaiting_materials { background-color: #fff8e1; color: #f57f17; }
+    .status-released_to_shop { background-color: #e0f2f1; color: #00695c; }
+    .status-in_production { background-color: #f1f8e9; color: #33691e; }
+    .status-under_qc { background-color: #e8eaf6; color: #283593; }
+    .status-qc_approved { background-color: #c8e6c9; color: #1b5e20; }
+    .status-complete { background-color: #c8e6c9; color: #1b5e20; }
+    .status-on_hold { background-color: #ffe0b2; color: #e65100; }
+    .status-scrapped { background-color: #ffcccc; color: #b71c1c; }
+    .status-cancelled { background-color: #f5f5f5; color: #424242; }
+
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        border-color: #dee2e6;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #6366f1;
+        border-color: #6366f1;
+        background-color: transparent;
+    }
+
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .action-button {
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .action-button.primary {
+        background-color: #6366f1;
+        color: white;
+    }
+
+    .action-button.success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .action-button.warning {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .table-minimal thead {
+        background-color: #f8f9fa;
+    }
+
+    .table-minimal tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .route-step-row {
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #6366f1;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 border-bottom bg-white">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:jobcard_list' %}">Job Cards</a></li>
+            <li class="breadcrumb-item active">{{ job_card.job_card_number }}</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h1 class="h3 mb-0 fw-bold">
+                    <i class="bi bi-card-checklist me-2"></i>{{ job_card.job_card_number }}
+                </h1>
+                <p class="text-muted mb-0 mt-1">Serial: {{ job_card.serial_unit.serial_number }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'production:jobcard_edit' job_card.pk %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil me-2"></i>Edit
+                </a>
+                <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Card Overview Card -->
+    <div class="info-card">
+        <h5 class="fw-bold mb-4">Job Card Overview</h5>
+
+        <div class="info-row">
+            <div class="info-item">
+                <div class="info-label">Job Card Number</div>
+                <div class="info-value">{{ job_card.job_card_number }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="status-badge status-{{ job_card.status|lower }}">
+                        {{ job_card.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Priority</div>
+                <div class="info-value">
+                    <span class="status-badge priority-{{ job_card.priority|lower }}">
+                        {{ job_card.get_priority_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Serial Unit</div>
+                <div class="info-value">
+                    <a href="{% url 'inventory:serialunit_detail' job_card.serial_unit.pk %}">
+                        {{ job_card.serial_unit.serial_number }}
+                    </a>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Batch Order</div>
+                <div class="info-value">
+                    {% if job_card.batch_order %}
+                        <a href="{% url 'production:batch_detail' job_card.batch_order.pk %}">
+                            {{ job_card.batch_order.batch_number }}
+                        </a>
+                    {% else %}
+                        <span class="secondary">—</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Customer</div>
+                <div class="info-value secondary">{{ job_card.customer_name|default:"—" }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Rig Name</div>
+                <div class="info-value secondary">{{ job_card.rig_name|default:"—" }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Well Name</div>
+                <div class="info-value secondary">{{ job_card.well_name|default:"—" }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Job Type</div>
+                <div class="info-value">
+                    <span class="badge bg-info">{{ job_card.get_job_type_display }}</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Bit Size</div>
+                <div class="info-value secondary">{{ job_card.bit_size|default:"—" }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Bit Type</div>
+                <div class="info-value secondary">{{ job_card.bit_type|default:"—" }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Created Date</div>
+                <div class="info-value secondary">{{ job_card.created_date|date:"Y-m-d H:i" }}</div>
+            </div>
+
+            {% if job_card.planned_start_date %}
+            <div class="info-item">
+                <div class="info-label">Planned Start</div>
+                <div class="info-value secondary">{{ job_card.planned_start_date|date:"Y-m-d" }}</div>
+            </div>
+            {% endif %}
+
+            {% if job_card.planned_end_date %}
+            <div class="info-item">
+                <div class="info-label">Planned Completion</div>
+                <div class="info-value secondary">{{ job_card.planned_end_date|date:"Y-m-d" }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mb-4">
+        <h5 class="fw-bold mb-3">Actions</h5>
+        <div class="d-flex flex-wrap gap-2">
+            {% if job_card.status == 'NEW' %}
+                <a href="{% url 'production:jobcard_start_evaluation' job_card.pk %}" class="btn btn-primary action-button">
+                    <i class="bi bi-play-circle me-2"></i>Start Evaluation
+                </a>
+            {% endif %}
+
+            {% if job_card.status == 'EVALUATION_IN_PROGRESS' %}
+                <a href="{% url 'production:jobcard_complete_evaluation' job_card.pk %}" class="btn btn-success action-button">
+                    <i class="bi bi-check-circle me-2"></i>Complete Evaluation
+                </a>
+            {% endif %}
+
+            {% if job_card.status in 'AWAITING_APPROVAL,AWAITING_MATERIALS' %}
+                <a href="{% url 'production:jobcard_release' job_card.pk %}" class="btn btn-success action-button">
+                    <i class="bi bi-box-seam me-2"></i>Release to Shop
+                </a>
+            {% endif %}
+
+            {% if job_card.status == 'RELEASED_TO_SHOP' %}
+                <a href="{% url 'production:jobcard_start_production' job_card.pk %}" class="btn btn-success action-button">
+                    <i class="bi bi-gear me-2"></i>Start Production
+                </a>
+            {% endif %}
+
+            {% if job_card.status in 'IN_PRODUCTION,UNDER_QC,QC_APPROVED' %}
+                <a href="{% url 'production:jobcard_complete' job_card.pk %}" class="btn btn-success action-button">
+                    <i class="bi bi-check2-circle me-2"></i>Complete Job
+                </a>
+            {% endif %}
+
+            <!-- Always available actions -->
+            <a href="{% url 'production:evaluation_list' job_card.pk %}" class="btn btn-outline-primary action-button">
+                <i class="bi bi-clipboard-check me-2"></i>Evaluations
+            </a>
+            <a href="{% url 'production:route_editor' job_card.pk %}" class="btn btn-outline-primary action-button">
+                <i class="bi bi-diagram-3 me-2"></i>Routing
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs Section -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link active"
+                id="overview-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#overview"
+                type="button"
+                role="tab"
+                aria-controls="overview"
+                aria-selected="true"
+            >
+                <i class="bi bi-info-circle me-2"></i>Overview
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link"
+                id="routing-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#routing"
+                type="button"
+                role="tab"
+                aria-controls="routing"
+                aria-selected="false"
+            >
+                <i class="bi bi-diagram-3 me-2"></i>Routing
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link"
+                id="evaluations-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#evaluations"
+                type="button"
+                role="tab"
+                aria-controls="evaluations"
+                aria-selected="false"
+            >
+                <i class="bi bi-clipboard-check me-2"></i>Evaluations
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link"
+                id="inspections-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#inspections"
+                type="button"
+                role="tab"
+                aria-controls="inspections"
+                aria-selected="false"
+            >
+                <i class="bi bi-check2-square me-2"></i>Inspections
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link"
+                id="checklists-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#checklists"
+                type="button"
+                role="tab"
+                aria-controls="checklists"
+                aria-selected="false"
+            >
+                <i class="bi bi-list-check me-2"></i>Checklists
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+            <h5 class="fw-bold mb-3">Job Details</h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold mb-3">MAT/Design Information</h6>
+                    <table class="table table-minimal">
+                        <tr>
+                            <td class="fw-bold">Initial MAT:</td>
+                            <td>
+                                {% if job_card.initial_mat %}
+                                    {{ job_card.initial_mat.mat_number }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Current MAT:</td>
+                            <td>
+                                {% if job_card.current_mat %}
+                                    {{ job_card.current_mat.mat_number }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">BOM:</td>
+                            <td>
+                                {% if job_card.bom_header %}
+                                    {{ job_card.bom_header.name }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="col-md-6">
+                    <h6 class="fw-bold mb-3">Schedule & Cost</h6>
+                    <table class="table table-minimal">
+                        <tr>
+                            <td class="fw-bold">Planned Start:</td>
+                            <td>{{ job_card.planned_start_date|date:"Y-m-d"|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Planned End:</td>
+                            <td>{{ job_card.planned_end_date|date:"Y-m-d"|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Estimated Cost:</td>
+                            <td>${{ job_card.estimated_cost|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Quoted Price:</td>
+                            <td>${{ job_card.quoted_price|default:"—" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% if job_card.notes or job_card.special_instructions or job_card.customer_requirements %}
+            <h6 class="fw-bold mt-4 mb-3">Notes & Instructions</h6>
+            {% endif %}
+
+            {% if job_card.notes %}
+            <div class="alert alert-light border mb-3">
+                <strong>Internal Notes:</strong>
+                <p class="mb-0 mt-2">{{ job_card.notes|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            {% if job_card.special_instructions %}
+            <div class="alert alert-light border mb-3">
+                <strong>Special Instructions:</strong>
+                <p class="mb-0 mt-2">{{ job_card.special_instructions|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            {% if job_card.customer_requirements %}
+            <div class="alert alert-light border">
+                <strong>Customer Requirements:</strong>
+                <p class="mb-0 mt-2">{{ job_card.customer_requirements|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Routing Tab -->
+        <div class="tab-pane fade" id="routing" role="tabpanel" aria-labelledby="routing-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold">Job Routing Steps</h5>
+                <a href="{% url 'production:route_add_step' job_card.pk %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus me-2"></i>Add Step
+                </a>
+            </div>
+
+            {% if route_steps %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-minimal">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Step</th>
+                                <th>Operation</th>
+                                <th>Operator</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for step in route_steps %}
+                            <tr>
+                                <td>
+                                    <span class="step-number">{{ forloop.counter }}</span>
+                                </td>
+                                <td>{{ step.operation.name }}</td>
+                                <td>{{ step.operator.get_full_name|default:step.operator.username|default:"—" }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ step.get_status_display }}</span>
+                                </td>
+                                <td>{{ step.actual_duration_hours|default:"—" }} hrs</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <p>No routing steps defined yet.</p>
+                    <a href="{% url 'production:route_add_step' job_card.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus me-2"></i>Add First Step
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Evaluations Tab -->
+        <div class="tab-pane fade" id="evaluations" role="tabpanel" aria-labelledby="evaluations-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold">Cutter Evaluations</h5>
+                <a href="{% url 'production:evaluation_create' job_card.pk %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus me-2"></i>New Evaluation
+                </a>
+            </div>
+
+            {% if evaluations %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-minimal">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Evaluation ID</th>
+                                <th>Cutter Position</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for evaluation in evaluations %}
+                            <tr>
+                                <td>{{ evaluation.public_id|truncatechars:12 }}</td>
+                                <td>{{ evaluation.cutter_position|default:"—" }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ evaluation.get_status_display }}</span>
+                                </td>
+                                <td>{{ evaluation.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'production:evaluation_detail' evaluation.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <p>No evaluations created yet.</p>
+                    <a href="{% url 'production:evaluation_create' job_card.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus me-2"></i>Create Evaluation
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Inspections Tab -->
+        <div class="tab-pane fade" id="inspections" role="tabpanel" aria-labelledby="inspections-tab">
+            <h5 class="fw-bold mb-3">NDT & Thread Inspections</h5>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold">NDT Reports</h6>
+                    <a href="{% url 'production:ndt_create' job_card.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus me-2"></i>Add Report
+                    </a>
+                </div>
+
+                {% if ndt_reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-minimal">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Report Type</th>
+                                    <th>Conducted By</th>
+                                    <th>Date</th>
+                                    <th>Result</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in ndt_reports %}
+                                <tr>
+                                    <td>{{ report.ndt_type }}</td>
+                                    <td>{{ report.conducted_by.get_full_name|default:report.conducted_by.username|default:"—" }}</td>
+                                    <td>{{ report.report_date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if report.result == 'PASS' %}success{% else %}danger{% endif %}">
+                                            {{ report.result }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'production:ndt_detail' report.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p class="mb-2">No NDT reports.</p>
+                        <a href="{% url 'production:ndt_create' job_card.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus me-2"></i>Add Report
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold">Thread Inspections</h6>
+                    <a href="{% url 'production:thread_inspection_create' job_card.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus me-2"></i>Add Inspection
+                    </a>
+                </div>
+
+                {% if thread_inspections %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-minimal">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>API Connection</th>
+                                    <th>Inspected By</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inspection in thread_inspections %}
+                                <tr>
+                                    <td>{{ inspection.api_connection }}</td>
+                                    <td>{{ inspection.inspected_by.get_full_name|default:inspection.inspected_by.username|default:"—" }}</td>
+                                    <td>{{ inspection.inspection_date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ inspection.get_status_display }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'production:thread_inspection_detail' inspection.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p class="mb-2">No thread inspections.</p>
+                        <a href="{% url 'production:thread_inspection_create' job_card.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus me-2"></i>Add Inspection
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Checklists Tab -->
+        <div class="tab-pane fade" id="checklists" role="tabpanel" aria-labelledby="checklists-tab">
+            <h5 class="fw-bold mb-3">Job Checklists</h5>
+
+            {% if checklists %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-minimal">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Checklist</th>
+                                <th>Status</th>
+                                <th>Completed By</th>
+                                <th>Completed Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for checklist in checklists %}
+                            <tr>
+                                <td>{{ checklist.template.name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if checklist.is_completed %}success{% else %}warning{% endif %}">
+                                        {% if checklist.is_completed %}Completed{% else %}In Progress{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ checklist.completed_by.get_full_name|default:checklist.completed_by.username|default:"—" }}</td>
+                                <td>{{ checklist.completed_at|date:"Y-m-d H:i"|default:"—" }}</td>
+                                <td>
+                                    <a href="{% url 'production:checklist_detail' checklist.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <p>No checklists assigned yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

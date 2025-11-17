@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}{% if ndt_report %}Edit{% else %}Create{% endif %} NDT Report - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 px-4 bg-light border-bottom">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:home' %}" class="text-decoration-none">
+                    <i class="bi bi-house-door-fill"></i> Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:dashboard' %}" class="text-decoration-none">
+                    <i class="bi bi-gear-fill"></i> Production
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:jobcard_detail' job_card.id %}" class="text-decoration-none">
+                    Job Card: {{ job_card.job_card_number }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:ndt_list' job_card.id %}" class="text-decoration-none">
+                    NDT Reports
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if ndt_report %}Edit{% else %}Create{% endif %}
+            </li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div>
+                <h1 class="h3 mb-1 fw-bold">
+                    <i class="bi bi-clipboard-check text-primary"></i>
+                    {% if ndt_report %}Edit{% else %}Create{% endif %} NDT Report
+                </h1>
+                <p class="text-muted">
+                    Job Card: <strong>{{ job_card.job_card_number }}</strong> |
+                    Bit Size: {{ job_card.bit_size }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Test Information Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle text-primary"></i> Test Information
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.test_type.id_for_label }}" class="form-label">
+                                    {{ form.test_type.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.test_type }}
+                                {% if form.test_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.test_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.test_date.id_for_label }}" class="form-label">
+                                    {{ form.test_date.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.test_date }}
+                                {% if form.test_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.test_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.test_procedure.id_for_label }}" class="form-label">
+                                    {{ form.test_procedure.label }}
+                                </label>
+                                {{ form.test_procedure }}
+                                {% if form.test_procedure.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.test_procedure.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-0">
+                                <label for="{{ form.test_area.id_for_label }}" class="form-label">
+                                    {{ form.test_area.label }}
+                                </label>
+                                {{ form.test_area }}
+                                {% if form.test_area.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.test_area.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-check2-circle text-success"></i> Test Results
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.result.id_for_label }}" class="form-label">
+                                    {{ form.result.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.result }}
+                                {% if form.result.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.result.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-0">
+                                <label for="{{ form.defect_severity.id_for_label }}" class="form-label">
+                                    {{ form.defect_severity.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.defect_severity }}
+                                {% if form.defect_severity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.defect_severity.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Findings Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-circle text-warning"></i> Findings & Recommendations
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="mb-3">
+                            <label for="{{ form.defects_found.id_for_label }}" class="form-label">
+                                {{ form.defects_found.label }}
+                            </label>
+                            {{ form.defects_found }}
+                            {% if form.defects_found.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.defects_found.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Describe any defects found during the test
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.defect_locations.id_for_label }}" class="form-label">
+                                {{ form.defect_locations.label }}
+                            </label>
+                            {{ form.defect_locations }}
+                            {% if form.defect_locations.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.defect_locations.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Specify the location of defects (e.g., blade faces, body, connection)
+                            </small>
+                        </div>
+                        <div class="mb-0">
+                            <label for="{{ form.recommendations.id_for_label }}" class="form-label">
+                                {{ form.recommendations.label }}
+                            </label>
+                            {{ form.recommendations }}
+                            {% if form.recommendations.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.recommendations.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Based on the findings, what actions should be taken?
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Equipment & Environmental Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-wrench text-secondary"></i> Equipment & Environmental Conditions
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.equipment_used.id_for_label }}" class="form-label">
+                                    {{ form.equipment_used.label }}
+                                </label>
+                                {{ form.equipment_used }}
+                                {% if form.equipment_used.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.equipment_used.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.calibration_ref.id_for_label }}" class="form-label">
+                                    {{ form.calibration_ref.label }}
+                                </label>
+                                {{ form.calibration_ref }}
+                                {% if form.calibration_ref.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.calibration_ref.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ambient_temp.id_for_label }}" class="form-label">
+                                    {{ form.ambient_temp.label }} (°C)
+                                </label>
+                                {{ form.ambient_temp }}
+                                {% if form.ambient_temp.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.ambient_temp.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-0">
+                                <label for="{{ form.humidity.id_for_label }}" class="form-label">
+                                    {{ form.humidity.label }} (%)
+                                </label>
+                                {{ form.humidity }}
+                                {% if form.humidity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.humidity.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Notes Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-chat-left-text text-info"></i> Additional Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-0">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Any additional notes or observations
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="card-footer bg-light">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Save Report
+                            </button>
+                            <a href="{% url 'production:ndt_list' job_card.id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle text-info"></i> Quick Reference
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Test Type Options</h6>
+                        <ul class="list-unstyled small">
+                            <li><span class="badge bg-info-subtle text-info">LPT</span> - Liquid Penetrant Testing</li>
+                            <li><span class="badge bg-info-subtle text-info">MPI</span> - Magnetic Particle Inspection</li>
+                            <li><span class="badge bg-info-subtle text-info">DIE CHECK</span> - Die Check</li>
+                            <li><span class="badge bg-info-subtle text-info">VISUAL</span> - Visual Inspection</li>
+                            <li><span class="badge bg-info-subtle text-info">UT</span> - Ultrasonic Testing</li>
+                        </ul>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <h6>Result Codes</h6>
+                        <ul class="list-unstyled small">
+                            <li><span class="badge bg-success-subtle text-success">PASS</span> - Test passed all criteria</li>
+                            <li><span class="badge bg-danger-subtle text-danger">FAIL</span> - Test failed</li>
+                            <li><span class="badge bg-warning-subtle text-warning">CONDITIONAL</span> - Conditional pass with notes</li>
+                            <li><span class="badge bg-info-subtle text-info">RETEST</span> - Retest required</li>
+                        </ul>
+                    </div>
+                    <hr>
+                    <div>
+                        <h6>Severity Levels</h6>
+                        <ul class="list-unstyled small">
+                            <li><span class="badge bg-success-subtle text-success">NONE</span> - No defects</li>
+                            <li><span class="badge bg-info-subtle text-info">MINOR</span> - Minor defects</li>
+                            <li><span class="badge bg-warning-subtle text-warning">MODERATE</span> - Moderate defects</li>
+                            <li><span class="badge bg-danger-subtle text-danger">SEVERE</span> - Severe defects</li>
+                            <li><span class="badge bg-danger text-white">CRITICAL</span> - Critical defects</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

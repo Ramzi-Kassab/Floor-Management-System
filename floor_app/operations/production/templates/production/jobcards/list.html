@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Job Cards - Production Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .priority-critical { background-color: #dc3545; color: white; }
+    .priority-rush { background-color: #fd7e14; color: white; }
+    .priority-high { background-color: #ffc107; color: #000; }
+    .priority-normal { background-color: #17a2b8; color: white; }
+    .priority-low { background-color: #6c757d; color: white; }
+
+    .status-new { background-color: #e7f3ff; color: #0c5aa0; }
+    .status-evaluation_in_progress { background-color: #fff3e0; color: #e65100; }
+    .status-awaiting_approval { background-color: #f3e5f5; color: #6a1b9a; }
+    .status-awaiting_materials { background-color: #fff8e1; color: #f57f17; }
+    .status-released_to_shop { background-color: #e0f2f1; color: #00695c; }
+    .status-in_production { background-color: #f1f8e9; color: #33691e; }
+    .status-under_qc { background-color: #e8eaf6; color: #283593; }
+    .status-qc_approved { background-color: #c8e6c9; color: #1b5e20; }
+    .status-complete { background-color: #c8e6c9; color: #1b5e20; }
+    .status-on_hold { background-color: #ffe0b2; color: #e65100; }
+    .status-scrapped { background-color: #ffcccc; color: #b71c1c; }
+    .status-cancelled { background-color: #f5f5f5; color: #424242; }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .job-card-number {
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    .filter-btn-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-filter {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        background-color: white;
+        color: #495057;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-filter:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+    }
+
+    .btn-filter.active {
+        background-color: #6366f1;
+        color: white;
+        border-color: #6366f1;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 border-bottom bg-white">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+            <li class="breadcrumb-item active">Job Cards</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 fw-bold">
+                <i class="bi bi-card-checklist me-2"></i>Job Cards
+            </h1>
+            <p class="text-muted mb-0 mt-1">Manage production job cards</p>
+        </div>
+        <div>
+            <a href="{% url 'production:jobcard_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Job Card
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <!-- Search -->
+            <div class="col-md-4">
+                <label for="search" class="form-label fw-600">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="search"
+                        name="search"
+                        placeholder="Job #, Serial, Customer, Well..."
+                        value="{{ request.GET.search|default:'' }}"
+                    >
+                </div>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="col-md-3">
+                <label for="status-filter" class="form-label fw-600">Status</label>
+                <select class="form-select" id="status-filter" name="status">
+                    <option value="">All Statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Job Type Filter -->
+            <div class="col-md-3">
+                <label for="job-type-filter" class="form-label fw-600">Job Type</label>
+                <select class="form-select" id="job-type-filter" name="job_type">
+                    <option value="">All Types</option>
+                    {% for value, label in job_type_choices %}
+                        <option value="{{ value }}" {% if request.GET.job_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="col-md-2">
+                <label for="priority-filter" class="form-label fw-600">Priority</label>
+                <select class="form-select" id="priority-filter" name="priority">
+                    <option value="">All Priorities</option>
+                    {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if request.GET.priority == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Customer Filter -->
+            <div class="col-md-3">
+                <label for="customer-filter" class="form-label fw-600">Customer</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="customer-filter"
+                    name="customer"
+                    placeholder="Filter by customer..."
+                    value="{{ request.GET.customer|default:'' }}"
+                >
+            </div>
+
+            <!-- Buttons -->
+            <div class="col-md-9 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-2"></i>Apply Filters
+                </button>
+                <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Count -->
+    <div class="mb-3">
+        <small class="text-muted">
+            Showing <strong>{{ job_cards.paginator.count }}</strong> job card(s)
+            {% if request.GET %}
+                (filtered)
+            {% endif %}
+        </small>
+    </div>
+
+    <!-- Job Cards Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-600">Job Card #</th>
+                        <th class="fw-600">Serial Number</th>
+                        <th class="fw-600">Batch</th>
+                        <th class="fw-600">Customer</th>
+                        <th class="fw-600">Job Type</th>
+                        <th class="fw-600">Status</th>
+                        <th class="fw-600">Priority</th>
+                        <th class="fw-600 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if job_cards %}
+                        {% for job_card in job_cards %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'production:jobcard_detail' job_card.pk %}" class="job-card-number">
+                                        {{ job_card.job_card_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ job_card.serial_unit.serial_number }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if job_card.batch_order %}
+                                        <a href="{% url 'production:batch_detail' job_card.batch_order.pk %}">
+                                            {{ job_card.batch_order.batch_number }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ job_card.customer_name|default:"—" }}</td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ job_card.get_job_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ job_card.status|lower }}">
+                                        {{ job_card.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge priority-{{ job_card.priority|lower }}">
+                                        {{ job_card.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a
+                                            href="{% url 'production:jobcard_detail' job_card.pk %}"
+                                            class="btn btn-outline-primary"
+                                            title="View Details"
+                                        >
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a
+                                            href="{% url 'production:jobcard_edit' job_card.pk %}"
+                                            class="btn btn-outline-secondary"
+                                            title="Edit"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    <p>No job cards found.</p>
+                                    {% if request.GET %}
+                                        <p class="small">Try adjusting your filters.</p>
+                                    {% else %}
+                                        <a href="{% url 'production:jobcard_create' %}" class="btn btn-sm btn-primary">
+                                            Create your first job card
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.job_type %}&job_type={{ request.GET.job_type }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.job_type %}&job_type={{ request.GET.job_type }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ num }}
+                                <span class="visually-hidden">(current)</span>
+                            </span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.job_type %}&job_type={{ request.GET.job_type }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.job_type %}&job_type={{ request.GET.job_type }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.job_type %}&job_type={{ request.GET.job_type }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

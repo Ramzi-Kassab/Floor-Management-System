@@ -34,5 +34,8 @@ urlpatterns = [
 
     # === Inventory / Materials Management ===
     path("inventory/", include(("floor_app.operations.inventory.urls", "inventory"), namespace="inventory")),
+
+    # === Production & Evaluation ===
+    path("production/", include(("floor_app.operations.production.urls", "production"), namespace="production")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}NDT Report Detail - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 px-4 bg-light border-bottom">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:home' %}" class="text-decoration-none">
+                    <i class="bi bi-house-door-fill"></i> Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:dashboard' %}" class="text-decoration-none">
+                    <i class="bi bi-gear-fill"></i> Production
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:jobcard_detail' ndt_report.job_card.id %}" class="text-decoration-none">
+                    Job Card: {{ ndt_report.job_card.job_card_number }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:ndt_list' ndt_report.job_card.id %}" class="text-decoration-none">
+                    NDT Reports
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-clipboard-check"></i> {{ ndt_report.get_test_type_display }}
+            </li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div>
+                <h1 class="h3 mb-1 fw-bold">
+                    <i class="bi bi-clipboard-check text-primary"></i>
+                    {{ ndt_report.get_test_type_display }} Report
+                </h1>
+                <p class="text-muted mb-0">
+                    Job Card: <strong>{{ ndt_report.job_card.job_card_number }}</strong>
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'production:ndt_edit' ndt_report.job_card.id ndt_report.id %}"
+               class="btn btn-primary me-2">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'production:ndt_list' ndt_report.job_card.id %}"
+               class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Test Information Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle text-primary"></i> Test Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Test Type</label>
+                            <p class="mb-0">
+                                <span class="badge bg-info-subtle text-info">
+                                    {{ ndt_report.get_test_type_display }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Test Date</label>
+                            <p class="mb-0">{{ ndt_report.test_date|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Test Procedure/Standard</label>
+                            <p class="mb-0">{{ ndt_report.test_procedure|default:"—" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Test Area</label>
+                            <p class="mb-0">{{ ndt_report.test_area|default:"—" }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Report Number</label>
+                            <p class="mb-0">{{ ndt_report.report_number|default:"—" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Results Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-check2-circle text-success"></i> Test Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Result</label>
+                            <p class="mb-0">
+                                {% if ndt_report.result == 'PASS' %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check-circle"></i> PASS
+                                    </span>
+                                {% elif ndt_report.result == 'FAIL' %}
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        <i class="bi bi-x-circle"></i> FAIL
+                                    </span>
+                                {% elif ndt_report.result == 'CONDITIONAL' %}
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-exclamation-circle"></i> CONDITIONAL PASS
+                                    </span>
+                                {% elif ndt_report.result == 'INCONCLUSIVE' %}
+                                    <span class="badge bg-secondary-subtle text-secondary">
+                                        <i class="bi bi-question-circle"></i> INCONCLUSIVE
+                                    </span>
+                                {% elif ndt_report.result == 'RETEST_REQUIRED' %}
+                                    <span class="badge bg-info-subtle text-info">
+                                        <i class="bi bi-arrow-repeat"></i> RETEST REQUIRED
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Defect Severity</label>
+                            <p class="mb-0">
+                                {% if ndt_report.defect_severity == 'NONE' %}
+                                    <span class="badge bg-success-subtle text-success">No Defects</span>
+                                {% elif ndt_report.defect_severity == 'MINOR' %}
+                                    <span class="badge bg-info-subtle text-info">Minor Defects</span>
+                                {% elif ndt_report.defect_severity == 'MODERATE' %}
+                                    <span class="badge bg-warning-subtle text-warning">Moderate Defects</span>
+                                {% elif ndt_report.defect_severity == 'SEVERE' %}
+                                    <span class="badge bg-danger-subtle text-danger">Severe Defects</span>
+                                {% elif ndt_report.defect_severity == 'CRITICAL' %}
+                                    <span class="badge bg-danger text-white">Critical Defects</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Findings Card -->
+            {% if ndt_report.defects_found or ndt_report.defect_locations or ndt_report.recommendations %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-circle text-warning"></i> Findings & Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ndt_report.defects_found %}
+                    <div class="mb-4">
+                        <label class="form-label text-muted small">Defects Found</label>
+                        <p class="mb-0">{{ ndt_report.defects_found|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    {% if ndt_report.defect_locations %}
+                    <div class="mb-4">
+                        <label class="form-label text-muted small">Defect Locations</label>
+                        <p class="mb-0">{{ ndt_report.defect_locations|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    {% if ndt_report.recommendations %}
+                    <div class="mb-0">
+                        <label class="form-label text-muted small">Recommendations</label>
+                        <p class="mb-0">{{ ndt_report.recommendations|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Additional Notes Card -->
+            {% if ndt_report.notes %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-left-text text-info"></i> Additional Notes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ ndt_report.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Equipment & Conditions Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-wrench text-secondary"></i> Equipment & Conditions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small d-block">Equipment Used</label>
+                        <small>{{ ndt_report.equipment_used|default:"Not specified" }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small d-block">Calibration Reference</label>
+                        <small>{{ ndt_report.calibration_ref|default:"Not specified" }}</small>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small d-block">Ambient Temperature</label>
+                        <small>
+                            {% if ndt_report.ambient_temp %}
+                                {{ ndt_report.ambient_temp }}°C
+                            {% else %}
+                                Not recorded
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label text-muted small d-block">Humidity</label>
+                        <small>
+                            {% if ndt_report.humidity %}
+                                {{ ndt_report.humidity }}%
+                            {% else %}
+                                Not recorded
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personnel Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people-fill text-primary"></i> Personnel
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small d-block">Performed By</label>
+                        <small>
+                            {% if ndt_report.performed_by %}
+                                {{ ndt_report.performed_by.name }}
+                            {% else %}
+                                Not assigned
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label text-muted small d-block">Verified By</label>
+                        <small>
+                            {% if ndt_report.verified_by %}
+                                {{ ndt_report.verified_by.name }}
+                            {% else %}
+                                Not verified
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Information Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history text-muted"></i> Record Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Created</small>
+                        <small>{{ ndt_report.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <div class="mb-0">
+                        <small class="text-muted d-block">Last Updated</small>
+                        <small>{{ ndt_report.updated_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

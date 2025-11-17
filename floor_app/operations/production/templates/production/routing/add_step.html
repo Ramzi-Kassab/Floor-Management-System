@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Add Routing Step - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #1e293b;
+        font-size: 0.938rem;
+    }
+    .form-label .required {
+        color: #dc2626;
+    }
+    .form-control,
+    .form-select {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.938rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .form-text {
+        font-size: 0.813rem;
+        color: #64748b;
+        margin-top: 0.375rem;
+    }
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+    .error-message {
+        color: #dc2626;
+        font-size: 0.813rem;
+        margin-top: 0.375rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="container-fluid mt-4" aria-label="breadcrumb">
+    <ol class="breadcrumb bg-transparent px-0 mb-3">
+        <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'production:jobcard_list' %}">Job Cards</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'production:routing_editor' job_card.id %}">Production Routing</a></li>
+        <li class="breadcrumb-item active">Add Step</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Add Routing Step</h1>
+            <p class="text-muted mb-0">Add a new production routing step for {{ job_card.job_card_number }}</p>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <!-- Job Card Reference -->
+        <div class="mb-4 p-3 bg-light rounded">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Job Card Number</small>
+                    <strong>{{ job_card.job_card_number }}</strong>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Bit Design</small>
+                    <strong>{{ job_card.bit_design_revision.design.name }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="post" id="addStepForm" novalidate>
+            {% csrf_token %}
+
+            <h6 class="form-section-title">Step Details</h6>
+
+            <!-- Sequence Number -->
+            <div class="form-group">
+                <label for="sequence" class="form-label">
+                    Sequence Number
+                    <span class="required">*</span>
+                </label>
+                <input type="number" class="form-control" id="sequence" name="sequence" required
+                       value="{{ form.sequence.value|default:'' }}" min="1" max="999">
+                <small class="form-text">The order in which this step will be executed</small>
+                {% if form.sequence.errors %}
+                    <div class="error-message">
+                        {% for error in form.sequence.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Operation -->
+            <div class="form-group">
+                <label for="operation" class="form-label">
+                    Operation
+                    <span class="required">*</span>
+                </label>
+                <select class="form-select" id="operation" name="operation" required>
+                    <option value="">Select an operation...</option>
+                    {% for operation in operations %}
+                    <option value="{{ operation.id }}"
+                            {% if form.operation.value == operation.id|stringformat:"s" %}selected{% endif %}>
+                        {{ operation.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">The production operation to be performed</small>
+                {% if form.operation.errors %}
+                    <div class="error-message">
+                        {% for error in form.operation.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Planned Duration -->
+            <div class="form-group">
+                <label for="planned_duration_hours" class="form-label">
+                    Planned Duration (Hours)
+                    <span class="required">*</span>
+                </label>
+                <input type="number" class="form-control" id="planned_duration_hours" name="planned_duration_hours"
+                       required value="{{ form.planned_duration_hours.value|default:'' }}" min="0.5" step="0.5">
+                <small class="form-text">Expected duration for completing this step</small>
+                {% if form.planned_duration_hours.errors %}
+                    <div class="error-message">
+                        {% for error in form.planned_duration_hours.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Assigned Operator -->
+            <div class="form-group">
+                <label for="operator" class="form-label">
+                    Operator
+                    <span class="required">*</span>
+                </label>
+                <select class="form-select" id="operator" name="operator" required>
+                    <option value="">Select an operator...</option>
+                    {% for operator in operators %}
+                    <option value="{{ operator.id }}"
+                            {% if form.operator.value == operator.id|stringformat:"s" %}selected{% endif %}>
+                        {{ operator.get_full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">The operator assigned to this step</small>
+                {% if form.operator.errors %}
+                    <div class="error-message">
+                        {% for error in form.operator.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3"
+                          placeholder="Add any additional notes or instructions...">{{ form.notes.value|default:'' }}</textarea>
+                <small class="form-text">Optional notes for this routing step</small>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'production:routing_editor' job_card.id %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Save Step
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('addStepForm');
+
+        form.addEventListener('submit', function(e) {
+            // Basic client-side validation
+            const sequence = document.getElementById('sequence').value;
+            const operation = document.getElementById('operation').value;
+            const duration = document.getElementById('planned_duration_hours').value;
+            const operator = document.getElementById('operator').value;
+
+            if (!sequence || !operation || !duration || !operator) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+                return false;
+            }
+
+            if (parseFloat(duration) <= 0) {
+                e.preventDefault();
+                alert('Duration must be greater than 0.');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

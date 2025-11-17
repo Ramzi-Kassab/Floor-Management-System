@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Production{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="container-fluid mt-3">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+            <a href="{% url 'production:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Production Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-gear"></i> Settings
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-gear text-primary"></i> Production Settings
+            </h2>
+            <p class="text-muted">Manage production module configurations and templates</p>
+        </div>
+    </div>
+
+    <!-- Settings Cards Grid -->
+    <div class="row">
+        <!-- Operations Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-tools text-primary" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Operations</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Define and manage production operation definitions with codes, departments, and sequences.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-primary mb-0">{{ operations_count }}</h3>
+                        <small class="text-muted">Total Operations</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'production:operation_list' %}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Operations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Symbols Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-hexagon-fill text-info" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Cutter Symbols</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Configure cutter evaluation symbols with action types, colors, and replacement/repair flags.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-info mb-0">{{ symbols_count }}</h3>
+                        <small class="text-muted">Total Symbols</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'production:symbol_list' %}" class="btn btn-info btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Symbols
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist Templates Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-checklist text-warning" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Checklist Templates</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Create and manage checklist templates for different production stages and operations.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-warning mb-0">{{ checklist_templates_count }}</h3>
+                        <small class="text-muted">Total Templates</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'production:checklist_template_list' %}" class="btn btn-warning btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Templates
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information Section -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Settings Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        The Production module settings allow you to configure:
+                    </p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Operations:</strong> Define production operations with departments, groups, and sequences
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Symbols:</strong> Create cutter evaluation symbols for quality assessments
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Checklist Templates:</strong> Build reusable checklists for different production stages
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.bg-opacity-10 {
+    opacity: 0.1;
+}
+</style>
+{% endblock %}

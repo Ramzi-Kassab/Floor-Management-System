@@ -275,13 +275,39 @@
                         </ul>
                     </li>
 
-                    <!-- Production Section (Coming Soon) -->
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                    <!-- Production & Evaluation Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="production-section">
                             <i class="bi bi-gear-fill"></i>
-                            <span>Production</span>
-                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
-                        </a>
+                            <span>Production & Evaluation</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="production-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'production:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Production Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'production:batch_list' %}">
+                                    <i class="bi bi-stack"></i>
+                                    <span>Batch Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'production:jobcard_list' %}">
+                                    <i class="bi bi-card-checklist"></i>
+                                    <span>Job Cards</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'production:settings' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- Maintenance Section (Coming Soon) -->

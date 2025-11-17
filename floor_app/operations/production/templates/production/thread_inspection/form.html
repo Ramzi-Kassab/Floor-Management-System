@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}{% if inspection %}Edit{% else %}Create{% endif %} Thread Inspection - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 px-4 bg-light border-bottom">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:home' %}" class="text-decoration-none">
+                    <i class="bi bi-house-door-fill"></i> Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:dashboard' %}" class="text-decoration-none">
+                    <i class="bi bi-gear-fill"></i> Production
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:jobcard_detail' job_card.id %}" class="text-decoration-none">
+                    Job Card: {{ job_card.job_card_number }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:thread_inspection_list' job_card.id %}" class="text-decoration-none">
+                    Thread Inspections
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if inspection %}Edit{% else %}Create{% endif %}
+            </li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div>
+                <h1 class="h3 mb-1 fw-bold">
+                    <i class="bi bi-wrench-adjustable text-primary"></i>
+                    {% if inspection %}Edit{% else %}Create{% endif %} Thread Inspection
+                </h1>
+                <p class="text-muted">
+                    Job Card: <strong>{{ job_card.job_card_number }}</strong> |
+                    Bit Size: {{ job_card.bit_size }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Thread Details Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle text-primary"></i> Thread Details
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.thread_type.id_for_label }}" class="form-label">
+                                    {{ form.thread_type.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.thread_type }}
+                                {% if form.thread_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.thread_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-0">
+                                <label for="{{ form.thread_size.id_for_label }}" class="form-label">
+                                    {{ form.thread_size.label }}
+                                </label>
+                                {{ form.thread_size }}
+                                {% if form.thread_size.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.thread_size.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    e.g., "API 2 3/8 REG", "API 3 1/2 IF"
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inspection Results Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-check2-circle text-success"></i> Inspection Results
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.result.id_for_label }}" class="form-label">
+                                    {{ form.result.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.result }}
+                                {% if form.result.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.result.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-0">
+                                <label for="{{ form.damage_type.id_for_label }}" class="form-label">
+                                    {{ form.damage_type.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.damage_type }}
+                                {% if form.damage_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.damage_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Findings Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-circle text-warning"></i> Findings
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="mb-3">
+                            <label for="{{ form.description_of_issue.id_for_label }}" class="form-label">
+                                {{ form.description_of_issue.label }}
+                            </label>
+                            {{ form.description_of_issue }}
+                            {% if form.description_of_issue.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description_of_issue.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Describe any issues found during inspection
+                            </small>
+                        </div>
+                        <div class="mb-0">
+                            <label for="{{ form.measurement_results.id_for_label }}" class="form-label">
+                                {{ form.measurement_results.label }}
+                            </label>
+                            {{ form.measurement_results }}
+                            {% if form.measurement_results.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.measurement_results.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                e.g., "Pitch diameter: 2.340", "Taper: normal", "Seal area: OK"
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Repair Information Section -->
+                    <div class="card-header bg-light border-bottom">
+                        <h5 class="mb-0">
+                            <i class="bi bi-tools text-secondary"></i> Repair Information
+                        </h5>
+                    </div>
+                    <div class="card-body border-bottom">
+                        <div class="mb-3">
+                            <label for="{{ form.repair_action.id_for_label }}" class="form-label">
+                                {{ form.repair_action.label }}
+                            </label>
+                            {{ form.repair_action }}
+                            {% if form.repair_action.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.repair_action.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Describe repair actions taken or recommended
+                            </small>
+                        </div>
+                        <div class="mb-0">
+                            <label for="{{ form.final_notes.id_for_label }}" class="form-label">
+                                {{ form.final_notes.label }}
+                            </label>
+                            {{ form.final_notes }}
+                            {% if form.final_notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.final_notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Final notes after inspection and/or repairs
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="card-footer bg-light">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Save Inspection
+                            </button>
+                            <a href="{% url 'production:thread_inspection_list' job_card.id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle text-info"></i> Thread Type Reference
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="small">API Thread Types</h6>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2">
+                                <span class="badge bg-info-subtle text-info">API REG</span>
+                                <br><small class="text-muted">API Regular - Standard connections</small>
+                            </li>
+                            <li class="mb-2">
+                                <span class="badge bg-info-subtle text-info">API IF</span>
+                                <br><small class="text-muted">API Internal Flush - Flush connections</small>
+                            </li>
+                            <li class="mb-2">
+                                <span class="badge bg-info-subtle text-info">API FH</span>
+                                <br><small class="text-muted">API Full Hole - Full hole connections</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-check-square text-success"></i> Result Codes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <span class="badge bg-success-subtle text-success">PASS</span>
+                            <small class="text-muted">Inspection passed, ready for use</small>
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-danger-subtle text-danger">FAIL</span>
+                            <small class="text-muted">Failed inspection, cannot be used</small>
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-warning-subtle text-warning">REPAIR REQUIRED</span>
+                            <small class="text-muted">Repair needed, not yet passed</small>
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-info-subtle text-info">CONDITIONAL PASS</span>
+                            <small class="text-muted">Passed with conditions/notes</small>
+                        </li>
+                        <li>
+                            <span class="badge bg-danger text-white">REJECT</span>
+                            <small class="text-muted">Not usable, must be rejected</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-circle text-warning"></i> Damage Types
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><strong>Galling:</strong> Friction-caused surface damage</li>
+                        <li class="mb-2"><strong>Thread Wear:</strong> Normal wear on threads</li>
+                        <li class="mb-2"><strong>Cross Threading:</strong> Damaged thread pitch</li>
+                        <li class="mb-2"><strong>Corrosion:</strong> Rust or chemical damage</li>
+                        <li class="mb-2"><strong>Mechanical Damage:</strong> Impact or tool damage</li>
+                        <li class="mb-2"><strong>Seal Area Damage:</strong> Seal zone compromised</li>
+                        <li><strong>Multiple Issues:</strong> Combination of damages</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

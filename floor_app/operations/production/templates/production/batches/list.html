@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Production Batches{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .batch-table th {
+        background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .batch-code {
+        font-family: monospace;
+        font-weight: 600;
+        color: #0d6efd;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .status-planned {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .status-in_progress {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .status-partial_complete {
+        background: #fff3cd;
+        color: #664d03;
+    }
+
+    .status-complete {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-on_hold {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .status-cancelled {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .priority-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .priority-low {
+        background: #e7f3ff;
+        color: #0c5aa0;
+    }
+
+    .priority-normal {
+        background: #e8f5e9;
+        color: #1b5e20;
+    }
+
+    .priority-high {
+        background: #fff3e0;
+        color: #e65100;
+    }
+
+    .priority-rush {
+        background: #ffebee;
+        color: #b71c1c;
+    }
+
+    .priority-critical {
+        background: #fce4ec;
+        color: #880e4f;
+    }
+
+    .completion-bar {
+        height: 20px;
+        background: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 0.7rem;
+        font-weight: 600;
+        position: relative;
+    }
+
+    .completion-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: width 0.3s ease;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .family-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #f0f0f0;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+            <li class="breadcrumb-item active">Production Batches</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-boxes text-primary me-2"></i>
+                        Production Batches
+                    </h2>
+                    <p class="text-muted mb-0">Manage production batch orders and track completion status</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'production:batch_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Batch
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search by Code or Customer</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="PLANNED" {% if request.GET.status == 'PLANNED' %}selected{% endif %}>Planned</option>
+                            <option value="IN_PROGRESS" {% if request.GET.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                            <option value="PARTIAL_COMPLETE" {% if request.GET.status == 'PARTIAL_COMPLETE' %}selected{% endif %}>Partially Complete</option>
+                            <option value="COMPLETE" {% if request.GET.status == 'COMPLETE' %}selected{% endif %}>Complete</option>
+                            <option value="ON_HOLD" {% if request.GET.status == 'ON_HOLD' %}selected{% endif %}>On Hold</option>
+                            <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                        <label for="status">Status</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="bit_family" name="bit_family">
+                            <option value="">All Bit Families</option>
+                            <option value="PDC" {% if request.GET.bit_family == 'PDC' %}selected{% endif %}>PDC Bit</option>
+                            <option value="ROLLER_CONE" {% if request.GET.bit_family == 'ROLLER_CONE' %}selected{% endif %}>Roller Cone</option>
+                            <option value="MATRIX" {% if request.GET.bit_family == 'MATRIX' %}selected{% endif %}>Matrix Infiltration</option>
+                            <option value="OTHER" {% if request.GET.bit_family == 'OTHER' %}selected{% endif %}>Other</option>
+                        </select>
+                        <label for="bit_family">Bit Family</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="">All Priorities</option>
+                            <option value="LOW" {% if request.GET.priority == 'LOW' %}selected{% endif %}>Low</option>
+                            <option value="NORMAL" {% if request.GET.priority == 'NORMAL' %}selected{% endif %}>Normal</option>
+                            <option value="HIGH" {% if request.GET.priority == 'HIGH' %}selected{% endif %}>High</option>
+                            <option value="RUSH" {% if request.GET.priority == 'RUSH' %}selected{% endif %}>Rush</option>
+                            <option value="CRITICAL" {% if request.GET.priority == 'CRITICAL' %}selected{% endif %}>Critical</option>
+                        </select>
+                        <label for="priority">Priority</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Batches Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover batch-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Customer</th>
+                            <th>Bit Family</th>
+                            <th width="80">Target Qty</th>
+                            <th width="80">Completed</th>
+                            <th width="120">Progress</th>
+                            <th width="110">Status</th>
+                            <th width="90">Priority</th>
+                            <th>Due Date</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for batch in batches %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'production:batch_detail' batch.pk %}" class="text-decoration-none">
+                                    <span class="batch-code">{{ batch.code }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'production:batch_detail' batch.pk %}" class="text-decoration-none text-dark">
+                                    <strong>{{ batch.customer_name|default:"-" }}</strong>
+                                </a>
+                            </td>
+                            <td>
+                                <span class="family-tag">
+                                    {{ batch.get_bit_family_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <strong>{{ batch.target_quantity }}</strong>
+                            </td>
+                            <td class="text-center">
+                                <strong>{{ batch.completed_quantity }}</strong>
+                            </td>
+                            <td>
+                                <div class="completion-bar">
+                                    <div class="completion-bar-fill" style="width: {{ batch.completion_percentage }}%;">
+                                        {% if batch.completion_percentage > 15 %}
+                                        {{ batch.completion_percentage }}%
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ batch.status|lower }}">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.4rem;"></i>
+                                    {{ batch.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-{{ batch.priority|lower }}">
+                                    {{ batch.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if batch.due_date %}
+                                    {% if batch.is_overdue and batch.status != 'COMPLETE' and batch.status != 'CANCELLED' %}
+                                    <span class="text-danger" title="Overdue">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        {{ batch.due_date|date:"Y-m-d" }}
+                                    </span>
+                                    {% else %}
+                                    <span>{{ batch.due_date|date:"Y-m-d" }}</span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'production:batch_detail' batch.pk %}"
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'production:batch_edit' batch.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No batches found</p>
+                                <a href="{% url 'production:batch_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First Batch
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if batches.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if batches.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ batches.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.bit_family %}&bit_family={{ request.GET.bit_family }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in batches.paginator.page_range %}
+                        {% if num == batches.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > batches.number|add:'-3' and num < batches.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.bit_family %}&bit_family={{ request.GET.bit_family }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if batches.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ batches.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.bit_family %}&bit_family={{ request.GET.bit_family }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clear filters
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "production:batch_list" %}';
+}
+</script>
+{% endblock %}

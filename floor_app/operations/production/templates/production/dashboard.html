@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Production Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .dashboard-card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 600;
+    }
+    .priority-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .priority-CRITICAL { background: #dc2626; color: white; }
+    .priority-RUSH { background: #ea580c; color: white; }
+    .priority-HIGH { background: #f59e0b; color: white; }
+    .priority-NORMAL { background: #6366f1; color: white; }
+    .priority-LOW { background: #94a3b8; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Production Dashboard</h1>
+            <p class="text-muted mb-0">Monitor production batches, job cards, and operations</p>
+        </div>
+        <div>
+            <a href="{% url 'production:batch_create' %}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-lg me-1"></i> New Batch
+            </a>
+            <a href="{% url 'production:jobcard_create' %}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-lg me-1"></i> New Job Card
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ open_batches }}</div>
+                        <div class="stat-label">Open Batches</div>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-stack"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ open_job_cards }}</div>
+                        <div class="stat-label">Open Job Cards</div>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-card-checklist"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ jobs_in_evaluation }}</div>
+                        <div class="stat-label">In Evaluation</div>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-search"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ jobs_in_production }}</div>
+                        <div class="stat-label">In Production</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-gear-wide-connected"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Banner for Awaiting Approval -->
+    {% if jobs_awaiting_approval > 0 %}
+    <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <div>
+            <strong>{{ jobs_awaiting_approval }} job card(s)</strong> are awaiting approval.
+            <a href="{% url 'production:jobcard_list' %}?status=AWAITING_APPROVAL" class="alert-link">Review now</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Urgent/High Priority Jobs -->
+        <div class="col-lg-6">
+            <div class="dashboard-card h-100">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>High Priority Jobs</span>
+                    <a href="{% url 'production:jobcard_list' %}?priority=HIGH" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job Card</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in urgent_jobs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'production:jobcard_detail' job.pk %}" class="text-decoration-none fw-medium">
+                                        {{ job.job_card_number }}
+                                    </a>
+                                </td>
+                                <td>{{ job.customer_name|default:"-" }}</td>
+                                <td>{{ job.get_status_display }}</td>
+                                <td><span class="priority-badge priority-{{ job.priority }}">{{ job.priority }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No high priority jobs</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue Jobs -->
+        <div class="col-lg-6">
+            <div class="dashboard-card h-100">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-clock-history text-danger me-2"></i>Overdue Jobs</span>
+                    <a href="{% url 'production:jobcard_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job Card</th>
+                                <th>Customer</th>
+                                <th>Due Date</th>
+                                <th>Days Overdue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in overdue_jobs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'production:jobcard_detail' job.pk %}" class="text-decoration-none fw-medium">
+                                        {{ job.job_card_number }}
+                                    </a>
+                                </td>
+                                <td>{{ job.customer_name|default:"-" }}</td>
+                                <td>{{ job.planned_end_date }}</td>
+                                <td class="text-danger">
+                                    {% with days=job.planned_end_date|timesince %}
+                                    {{ days }}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No overdue jobs</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Operations -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-activity text-primary me-2"></i>Active Operations (In Progress)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job Card</th>
+                                <th>Operation</th>
+                                <th>Operator</th>
+                                <th>Started At</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for step in today_operations %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'production:jobcard_detail' step.route.job_card.pk %}" class="text-decoration-none fw-medium">
+                                        {{ step.route.job_card.job_card_number }}
+                                    </a>
+                                </td>
+                                <td>{{ step.operation.name }}</td>
+                                <td>{{ step.operator|default:"-" }}</td>
+                                <td>{{ step.actual_start_at|date:"M d, H:i" }}</td>
+                                <td>
+                                    {% if step.actual_start_at %}
+                                    {{ step.actual_start_at|timesince }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">No operations currently in progress</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Job Cards -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-clock me-2"></i>Recent Job Cards</span>
+                    <a href="{% url 'production:jobcard_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job Card #</th>
+                                <th>Serial Number</th>
+                                <th>Type</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in recent_jobs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'production:jobcard_detail' job.pk %}" class="text-decoration-none fw-medium">
+                                        {{ job.job_card_number }}
+                                    </a>
+                                </td>
+                                <td>{{ job.serial_unit.serial_number }}</td>
+                                <td>{{ job.get_job_type_display }}</td>
+                                <td>{{ job.customer_name|default:"-" }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ job.get_status_display }}</span>
+                                </td>
+                                <td>{{ job.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">No recent job cards</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

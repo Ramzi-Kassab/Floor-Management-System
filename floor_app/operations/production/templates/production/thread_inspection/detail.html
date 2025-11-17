@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Thread Inspection Detail - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 px-4 bg-light border-bottom">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:home' %}" class="text-decoration-none">
+                    <i class="bi bi-house-door-fill"></i> Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:dashboard' %}" class="text-decoration-none">
+                    <i class="bi bi-gear-fill"></i> Production
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:jobcard_detail' inspection.job_card.id %}" class="text-decoration-none">
+                    Job Card: {{ inspection.job_card.job_card_number }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'production:thread_inspection_list' inspection.job_card.id %}" class="text-decoration-none">
+                    Thread Inspections
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-wrench-adjustable"></i> {{ inspection.get_thread_type_display }}
+            </li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div>
+                <h1 class="h3 mb-1 fw-bold">
+                    <i class="bi bi-wrench-adjustable text-primary"></i>
+                    {{ inspection.get_thread_type_display }} Inspection
+                </h1>
+                <p class="text-muted mb-0">
+                    Job Card: <strong>{{ inspection.job_card.job_card_number }}</strong>
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'production:thread_inspection_edit' inspection.job_card.id inspection.id %}"
+               class="btn btn-primary me-2">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'production:thread_inspection_list' inspection.job_card.id %}"
+               class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Inspection Information Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle text-primary"></i> Inspection Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Thread Type</label>
+                            <p class="mb-0">
+                                <span class="badge bg-info-subtle text-info">
+                                    {{ inspection.get_thread_type_display }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Thread Size</label>
+                            <p class="mb-0">{{ inspection.thread_size|default:"—" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Inspection Date</label>
+                            <p class="mb-0">{{ inspection.inspection_date|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Inspected By</label>
+                            <p class="mb-0">
+                                {% if inspection.inspected_by %}
+                                    {{ inspection.inspected_by.name }}
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Results Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-check2-circle text-success"></i> Inspection Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Result</label>
+                            <p class="mb-0">
+                                {% if inspection.result == 'PASS' %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check-circle"></i> PASS
+                                    </span>
+                                {% elif inspection.result == 'FAIL' %}
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        <i class="bi bi-x-circle"></i> FAIL
+                                    </span>
+                                {% elif inspection.result == 'REPAIR_REQUIRED' %}
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-exclamation-circle"></i> REPAIR REQUIRED
+                                    </span>
+                                {% elif inspection.result == 'CONDITIONAL_PASS' %}
+                                    <span class="badge bg-info-subtle text-info">
+                                        <i class="bi bi-info-circle"></i> CONDITIONAL PASS
+                                    </span>
+                                {% elif inspection.result == 'REJECT' %}
+                                    <span class="badge bg-danger text-white">
+                                        <i class="bi bi-stop-circle"></i> REJECT
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Damage Type</label>
+                            <p class="mb-0">
+                                {% if inspection.damage_type == 'NONE' %}
+                                    <span class="badge bg-success-subtle text-success">No Damage</span>
+                                {% elif inspection.damage_type == 'GALLING' %}
+                                    <span class="badge bg-warning-subtle text-warning">Galling</span>
+                                {% elif inspection.damage_type == 'THREAD_WEAR' %}
+                                    <span class="badge bg-warning-subtle text-warning">Thread Wear</span>
+                                {% elif inspection.damage_type == 'CROSS_THREAD' %}
+                                    <span class="badge bg-danger-subtle text-danger">Cross Threading</span>
+                                {% elif inspection.damage_type == 'CORROSION' %}
+                                    <span class="badge bg-danger-subtle text-danger">Corrosion</span>
+                                {% elif inspection.damage_type == 'MECHANICAL_DAMAGE' %}
+                                    <span class="badge bg-danger-subtle text-danger">Mechanical Damage</span>
+                                {% elif inspection.damage_type == 'SEAL_AREA_DAMAGE' %}
+                                    <span class="badge bg-danger-subtle text-danger">Seal Area Damage</span>
+                                {% elif inspection.damage_type == 'MULTIPLE' %}
+                                    <span class="badge bg-danger text-white">Multiple Issues</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">{{ inspection.get_damage_type_display }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Findings Card -->
+            {% if inspection.description_of_issue or inspection.measurement_results %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-circle text-warning"></i> Findings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if inspection.description_of_issue %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Description of Issue</label>
+                        <p class="mb-0">{{ inspection.description_of_issue|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    {% if inspection.measurement_results %}
+                    <div class="mb-0">
+                        <label class="form-label text-muted small">Measurement Results</label>
+                        <p class="mb-0">{{ inspection.measurement_results|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Repair Information Card -->
+            {% if inspection.result in 'FAIL,REPAIR_REQUIRED' %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-tools text-secondary"></i> Repair Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Repair Action</label>
+                        <p class="mb-0">{{ inspection.repair_action|default:"Not specified"|linebreaks }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Repair Status</label>
+                        <p class="mb-0">
+                            {% if inspection.repair_completed %}
+                                <span class="badge bg-success-subtle text-success">
+                                    <i class="bi bi-check-circle"></i> Completed
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning">
+                                    <i class="bi bi-hourglass-split"></i> Pending
+                                </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if inspection.repair_completed %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Repair Completed At</label>
+                        <p class="mb-0">{{ inspection.repair_completed_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label text-muted small">Repaired By</label>
+                        <p class="mb-0">
+                            {% if inspection.repaired_by %}
+                                {{ inspection.repaired_by.name }}
+                            {% else %}
+                                Not assigned
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="mb-0">
+                        <form method="POST" action="{% url 'production:thread_inspection_complete_repair' inspection.job_card.id inspection.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle"></i> Mark Repair as Completed
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Final Status Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-flag-fill text-info"></i> Final Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Final Status</label>
+                        <p class="mb-0">
+                            {% if inspection.final_status == 'PASS' %}
+                                <span class="badge bg-success-subtle text-success">PASS</span>
+                            {% elif inspection.final_status == 'FAIL' %}
+                                <span class="badge bg-danger-subtle text-danger">FAIL</span>
+                            {% elif inspection.final_status == 'REPAIR_REQUIRED' %}
+                                <span class="badge bg-warning-subtle text-warning">REPAIR REQUIRED</span>
+                            {% elif inspection.final_status == 'CONDITIONAL_PASS' %}
+                                <span class="badge bg-info-subtle text-info">CONDITIONAL PASS</span>
+                            {% elif inspection.final_status == 'REJECT' %}
+                                <span class="badge bg-danger text-white">REJECT</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if inspection.final_notes %}
+                    <div class="mb-0">
+                        <label class="form-label text-muted small">Final Notes</label>
+                        <p class="mb-0">{{ inspection.final_notes|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Personnel Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people-fill text-primary"></i> Personnel
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small d-block">Inspected By</label>
+                        <small>
+                            {% if inspection.inspected_by %}
+                                {{ inspection.inspected_by.name }}
+                            {% else %}
+                                Not assigned
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% if inspection.repair_completed and inspection.repaired_by %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted small d-block">Repaired By</label>
+                        <small>{{ inspection.repaired_by.name }}</small>
+                    </div>
+                    {% endif %}
+                    <div class="mb-0">
+                        <label class="form-label text-muted small d-block">Verified By</label>
+                        <small>
+                            {% if inspection.verified_by %}
+                                {{ inspection.verified_by.get_full_name|default:inspection.verified_by.username }}
+                            {% else %}
+                                Not verified
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Summary Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-speedometer2 text-success"></i> Status Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">Initial Result</small>
+                        <span class="badge bg-secondary-subtle text-secondary">{{ inspection.get_result_display }}</span>
+                    </div>
+                    {% if inspection.needs_repair %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">Repair Status</small>
+                        <span class="badge bg-warning-subtle text-warning">Pending</span>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Final Status</small>
+                        {% if inspection.final_status == 'PASS' %}
+                            <span class="badge bg-success-subtle text-success">PASS</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger">{{ inspection.get_final_status_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Information Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history text-muted"></i> Record Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Created</small>
+                        <small>{{ inspection.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <div class="mb-0">
+                        <small class="text-muted d-block">Last Updated</small>
+                        <small>{{ inspection.updated_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

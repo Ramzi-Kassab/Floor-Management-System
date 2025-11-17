@@ -1,0 +1,440 @@
+[
+  {
+    "model": "production.operationdefinition",
+    "pk": 1,
+    "fields": {
+      "code": "EVAL-PRE",
+      "name": "Pre-Evaluation",
+      "description": "Initial evaluation of incoming bit condition",
+      "department": "Evaluation",
+      "operation_group": "Evaluation",
+      "default_sequence": 10,
+      "default_duration_hours": "2.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": false,
+      "is_quality_checkpoint": true,
+      "is_active": true,
+      "sort_order": 10
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 2,
+    "fields": {
+      "code": "DEBRAZE",
+      "name": "De-Braze",
+      "description": "Remove existing cutters and braze material",
+      "department": "Production-PDC",
+      "operation_group": "Brazing",
+      "default_sequence": 20,
+      "default_duration_hours": "4.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": false,
+      "is_quality_checkpoint": false,
+      "is_active": true,
+      "sort_order": 20
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 3,
+    "fields": {
+      "code": "GRIND-HEAD",
+      "name": "Head Grinding",
+      "description": "Grinding of bit head surface",
+      "department": "Production-PDC",
+      "operation_group": "Grinding",
+      "default_sequence": 30,
+      "default_duration_hours": "3.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": false,
+      "is_quality_checkpoint": false,
+      "is_active": true,
+      "sort_order": 30
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 4,
+    "fields": {
+      "code": "BRAZE-CUTTER",
+      "name": "Cutter Brazing",
+      "description": "Brazing new cutters onto bit",
+      "department": "Production-PDC",
+      "operation_group": "Brazing",
+      "default_sequence": 40,
+      "default_duration_hours": "6.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": true,
+      "is_quality_checkpoint": false,
+      "is_active": true,
+      "sort_order": 40
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 5,
+    "fields": {
+      "code": "MACHINE",
+      "name": "Machining",
+      "description": "Final machining and finishing",
+      "department": "Production-PDC",
+      "operation_group": "Machining",
+      "default_sequence": 50,
+      "default_duration_hours": "2.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": false,
+      "is_quality_checkpoint": false,
+      "is_active": true,
+      "sort_order": 50
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 6,
+    "fields": {
+      "code": "NDT-LPT",
+      "name": "Liquid Penetrant Testing",
+      "description": "Non-destructive testing - LPT",
+      "department": "NDT",
+      "operation_group": "NDT",
+      "default_sequence": 60,
+      "default_duration_hours": "1.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": false,
+      "is_quality_checkpoint": true,
+      "is_active": true,
+      "sort_order": 60
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 7,
+    "fields": {
+      "code": "THREAD-INSP",
+      "name": "API Thread Inspection",
+      "description": "Inspection of API threaded connection",
+      "department": "QC",
+      "operation_group": "Inspection",
+      "default_sequence": 70,
+      "default_duration_hours": "1.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": false,
+      "is_quality_checkpoint": true,
+      "is_active": true,
+      "sort_order": 70
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 8,
+    "fields": {
+      "code": "FINAL-QC",
+      "name": "Final QC Inspection",
+      "description": "Final quality control inspection",
+      "department": "QC",
+      "operation_group": "Inspection",
+      "default_sequence": 80,
+      "default_duration_hours": "2.00",
+      "requires_operator": true,
+      "requires_supervisor_approval": true,
+      "is_quality_checkpoint": true,
+      "is_active": true,
+      "sort_order": 80
+    }
+  },
+  {
+    "model": "production.operationdefinition",
+    "pk": 9,
+    "fields": {
+      "code": "PACK",
+      "name": "Packing",
+      "description": "Final packing for shipment",
+      "department": "Logistics",
+      "operation_group": "Logistics",
+      "default_sequence": 90,
+      "default_duration_hours": "0.50",
+      "requires_operator": true,
+      "requires_supervisor_approval": false,
+      "is_quality_checkpoint": false,
+      "is_active": true,
+      "sort_order": 90
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 1,
+    "fields": {
+      "symbol": "X",
+      "name": "Damaged - Replace",
+      "description": "Cutter is damaged and must be replaced",
+      "action": "REPLACE",
+      "is_replacement": true,
+      "is_repair": false,
+      "cost_multiplier": "1.00",
+      "color_code": "#FF0000",
+      "is_active": true,
+      "sort_order": 10
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 2,
+    "fields": {
+      "symbol": "O",
+      "name": "OK - Good Condition",
+      "description": "Cutter is in good condition, keep as-is",
+      "action": "KEEP",
+      "is_replacement": false,
+      "is_repair": false,
+      "cost_multiplier": "0.00",
+      "color_code": "#00FF00",
+      "is_active": true,
+      "sort_order": 20
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 3,
+    "fields": {
+      "symbol": "S",
+      "name": "Braze Build-up",
+      "description": "Spin cutter and add braze build-up",
+      "action": "REPAIR_BRAZE",
+      "is_replacement": false,
+      "is_repair": true,
+      "cost_multiplier": "0.50",
+      "color_code": "#FFA500",
+      "is_active": true,
+      "sort_order": 30
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 4,
+    "fields": {
+      "symbol": "R",
+      "name": "Rotate Cutter",
+      "description": "Rotate cutter to expose new usable edge",
+      "action": "ROTATE",
+      "is_replacement": false,
+      "is_repair": true,
+      "cost_multiplier": "0.25",
+      "color_code": "#FFFF00",
+      "is_active": true,
+      "sort_order": 40
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 5,
+    "fields": {
+      "symbol": "L",
+      "name": "Lost Cutter",
+      "description": "Cutter is lost, clean pocket and replace",
+      "action": "CLEAN",
+      "is_replacement": true,
+      "is_repair": false,
+      "cost_multiplier": "1.20",
+      "color_code": "#800080",
+      "is_active": true,
+      "sort_order": 50
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 6,
+    "fields": {
+      "symbol": "V",
+      "name": "Build-up Fins",
+      "description": "Build-up fins/blades with additional material",
+      "action": "BUILD_UP",
+      "is_replacement": false,
+      "is_repair": true,
+      "cost_multiplier": "0.75",
+      "color_code": "#0000FF",
+      "is_active": true,
+      "sort_order": 60
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 7,
+    "fields": {
+      "symbol": "P",
+      "name": "Pocket Repair",
+      "description": "Repair or rebuild cutter pocket",
+      "action": "BUILD_UP",
+      "is_replacement": false,
+      "is_repair": true,
+      "cost_multiplier": "0.60",
+      "color_code": "#008080",
+      "is_active": true,
+      "sort_order": 70
+    }
+  },
+  {
+    "model": "production.cuttersymbol",
+    "pk": 8,
+    "fields": {
+      "symbol": "I",
+      "name": "Impact Arrestor",
+      "description": "Impact arrestor needs attention",
+      "action": "INSPECT",
+      "is_replacement": false,
+      "is_repair": true,
+      "cost_multiplier": "0.40",
+      "color_code": "#FF00FF",
+      "is_active": true,
+      "sort_order": 80
+    }
+  },
+  {
+    "model": "production.checklisttemplate",
+    "pk": 1,
+    "fields": {
+      "code": "RELEASE-CHECKLIST",
+      "name": "Production Release Checklist",
+      "description": "Checklist to be completed before releasing job to shop floor",
+      "applies_to": "JOB_CARD",
+      "required_for_release": true,
+      "auto_create_on_job": true,
+      "is_active": true,
+      "sort_order": 10
+    }
+  },
+  {
+    "model": "production.checklisttemplate",
+    "pk": 2,
+    "fields": {
+      "code": "FINAL-QC-CHECKLIST",
+      "name": "Final QC Checklist",
+      "description": "Final quality control checklist before shipping",
+      "applies_to": "JOB_CARD",
+      "required_for_release": true,
+      "auto_create_on_job": false,
+      "is_active": true,
+      "sort_order": 20
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 1,
+    "fields": {
+      "template": 1,
+      "text": "Evaluation completed and approved",
+      "required_role": "Technical Engineer",
+      "is_mandatory": true,
+      "sequence": 10,
+      "help_text": "Ensure cutter evaluation has been reviewed and approved"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 2,
+    "fields": {
+      "template": 1,
+      "text": "Required cutters available in stock",
+      "required_role": "Inventory Control",
+      "is_mandatory": true,
+      "sequence": 20,
+      "help_text": "Verify all required cutters are available for this job"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 3,
+    "fields": {
+      "template": 1,
+      "text": "BOM verified and confirmed",
+      "required_role": "Production Planner",
+      "is_mandatory": true,
+      "sequence": 30,
+      "help_text": "Confirm Bill of Materials is accurate for this MAT"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 4,
+    "fields": {
+      "template": 1,
+      "text": "Customer requirements documented",
+      "required_role": "Sales/Customer Service",
+      "is_mandatory": false,
+      "sequence": 40,
+      "help_text": "Any special customer requirements are noted"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 5,
+    "fields": {
+      "template": 1,
+      "text": "Route steps assigned and scheduled",
+      "required_role": "Production Planner",
+      "is_mandatory": true,
+      "sequence": 50,
+      "help_text": "Production route is defined with estimated times"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 6,
+    "fields": {
+      "template": 2,
+      "text": "All production steps completed",
+      "required_role": "QC Inspector",
+      "is_mandatory": true,
+      "sequence": 10,
+      "help_text": "Verify all routing steps show as completed"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 7,
+    "fields": {
+      "template": 2,
+      "text": "NDT tests passed",
+      "required_role": "QC Inspector",
+      "is_mandatory": true,
+      "sequence": 20,
+      "help_text": "All required NDT tests have passed"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 8,
+    "fields": {
+      "template": 2,
+      "text": "Thread inspection passed",
+      "required_role": "QC Inspector",
+      "is_mandatory": true,
+      "sequence": 30,
+      "help_text": "API thread inspection has passed or repairs completed"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 9,
+    "fields": {
+      "template": 2,
+      "text": "Visual inspection satisfactory",
+      "required_role": "QC Inspector",
+      "is_mandatory": true,
+      "sequence": 40,
+      "help_text": "Bit passes visual inspection for quality"
+    }
+  },
+  {
+    "model": "production.checklistitemtemplate",
+    "pk": 10,
+    "fields": {
+      "template": 2,
+      "text": "Documentation complete",
+      "required_role": "QC Inspector",
+      "is_mandatory": true,
+      "sequence": 50,
+      "help_text": "All required documentation is complete and accurate"
+    }
+  }
+]

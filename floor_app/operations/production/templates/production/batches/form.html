@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit {{ form.instance.code }}{% else %}Create New Production Batch{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #0d6efd;
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-list li {
+        color: #dc3545;
+        font-size: 0.875rem;
+        padding: 0.25rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'production:batch_list' %}">Production Batches</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'production:batch_detail' form.instance.pk %}">{{ form.instance.code }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New Batch</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-primary me-2"></i>
+                        {% if form.instance.pk %}Edit {{ form.instance.code }}{% else %}Create New Production Batch{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update batch information and settings
+                        {% else %}
+                        Add a new production batch order
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="error-list mt-2 mb-0">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Batch Identification -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-tag me-2"></i>
+                Batch Identification
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.code.id_for_label }}" class="form-label required-field">Batch Code</label>
+                    {% render_field form.code class="form-control" placeholder="e.g., 2025-ARDT-LV4-015" %}
+                    {% if form.code.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.code.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.code.help_text %}
+                    <div class="form-text">{{ form.code.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    {% render_field form.description class="form-control" placeholder="Batch description" %}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer & Order Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-people me-2"></i>
+                Customer & Order Information
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.customer_name.id_for_label }}" class="form-label">Customer Name</label>
+                    {% render_field form.customer_name class="form-control" placeholder="Customer name" %}
+                    {% if form.customer_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customer_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.main_order_number.id_for_label }}" class="form-label">Order/PO Number</label>
+                    {% render_field form.main_order_number class="form-control" placeholder="e.g., PO-2025-001" %}
+                    {% if form.main_order_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.main_order_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.customer_reference.id_for_label }}" class="form-label">Customer Reference</label>
+                    {% render_field form.customer_reference class="form-control" placeholder="Customer reference number" %}
+                    {% if form.customer_reference.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customer_reference.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Classification -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-box me-2"></i>
+                Product Classification
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.bit_family.id_for_label }}" class="form-label required-field">Bit Family</label>
+                    {% render_field form.bit_family class="form-select" %}
+                    {% if form.bit_family.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.bit_family.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.bit_family.help_text %}
+                    <div class="form-text">{{ form.bit_family.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quantity & Scheduling -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-calendar-event me-2"></i>
+                Quantity & Scheduling
+            </h5>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.target_quantity.id_for_label }}" class="form-label required-field">Target Quantity</label>
+                    {% render_field form.target_quantity class="form-control" placeholder="1" %}
+                    {% if form.target_quantity.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.target_quantity.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.target_quantity.help_text %}
+                    <div class="form-text">{{ form.target_quantity.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                    {% render_field form.due_date class="form-control" type="date" %}
+                    {% if form.due_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.due_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="{{ form.priority.id_for_label }}" class="form-label required-field">Priority</label>
+                    {% render_field form.priority class="form-select" %}
+                    {% if form.priority.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.priority.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Status & Location -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-geo-alt me-2"></i>
+                Location & Status
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.current_location.id_for_label }}" class="form-label">Current Location</label>
+                    {% render_field form.current_location class="form-control" placeholder="e.g., Warehouse A, Shop Floor" %}
+                    {% if form.current_location.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.current_location.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.current_location.help_text %}
+                    <div class="form-text">{{ form.current_location.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes & Instructions -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-card-text me-2"></i>
+                Notes & Instructions
+            </h5>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Internal Notes</label>
+                    {% render_field form.notes class="form-control" rows="3" placeholder="Internal notes for this batch..." %}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.notes.help_text %}
+                    <div class="form-text">{{ form.notes.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="{{ form.special_instructions.id_for_label }}" class="form-label">Special Instructions</label>
+                    {% render_field form.special_instructions class="form-control" rows="3" placeholder="Special handling or processing instructions..." %}
+                    {% if form.special_instructions.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.special_instructions.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.special_instructions.help_text %}
+                    <div class="form-text">{{ form.special_instructions.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'production:batch_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>{% if form.instance.pk %}Save Changes{% else %}Create Batch{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on code field for new batches
+    {% if not form.instance.pk %}
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    if (codeField) {
+        codeField.focus();
+    }
+    {% endif %}
+
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

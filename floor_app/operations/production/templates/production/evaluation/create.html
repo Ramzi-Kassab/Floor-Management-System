@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Evaluation - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #1e293b;
+        font-size: 0.938rem;
+    }
+    .form-label .required {
+        color: #dc2626;
+    }
+    .form-control,
+    .form-select {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.938rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .form-text {
+        font-size: 0.813rem;
+        color: #64748b;
+        margin-top: 0.375rem;
+    }
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+    .error-message {
+        color: #dc2626;
+        font-size: 0.813rem;
+        margin-top: 0.375rem;
+    }
+    .info-box {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .info-box-title {
+        color: #0c4a6e;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .info-box-text {
+        color: #0c4a6e;
+        font-size: 0.938rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="container-fluid mt-4" aria-label="breadcrumb">
+    <ol class="breadcrumb bg-transparent px-0 mb-3">
+        <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'production:jobcard_list' %}">Job Cards</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'production:evaluation_list' job_card.id %}">Cutter Evaluations</a></li>
+        <li class="breadcrumb-item active">Create Evaluation</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Create Evaluation</h1>
+            <p class="text-muted mb-0">Create a new cutter evaluation for {{ job_card.job_card_number }}</p>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <!-- Job Card Reference -->
+        <div class="info-box">
+            <div class="info-box-title">Job Card Details</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Job Card Number</small>
+                    <strong class="info-box-text">{{ job_card.job_card_number }}</strong>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Bit Design</small>
+                    <strong class="info-box-text">{{ job_card.bit_design_revision.design.name }}</strong>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Quantity</small>
+                    <strong class="info-box-text">{{ job_card.quantity }}</strong>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Status</small>
+                    <strong class="info-box-text">{{ job_card.get_status_display }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="post" id="createEvaluationForm" novalidate>
+            {% csrf_token %}
+
+            <h6 class="form-section-title">Evaluation Header</h6>
+
+            <!-- Evaluation Type -->
+            <div class="form-group">
+                <label for="type" class="form-label">
+                    Evaluation Type
+                    <span class="required">*</span>
+                </label>
+                <select class="form-select" id="type" name="type" required>
+                    <option value="">Select evaluation type...</option>
+                    <option value="INITIAL" {% if form.type.value == 'INITIAL' %}selected{% endif %}>Initial Evaluation</option>
+                    <option value="RE_EVALUATION" {% if form.type.value == 'RE_EVALUATION' %}selected{% endif %}>Re-evaluation</option>
+                    <option value="FINAL_INSPECTION" {% if form.type.value == 'FINAL_INSPECTION' %}selected{% endif %}>Final Inspection</option>
+                </select>
+                <small class="form-text">Select the type of evaluation being performed</small>
+                {% if form.type.errors %}
+                    <div class="error-message">
+                        {% for error in form.type.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Layout/Template -->
+            <div class="form-group">
+                <label for="layout" class="form-label">
+                    Cutter Layout
+                    <span class="required">*</span>
+                </label>
+                <select class="form-select" id="layout" name="layout" required>
+                    <option value="">Select layout template...</option>
+                    {% for layout_option in layout_options %}
+                    <option value="{{ layout_option.id }}"
+                            {% if form.layout.value == layout_option.id|stringformat:"s" %}selected{% endif %}>
+                        {{ layout_option.name }} ({{ layout_option.rows }}x{{ layout_option.columns }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">Select the grid layout for cutter evaluation</small>
+                {% if form.layout.errors %}
+                    <div class="error-message">
+                        {% for error in form.layout.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Comments -->
+            <div class="form-group">
+                <label for="comments" class="form-label">Comments</label>
+                <textarea class="form-control" id="comments" name="comments" rows="3"
+                          placeholder="Add any initial comments or notes about this evaluation...">{{ form.comments.value|default:'' }}</textarea>
+                <small class="form-text">Optional comments for this evaluation</small>
+                {% if form.comments.errors %}
+                    <div class="error-message">
+                        {% for error in form.comments.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'production:evaluation_list' job_card.id %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Create Evaluation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createEvaluationForm');
+
+        form.addEventListener('submit', function(e) {
+            // Basic client-side validation
+            const type = document.getElementById('type').value;
+            const layout = document.getElementById('layout').value;
+
+            if (!type) {
+                e.preventDefault();
+                alert('Please select an evaluation type.');
+                return false;
+            }
+
+            if (!layout) {
+                e.preventDefault();
+                alert('Please select a cutter layout.');
+                return false;
+            }
+
+            // Show confirmation
+            if (!confirm('Create this evaluation? You will be able to edit the cutter grid on the next page.')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Dynamically load layout options
+        const layoutSelect = document.getElementById('layout');
+        if (layoutSelect) {
+            layoutSelect.addEventListener('change', function() {
+                // In a real implementation, you might load layout details via AJAX
+                console.log('Layout selected:', this.value);
+            });
+        }
+    });
+</script>
+{% endblock %}
