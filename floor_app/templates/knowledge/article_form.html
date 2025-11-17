@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Article - Knowledge Center{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid py-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'knowledge:dashboard' %}">Knowledge Center</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'knowledge:article_list' %}">Articles</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit {{ object.code }}{% else %}Create New{% endif %}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-{% if object %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+                        {% if object %}Edit Article{% else %}Create New Article{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="articleForm">
+                        {% csrf_token %}
+
+                        <!-- Form Errors -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below:</strong>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                    <li>{{ field|title }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Basic Information -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-info-circle me-2"></i>Basic Information
+                            </legend>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.code.id_for_label }}" class="form-label fw-bold">
+                                        Code <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.code }}
+                                    <div class="form-text">Unique identifier, e.g., PROC-QC-001</div>
+                                    {% if form.code.errors %}
+                                    <div class="text-danger small">{{ form.code.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                                        Title <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label for="{{ form.summary.id_for_label }}" class="form-label fw-bold">
+                                    Summary
+                                </label>
+                                {{ form.summary }}
+                                <div class="form-text">Brief description of the article content</div>
+                                {% if form.summary.errors %}
+                                <div class="text-danger small">{{ form.summary.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </fieldset>
+
+                        <!-- Classification -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-tag me-2"></i>Classification
+                            </legend>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.article_type.id_for_label }}" class="form-label fw-bold">
+                                        Article Type <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.article_type }}
+                                    {% if form.article_type.errors %}
+                                    <div class="text-danger small">{{ form.article_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.priority.id_for_label }}" class="form-label fw-bold">
+                                        Priority <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.priority }}
+                                    {% if form.priority.errors %}
+                                    <div class="text-danger small">{{ form.priority.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">
+                                        Category
+                                    </label>
+                                    {{ form.category }}
+                                    {% if form.category.errors %}
+                                    <div class="text-danger small">{{ form.category.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label for="{{ form.owner_department.id_for_label }}" class="form-label fw-bold">
+                                    Owner Department
+                                </label>
+                                {{ form.owner_department }}
+                                <div class="form-text">Department responsible for maintaining this article</div>
+                                {% if form.owner_department.errors %}
+                                <div class="text-danger small">{{ form.owner_department.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="form-label fw-bold">Tags</label>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="row">
+                                        {% for tag in form.tags %}
+                                        <div class="col-md-3 col-sm-4 col-6">
+                                            <div class="form-check">
+                                                {{ tag.tag }}
+                                                {{ tag.choice_label }}
+                                            </div>
+                                        </div>
+                                        {% empty %}
+                                        <p class="text-muted mb-0">No tags available.</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if form.tags.errors %}
+                                <div class="text-danger small">{{ form.tags.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </fieldset>
+
+                        <!-- Main Content -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-file-text me-2"></i>Content
+                            </legend>
+
+                            <!-- Editor Toolbar -->
+                            <div class="btn-toolbar mb-2" role="toolbar">
+                                <div class="btn-group me-2" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('bold')" title="Bold">
+                                        <i class="bi bi-type-bold"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('italic')" title="Italic">
+                                        <i class="bi bi-type-italic"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('underline')" title="Underline">
+                                        <i class="bi bi-type-underline"></i>
+                                    </button>
+                                </div>
+                                <div class="btn-group me-2" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertHeading(2)" title="Heading 2">
+                                        <i class="bi bi-type-h2"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertHeading(3)" title="Heading 3">
+                                        <i class="bi bi-type-h3"></i>
+                                    </button>
+                                </div>
+                                <div class="btn-group me-2" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertList('ul')" title="Bullet List">
+                                        <i class="bi bi-list-ul"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertList('ol')" title="Numbered List">
+                                        <i class="bi bi-list-ol"></i>
+                                    </button>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertTable()" title="Insert Table">
+                                        <i class="bi bi-table"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertLink()" title="Insert Link">
+                                        <i class="bi bi-link-45deg"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{ form.body }}
+                            <div class="form-text">Supports HTML formatting. Use the toolbar above or write HTML directly.</div>
+                            {% if form.body.errors %}
+                            <div class="text-danger small">{{ form.body.errors }}</div>
+                            {% endif %}
+                        </fieldset>
+
+                        <!-- Validity & Review -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-calendar-check me-2"></i>Validity & Review
+                            </legend>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.effective_from.id_for_label }}" class="form-label fw-bold">
+                                        Effective From
+                                    </label>
+                                    {{ form.effective_from }}
+                                    <div class="form-text">When this article becomes active</div>
+                                    {% if form.effective_from.errors %}
+                                    <div class="text-danger small">{{ form.effective_from.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.effective_until.id_for_label }}" class="form-label fw-bold">
+                                        Effective Until
+                                    </label>
+                                    {{ form.effective_until }}
+                                    <div class="form-text">Expiration date (optional)</div>
+                                    {% if form.effective_until.errors %}
+                                    <div class="text-danger small">{{ form.effective_until.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.review_due_date.id_for_label }}" class="form-label fw-bold">
+                                        Review Due Date
+                                    </label>
+                                    {{ form.review_due_date }}
+                                    <div class="form-text">When this article needs review</div>
+                                    {% if form.review_due_date.errors %}
+                                    <div class="text-danger small">{{ form.review_due_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Display Options -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-gear me-2"></i>Display & Access Options
+                            </legend>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_featured }}
+                                        <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                                            <i class="bi bi-star text-warning me-1"></i>Featured Article
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Show in featured section on dashboard</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_pinned }}
+                                        <label class="form-check-label" for="{{ form.is_pinned.id_for_label }}">
+                                            <i class="bi bi-pin text-danger me-1"></i>Pin to Top
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Pin to top of article lists</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        {{ form.requires_acknowledgment }}
+                                        <label class="form-check-label" for="{{ form.requires_acknowledgment.id_for_label }}">
+                                            <i class="bi bi-check2-square text-primary me-1"></i>Require Acknowledgment
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Users must acknowledge reading</div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <a href="{% if object %}{% url 'knowledge:article_detail' object.slug %}{% else %}{% url 'knowledge:article_list' %}{% endif %}"
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="submit" name="save_draft" class="btn btn-secondary me-2">
+                                    <i class="bi bi-file-earmark me-2"></i>Save as Draft
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    {% if object %}Update Article{% else %}Create Article{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Help -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Help & Tips</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold">Article Code Format</h6>
+                    <p class="small text-muted">
+                        Use a consistent format like:<br>
+                        <code>TYPE-DEPT-NUMBER</code><br>
+                        Examples: PROC-QC-001, WI-PROD-012, POL-HR-003
+                    </p>
+
+                    <h6 class="fw-bold">Article Types</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Procedure:</strong> Step-by-step process</li>
+                        <li><strong>Work Instruction:</strong> Detailed task guide</li>
+                        <li><strong>Guideline:</strong> Best practices</li>
+                        <li><strong>Policy:</strong> Organizational rules</li>
+                        <li><strong>Checklist:</strong> Verification list</li>
+                        <li><strong>Safety:</strong> Safety documentation</li>
+                    </ul>
+
+                    <h6 class="fw-bold">Content Formatting</h6>
+                    <p class="small text-muted">
+                        You can use HTML tags in the body:
+                    </p>
+                    <ul class="small text-muted">
+                        <li><code>&lt;h2&gt;</code> for headings</li>
+                        <li><code>&lt;p&gt;</code> for paragraphs</li>
+                        <li><code>&lt;ul&gt;&lt;li&gt;</code> for lists</li>
+                        <li><code>&lt;table&gt;</code> for tables</li>
+                        <li><code>&lt;strong&gt;</code> for bold</li>
+                    </ul>
+
+                    <h6 class="fw-bold">Review Schedule</h6>
+                    <p class="small text-muted">
+                        Set a review date to ensure articles stay current.
+                        Articles past their review date will be flagged.
+                    </p>
+
+                    <h6 class="fw-bold">Acknowledgment</h6>
+                    <p class="small text-muted">
+                        Enable acknowledgment for critical articles
+                        that require employees to confirm they've read them.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Simple text formatting helpers
+function formatText(type) {
+    const textarea = document.querySelector('.rich-editor');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    let tag = '';
+    switch(type) {
+        case 'bold': tag = 'strong'; break;
+        case 'italic': tag = 'em'; break;
+        case 'underline': tag = 'u'; break;
+    }
+
+    const newText = `<${tag}>${selectedText}</${tag}>`;
+    textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+    textarea.focus();
+}
+
+function insertHeading(level) {
+    const textarea = document.querySelector('.rich-editor');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end) || 'Heading Text';
+
+    const newText = `\n<h${level}>${selectedText}</h${level}>\n`;
+    textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+    textarea.focus();
+}
+
+function insertList(type) {
+    const textarea = document.querySelector('.rich-editor');
+    const start = textarea.selectionStart;
+
+    const listHTML = `\n<${type}>\n    <li>Item 1</li>\n    <li>Item 2</li>\n    <li>Item 3</li>\n</${type}>\n`;
+    textarea.value = textarea.value.substring(0, start) + listHTML + textarea.value.substring(start);
+    textarea.focus();
+}
+
+function insertTable() {
+    const textarea = document.querySelector('.rich-editor');
+    const start = textarea.selectionStart;
+
+    const tableHTML = `\n<table>\n    <thead>\n        <tr>\n            <th>Header 1</th>\n            <th>Header 2</th>\n            <th>Header 3</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>Data 1</td>\n            <td>Data 2</td>\n            <td>Data 3</td>\n        </tr>\n    </tbody>\n</table>\n`;
+    textarea.value = textarea.value.substring(0, start) + tableHTML + textarea.value.substring(start);
+    textarea.focus();
+}
+
+function insertLink() {
+    const url = prompt('Enter URL:', 'https://');
+    if (url) {
+        const textarea = document.querySelector('.rich-editor');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end) || 'Link Text';
+
+        const linkHTML = `<a href="${url}" target="_blank">${selectedText}</a>`;
+        textarea.value = textarea.value.substring(0, start) + linkHTML + textarea.value.substring(end);
+        textarea.focus();
+    }
+}
+
+// Auto-generate code from type and title
+document.addEventListener('DOMContentLoaded', function() {
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    const titleField = document.getElementById('{{ form.title.id_for_label }}');
+    const typeField = document.getElementById('{{ form.article_type.id_for_label }}');
+
+    // Only auto-fill if code is empty and we're creating new
+    {% if not object %}
+    titleField.addEventListener('blur', function() {
+        if (!codeField.value && typeField.value) {
+            const typeCode = typeField.value.substring(0, 4).toUpperCase();
+            const titlePart = titleField.value.substring(0, 10).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            codeField.value = `${typeCode}-${titlePart}-001`;
+        }
+    });
+    {% endif %}
+
+    // Form validation
+    document.getElementById('articleForm').addEventListener('submit', function(e) {
+        const body = document.querySelector('.rich-editor').value;
+        if (body.trim().length < 10) {
+            e.preventDefault();
+            alert('Article body must have meaningful content.');
+        }
+    });
+});
+</script>
+{% endblock %}

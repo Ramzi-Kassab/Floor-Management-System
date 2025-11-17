@@ -457,6 +457,59 @@
                         </ul>
                     </li>
 
+                    <!-- Knowledge & Learning Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="knowledge-section">
+                            <i class="bi bi-book-fill"></i>
+                            <span>Knowledge & Learning</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="knowledge-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Knowledge Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:article_list' %}">
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Articles & Procedures</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:instruction_list' %}">
+                                    <i class="bi bi-lightning-fill"></i>
+                                    <span>Business Instructions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:document_list' %}">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Document Library</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:training_dashboard' %}">
+                                    <i class="bi bi-mortarboard"></i>
+                                    <span>Training Center</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:faq_list' %}">
+                                    <i class="bi bi-question-circle"></i>
+                                    <span>FAQ</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:search' %}">
+                                    <i class="bi bi-search"></i>
+                                    <span>Global Search</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- System Administration Section -->
                     {% if user.is_staff %}
                     <li class="nav-item mt-3">

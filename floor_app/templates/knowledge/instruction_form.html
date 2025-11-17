@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Instruction Rule{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid py-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'knowledge:dashboard' %}">Knowledge Center</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'knowledge:instruction_list' %}">Instructions</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit {{ object.code }}{% else %}Create{% endif %}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>
+                        {% if object %}Edit Instruction Rule{% else %}Create New Instruction Rule{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="instructionForm">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below:</strong>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                    <li>{{ field|title }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Basic Information -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-info-circle me-2"></i>Basic Information
+                            </legend>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.code.id_for_label }}" class="form-label fw-bold">
+                                        Code <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.code }}
+                                    <div class="form-text">Unique rule code, e.g., INST-QC-001</div>
+                                    {% if form.code.errors %}
+                                    <div class="text-danger small">{{ form.code.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                                        Title <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label for="{{ form.short_description.id_for_label }}" class="form-label fw-bold">
+                                    Short Description
+                                </label>
+                                {{ form.short_description }}
+                                <div class="form-text">Brief summary (shown in warnings/notifications)</div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                                    Full Description
+                                </label>
+                                {{ form.description }}
+                            </div>
+                        </fieldset>
+
+                        <!-- Classification -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-tag me-2"></i>Classification & Priority
+                            </legend>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.instruction_type.id_for_label }}" class="form-label fw-bold">
+                                        Type <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.instruction_type }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.priority.id_for_label }}" class="form-label fw-bold">
+                                        Priority <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.priority }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.execution_order.id_for_label }}" class="form-label fw-bold">
+                                        Execution Order
+                                    </label>
+                                    {{ form.execution_order }}
+                                    <div class="form-text">Lower runs first</div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <label for="{{ form.owner_department.id_for_label }}" class="form-label fw-bold">
+                                        Owner Department
+                                    </label>
+                                    {{ form.owner_department }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.source_article.id_for_label }}" class="form-label fw-bold">
+                                        Source Article
+                                    </label>
+                                    {{ form.source_article }}
+                                    <div class="form-text">Link to procedure/guideline article</div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Scope & Validity -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-calendar3 me-2"></i>Scope & Validity
+                            </legend>
+
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_default }}
+                                        <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                            Default Rule
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Applies unless overridden</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_temporary }}
+                                        <label class="form-check-label" for="{{ form.is_temporary.id_for_label }}">
+                                            Temporary Rule
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Has expiration date</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="{{ form.valid_from.id_for_label }}" class="form-label fw-bold">
+                                        Valid From
+                                    </label>
+                                    {{ form.valid_from }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="{{ form.valid_until.id_for_label }}" class="form-label fw-bold">
+                                        Valid Until
+                                    </label>
+                                    {{ form.valid_until }}
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        {% if object %}
+                        <!-- Conditions Builder -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-funnel me-2"></i>Conditions (IF)
+                                <button type="button" class="btn btn-sm btn-outline-primary float-end" data-bs-toggle="modal" data-bs-target="#conditionModal">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Condition
+                                </button>
+                            </legend>
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Define conditions that must be met for this instruction to trigger.
+                                Conditions in the same group are joined with AND. Different groups are joined with OR.
+                            </div>
+
+                            {% if conditions %}
+                            <div id="conditionsList">
+                                {% regroup conditions by condition_group as grouped %}
+                                {% for group in grouped %}
+                                <div class="condition-group-card border rounded p-3 mb-3 bg-light">
+                                    <h6>Group {{ group.grouper }}</h6>
+                                    {% for cond in group.list %}
+                                    <div class="condition-item bg-white p-2 rounded mb-1">
+                                        <code>{{ cond.field_name }}</code>
+                                        <span class="badge bg-secondary">{{ cond.get_operator_display }}</span>
+                                        <code class="text-success">{{ cond.compare_value }}</code>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-3 border rounded bg-light">
+                                <i class="bi bi-funnel text-muted d-block fs-3 mb-2"></i>
+                                <p class="text-muted mb-0">No conditions defined. Rule will always trigger.</p>
+                            </div>
+                            {% endif %}
+                        </fieldset>
+
+                        <!-- Actions Builder -->
+                        <fieldset class="mb-4">
+                            <legend class="h5 text-primary mb-3">
+                                <i class="bi bi-gear me-2"></i>Actions (THEN)
+                                <button type="button" class="btn btn-sm btn-outline-success float-end" data-bs-toggle="modal" data-bs-target="#actionModal">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Action
+                                </button>
+                            </legend>
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Define what should happen when conditions are met.
+                            </div>
+
+                            {% if actions %}
+                            <div id="actionsList">
+                                {% for action in actions %}
+                                <div class="action-item border rounded p-3 mb-2 bg-light">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>{{ action.order }}. {{ action.get_action_type_display }}</strong>
+                                        {% if action.stop_on_failure %}
+                                        <span class="badge bg-danger">Stop on Failure</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if action.message %}
+                                    <p class="mb-0 mt-1 text-muted">{{ action.message }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-3 border rounded bg-light">
+                                <i class="bi bi-gear text-muted d-block fs-3 mb-2"></i>
+                                <p class="text-muted mb-0">No actions defined.</p>
+                            </div>
+                            {% endif %}
+                        </fieldset>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Note:</strong> Save the instruction first, then you can add conditions and actions.
+                        </div>
+                        {% endif %}
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <a href="{% if object %}{% url 'knowledge:instruction_detail' object.code %}{% else %}{% url 'knowledge:instruction_list' %}{% endif %}"
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {% if object %}Update Instruction{% else %}Create Instruction{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Help -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Builder Guide</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold">Instruction Types</h6>
+                    <ul class="small text-muted mb-3">
+                        <li><strong>Validation:</strong> Check data before saving</li>
+                        <li><strong>Warning:</strong> Alert users of important info</li>
+                        <li><strong>Blocking:</strong> Prevent certain operations</li>
+                        <li><strong>Auto-fill:</strong> Calculate values automatically</li>
+                        <li><strong>Notification:</strong> Send alerts to users</li>
+                        <li><strong>Routing:</strong> Direct workflows</li>
+                    </ul>
+
+                    <h6 class="fw-bold">Priority Levels</h6>
+                    <ul class="small text-muted mb-3">
+                        <li><strong class="text-danger">Critical:</strong> Safety/quality related</li>
+                        <li><strong style="color: #7c3aed;">Mandatory:</strong> Must be followed</li>
+                        <li><strong class="text-warning">High:</strong> Important guidelines</li>
+                        <li><strong>Normal:</strong> Standard rules</li>
+                        <li><strong class="text-muted">Low:</strong> Suggestions</li>
+                    </ul>
+
+                    <h6 class="fw-bold">Condition Operators</h6>
+                    <ul class="small text-muted mb-3">
+                        <li><code>==</code> Equals</li>
+                        <li><code>!=</code> Not equals</li>
+                        <li><code>&gt;</code> Greater than</li>
+                        <li><code>&lt;</code> Less than</li>
+                        <li><code>IN</code> In list</li>
+                        <li><code>CONTAINS</code> Contains text</li>
+                        <li><code>IS_NULL</code> Is empty</li>
+                    </ul>
+
+                    <h6 class="fw-bold">Example Use Cases</h6>
+                    <p class="small text-muted">
+                        <strong>Validation:</strong> If bit size &gt; 17.5, require special approval.<br>
+                        <strong>Warning:</strong> If steel grade is X, show handling instructions.<br>
+                        <strong>Auto-fill:</strong> Calculate material cost based on weight.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if object %}
+<!-- Condition Modal -->
+<div class="modal fade" id="conditionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-funnel me-2"></i>Add Condition</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Group</label>
+                        <input type="number" class="form-control" id="condGroup" value="1" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Order</label>
+                        <input type="number" class="form-control" id="condOrder" value="1" min="1">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Target Model</label>
+                        <select class="form-select" id="condModel">
+                            {% if available_models %}
+                            {% for model in available_models %}
+                            <option value="{{ model.id }}">{{ model.name }}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Field Name</label>
+                        <input type="text" class="form-control" id="condField" placeholder="e.g., status">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Operator</label>
+                        <select class="form-select" id="condOperator">
+                            {% for value, label in operators %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Compare Value</label>
+                        <input type="text" class="form-control" id="condValue">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCondition">Add Condition</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Modal -->
+<div class="modal fade" id="actionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-gear me-2"></i>Add Action</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Order</label>
+                        <input type="number" class="form-control" id="actionOrder" value="1" min="1">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Action Type</label>
+                        <select class="form-select" id="actionType">
+                            {% for value, label in action_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" id="actionMessage" rows="3"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="actionStopOnFailure">
+                            <label class="form-check-label">Stop on Failure</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveAction">Add Action</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    document.getElementById('instructionForm').addEventListener('submit', function(e) {
+        const code = document.getElementById('{{ form.code.id_for_label }}').value;
+        if (!code || code.length < 3) {
+            e.preventDefault();
+            alert('Code must be at least 3 characters.');
+        }
+    });
+
+    {% if object %}
+    // Save condition (placeholder - would need AJAX endpoint)
+    document.getElementById('saveCondition').addEventListener('click', function() {
+        alert('Condition builder requires backend API integration. Please use the admin interface or create a custom API endpoint for managing conditions.');
+        // In production, this would POST to an API endpoint
+    });
+
+    // Save action (placeholder)
+    document.getElementById('saveAction').addEventListener('click', function() {
+        alert('Action builder requires backend API integration. Please use the admin interface or create a custom API endpoint for managing actions.');
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

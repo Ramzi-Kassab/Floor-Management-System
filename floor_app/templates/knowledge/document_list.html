@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Documents - Knowledge Center{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid py-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'knowledge:dashboard' %}">Knowledge Center</a></li>
+            <li class="breadcrumb-item active">Documents</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-file-earmark-text me-2"></i>
+                Document Library
+            </h1>
+            <p class="text-muted mb-0">Browse and download documents, templates, and attachments</p>
+        </div>
+        {% if perms.knowledge.add_document %}
+        <a href="{% url 'knowledge:document_upload' %}" class="btn btn-primary">
+            <i class="bi bi-upload me-2"></i>Upload Document
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="Search documents..."
+                               value="{{ request.GET.q }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="type" class="form-select" onchange="this.form.submit()">
+                        <option value="">All File Types</option>
+                        {% for value, label in file_types %}
+                        <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    {% if request.GET.q or request.GET.type %}
+                    <a href="{% url 'knowledge:document_list' %}" class="btn btn-outline-secondary w-100">
+                        Clear
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Document List -->
+    {% if documents %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;"></th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Version</th>
+                            <th>Size</th>
+                            <th>Downloads</th>
+                            <th>Uploaded</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents %}
+                        <tr>
+                            <td class="text-center">
+                                <i class="bi bi-file-{{ doc.file_type|lower }} fs-4 text-{{ doc.file_type|lower }}-icon"></i>
+                            </td>
+                            <td>
+                                <a href="{% url 'knowledge:document_detail' doc.public_id %}"
+                                   class="text-decoration-none fw-bold">
+                                    {{ doc.title }}
+                                </a>
+                                {% if doc.is_expired %}
+                                <span class="badge bg-danger ms-1">Expired</span>
+                                {% endif %}
+                                {% if doc.description %}
+                                <br>
+                                <small class="text-muted">{{ doc.description|truncatechars:80 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ doc.get_file_type_display }}</span>
+                            </td>
+                            <td>v{{ doc.version }}</td>
+                            <td>{{ doc.file_size_display }}</td>
+                            <td>
+                                <i class="bi bi-download me-1"></i>{{ doc.download_count }}
+                            </td>
+                            <td>
+                                {{ doc.created_at|date:"M d, Y" }}
+                                <br>
+                                <small class="text-muted">
+                                    by {{ doc.created_by.get_full_name|default:doc.created_by.username|default:"System" }}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'knowledge:document_download' doc.public_id %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download me-1"></i>Download
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Document pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&type={{ request.GET.type }}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&q={{ request.GET.q }}&type={{ request.GET.type }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&type={{ request.GET.type }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-file-earmark-x display-1 text-muted mb-3"></i>
+            <h4 class="text-muted">No Documents Found</h4>
+            <p class="text-muted">
+                {% if request.GET.q or request.GET.type %}
+                No documents match your search criteria.
+                {% else %}
+                No documents have been uploaded yet.
+                {% endif %}
+            </p>
+            {% if perms.knowledge.add_document %}
+            <a href="{% url 'knowledge:document_upload' %}" class="btn btn-primary">
+                <i class="bi bi-upload me-2"></i>Upload First Document
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.text-pdf-icon { color: #dc3545; }
+.text-image-icon { color: #0d6efd; }
+.text-video-icon { color: #6f42c1; }
+.text-audio-icon { color: #fd7e14; }
+.text-spreadsheet-icon { color: #198754; }
+.text-document-icon { color: #0dcaf0; }
+.text-presentation-icon { color: #ffc107; }
+.text-archive-icon { color: #6c757d; }
+.text-cad-icon { color: #20c997; }
+.text-other-icon { color: #adb5bd; }
+
+.bi-file-pdf::before { content: "\f42f"; }
+.bi-file-image::before { content: "\f3a2"; }
+.bi-file-video::before { content: "\f423"; }
+.bi-file-audio::before { content: "\f419"; }
+.bi-file-spreadsheet::before { content: "\f41e"; }
+.bi-file-document::before { content: "\f41d"; }
+.bi-file-presentation::before { content: "\f41c"; }
+.bi-file-archive::before { content: "\f41a"; }
+.bi-file-cad::before { content: "\f41b"; }
+.bi-file-other::before { content: "\f41f"; }
+</style>
+{% endblock %}
