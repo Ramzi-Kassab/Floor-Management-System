@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Record{% endif %} Dull Grade Evaluation - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .iadc-preview {
+        font-size: 1.5rem;
+        font-family: monospace;
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h1 class="h3 mb-1">{% if object %}Edit{% else %}Record{% endif %} Dull Grade Evaluation</h1>
+        <p class="text-muted mb-0">IADC-style bit wear assessment after drilling run</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Please correct the errors below:</strong>
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <!-- Bit Identification -->
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2">Bit Identification</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Serial Unit ID *</label>
+                        {{ form.serial_unit_id }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Bit Serial Number *</label>
+                        {{ form.bit_serial_number }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">MAT Number</label>
+                        {{ form.mat_number }}
+                    </div>
+
+                    <!-- Context -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Context</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Drilling Run ID</label>
+                        {{ form.drilling_run_id }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Run Sequence *</label>
+                        {{ form.run_sequence }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Customer *</label>
+                        {{ form.customer }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Well</label>
+                        {{ form.well }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Rig</label>
+                        {{ form.rig }}
+                    </div>
+
+                    <!-- IADC Dull Grade Components -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">IADC Dull Grade Components</h5>
+                        <p class="text-muted small">
+                            Format: [Inner]-[Outer]-[Primary Char]-[Location]-[Bearing]-[Gauge]-[Other Char]-[Reason Pulled]
+                        </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Inner Cutting Structure (0-8) *</label>
+                        {{ form.inner_cutting_structure }}
+                        <small class="form-text text-muted">Inner 2/3 wear: 0=No Wear, 8=100% Worn</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Outer Cutting Structure (0-8) *</label>
+                        {{ form.outer_cutting_structure }}
+                        <small class="form-text text-muted">Outer 1/3 wear: 0=No Wear, 8=100% Worn</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Primary Dull Characteristic *</label>
+                        {{ form.primary_dull_characteristic }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Secondary Dull Characteristic</label>
+                        {{ form.secondary_dull_characteristic }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Dull Location *</label>
+                        {{ form.dull_location }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Bearing/Seal</label>
+                        {{ form.bearing_seal }}
+                        <small class="form-text text-muted">X for PDC bits</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Gauge Condition *</label>
+                        {{ form.gauge_condition }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Other Dull Characteristic</label>
+                        {{ form.other_dull_characteristic }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Reason Pulled *</label>
+                        {{ form.reason_pulled }}
+                    </div>
+
+                    <!-- Measurements -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Additional Measurements</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Cutter Wear Percent</label>
+                        {{ form.cutter_wear_percent }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Gauge Wear (inches)</label>
+                        {{ form.gauge_wear_inches }}
+                    </div>
+
+                    <!-- Observations -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Detailed Observations</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Impact Damage</label>
+                        {{ form.impact_damage }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Abrasion Notes</label>
+                        {{ form.abrasion_notes }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Thermal Damage</label>
+                        {{ form.thermal_damage }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Erosion Notes</label>
+                        {{ form.erosion_notes }}
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            {{ form.bit_balling_observed }}
+                            <label class="form-check-label">Bit Balling Observed</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cutter Loss Count</label>
+                        {{ form.cutter_loss_count }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Blade Damage Notes</label>
+                        {{ form.blade_damage_notes }}
+                    </div>
+
+                    <!-- Evaluation Details -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Evaluation Details</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Evaluation Date *</label>
+                        {{ form.evaluation_date }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Evaluation Source *</label>
+                        {{ form.evaluation_source }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Evaluated By</label>
+                        {{ form.evaluated_by }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Evaluator Name (if external)</label>
+                        {{ form.evaluator_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Evaluation Location</label>
+                        {{ form.evaluation_location }}
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Recommendations</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Recommended Action</label>
+                        {{ form.recommended_action }}
+                        <small class="form-text text-muted">RERUN, REPAIR, RETROFIT, SCRAP, etc.</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">NCR ID (if quality issue)</label>
+                        {{ form.ncr_id }}
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Recommendation Notes</label>
+                        {{ form.recommendation_notes }}
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Additional Notes</h5>
+                    </div>
+                    <div class="col-12">
+                        {{ form.notes }}
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-clipboard-check me-1"></i> {% if object %}Update{% else %}Record{% endif %} Evaluation
+                    </button>
+                    <a href="{% url 'sales:dullgrade_list' %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

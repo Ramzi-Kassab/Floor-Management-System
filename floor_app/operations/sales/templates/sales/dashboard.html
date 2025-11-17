@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sales & Lifecycle Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .dashboard-card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 600;
+    }
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .status-ACTIVE { background: #10b981; color: white; }
+    .status-OVERDUE { background: #dc2626; color: white; }
+    .priority-HIGH { background: #dc2626; color: white; }
+    .priority-URGENT { background: #7c3aed; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Sales & Lifecycle Dashboard</h1>
+            <p class="text-muted mb-0">Monitor sales pipeline, bit lifecycle, and drilling operations</p>
+        </div>
+        <div>
+            <a href="{% url 'sales:opportunity_create' %}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-lg me-1"></i> New Opportunity
+            </a>
+            <a href="{% url 'sales:order_create' %}" class="btn btn-success me-2">
+                <i class="bi bi-cart-plus me-1"></i> New Order
+            </a>
+            <a href="{% url 'sales:dullgrade_create' %}" class="btn btn-warning">
+                <i class="bi bi-clipboard-check me-1"></i> Dull Grade
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Row 1 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ customer_stats.total_active }}</div>
+                        <div class="stat-label">Active Customers</div>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ pipeline_stats.total_opportunities }}</div>
+                        <div class="stat-label">Open Opportunities</div>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-funnel"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">${{ pipeline_stats.weighted_value|floatformat:0 }}</div>
+                        <div class="stat-label">Weighted Pipeline</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value text-danger">{{ order_stats.overdue_orders }}</div>
+                        <div class="stat-label">Overdue Orders</div>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Row 2 - Drilling -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ drilling_stats.active_runs }}</div>
+                        <div class="stat-label">Active Drilling Runs</div>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-geo-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ drilling_stats.runs_last_30_days }}</div>
+                        <div class="stat-label">Runs (30 Days)</div>
+                    </div>
+                    <div class="stat-icon bg-secondary bg-opacity-10 text-secondary">
+                        <i class="bi bi-activity"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ drilling_stats.avg_rop|floatformat:1 }}</div>
+                        <div class="stat-label">Avg ROP (ft/hr)</div>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ drilling_stats.total_footage|floatformat:0 }}</div>
+                        <div class="stat-label">Total Footage (ft)</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-rulers"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <!-- Recent Opportunities -->
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Opportunities</span>
+                    <a href="{% url 'sales:opportunity_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for opp in recent_opportunities %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'sales:opportunity_detail' opp.pk %}">{{ opp.opportunity_number }}</a>
+                                </td>
+                                <td>{{ opp.customer.name|truncatechars:20 }}</td>
+                                <td><span class="badge bg-info">{{ opp.status }}</span></td>
+                                <td>${{ opp.estimated_value|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No opportunities found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Orders</span>
+                    <a href="{% url 'sales:order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'sales:order_detail' order.pk %}">{{ order.order_number }}</a>
+                                </td>
+                                <td>{{ order.customer.name|truncatechars:20 }}</td>
+                                <td>
+                                    <span class="badge bg-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+                                </td>
+                                <td>
+                                    {% if order.is_overdue %}
+                                    <span class="text-danger fw-bold">{{ order.required_delivery_date }} (OVERDUE)</span>
+                                    {% else %}
+                                    {{ order.required_delivery_date|default:"-" }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No orders found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Drilling Runs -->
+        <div class="col-lg-8">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Drilling Runs</span>
+                    <a href="{% url 'sales:drilling_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Run #</th>
+                                <th>Bit S/N</th>
+                                <th>Well</th>
+                                <th>Footage</th>
+                                <th>ROP</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in recent_runs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'sales:drilling_detail' run.pk %}">{{ run.run_number }}</a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'sales:lifecycle_timeline' %}?bit_serial={{ run.bit_serial_number }}">
+                                        {{ run.bit_serial_number }}
+                                    </a>
+                                </td>
+                                <td>{{ run.well.well_name|truncatechars:15 }}</td>
+                                <td>{{ run.footage_drilled|floatformat:0|default:"-" }} ft</td>
+                                <td>{{ run.avg_rop|floatformat:1|default:"-" }} ft/hr</td>
+                                <td><span class="badge bg-secondary">{{ run.get_status_display }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">No drilling runs found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Dull Grades -->
+        <div class="col-lg-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Dull Grades</span>
+                    <a href="{% url 'sales:dullgrade_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for dg in recent_dull_grades %}
+                    <a href="{% url 'sales:dullgrade_detail' dg.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ dg.bit_serial_number }}</div>
+                                <small class="text-muted">{{ dg.iadc_dull_grade }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if dg.severity_score >= 75 %}bg-danger{% elif dg.severity_score >= 50 %}bg-warning{% else %}bg-success{% endif %}">
+                                    {{ dg.severity_score|floatformat:0 }}%
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted py-3">
+                        No dull grades recorded
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">Quick Actions</div>
+                <div class="p-3">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <a href="{% url 'sales:customer_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-people me-1"></i> Customers
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'sales:lifecycle_timeline' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-clock-history me-1"></i> Bit Timeline
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'sales:lifecycle_fleet' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-collection me-1"></i> Fleet View
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'sales:shipment_list' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-truck me-1"></i> Shipments
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'sales:junksale_list' %}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-recycle me-1"></i> Junk Sales
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'sales:reports_dashboard' %}" class="btn btn-outline-dark w-100">
+                                <i class="bi bi-bar-chart me-1"></i> Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

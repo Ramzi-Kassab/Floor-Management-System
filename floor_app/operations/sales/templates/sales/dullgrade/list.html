@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Dull Grade Evaluations - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Dull Grade Evaluations</h1>
+            <p class="text-muted mb-0">IADC-style bit wear assessments after drilling runs</p>
+        </div>
+        <a href="{% url 'sales:dullgrade_create' %}" class="btn btn-warning">
+            <i class="bi bi-plus-lg me-1"></i> New Evaluation
+        </a>
+    </div>
+
+    <!-- Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Search by evaluation number, bit serial, or dull grade..."
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Evaluations List -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Eval #</th>
+                        <th>Bit Serial</th>
+                        <th>IADC Dull Grade</th>
+                        <th>Customer</th>
+                        <th>Well</th>
+                        <th>Severity</th>
+                        <th>Rerunnable</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eval in evaluations %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'sales:dullgrade_detail' eval.pk %}">
+                                {{ eval.evaluation_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'sales:lifecycle_timeline' %}?bit_serial={{ eval.bit_serial_number }}">
+                                {{ eval.bit_serial_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <code class="bg-light p-1 rounded">{{ eval.iadc_dull_grade }}</code>
+                        </td>
+                        <td>{{ eval.customer.name|truncatechars:20 }}</td>
+                        <td>{{ eval.well.well_name|default:"-"|truncatechars:15 }}</td>
+                        <td>
+                            <span class="badge {% if eval.severity_score >= 75 %}bg-danger{% elif eval.severity_score >= 50 %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ eval.severity_score|floatformat:0 }}%
+                            </span>
+                        </td>
+                        <td>
+                            {% if eval.is_rerunnable %}
+                            <span class="badge bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge bg-danger">No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ eval.evaluation_date|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'sales:dullgrade_update' eval.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            No dull grade evaluations found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

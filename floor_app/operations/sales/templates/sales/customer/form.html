@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Customer - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h1 class="h3 mb-1">{% if object %}Edit Customer{% else %}Create Customer{% endif %}</h1>
+        <p class="text-muted mb-0">{% if object %}Update customer information{% else %}Add a new customer account{% endif %}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Please correct the errors below:</strong>
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <!-- Identification -->
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2">Identification</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Customer Code *</label>
+                        {{ form.customer_code }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Name *</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Legal Name</label>
+                        {{ form.legal_name }}
+                    </div>
+
+                    <!-- Classification -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Classification</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Customer Type *</label>
+                        {{ form.customer_type }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Account Status *</label>
+                        {{ form.account_status }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Parent Company</label>
+                        {{ form.parent_company }}
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            {{ form.is_billing_entity }}
+                            <label class="form-check-label">Is Billing Entity</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            {{ form.is_operating_entity }}
+                            <label class="form-check-label">Is Operating Entity</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Billing Customer</label>
+                        {{ form.billing_customer }}
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Contact Information</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Primary Contact Name</label>
+                        {{ form.primary_contact_name }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Primary Contact Email</label>
+                        {{ form.primary_contact_email }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Primary Contact Phone</label>
+                        {{ form.primary_contact_phone }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Billing Address</label>
+                        {{ form.billing_address }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Shipping Address</label>
+                        {{ form.shipping_address }}
+                    </div>
+
+                    <!-- Location -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Location</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Region</label>
+                        {{ form.region }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Country</label>
+                        {{ form.country }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">State/Province</label>
+                        {{ form.state_province }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">City</label>
+                        {{ form.city }}
+                    </div>
+
+                    <!-- Financial -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Financial</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tax ID</label>
+                        {{ form.tax_id }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Payment Terms (Days)</label>
+                        {{ form.payment_terms_days }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Credit Limit</label>
+                        {{ form.credit_limit }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Currency</label>
+                        {{ form.currency }}
+                    </div>
+
+                    <!-- Requirements -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Requirements</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check">
+                            {{ form.requires_coc }}
+                            <label class="form-check-label">Requires COC</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check">
+                            {{ form.requires_dull_grade }}
+                            <label class="form-check-label">Requires Dull Grade</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Custom Report Format</label>
+                        {{ form.custom_report_format }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Special Requirements</label>
+                        {{ form.special_requirements }}
+                    </div>
+
+                    <!-- Sales -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Sales</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Assigned Sales Rep</label>
+                        {{ form.assigned_sales_rep }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contract Expiry Date</label>
+                        {{ form.contract_expiry_date }}
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12 mt-4">
+                        <h5 class="border-bottom pb-2">Notes</h5>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i> {% if object %}Update{% else %}Create{% endif %} Customer
+                    </button>
+                    <a href="{% url 'sales:customer_list' %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

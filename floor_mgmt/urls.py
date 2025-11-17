@@ -58,5 +58,8 @@ urlpatterns = [
 
     # === Planning & KPI ===
     path("planning/", include(("floor_app.operations.planning.urls", "planning"), namespace="planning")),
+
+    # === Sales, Lifecycle & Drilling Operations ===
+    path("sales/", include(("floor_app.operations.sales.urls", "sales"), namespace="sales")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

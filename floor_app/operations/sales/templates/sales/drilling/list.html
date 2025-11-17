@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Drilling Runs - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Drilling Runs</h1>
+            <p class="text-muted mb-0">Track drilling operations and bit performance data</p>
+        </div>
+        <a href="{% url 'sales:drilling_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> New Drilling Run
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Bit Serial Number</label>
+                    {{ search_form.bit_serial_number }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Customer</label>
+                    {{ search_form.customer }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    {{ search_form.status }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date From</label>
+                    {{ search_form.date_from }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date To</label>
+                    {{ search_form.date_to }}
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search me-1"></i> Filter
+                    </button>
+                    <a href="{% url 'sales:drilling_list' %}" class="btn btn-outline-secondary">
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Runs List -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Run #</th>
+                        <th>Bit Serial</th>
+                        <th>Well</th>
+                        <th>Rig</th>
+                        <th>Section</th>
+                        <th>Depth In/Out</th>
+                        <th>Footage</th>
+                        <th>Hours</th>
+                        <th>ROP</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in runs %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'sales:drilling_detail' run.pk %}">
+                                {{ run.run_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'sales:lifecycle_timeline' %}?bit_serial={{ run.bit_serial_number }}">
+                                {{ run.bit_serial_number }}
+                            </a>
+                        </td>
+                        <td>{{ run.well.well_name|truncatechars:15 }}</td>
+                        <td>{{ run.rig.name|truncatechars:12 }}</td>
+                        <td>{{ run.hole_section }}</td>
+                        <td>
+                            {{ run.depth_in_ft|floatformat:0 }} -
+                            {{ run.depth_out_ft|floatformat:0|default:"?" }}
+                        </td>
+                        <td>
+                            <strong>{{ run.footage_drilled|floatformat:0|default:"-" }}</strong> ft
+                        </td>
+                        <td>{{ run.hours_on_bottom|floatformat:1|default:"-" }}</td>
+                        <td>
+                            {% if run.avg_rop %}
+                            <span class="badge {% if run.avg_rop >= 50 %}bg-success{% elif run.avg_rop >= 25 %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ run.avg_rop|floatformat:1 }} ft/hr
+                            </span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ run.get_status_display }}</span>
+                        </td>
+                        <td>{{ run.run_in_date|date:"M d, Y"|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="text-center py-4 text-muted">
+                            No drilling runs found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

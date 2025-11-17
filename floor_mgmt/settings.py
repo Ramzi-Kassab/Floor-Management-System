@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'floor_app.operations.maintenance.apps.MaintenanceConfig',
     'floor_app.operations.quality.apps.QualityConfig',
     'floor_app.operations.planning.apps.PlanningConfig',
+    'floor_app.operations.sales.apps.SalesConfig',
     "core",
     "widget_tweaks",
 ]

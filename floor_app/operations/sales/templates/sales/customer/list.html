@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Customers</h1>
+            <p class="text-muted mb-0">Manage customer accounts and relationships</p>
+        </div>
+        <a href="{% url 'sales:customer_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Add Customer
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Search by code, name..."
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="OPERATOR" {% if request.GET.type == 'OPERATOR' %}selected{% endif %}>Operator</option>
+                        <option value="DRILLING_CONTRACTOR" {% if request.GET.type == 'DRILLING_CONTRACTOR' %}selected{% endif %}>Drilling Contractor</option>
+                        <option value="SERVICE_COMPANY" {% if request.GET.type == 'SERVICE_COMPANY' %}selected{% endif %}>Service Company</option>
+                        <option value="DISTRIBUTOR" {% if request.GET.type == 'DISTRIBUTOR' %}selected{% endif %}>Distributor</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="ACTIVE" {% if request.GET.status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                        <option value="INACTIVE" {% if request.GET.status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                        <option value="PROSPECT" {% if request.GET.status == 'PROSPECT' %}selected{% endif %}>Prospect</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search me-1"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer List -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Region</th>
+                        <th>Contact</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'sales:customer_detail' customer.pk %}">
+                                {{ customer.customer_code }}
+                            </a>
+                        </td>
+                        <td>{{ customer.name }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ customer.get_customer_type_display }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {% if customer.account_status == 'ACTIVE' %}bg-success{% elif customer.account_status == 'INACTIVE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ customer.get_account_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ customer.region|default:"-" }}</td>
+                        <td>{{ customer.primary_contact_email|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'sales:customer_update' customer.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            No customers found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
