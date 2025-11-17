@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Create Maintenance Request{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'maintenance:request_list' %}">Requests</a></li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Create Maintenance Request</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below:</strong>
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Asset *</label>
+                            {{ form.asset }}
+                            {% if form.asset.errors %}
+                            <div class="text-danger small">{{ form.asset.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Describe the problem in detail</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Symptoms</label>
+                            {{ form.symptoms }}
+                            <small class="text-muted">Observable symptoms (noise, smell, vibration, etc.)</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Priority *</label>
+                                    {{ form.priority }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Estimated Downtime (minutes)</label>
+                                    {{ form.estimated_downtime_minutes }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_production_stopped }}
+                                <label class="form-check-label fw-bold text-danger">
+                                    Production is currently stopped
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h5>Contact Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Your Phone</label>
+                                    {{ form.requester_phone }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Your Location</label>
+                                    {{ form.requester_location }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'maintenance:request_list' %}" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-send"></i> Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

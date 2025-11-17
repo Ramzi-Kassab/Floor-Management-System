@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'floor_app.operations.qrcodes.apps.QRCodesConfig',
     'floor_app.operations.purchasing.apps.PurchasingConfig',
     'floor_app.operations.knowledge.apps.KnowledgeConfig',
+    'floor_app.operations.maintenance.apps.MaintenanceConfig',
     "core",
     "widget_tweaks",
 ]

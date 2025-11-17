@@ -49,5 +49,8 @@ urlpatterns = [
 
     # === Knowledge & Instructions ===
     path("knowledge/", include(("floor_app.operations.knowledge.urls", "knowledge"), namespace="knowledge")),
+
+    # === Maintenance & Asset Management ===
+    path("maintenance/", include(("floor_app.operations.maintenance.urls", "maintenance"), namespace="maintenance")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
