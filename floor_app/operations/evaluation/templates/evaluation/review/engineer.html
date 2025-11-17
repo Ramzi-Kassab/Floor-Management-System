@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Engineer Review - Session #{{ session.id }} - Evaluation{% endblock %}
+
+{% block extra_css %}
+<style>
+.change-highlight {
+    background-color: #fff3cd !important;
+    border: 2px solid #ffc107 !important;
+}
+
+.change-icon {
+    color: #ffc107;
+    font-size: 0.8rem;
+}
+
+.grid-container {
+    overflow-x: auto;
+}
+
+.evaluation-grid {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.evaluation-grid th,
+.evaluation-grid td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: center;
+    min-width: 60px;
+}
+
+.evaluation-grid th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.evaluation-grid .section-header {
+    background-color: #e9ecef;
+    font-weight: 700;
+}
+
+.evaluation-grid .position-cell {
+    background-color: #f1f3f5;
+    font-weight: 500;
+}
+
+.signature-area {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.change-summary-table td {
+    vertical-align: middle;
+}
+
+.original-code {
+    text-decoration: line-through;
+    color: #dc3545;
+}
+
+.current-code {
+    color: #198754;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="container-fluid mt-3">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Evaluation Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:session_list' %}">Sessions</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:session_detail' session.id %}">Session #{{ session.id }}</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-person-check"></i> Engineer Review
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-person-check text-primary"></i> Engineer Review for Session #{{ session.id }}
+            </h2>
+            <p class="text-muted">Review and approve changes made to the evaluation session</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'evaluation:session_detail' session.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Session
+            </a>
+        </div>
+    </div>
+
+    <!-- Session Info Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle"></i> Session Information
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Serial Number</small>
+                    <strong>{{ session.serial_unit.serial_number|default:"N/A" }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">MAT</small>
+                    <strong>{{ session.serial_unit.mat_revision.code|default:"N/A" }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Evaluator</small>
+                    <strong>{{ session.created_by.get_full_name|default:session.created_by.username }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Status</small>
+                    <span class="badge bg-warning">{{ session.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary of Changes -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-warning bg-opacity-10 border-bottom">
+            <h5 class="mb-0">
+                <i class="bi bi-arrow-left-right text-warning"></i> Summary of Changes
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if changes %}
+            <div class="table-responsive">
+                <table class="table table-hover change-summary-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 150px;">Cell Position</th>
+                            <th style="width: 120px;">Original Code</th>
+                            <th style="width: 120px;">Current Code</th>
+                            <th style="width: 150px;">Changed By</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for change in changes %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ change.cell_position }}</span>
+                            </td>
+                            <td>
+                                <span class="original-code">{{ change.original_code|default:"(empty)" }}</span>
+                            </td>
+                            <td>
+                                <span class="current-code">{{ change.current_code }}</span>
+                                <i class="bi bi-arrow-up-right change-icon ms-1"></i>
+                            </td>
+                            <td>
+                                <small>{{ change.changed_by.get_full_name|default:change.changed_by.username }}</small>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ change.reason|default:"No reason provided" }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-3">
+                <i class="bi bi-check-circle"></i> No changes have been made to the original evaluation
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Grid View with Change Highlights -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0">
+                <i class="bi bi-grid-3x3"></i> Evaluation Grid (Read-Only)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="grid-container">
+                <table class="evaluation-grid">
+                    <thead>
+                        <tr>
+                            <th class="section-header">Section</th>
+                            <th class="section-header">Position</th>
+                            {% for blade in blades %}
+                            <th>B{{ blade }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for section in sections %}
+                        {% for position in section.positions %}
+                        <tr>
+                            {% if forloop.first %}
+                            <td class="section-header" rowspan="{{ section.positions|length }}">
+                                {{ section.name }}
+                            </td>
+                            {% endif %}
+                            <td class="position-cell">P{{ position.number }}</td>
+                            {% for cell in position.cells %}
+                            <td class="{% if cell.is_changed %}change-highlight{% endif %}">
+                                {{ cell.code|default:"" }}
+                                {% if cell.is_changed %}
+                                <i class="bi bi-pencil-square change-icon d-block"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Cells highlighted in yellow indicate modifications from the original evaluation.
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engineer Comments Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0">
+                <i class="bi bi-chat-left-text"></i> Engineer Notes
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'evaluation:engineer_review_submit' session.id %}" id="reviewForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="engineer_comments" class="form-label">Comments and Observations</label>
+                    <textarea class="form-control" id="engineer_comments" name="engineer_comments" rows="5"
+                              placeholder="Enter your review comments, observations, or revision requests...">{{ session.engineer_comments|default:"" }}</textarea>
+                </div>
+
+                <!-- Signature Area -->
+                <div class="signature-area mb-4">
+                    <h6 class="mb-3">
+                        <i class="bi bi-pen"></i> Digital Signature
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="signature_name" class="form-label">Engineer Name</label>
+                            <input type="text" class="form-control" id="signature_name" name="signature_name"
+                                   value="{{ user.get_full_name|default:user.username }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="signature_timestamp" class="form-label">Timestamp</label>
+                            <input type="text" class="form-control" id="signature_timestamp"
+                                   value="{% now 'F j, Y H:i' %}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Approve Session
+                    </button>
+                    <button type="submit" name="action" value="revisions" class="btn btn-warning">
+                        <i class="bi bi-arrow-counterclockwise"></i> Request Revisions
+                    </button>
+                    <button type="submit" name="action" value="lock" class="btn btn-danger">
+                        <i class="bi bi-lock"></i> Lock Session
+                    </button>
+                    <a href="{% url 'evaluation:session_detail' session.id %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirm action before submission
+    const reviewForm = document.getElementById('reviewForm');
+
+    reviewForm.addEventListener('submit', function(event) {
+        const action = event.submitter.value;
+        let confirmMessage = '';
+
+        switch(action) {
+            case 'approve':
+                confirmMessage = 'Are you sure you want to approve this session? This will finalize the evaluation.';
+                break;
+            case 'revisions':
+                confirmMessage = 'Are you sure you want to request revisions? The evaluator will be notified.';
+                break;
+            case 'lock':
+                confirmMessage = 'Are you sure you want to lock this session? This action cannot be undone.';
+                break;
+        }
+
+        if (confirmMessage && !confirm(confirmMessage)) {
+            event.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

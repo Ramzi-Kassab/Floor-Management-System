@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Technical Instructions - {{ session.serial_unit.serial_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .instruction-card {
+        border-left: 4px solid #667eea;
+    }
+    .severity-INFO { border-left-color: #17a2b8 !important; }
+    .severity-WARNING { border-left-color: #ffc107 !important; }
+    .severity-CRITICAL { border-left-color: #dc3545 !important; }
+
+    .instruction-row {
+        transition: all 0.3s ease;
+    }
+    .instruction-row:hover {
+        background-color: #f8f9fa;
+    }
+    .instruction-row.suggested {
+        background-color: #fff3cd;
+    }
+    .instruction-row.accepted {
+        background-color: #d4edda;
+    }
+    .instruction-row.rejected {
+        background-color: #f8d7da;
+    }
+    .instruction-row.overridden {
+        background-color: #e2e3e5;
+    }
+
+    .severity-badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+    .status-badge {
+        font-size: 0.85rem;
+    }
+    .override-input {
+        display: none;
+    }
+    .override-input.show {
+        display: block;
+    }
+    .instruction-text {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+    }
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-2 px-4 bg-light">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:dashboard' %}">Evaluation</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:session_detail' session.public_id %}">{{ session.serial_unit.serial_number }}</a></li>
+        <li class="breadcrumb-item active">Technical Instructions</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-list-check me-2"></i>
+                Technical Instructions
+            </h2>
+            <p class="text-muted mb-0">
+                Session: <strong>{{ session.serial_unit.serial_number }}</strong> |
+                Review and respond to generated instructions
+            </p>
+        </div>
+        <a href="{% url 'evaluation:session_detail' session.public_id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Session
+        </a>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-card mb-4 p-3">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value">{{ total_count }}</div>
+                    <div class="stat-label">Total Instructions</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value">{{ suggested_count }}</div>
+                    <div class="stat-label">Pending Review</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value">{{ accepted_count }}</div>
+                    <div class="stat-label">Accepted</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value">{{ rejected_count }}</div>
+                    <div class="stat-label">Rejected/Overridden</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#all" role="tab">
+                All <span class="badge bg-secondary ms-1">{{ total_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#pending" role="tab">
+                Pending <span class="badge bg-warning ms-1">{{ suggested_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#critical" role="tab">
+                Critical <span class="badge bg-danger ms-1">{{ critical_count }}</span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Instructions List -->
+    <div class="card shadow-sm instruction-card">
+        <div class="card-body p-0">
+            {% if instructions %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="150">Instruction</th>
+                            <th width="100">Severity</th>
+                            <th width="120">Stage</th>
+                            <th>Resolved Text</th>
+                            <th width="120">Status</th>
+                            <th width="250">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for instruction in instructions %}
+                        <tr class="instruction-row {% if instruction.status == 'SUGGESTED' %}suggested{% elif instruction.status == 'ACCEPTED' %}accepted{% elif instruction.status == 'REJECTED' %}rejected{% elif instruction.status == 'OVERRIDDEN' %}overridden{% endif %}"
+                            data-instruction-id="{{ instruction.id }}"
+                            data-status="{{ instruction.status }}"
+                            data-severity="{{ instruction.severity }}">
+                            <td>
+                                <strong>{{ instruction.template.code }}</strong><br>
+                                <small class="text-muted">{{ instruction.template.name }}</small>
+                            </td>
+                            <td>
+                                <span class="badge severity-badge bg-{% if instruction.severity == 'INFO' %}info{% elif instruction.severity == 'WARNING' %}warning text-dark{% else %}danger{% endif %}">
+                                    <i class="bi bi-{% if instruction.severity == 'INFO' %}info-circle{% elif instruction.severity == 'WARNING' %}exclamation-triangle{% else %}exclamation-octagon{% endif %} me-1"></i>
+                                    {{ instruction.get_severity_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ instruction.get_stage_display }}</span>
+                            </td>
+                            <td class="instruction-text">
+                                {{ instruction.resolved_text }}
+                                {% if instruction.override_reason %}
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    <small class="text-muted">
+                                        <i class="bi bi-chat-quote me-1"></i>
+                                        <strong>Override Reason:</strong> {{ instruction.override_reason }}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge status-badge bg-{% if instruction.status == 'SUGGESTED' %}warning text-dark{% elif instruction.status == 'ACCEPTED' %}success{% elif instruction.status == 'REJECTED' %}danger{% elif instruction.status == 'OVERRIDDEN' %}secondary{% else %}info{% endif %}">
+                                    {{ instruction.get_status_display }}
+                                </span>
+                                {% if instruction.acknowledged_by %}
+                                <br><small class="text-muted">by {{ instruction.acknowledged_by }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if instruction.status == 'SUGGESTED' %}
+                                <div class="btn-group btn-group-sm mb-2">
+                                    <button class="btn btn-success accept-btn" title="Accept">
+                                        <i class="bi bi-check-lg"></i> Accept
+                                    </button>
+                                    <button class="btn btn-danger reject-btn" title="Reject">
+                                        <i class="bi bi-x-lg"></i> Reject
+                                    </button>
+                                    <button class="btn btn-secondary override-btn" title="Override">
+                                        <i class="bi bi-shield-exclamation"></i> Override
+                                    </button>
+                                </div>
+                                <div class="override-input" id="override-{{ instruction.id }}">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control override-reason"
+                                               placeholder="Override reason..." required>
+                                        <button class="btn btn-warning confirm-override-btn" type="button">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary cancel-override-btn" type="button">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <button class="btn btn-outline-secondary btn-sm" disabled>
+                                    <i class="bi bi-lock"></i> Resolved
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                <h5 class="text-muted">No Technical Instructions</h5>
+                <p class="text-muted">No instructions have been generated for this evaluation session.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = '{{ csrf_token }}';
+    const updateUrl = '{% url "evaluation:update_instruction" session.public_id %}';
+
+    // Accept button
+    document.querySelectorAll('.accept-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.instruction-row');
+            const instructionId = row.dataset.instructionId;
+
+            updateInstruction(instructionId, 'accept', '').then(() => {
+                row.classList.remove('suggested');
+                row.classList.add('accepted');
+                row.querySelector('.status-badge').textContent = 'Accepted';
+                row.querySelector('.status-badge').className = 'badge status-badge bg-success';
+                disableActions(row);
+            });
+        });
+    });
+
+    // Reject button
+    document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.instruction-row');
+            const instructionId = row.dataset.instructionId;
+            const reason = prompt('Please provide a reason for rejection:');
+
+            if (reason) {
+                updateInstruction(instructionId, 'reject', reason).then(() => {
+                    row.classList.remove('suggested');
+                    row.classList.add('rejected');
+                    row.querySelector('.status-badge').textContent = 'Rejected';
+                    row.querySelector('.status-badge').className = 'badge status-badge bg-danger';
+                    disableActions(row);
+                });
+            }
+        });
+    });
+
+    // Override button - show input
+    document.querySelectorAll('.override-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.instruction-row');
+            const instructionId = row.dataset.instructionId;
+            const overrideInput = document.getElementById('override-' + instructionId);
+            overrideInput.classList.add('show');
+            overrideInput.querySelector('.override-reason').focus();
+        });
+    });
+
+    // Confirm override
+    document.querySelectorAll('.confirm-override-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.instruction-row');
+            const instructionId = row.dataset.instructionId;
+            const reason = row.querySelector('.override-reason').value;
+
+            if (reason.trim()) {
+                updateInstruction(instructionId, 'override', reason).then(() => {
+                    row.classList.remove('suggested');
+                    row.classList.add('overridden');
+                    row.querySelector('.status-badge').textContent = 'Overridden';
+                    row.querySelector('.status-badge').className = 'badge status-badge bg-secondary';
+                    disableActions(row);
+
+                    // Add override reason to the text cell
+                    const textCell = row.querySelector('.instruction-text');
+                    textCell.innerHTML += `
+                        <div class="mt-2 p-2 bg-light rounded">
+                            <small class="text-muted">
+                                <i class="bi bi-chat-quote me-1"></i>
+                                <strong>Override Reason:</strong> ${reason}
+                            </small>
+                        </div>
+                    `;
+                });
+            }
+        });
+    });
+
+    // Cancel override
+    document.querySelectorAll('.cancel-override-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const overrideInput = this.closest('.override-input');
+            overrideInput.classList.remove('show');
+            overrideInput.querySelector('.override-reason').value = '';
+        });
+    });
+
+    function updateInstruction(instructionId, action, reason) {
+        return fetch(updateUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                instruction_id: instructionId,
+                action: action,
+                reason: reason
+            })
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Update failed');
+            }
+            return response.json();
+        }).then(data => {
+            // Update statistics
+            updateStatistics();
+            return data;
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update instruction. Please try again.');
+        });
+    }
+
+    function disableActions(row) {
+        const actionCell = row.querySelector('td:last-child');
+        actionCell.innerHTML = `
+            <button class="btn btn-outline-secondary btn-sm" disabled>
+                <i class="bi bi-lock"></i> Resolved
+            </button>
+        `;
+    }
+
+    function updateStatistics() {
+        // Recalculate counts from visible rows
+        const rows = document.querySelectorAll('.instruction-row');
+        let suggested = 0, accepted = 0, rejected = 0;
+
+        rows.forEach(row => {
+            const status = row.dataset.status;
+            if (row.classList.contains('suggested')) suggested++;
+            else if (row.classList.contains('accepted')) accepted++;
+            else if (row.classList.contains('rejected') || row.classList.contains('overridden')) rejected++;
+        });
+
+        // Update the stat cards
+        document.querySelector('.stat-value:nth-child(1)').textContent = rows.length;
+        // Note: We'd need to fetch fresh stats from server for accurate counts
+    }
+
+    // Tab filtering
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(e) {
+            const targetId = e.target.getAttribute('href').substring(1);
+            const rows = document.querySelectorAll('.instruction-row');
+
+            rows.forEach(row => {
+                row.style.display = '';
+
+                if (targetId === 'pending' && !row.classList.contains('suggested')) {
+                    row.style.display = 'none';
+                } else if (targetId === 'critical' && row.dataset.severity !== 'CRITICAL') {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

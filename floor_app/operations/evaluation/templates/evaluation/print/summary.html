@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Print Summary - Session #{{ session.id }} - Evaluation{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ARAMCO-style compact summary */
+.summary-container {
+    background: white;
+    padding: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.summary-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.summary-header .subtitle {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.summary-info {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+}
+
+.summary-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.summary-info-row:last-child {
+    margin-bottom: 0;
+}
+
+.summary-info-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.summary-info-value {
+    font-weight: 400;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1px solid #000;
+    padding: 10px;
+    text-align: left;
+}
+
+.summary-table th {
+    background-color: #333;
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.summary-table td {
+    vertical-align: middle;
+}
+
+.summary-table .position-col {
+    width: 120px;
+    font-weight: 600;
+}
+
+.summary-table .status-col {
+    width: 150px;
+}
+
+.summary-table .action-col {
+    font-size: 0.9rem;
+}
+
+.status-good {
+    color: #198754;
+    font-weight: 600;
+}
+
+.status-replace {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.status-repair {
+    color: #fd7e14;
+    font-weight: 600;
+}
+
+.status-lost {
+    color: #6c757d;
+    font-weight: 600;
+    font-style: italic;
+}
+
+.recommendation-box {
+    border: 2px solid #0d6efd;
+    padding: 20px;
+    background: #e7f1ff;
+    margin-top: 30px;
+}
+
+.recommendation-box h4 {
+    margin-top: 0;
+    color: #0d6efd;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.recommendation-box p {
+    margin-bottom: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.print-actions {
+    margin-bottom: 20px;
+}
+
+.footer-info {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    font-size: 0.85rem;
+    color: #666;
+    text-align: center;
+}
+
+/* Print-specific styles */
+@media print {
+    body {
+        font-size: 11pt;
+        line-height: 1.3;
+        color: #000;
+    }
+
+    .navbar,
+    .sidebar,
+    .sidebar-backdrop,
+    .breadcrumb,
+    footer,
+    .print-actions,
+    .btn {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .summary-container {
+        padding: 0;
+        max-width: none;
+        box-shadow: none;
+    }
+
+    .summary-table th {
+        background-color: #333 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .summary-info {
+        background: #f9f9f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .recommendation-box {
+        background: #e7f1ff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .status-good,
+    .status-replace,
+    .status-repair,
+    .status-lost {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    @page {
+        margin: 1.5cm;
+        size: A4;
+    }
+}
+
+@media screen {
+    .summary-container {
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 8px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="container-fluid mt-3">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Evaluation Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:session_detail' session.id %}">Session #{{ session.id }}</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-file-text"></i> Print Summary
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Print Actions -->
+    <div class="print-actions">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Print Summary
+        </button>
+        <a href="{% url 'evaluation:session_detail' session.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Session
+        </a>
+    </div>
+
+    <!-- Printable Content -->
+    <div class="summary-container">
+        <!-- Header -->
+        <div class="summary-header">
+            <h2>Cutter Evaluation Summary Report</h2>
+            <p class="subtitle">Customer Reference Document</p>
+        </div>
+
+        <!-- Basic Info -->
+        <div class="summary-info">
+            <div class="summary-info-row">
+                <span class="summary-info-label">Reference Number:</span>
+                <span class="summary-info-value">{{ session.id }}</span>
+            </div>
+            <div class="summary-info-row">
+                <span class="summary-info-label">Serial Number:</span>
+                <span class="summary-info-value">{{ session.serial_unit.serial_number|default:"N/A" }}</span>
+            </div>
+            <div class="summary-info-row">
+                <span class="summary-info-label">Evaluation Date:</span>
+                <span class="summary-info-value">{{ session.created_at|date:"F j, Y" }}</span>
+            </div>
+        </div>
+
+        <!-- Simple Status Table -->
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th class="position-col">Position</th>
+                    <th class="status-col">Cutter Status</th>
+                    <th class="action-col">Action Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in summary_items %}
+                <tr>
+                    <td class="position-col">{{ item.position }}</td>
+                    <td class="status-col">
+                        {% if item.status == "Good" %}
+                        <span class="status-good">Good</span>
+                        {% elif item.status == "Replace" %}
+                        <span class="status-replace">Replace</span>
+                        {% elif item.status == "Repair" %}
+                        <span class="status-repair">Repair</span>
+                        {% elif item.status == "Lost" %}
+                        <span class="status-lost">Lost</span>
+                        {% else %}
+                        {{ item.status }}
+                        {% endif %}
+                    </td>
+                    <td class="action-col">{{ item.action|default:"None" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted">No evaluation data available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Statistics Summary -->
+        <div class="summary-info">
+            <div class="summary-info-row">
+                <span class="summary-info-label">Total Positions Evaluated:</span>
+                <span class="summary-info-value">{{ total_positions|default:0 }}</span>
+            </div>
+            <div class="summary-info-row">
+                <span class="summary-info-label">Good Condition:</span>
+                <span class="summary-info-value">{{ good_count|default:0 }}</span>
+            </div>
+            <div class="summary-info-row">
+                <span class="summary-info-label">Require Replacement:</span>
+                <span class="summary-info-value">{{ replace_count|default:0 }}</span>
+            </div>
+            <div class="summary-info-row">
+                <span class="summary-info-label">Require Repair:</span>
+                <span class="summary-info-value">{{ repair_count|default:0 }}</span>
+            </div>
+            <div class="summary-info-row">
+                <span class="summary-info-label">Lost/Missing:</span>
+                <span class="summary-info-value">{{ lost_count|default:0 }}</span>
+            </div>
+        </div>
+
+        <!-- Overall Recommendation -->
+        <div class="recommendation-box">
+            <h4><i class="bi bi-clipboard-check"></i> Overall Recommendation</h4>
+            <p>{{ overall_recommendation|default:"Based on the evaluation results, the bit requires maintenance as indicated above. Please refer to the detailed technical report for specific instructions and requirements." }}</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-info">
+            <p>This is a summary document for customer reference. For detailed technical information, please refer to the complete evaluation job card.</p>
+            <p>Generated on {% now "F j, Y" %} at {% now "H:i" %}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

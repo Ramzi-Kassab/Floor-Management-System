@@ -1,0 +1,671 @@
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+
+
+# ========== Reference/Configuration Models ==========
+
+class BitType(models.Model):
+    """Types of bits (e.g., PDC, Roller Cone, etc.)"""
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+        verbose_name = 'Bit Type'
+        verbose_name_plural = 'Bit Types'
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+class BitSection(models.Model):
+    """Sections of a bit (e.g., Nose, Shoulder, Gauge)"""
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+        verbose_name = 'Bit Section'
+        verbose_name_plural = 'Bit Sections'
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+class FeatureCode(models.Model):
+    """Feature codes for evaluation (e.g., specific cutter features)"""
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'code']
+        verbose_name = 'Feature Code'
+        verbose_name_plural = 'Feature Codes'
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+class CutterEvaluationCode(models.Model):
+    """Codes used for cutter evaluation (e.g., OK, REPLACE, REPAIR)"""
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    color = models.CharField(max_length=20, default='#000000', help_text='Hex color for UI display')
+    action_required = models.CharField(
+        max_length=50,
+        choices=[
+            ('NONE', 'No Action'),
+            ('REPLACE', 'Replace Cutter'),
+            ('REPAIR', 'Repair Cutter'),
+            ('ROTATE', 'Rotate Cutter'),
+            ('INSPECT', 'Further Inspection'),
+        ],
+        default='NONE'
+    )
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'code']
+        verbose_name = 'Cutter Evaluation Code'
+        verbose_name_plural = 'Cutter Evaluation Codes'
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+# ========== Template Models ==========
+
+class TechnicalInstructionTemplate(models.Model):
+    """Template for technical instructions that can be instantiated per session"""
+    code = models.CharField(max_length=50, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    applies_to_bit_type = models.ForeignKey(
+        BitType, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='instruction_templates'
+    )
+    applies_to_section = models.ForeignKey(
+        BitSection, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='instruction_templates'
+    )
+    priority = models.IntegerField(default=0, help_text='Higher number = higher priority')
+    is_mandatory = models.BooleanField(default=False)
+    requires_engineer_override = models.BooleanField(default=False)
+    auto_apply = models.BooleanField(default=True, help_text='Auto-apply when creating session')
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='created_instruction_templates'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-priority', 'code']
+        verbose_name = 'Technical Instruction Template'
+        verbose_name_plural = 'Technical Instruction Templates'
+
+    def __str__(self):
+        return f"{self.code}: {self.title}"
+
+
+class RequirementTemplate(models.Model):
+    """Template for requirements that must be satisfied"""
+    code = models.CharField(max_length=50, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('SAFETY', 'Safety'),
+            ('QUALITY', 'Quality'),
+            ('PROCESS', 'Process'),
+            ('CUSTOMER', 'Customer Specific'),
+            ('REGULATORY', 'Regulatory'),
+        ],
+        default='QUALITY'
+    )
+    applies_to_bit_type = models.ForeignKey(
+        BitType, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='requirement_templates'
+    )
+    verification_method = models.CharField(max_length=200, blank=True)
+    is_mandatory = models.BooleanField(default=True)
+    auto_apply = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='created_requirement_templates'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'code']
+        verbose_name = 'Requirement Template'
+        verbose_name_plural = 'Requirement Templates'
+
+    def __str__(self):
+        return f"{self.code}: {self.title}"
+
+
+# ========== Main Evaluation Session Model ==========
+
+class EvaluationSession(models.Model):
+    """Main evaluation session for a job card"""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('PENDING_REVIEW', 'Pending Review'),
+        ('UNDER_REVIEW', 'Under Review'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('LOCKED', 'Locked'),
+    ]
+
+    session_number = models.CharField(max_length=50, unique=True)
+    job_card = models.ForeignKey(
+        'production.JobCard', on_delete=models.CASCADE,
+        related_name='evaluation_sessions'
+    )
+    serial_unit = models.ForeignKey(
+        'inventory.SerialUnit', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='evaluation_sessions'
+    )
+    bit_type = models.ForeignKey(
+        BitType, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='evaluation_sessions'
+    )
+
+    # Grid dimensions
+    total_pockets = models.IntegerField(default=0)
+    total_rows = models.IntegerField(default=10)
+    total_columns = models.IntegerField(default=20)
+
+    # Status tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    revision_number = models.IntegerField(default=1)
+
+    # Evaluation details
+    evaluated_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='evaluated_sessions'
+    )
+    evaluation_date = models.DateField(null=True, blank=True)
+    evaluation_notes = models.TextField(blank=True)
+
+    # Review/Approval
+    reviewed_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='reviewed_sessions'
+    )
+    review_date = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(blank=True)
+
+    approved_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='approved_sessions'
+    )
+    approval_date = models.DateTimeField(null=True, blank=True)
+    approval_notes = models.TextField(blank=True)
+
+    # Summary statistics (cached)
+    total_cutters = models.IntegerField(default=0)
+    replace_count = models.IntegerField(default=0)
+    repair_count = models.IntegerField(default=0)
+    ok_count = models.IntegerField(default=0)
+    rotate_count = models.IntegerField(default=0)
+
+    # Lock status
+    is_locked = models.BooleanField(default=False)
+    locked_at = models.DateTimeField(null=True, blank=True)
+    locked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='locked_sessions'
+    )
+
+    # Audit fields
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='created_evaluation_sessions'
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='updated_evaluation_sessions'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Evaluation Session'
+        verbose_name_plural = 'Evaluation Sessions'
+
+    def __str__(self):
+        return f"{self.session_number} - {self.job_card.job_card_number}"
+
+    def calculate_summary(self):
+        """Calculate and update summary statistics from cells"""
+        cells = self.cells.all()
+        self.total_cutters = cells.count()
+        self.replace_count = cells.filter(evaluation_code__action_required='REPLACE').count()
+        self.repair_count = cells.filter(evaluation_code__action_required='REPAIR').count()
+        self.rotate_count = cells.filter(evaluation_code__action_required='ROTATE').count()
+        self.ok_count = cells.filter(evaluation_code__action_required='NONE').count()
+        self.save(update_fields=['total_cutters', 'replace_count', 'repair_count', 'rotate_count', 'ok_count'])
+
+    def submit_for_review(self):
+        """Submit session for engineer review"""
+        self.status = 'PENDING_REVIEW'
+        self.save(update_fields=['status'])
+
+    def approve(self, user, notes=''):
+        """Approve the evaluation session"""
+        try:
+            if hasattr(user, 'hr_employee'):
+                self.approved_by = user.hr_employee
+        except:
+            pass
+        self.approval_date = timezone.now()
+        self.approval_notes = notes
+        self.status = 'APPROVED'
+        self.save()
+
+    def lock_session(self, user):
+        """Lock the session to prevent further edits"""
+        self.is_locked = True
+        self.locked_at = timezone.now()
+        self.locked_by = user
+        self.status = 'LOCKED'
+        self.save()
+
+
+class EvaluationCell(models.Model):
+    """Individual cell/pocket in evaluation grid"""
+    session = models.ForeignKey(
+        EvaluationSession, on_delete=models.CASCADE,
+        related_name='cells'
+    )
+    pocket_number = models.IntegerField()
+    row = models.IntegerField()
+    column = models.IntegerField()
+    blade_number = models.IntegerField(null=True, blank=True)
+    position_on_blade = models.IntegerField(null=True, blank=True)
+
+    # Evaluation data
+    evaluation_code = models.ForeignKey(
+        CutterEvaluationCode, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='cells'
+    )
+    feature_code = models.ForeignKey(
+        FeatureCode, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='cells'
+    )
+    section = models.ForeignKey(
+        BitSection, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='cells'
+    )
+
+    # Details
+    condition_description = models.CharField(max_length=200, blank=True)
+    notes = models.TextField(blank=True)
+    wear_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Timestamps
+    evaluated_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['session', 'row', 'column']
+        unique_together = [['session', 'row', 'column']]
+        verbose_name = 'Evaluation Cell'
+        verbose_name_plural = 'Evaluation Cells'
+
+    def __str__(self):
+        return f"Session {self.session.session_number} - Pocket {self.pocket_number} ({self.row},{self.column})"
+
+
+# ========== Inspection Models ==========
+
+class ThreadInspection(models.Model):
+    """Thread inspection for evaluation session"""
+    RESULT_CHOICES = [
+        ('PASS', 'Pass'),
+        ('FAIL', 'Fail'),
+        ('REPAIR_NEEDED', 'Repair Needed'),
+        ('NOT_APPLICABLE', 'Not Applicable'),
+    ]
+
+    DAMAGE_TYPE_CHOICES = [
+        ('NONE', 'No Damage'),
+        ('GALLING', 'Galling'),
+        ('CORROSION', 'Corrosion'),
+        ('THREAD_DAMAGE', 'Thread Damage'),
+        ('WEAR', 'Excessive Wear'),
+        ('OTHER', 'Other'),
+    ]
+
+    session = models.ForeignKey(
+        EvaluationSession, on_delete=models.CASCADE,
+        related_name='thread_inspections'
+    )
+    thread_type = models.CharField(max_length=50)
+    thread_size = models.CharField(max_length=50, blank=True)
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default='PASS')
+    damage_type = models.CharField(max_length=30, choices=DAMAGE_TYPE_CHOICES, default='NONE')
+
+    # Measurements
+    pitch_diameter = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    lead = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    taper = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+
+    description = models.TextField(blank=True)
+    repair_action = models.TextField(blank=True)
+    repair_completed = models.BooleanField(default=False)
+    repair_completed_at = models.DateTimeField(null=True, blank=True)
+
+    inspected_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='thread_inspections'
+    )
+    inspection_date = models.DateTimeField(auto_now_add=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='created_thread_inspections'
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='updated_thread_inspections'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-inspection_date']
+        verbose_name = 'Thread Inspection'
+        verbose_name_plural = 'Thread Inspections'
+
+    def __str__(self):
+        return f"{self.session.session_number} - Thread {self.thread_type}"
+
+
+class NDTInspection(models.Model):
+    """Non-Destructive Testing inspection"""
+    TEST_TYPE_CHOICES = [
+        ('MPI', 'Magnetic Particle Inspection'),
+        ('DPI', 'Dye Penetrant Inspection'),
+        ('UT', 'Ultrasonic Testing'),
+        ('RT', 'Radiographic Testing'),
+        ('VT', 'Visual Testing'),
+        ('EC', 'Eddy Current'),
+    ]
+
+    RESULT_CHOICES = [
+        ('PASS', 'Pass'),
+        ('FAIL', 'Fail'),
+        ('CONDITIONAL', 'Conditional Pass'),
+        ('RETEST', 'Retest Required'),
+    ]
+
+    SEVERITY_CHOICES = [
+        ('NONE', 'No Defects'),
+        ('MINOR', 'Minor Defects'),
+        ('MAJOR', 'Major Defects'),
+        ('CRITICAL', 'Critical Defects'),
+    ]
+
+    session = models.ForeignKey(
+        EvaluationSession, on_delete=models.CASCADE,
+        related_name='ndt_inspections'
+    )
+    test_type = models.CharField(max_length=20, choices=TEST_TYPE_CHOICES)
+    test_procedure = models.CharField(max_length=100, blank=True)
+    test_area = models.CharField(max_length=100, blank=True)
+
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default='PASS')
+    defect_severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='NONE')
+
+    defects_found = models.TextField(blank=True)
+    defect_locations = models.TextField(blank=True)
+    recommendations = models.TextField(blank=True)
+
+    equipment_used = models.CharField(max_length=200, blank=True)
+    calibration_ref = models.CharField(max_length=100, blank=True)
+
+    report_number = models.CharField(max_length=50, blank=True)
+    test_date = models.DateTimeField(auto_now_add=True)
+
+    performed_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='ndt_inspections'
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='created_ndt_inspections'
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='updated_ndt_inspections'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-test_date']
+        verbose_name = 'NDT Inspection'
+        verbose_name_plural = 'NDT Inspections'
+
+    def __str__(self):
+        return f"{self.session.session_number} - {self.get_test_type_display()}"
+
+
+# ========== Instruction & Requirement Instance Models ==========
+
+class TechnicalInstructionInstance(models.Model):
+    """Instance of a technical instruction for a specific session"""
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('ACCEPTED', 'Accepted'),
+        ('REJECTED', 'Rejected'),
+        ('OVERRIDDEN', 'Overridden by Engineer'),
+    ]
+
+    session = models.ForeignKey(
+        EvaluationSession, on_delete=models.CASCADE,
+        related_name='instruction_instances'
+    )
+    template = models.ForeignKey(
+        TechnicalInstructionTemplate, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='instances'
+    )
+
+    # Copy of template data (in case template changes)
+    code = models.CharField(max_length=50)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    is_mandatory = models.BooleanField(default=False)
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+
+    # Action tracking
+    actioned_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='actioned_instructions'
+    )
+    actioned_at = models.DateTimeField(null=True, blank=True)
+    action_notes = models.TextField(blank=True)
+
+    # Override (for engineer override)
+    override_reason = models.TextField(blank=True)
+    overridden_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='overridden_instructions'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['session', '-template__priority']
+        verbose_name = 'Technical Instruction Instance'
+        verbose_name_plural = 'Technical Instruction Instances'
+
+    def __str__(self):
+        return f"{self.session.session_number} - {self.code}"
+
+    def accept(self, employee, notes=''):
+        """Accept the instruction"""
+        self.status = 'ACCEPTED'
+        self.actioned_by = employee
+        self.actioned_at = timezone.now()
+        self.action_notes = notes
+        self.save()
+
+    def reject(self, employee, notes=''):
+        """Reject the instruction"""
+        self.status = 'REJECTED'
+        self.actioned_by = employee
+        self.actioned_at = timezone.now()
+        self.action_notes = notes
+        self.save()
+
+    def override(self, employee, reason):
+        """Override the instruction (engineer only)"""
+        self.status = 'OVERRIDDEN'
+        self.overridden_by = employee
+        self.override_reason = reason
+        self.actioned_at = timezone.now()
+        self.save()
+
+
+class RequirementInstance(models.Model):
+    """Instance of a requirement for a specific session"""
+    STATUS_CHOICES = [
+        ('NOT_SATISFIED', 'Not Satisfied'),
+        ('SATISFIED', 'Satisfied'),
+        ('WAIVED', 'Waived'),
+    ]
+
+    session = models.ForeignKey(
+        EvaluationSession, on_delete=models.CASCADE,
+        related_name='requirement_instances'
+    )
+    template = models.ForeignKey(
+        RequirementTemplate, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='instances'
+    )
+
+    # Copy of template data
+    code = models.CharField(max_length=50)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.CharField(max_length=50)
+    is_mandatory = models.BooleanField(default=True)
+    verification_method = models.CharField(max_length=200, blank=True)
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NOT_SATISFIED')
+
+    # Satisfaction tracking
+    satisfied_by = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='satisfied_requirements'
+    )
+    satisfied_at = models.DateTimeField(null=True, blank=True)
+    satisfaction_notes = models.TextField(blank=True)
+
+    # Evidence/Verification
+    verification_result = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['session', 'category', 'code']
+        verbose_name = 'Requirement Instance'
+        verbose_name_plural = 'Requirement Instances'
+
+    def __str__(self):
+        return f"{self.session.session_number} - {self.code}"
+
+    def satisfy(self, employee, notes='', verification_result=''):
+        """Mark requirement as satisfied"""
+        self.status = 'SATISFIED'
+        self.satisfied_by = employee
+        self.satisfied_at = timezone.now()
+        self.satisfaction_notes = notes
+        self.verification_result = verification_result
+        self.save()
+
+    def waive(self, employee, notes=''):
+        """Waive the requirement"""
+        self.status = 'WAIVED'
+        self.satisfied_by = employee
+        self.satisfied_at = timezone.now()
+        self.satisfaction_notes = notes
+        self.save()
+
+
+# ========== Session History Model ==========
+
+class EvaluationSessionHistory(models.Model):
+    """Audit trail for evaluation session changes"""
+    ACTION_CHOICES = [
+        ('CREATED', 'Session Created'),
+        ('UPDATED', 'Session Updated'),
+        ('CELL_UPDATED', 'Cell Updated'),
+        ('SUBMITTED', 'Submitted for Review'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('LOCKED', 'Session Locked'),
+        ('INSTRUCTION_ACTIONED', 'Instruction Actioned'),
+        ('REQUIREMENT_SATISFIED', 'Requirement Satisfied'),
+    ]
+
+    session = models.ForeignKey(
+        EvaluationSession, on_delete=models.CASCADE,
+        related_name='history'
+    )
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    description = models.TextField()
+    old_value = models.TextField(blank=True)
+    new_value = models.TextField(blank=True)
+
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='session_history_actions'
+    )
+    performed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-performed_at']
+        verbose_name = 'Session History'
+        verbose_name_plural = 'Session Histories'
+
+    def __str__(self):
+        return f"{self.session.session_number} - {self.action} at {self.performed_at}"

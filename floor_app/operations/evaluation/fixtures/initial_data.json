@@ -1,0 +1,358 @@
+[
+  {
+    "model": "evaluation.cutterevaluationcode",
+    "pk": 1,
+    "fields": {
+      "code": "X",
+      "name": "Damaged-Replace",
+      "description": "Cutter is damaged and requires immediate replacement. This includes broken cutters, severely chipped PDC tables, or thermal damage.",
+      "action": "REPLACE",
+      "color_code": "#FF0000",
+      "sort_order": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.cutterevaluationcode",
+    "pk": 2,
+    "fields": {
+      "code": "O",
+      "name": "OK-Good",
+      "description": "Cutter is in good condition and can be kept as is. No action required.",
+      "action": "KEEP",
+      "color_code": "#00FF00",
+      "sort_order": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.cutterevaluationcode",
+    "pk": 3,
+    "fields": {
+      "code": "S",
+      "name": "Braze Fill",
+      "description": "Cutter pocket requires braze fill repair to secure the cutter properly.",
+      "action": "BRAZE_FILL",
+      "color_code": "#FFA500",
+      "sort_order": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.cutterevaluationcode",
+    "pk": 4,
+    "fields": {
+      "code": "R",
+      "name": "Rotate",
+      "description": "Cutter can be rotated to expose a fresh cutting face. Partial wear allows for repositioning.",
+      "action": "ROTATE",
+      "color_code": "#FFFF00",
+      "sort_order": 4,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.cutterevaluationcode",
+    "pk": 5,
+    "fields": {
+      "code": "L",
+      "name": "Lost",
+      "description": "Cutter is missing or lost from the pocket. Replacement required.",
+      "action": "LOST",
+      "color_code": "#800080",
+      "sort_order": 5,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.featurecode",
+    "pk": 1,
+    "fields": {
+      "code": "V",
+      "name": "Build-Up Fin",
+      "description": "Material build-up on the fin/blade geometry affecting cutting performance.",
+      "geometry_type": "FIN",
+      "color_code": "#0000FF",
+      "sort_order": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.featurecode",
+    "pk": 2,
+    "fields": {
+      "code": "P",
+      "name": "Pocket",
+      "description": "Damage or issue with the cutter pocket that may affect cutter stability.",
+      "geometry_type": "POCKET",
+      "color_code": "#008080",
+      "sort_order": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.featurecode",
+    "pk": 3,
+    "fields": {
+      "code": "I",
+      "name": "Impact Arrestor",
+      "description": "Issue with impact arrestor feature on the bit body.",
+      "geometry_type": "BODY",
+      "color_code": "#FF00FF",
+      "sort_order": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.featurecode",
+    "pk": 4,
+    "fields": {
+      "code": "B",
+      "name": "Body Build-Up",
+      "description": "Material build-up on the bit body affecting overall performance.",
+      "geometry_type": "BODY",
+      "color_code": "#A52A2A",
+      "sort_order": 4,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bitsection",
+    "pk": 1,
+    "fields": {
+      "code": "CONE",
+      "name": "Cone Section",
+      "description": "Center/cone area of the bit. First section from the center.",
+      "sequence": 1,
+      "color_code": "#FF6B6B",
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bitsection",
+    "pk": 2,
+    "fields": {
+      "code": "NOSE",
+      "name": "Nose Section",
+      "description": "Nose section of the bit. Second section from the center.",
+      "sequence": 2,
+      "color_code": "#4ECDC4",
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bitsection",
+    "pk": 3,
+    "fields": {
+      "code": "TAPER",
+      "name": "Taper Section",
+      "description": "Tapered section of the bit. Third section from the center.",
+      "sequence": 3,
+      "color_code": "#45B7D1",
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bitsection",
+    "pk": 4,
+    "fields": {
+      "code": "SHOULDER",
+      "name": "Shoulder Section",
+      "description": "Shoulder area of the bit. Fourth section from the center.",
+      "sequence": 4,
+      "color_code": "#96CEB4",
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bitsection",
+    "pk": 5,
+    "fields": {
+      "code": "GAUGE",
+      "name": "Gauge Section",
+      "description": "Gauge/outer section of the bit. Fifth and outermost section.",
+      "sequence": 5,
+      "color_code": "#FFEAA7",
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bittype",
+    "pk": 1,
+    "fields": {
+      "code": "HDBS",
+      "name": "HDBS Type",
+      "description": "High Durability Bit System - advanced PDC bit design for extended run life.",
+      "manufacturer": "Internal Design",
+      "sort_order": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bittype",
+    "pk": 2,
+    "fields": {
+      "code": "SMI_LEGACY",
+      "name": "SMI Legacy",
+      "description": "Standard Matrix Impregnated - Legacy design with proven field performance.",
+      "manufacturer": "SMI",
+      "sort_order": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.bittype",
+    "pk": 3,
+    "fields": {
+      "code": "SMI_NEW",
+      "name": "SMI New",
+      "description": "Standard Matrix Impregnated - New generation with improved cutter layout.",
+      "manufacturer": "SMI",
+      "sort_order": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.technicalinstructiontemplate",
+    "pk": 1,
+    "fields": {
+      "code": "GAUGE_REPLACE_CHECK",
+      "name": "Replace all damaged cutters in Gauge section",
+      "description": "Triggered when any cutter in the gauge section is marked with X code for replacement.",
+      "scope": "CELL_LEVEL",
+      "stage": "EVALUATION",
+      "severity": "WARNING",
+      "condition_json": {
+        "section": "GAUGE",
+        "cutter_code": "X",
+        "min_count": 1
+      },
+      "output_template": "Replace all damaged cutters in Gauge section. {count} cutter(s) marked for replacement in gauge area.",
+      "auto_generate": true,
+      "requires_acknowledgment": false,
+      "can_be_overridden": true,
+      "override_requires_approval": false,
+      "priority": 100,
+      "version": 1,
+      "effective_from": null,
+      "effective_to": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.technicalinstructiontemplate",
+    "pk": 2,
+    "fields": {
+      "code": "LOST_CUTTER_CRITICAL",
+      "name": "Critical: Lost cutter detected",
+      "description": "Critical alert when any cutter is marked as lost (L code). Requires immediate attention.",
+      "scope": "EVALUATION_SESSION",
+      "stage": "EVALUATION",
+      "severity": "CRITICAL",
+      "condition_json": {
+        "cutter_code": "L",
+        "min_count": 1
+      },
+      "output_template": "CRITICAL: Lost cutter detected. {count} cutter(s) missing from bit. Investigate cause and verify pocket integrity before replacement.",
+      "auto_generate": true,
+      "requires_acknowledgment": true,
+      "can_be_overridden": false,
+      "override_requires_approval": true,
+      "priority": 200,
+      "version": 1,
+      "effective_from": null,
+      "effective_to": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.technicalinstructiontemplate",
+    "pk": 3,
+    "fields": {
+      "code": "HIGH_DAMAGE_ALERT",
+      "name": "High damage percentage alert",
+      "description": "Triggered when more than 50% of cutters need action (non-OK status).",
+      "scope": "EVALUATION_SESSION",
+      "stage": "EVALUATION",
+      "severity": "WARNING",
+      "condition_json": {
+        "damage_percentage_min": 50
+      },
+      "output_template": "High damage detected: {damage_percentage}% of cutters require action. Consider full bit assessment before repair.",
+      "auto_generate": true,
+      "requires_acknowledgment": false,
+      "can_be_overridden": true,
+      "override_requires_approval": false,
+      "priority": 150,
+      "version": 1,
+      "effective_from": null,
+      "effective_to": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.requirementtemplate",
+    "pk": 1,
+    "fields": {
+      "code": "TECH_ENG_APPROVAL",
+      "name": "Technical Engineer Approval",
+      "description": "Technical engineer must review and approve the evaluation results before proceeding to production.",
+      "stage": "EVALUATION",
+      "requirement_type": "APPROVAL",
+      "is_mandatory": true,
+      "can_be_waived": false,
+      "waiver_authority": "",
+      "condition_json": {},
+      "satisfaction_instructions": "Submit evaluation for technical engineer review. Engineer must verify cutter assessments and approve recommendations.",
+      "reference_documents": ["SOP-EVAL-001", "QC-PROC-APPROVAL"],
+      "lead_time_hours": 4,
+      "sort_order": 1,
+      "icon": "bi-person-check",
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.requirementtemplate",
+    "pk": 2,
+    "fields": {
+      "code": "CUTTER_AVAILABILITY",
+      "name": "Cutter availability confirmed",
+      "description": "Verify that all required replacement cutters are available in inventory before scheduling repair.",
+      "stage": "PRE_PRODUCTION",
+      "requirement_type": "MATERIAL",
+      "is_mandatory": true,
+      "can_be_waived": true,
+      "waiver_authority": "Production Manager",
+      "condition_json": {
+        "has_replacements": true
+      },
+      "satisfaction_instructions": "Check inventory system for required cutter types and sizes. Reserve cutters for this job if available.",
+      "reference_documents": ["INV-PROC-001", "CUTTER-SPEC-GUIDE"],
+      "lead_time_hours": 2,
+      "sort_order": 2,
+      "icon": "bi-box-seam",
+      "is_active": true
+    }
+  },
+  {
+    "model": "evaluation.requirementtemplate",
+    "pk": 3,
+    "fields": {
+      "code": "NDT_INSPECTION_COMPLETE",
+      "name": "NDT Inspection Completed",
+      "description": "Non-destructive testing inspection must be completed and documented.",
+      "stage": "EVALUATION",
+      "requirement_type": "INSPECTION",
+      "is_mandatory": true,
+      "can_be_waived": false,
+      "waiver_authority": "",
+      "condition_json": {},
+      "satisfaction_instructions": "Complete all required NDT inspections including crack detection and dimensional verification. Document results in evaluation session.",
+      "reference_documents": ["NDT-PROC-001", "QC-NDT-STANDARDS"],
+      "lead_time_hours": 8,
+      "sort_order": 3,
+      "icon": "bi-search",
+      "is_active": true
+    }
+  }
+]

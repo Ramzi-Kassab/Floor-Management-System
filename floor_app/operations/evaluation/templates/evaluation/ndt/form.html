@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NDT Inspection - {{ session.serial_unit.serial_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ndt-card {
+        border-left: 4px solid #17a2b8;
+    }
+    .method-badge {
+        font-size: 1.1rem;
+        padding: 0.6rem 1.2rem;
+    }
+    .indication-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    .equipment-info {
+        background: #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-2 px-4 bg-light">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:dashboard' %}">Evaluation</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:session_detail' session.public_id %}">{{ session.serial_unit.serial_number }}</a></li>
+        <li class="breadcrumb-item active">NDT Inspection</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm ndt-card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-search me-2"></i>
+                        Non-Destructive Testing (NDT) Inspection
+                    </h4>
+                    {% if inspection.pk %}
+                    <span class="badge method-badge bg-info">
+                        {{ inspection.get_method_display }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post" id="ndtInspectionForm">
+                        {% csrf_token %}
+
+                        <!-- Method and Result -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">NDT Method <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" name="method" required>
+                                    <option value="">-- Select Method --</option>
+                                    <option value="LPT" {% if inspection.method == 'LPT' %}selected{% endif %}>
+                                        LPT - Liquid Penetrant Testing
+                                    </option>
+                                    <option value="MPI" {% if inspection.method == 'MPI' %}selected{% endif %}>
+                                        MPI - Magnetic Particle Inspection
+                                    </option>
+                                    <option value="UT" {% if inspection.method == 'UT' %}selected{% endif %}>
+                                        UT - Ultrasonic Testing
+                                    </option>
+                                    <option value="RT" {% if inspection.method == 'RT' %}selected{% endif %}>
+                                        RT - Radiographic Testing
+                                    </option>
+                                    <option value="VT" {% if inspection.method == 'VT' %}selected{% endif %}>
+                                        VT - Visual Testing
+                                    </option>
+                                    <option value="OTHER" {% if inspection.method == 'OTHER' %}selected{% endif %}>
+                                        Other Method
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Inspection Result <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" name="result" required id="resultSelect">
+                                    <option value="">-- Select Result --</option>
+                                    <option value="PASS" {% if inspection.result == 'PASS' %}selected{% endif %}>
+                                        PASS - No Defects
+                                    </option>
+                                    <option value="FAIL" {% if inspection.result == 'FAIL' %}selected{% endif %}>
+                                        FAIL - Critical Defects
+                                    </option>
+                                    <option value="REPAIR_REQUIRED" {% if inspection.result == 'REPAIR_REQUIRED' %}selected{% endif %}>
+                                        REPAIR REQUIRED
+                                    </option>
+                                    <option value="MONITOR" {% if inspection.result == 'MONITOR' %}selected{% endif %}>
+                                        MONITOR - Acceptable with Conditions
+                                    </option>
+                                    <option value="INCONCLUSIVE" {% if inspection.result == 'INCONCLUSIVE' %}selected{% endif %}>
+                                        INCONCLUSIVE - Retest Required
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Areas Inspected -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Areas Inspected <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="areas_inspected" rows="3" required
+                                      placeholder="Describe areas inspected (e.g., bit body, blades, shank, gauge pads, etc.)">{{ inspection.areas_inspected|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Indications Found -->
+                        <div class="indication-card mb-4">
+                            <h6 class="mb-3"><i class="bi bi-exclamation-diamond me-2"></i>Indications Found</h6>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="crack_indications"
+                                               id="crackCheck" {% if inspection.crack_indications %}checked{% endif %}>
+                                        <label class="form-check-label" for="crackCheck">
+                                            <i class="bi bi-lightning text-danger me-1"></i>
+                                            Crack Indications
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="porosity_indications"
+                                               id="porosityCheck" {% if inspection.porosity_indications %}checked{% endif %}>
+                                        <label class="form-check-label" for="porosityCheck">
+                                            <i class="bi bi-circle-fill text-warning me-1"></i>
+                                            Porosity Indications
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="inclusion_indications"
+                                               id="inclusionCheck" {% if inspection.inclusion_indications %}checked{% endif %}>
+                                        <label class="form-check-label" for="inclusionCheck">
+                                            <i class="bi bi-square-fill text-info me-1"></i>
+                                            Inclusion Indications
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Indication Count</label>
+                                    <input type="number" class="form-control" name="indication_count"
+                                           min="0" value="{{ inspection.indication_count|default:0 }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Max Indication Size (mm)</label>
+                                    <input type="number" class="form-control" name="max_indication_size"
+                                           step="0.001" value="{{ inspection.max_indication_size|default:'' }}">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Indications Description</label>
+                                <textarea class="form-control" name="indications_description" rows="3"
+                                          placeholder="Detailed description of indications found, their locations, and characteristics...">{{ inspection.indications_description|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Acceptance Criteria -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Acceptance Standard</label>
+                                <input type="text" class="form-control" name="acceptance_standard"
+                                       value="{{ inspection.acceptance_standard|default:'' }}"
+                                       placeholder="e.g., ASME Section V, API Standard, Company Standard">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="meets_acceptance_criteria"
+                                           id="acceptanceCheck" {% if inspection.meets_acceptance_criteria %}checked{% endif %}>
+                                    <label class="form-check-label" for="acceptanceCheck">
+                                        Meets Acceptance Criteria
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Recommendations</label>
+                            <textarea class="form-control" name="recommendations" rows="3"
+                                      placeholder="Recommended actions based on inspection findings...">{{ inspection.recommendations|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Retest Requirements -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="requires_retest"
+                                           id="retestCheck" {% if inspection.requires_retest %}checked{% endif %}>
+                                    <label class="form-check-label" for="retestCheck">
+                                        <i class="bi bi-arrow-repeat text-primary me-1"></i>
+                                        Requires Retest
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Retest Due Date</label>
+                                <input type="date" class="form-control" name="retest_due_date"
+                                       value="{{ inspection.retest_due_date|date:'Y-m-d'|default:'' }}">
+                            </div>
+                        </div>
+
+                        <!-- Equipment & Calibration -->
+                        <div class="equipment-info mb-4">
+                            <h6 class="mb-3"><i class="bi bi-tools me-2"></i>Equipment & Certification</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Equipment Used</label>
+                                    <input type="text" class="form-control" name="equipment_used"
+                                           value="{{ inspection.equipment_used|default:'' }}"
+                                           placeholder="Equipment model/serial">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Last Calibration Date</label>
+                                    <input type="date" class="form-control" name="calibration_date"
+                                           value="{{ inspection.calibration_date|date:'Y-m-d'|default:'' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Inspector Certification</label>
+                                    <input type="text" class="form-control" name="inspector_certification"
+                                           value="{{ inspection.inspector_certification|default:'' }}"
+                                           placeholder="e.g., Level II, Level III">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Report Reference -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">NDT Report Number</label>
+                            <input type="text" class="form-control" name="report_number"
+                                   value="{{ inspection.report_number|default:'' }}"
+                                   placeholder="Reference number for the NDT report">
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'evaluation:session_detail' session.public_id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Session
+                            </a>
+                            <div>
+                                <button type="submit" name="action" value="save" class="btn btn-primary">
+                                    <i class="bi bi-save me-1"></i> Save Inspection
+                                </button>
+                                <button type="submit" name="action" value="save_and_continue" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-1"></i> Save & Continue
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Visual feedback on result selection
+    const resultSelect = document.getElementById('resultSelect');
+    resultSelect.addEventListener('change', function() {
+        const value = this.value;
+        const colors = {
+            'PASS': '#d4edda',
+            'FAIL': '#f8d7da',
+            'REPAIR_REQUIRED': '#fff3cd',
+            'MONITOR': '#d1ecf1',
+            'INCONCLUSIVE': '#e2e3e5'
+        };
+
+        this.style.backgroundColor = colors[value] || '';
+    });
+
+    // Trigger initial color
+    if (resultSelect.value) {
+        resultSelect.dispatchEvent(new Event('change'));
+    }
+
+    // Toggle retest date field based on checkbox
+    const retestCheck = document.getElementById('retestCheck');
+    const retestDateInput = document.querySelector('input[name="retest_due_date"]');
+
+    retestCheck.addEventListener('change', function() {
+        if (this.checked) {
+            retestDateInput.required = true;
+            retestDateInput.focus();
+        } else {
+            retestDateInput.required = false;
+        }
+    });
+});
+</script>
+{% endblock %}

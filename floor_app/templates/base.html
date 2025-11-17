@@ -310,6 +310,35 @@
                         </ul>
                     </li>
 
+                    <!-- Evaluation & Tech Instructions Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="evaluation-section">
+                            <i class="bi bi-clipboard-check-fill"></i>
+                            <span>Evaluation & Tech Instructions</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="evaluation-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'evaluation:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Evaluation Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'evaluation:session_list' %}">
+                                    <i class="bi bi-table"></i>
+                                    <span>Evaluation Sessions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'evaluation:settings_dashboard' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Maintenance Section (Coming Soon) -->
                     <li class="nav-item">
                         <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">

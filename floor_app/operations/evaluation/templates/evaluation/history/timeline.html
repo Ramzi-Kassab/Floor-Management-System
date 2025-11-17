@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Session History - Session #{{ session.id }} - Evaluation{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-date-group {
+    margin-bottom: 30px;
+}
+
+.timeline-date-header {
+    position: relative;
+    background: #0d6efd;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 15px;
+    margin-left: -30px;
+    font-weight: 600;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -23px;
+    top: 5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #0d6efd;
+}
+
+.timeline-marker.created {
+    border-color: #198754;
+}
+
+.timeline-marker.modified {
+    border-color: #ffc107;
+}
+
+.timeline-marker.approved {
+    border-color: #0d6efd;
+}
+
+.timeline-marker.locked {
+    border-color: #dc3545;
+}
+
+.timeline-marker.status {
+    border-color: #6c757d;
+}
+
+.timeline-content {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.timeline-time {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.timeline-user {
+    font-weight: 600;
+    color: #495057;
+}
+
+.timeline-action {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.timeline-action.action-created {
+    color: #198754;
+}
+
+.timeline-action.action-modified {
+    color: #ffc107;
+}
+
+.timeline-action.action-approved {
+    color: #0d6efd;
+}
+
+.timeline-action.action-locked {
+    color: #dc3545;
+}
+
+.timeline-action.action-status {
+    color: #6c757d;
+}
+
+.timeline-details {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.cell-change {
+    background: #fff3cd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+
+.cell-change .old-value {
+    color: #dc3545;
+    text-decoration: line-through;
+}
+
+.cell-change .new-value {
+    color: #198754;
+    font-weight: 600;
+}
+
+.cell-change .arrow {
+    color: #6c757d;
+    margin: 0 5px;
+}
+
+.status-change {
+    background: #e9ecef;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.filter-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.no-history {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.no-history i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="container-fluid mt-3">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Evaluation Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:session_list' %}">Sessions</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:session_detail' session.id %}">Session #{{ session.id }}</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-clock-history"></i> History
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-clock-history text-primary"></i> Session History
+            </h2>
+            <p class="text-muted">Timeline of all changes to Session #{{ session.id }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'evaluation:session_detail' session.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Session
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="user_filter" class="form-label">Filter by User</label>
+                <select class="form-select" id="user_filter" name="user">
+                    <option value="">All Users</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if request.GET.user == user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ user.get_full_name|default:user.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="action_filter" class="form-label">Filter by Action</label>
+                <select class="form-select" id="action_filter" name="action">
+                    <option value="">All Actions</option>
+                    <option value="created" {% if request.GET.action == "created" %}selected{% endif %}>Created</option>
+                    <option value="modified" {% if request.GET.action == "modified" %}selected{% endif %}>Modified</option>
+                    <option value="approved" {% if request.GET.action == "approved" %}selected{% endif %}>Approved</option>
+                    <option value="locked" {% if request.GET.action == "locked" %}selected{% endif %}>Locked</option>
+                    <option value="status" {% if request.GET.action == "status" %}selected{% endif %}>Status Change</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Apply Filter
+                    </button>
+                    <a href="{% url 'evaluation:session_history' session.id %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul"></i> Change Timeline
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if history_entries %}
+            <div class="timeline">
+                {% regroup history_entries by date as entries_by_date %}
+                {% for date_group in entries_by_date %}
+                <div class="timeline-date-group">
+                    <div class="timeline-date-header">
+                        <i class="bi bi-calendar3"></i> {{ date_group.grouper|date:"F j, Y" }}
+                    </div>
+
+                    {% for entry in date_group.list %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker {{ entry.action_type }}"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <span class="timeline-user">
+                                    <i class="bi bi-person-circle"></i>
+                                    {{ entry.user.get_full_name|default:entry.user.username }}
+                                </span>
+                                <span class="timeline-time">
+                                    <i class="bi bi-clock"></i>
+                                    {{ entry.timestamp|time:"H:i" }}
+                                </span>
+                            </div>
+
+                            <div class="timeline-action action-{{ entry.action_type }}">
+                                {% if entry.action_type == "created" %}
+                                <i class="bi bi-plus-circle"></i> Created
+                                {% elif entry.action_type == "modified" %}
+                                <i class="bi bi-pencil"></i> Modified
+                                {% elif entry.action_type == "approved" %}
+                                <i class="bi bi-check-circle"></i> Approved
+                                {% elif entry.action_type == "locked" %}
+                                <i class="bi bi-lock"></i> Locked
+                                {% elif entry.action_type == "status" %}
+                                <i class="bi bi-arrow-left-right"></i> Status Changed
+                                {% endif %}
+                            </div>
+
+                            <div class="timeline-details">
+                                {% if entry.action_type == "modified" and entry.cell_changes %}
+                                {% for change in entry.cell_changes %}
+                                <div class="cell-change">
+                                    <strong>{{ change.cell_position }}:</strong>
+                                    <span class="old-value">{{ change.old_value|default:"(empty)" }}</span>
+                                    <span class="arrow">-></span>
+                                    <span class="new-value">{{ change.new_value }}</span>
+                                    {% if change.changed_by %}
+                                    <span class="text-muted">by {{ change.changed_by }}</span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% elif entry.action_type == "status" %}
+                                <div class="status-change">
+                                    Status changed from <strong>{{ entry.old_status }}</strong> to <strong>{{ entry.new_status }}</strong>
+                                </div>
+                                {% else %}
+                                {{ entry.details|default:"No additional details" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-history">
+                <i class="bi bi-inbox"></i>
+                <p class="mb-0">No history entries found for this session.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit filter form on change
+    const userFilter = document.getElementById('user_filter');
+    const actionFilter = document.getElementById('action_filter');
+
+    // Optional: Auto-submit on filter change
+    // userFilter.addEventListener('change', function() {
+    //     this.form.submit();
+    // });
+
+    // actionFilter.addEventListener('change', function() {
+    //     this.form.submit();
+    // });
+});
+</script>
+{% endblock %}

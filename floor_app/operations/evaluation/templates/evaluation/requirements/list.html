@@ -1,0 +1,508 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Requirements - {{ session.serial_unit.serial_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .requirements-card {
+        border-left: 4px solid #28a745;
+    }
+    .requirement-row {
+        transition: all 0.3s ease;
+    }
+    .requirement-row:hover {
+        background-color: #f8f9fa;
+    }
+    .requirement-row.pending {
+        background-color: #fff3cd;
+    }
+    .requirement-row.satisfied {
+        background-color: #d4edda;
+    }
+    .requirement-row.not-applicable {
+        background-color: #e9ecef;
+    }
+    .requirement-row.waived {
+        background-color: #d1ecf1;
+    }
+    .requirement-row.mandatory {
+        border-left: 3px solid #dc3545;
+    }
+    .progress-card {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    .progress-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: conic-gradient(white var(--progress), rgba(255,255,255,0.3) 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    .progress-inner {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .progress-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+    .progress-label {
+        font-size: 0.75rem;
+        opacity: 0.9;
+    }
+    .type-badge {
+        font-size: 0.8rem;
+    }
+    .mandatory-indicator {
+        color: #dc3545;
+        font-weight: 700;
+    }
+    .filter-btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .filter-btn.active {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-2 px-4 bg-light">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:dashboard' %}">Evaluation</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:session_detail' session.public_id %}">{{ session.serial_unit.serial_number }}</a></li>
+        <li class="breadcrumb-item active">Requirements</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-clipboard-check me-2"></i>
+                Requirements Checklist
+            </h2>
+            <p class="text-muted mb-0">
+                Session: <strong>{{ session.serial_unit.serial_number }}</strong> |
+                Track and satisfy required items before proceeding
+            </p>
+        </div>
+        <a href="{% url 'evaluation:session_detail' session.public_id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Session
+        </a>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="progress-card">
+                <div class="text-center">
+                    <div class="progress-circle" style="--progress: {{ progress_percentage }}%;">
+                        <div class="progress-inner">
+                            <div class="progress-value">{{ satisfied_count }}/{{ total_count }}</div>
+                            <div class="progress-label">Satisfied</div>
+                        </div>
+                    </div>
+                    <h5 class="mt-3 mb-0">Overall Progress</h5>
+                    <p class="mb-0 opacity-75">{{ progress_percentage }}% Complete</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5><i class="bi bi-bar-chart me-2"></i>Requirements Breakdown</h5>
+                    <div class="row mt-3">
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fs-3 fw-bold text-warning">{{ pending_count }}</div>
+                            <div class="small text-muted">Pending</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fs-3 fw-bold text-success">{{ satisfied_count }}</div>
+                            <div class="small text-muted">Satisfied</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fs-3 fw-bold text-secondary">{{ not_applicable_count }}</div>
+                            <div class="small text-muted">N/A</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fs-3 fw-bold text-info">{{ waived_count }}</div>
+                            <div class="small text-muted">Waived</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <span class="text-danger fw-bold">{{ mandatory_pending }}</span>
+                            <span class="text-muted">Mandatory items pending</span>
+                        </div>
+                        {% if mandatory_pending > 0 %}
+                        <span class="badge bg-danger">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Blocking Progress
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Ready to Proceed
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-4">
+        <label class="form-label fw-semibold">Filter by Stage:</label>
+        <div>
+            <button class="btn btn-outline-primary filter-btn active" data-stage="all">
+                All Stages
+            </button>
+            <button class="btn btn-outline-primary filter-btn" data-stage="PRE_PRODUCTION">
+                Pre-Production
+            </button>
+            <button class="btn btn-outline-primary filter-btn" data-stage="EVALUATION">
+                Evaluation
+            </button>
+            <button class="btn btn-outline-primary filter-btn" data-stage="PROCESSING">
+                Processing
+            </button>
+            <button class="btn btn-outline-primary filter-btn" data-stage="FINAL_QC">
+                Final QC
+            </button>
+            <button class="btn btn-outline-primary filter-btn" data-stage="SHIPPING">
+                Shipping
+            </button>
+        </div>
+    </div>
+
+    <!-- Requirements List -->
+    <div class="card shadow-sm requirements-card">
+        <div class="card-body p-0">
+            {% if requirements %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="200">Requirement</th>
+                            <th width="120">Type</th>
+                            <th width="120">Stage</th>
+                            <th width="100">Mandatory</th>
+                            <th width="120">Status</th>
+                            <th>Satisfied By / Date</th>
+                            <th width="200">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requirements %}
+                        <tr class="requirement-row {% if req.status == 'PENDING' %}pending{% elif req.status == 'SATISFIED' %}satisfied{% elif req.status == 'NOT_APPLICABLE' %}not-applicable{% elif req.status == 'WAIVED' %}waived{% endif %} {% if req.template.is_mandatory %}mandatory{% endif %}"
+                            data-requirement-id="{{ req.id }}"
+                            data-stage="{{ req.template.stage }}"
+                            data-status="{{ req.status }}">
+                            <td>
+                                <strong>{{ req.template.code }}</strong><br>
+                                <small class="text-muted">{{ req.template.name }}</small>
+                                {% if req.template.description %}
+                                <button class="btn btn-link btn-sm p-0 ms-1"
+                                        data-bs-toggle="tooltip"
+                                        title="{{ req.template.description }}">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge type-badge bg-{% if req.template.requirement_type == 'DOCUMENT' %}primary{% elif req.template.requirement_type == 'APPROVAL' %}warning text-dark{% elif req.template.requirement_type == 'MATERIAL' %}success{% elif req.template.requirement_type == 'DATA' %}info{% elif req.template.requirement_type == 'INSPECTION' %}secondary{% else %}dark{% endif %}">
+                                    <i class="bi bi-{% if req.template.requirement_type == 'DOCUMENT' %}file-earmark{% elif req.template.requirement_type == 'APPROVAL' %}check2-square{% elif req.template.requirement_type == 'MATERIAL' %}box{% elif req.template.requirement_type == 'DATA' %}graph-up{% elif req.template.requirement_type == 'INSPECTION' %}search{% else %}award{% endif %} me-1"></i>
+                                    {{ req.template.get_requirement_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    {{ req.template.get_stage_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if req.template.is_mandatory %}
+                                <span class="mandatory-indicator">
+                                    <i class="bi bi-asterisk"></i> Yes
+                                </span>
+                                {% else %}
+                                <span class="text-muted">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if req.status == 'PENDING' %}warning text-dark{% elif req.status == 'SATISFIED' %}success{% elif req.status == 'NOT_APPLICABLE' %}secondary{% else %}info{% endif %}">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if req.satisfied_by %}
+                                <div>
+                                    <strong>{{ req.satisfied_by }}</strong><br>
+                                    <small class="text-muted">{{ req.satisfied_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                                {% if req.notes %}
+                                <small class="d-block mt-1 text-muted">
+                                    <i class="bi bi-chat-quote me-1"></i>{{ req.notes|truncatewords:10 }}
+                                </small>
+                                {% endif %}
+                                {% if req.waiver_reason %}
+                                <small class="d-block mt-1 text-info">
+                                    <i class="bi bi-shield-exclamation me-1"></i>
+                                    Waived: {{ req.waiver_reason|truncatewords:10 }}
+                                </small>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">--</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'PENDING' %}
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-success satisfy-btn" title="Mark as Satisfied">
+                                        <i class="bi bi-check-lg"></i> Satisfy
+                                    </button>
+                                    <button class="btn btn-secondary na-btn" title="Mark as N/A">
+                                        N/A
+                                    </button>
+                                    {% if req.template.can_be_waived %}
+                                    <button class="btn btn-info waive-btn" title="Waive Requirement">
+                                        <i class="bi bi-shield"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <button class="btn btn-outline-warning btn-sm reset-btn" title="Reset to Pending">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-clipboard fs-1 text-muted d-block mb-3"></i>
+                <h5 class="text-muted">No Requirements</h5>
+                <p class="text-muted">No requirements have been defined for this evaluation session.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Satisfy Modal -->
+<div class="modal fade" id="satisfyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    Satisfy Requirement
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="satisfyForm">
+                    <input type="hidden" name="requirement_id" id="satisfyReqId">
+                    <div class="mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" name="notes" rows="3"
+                                  placeholder="Add any notes about how this was satisfied..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmSatisfyBtn">
+                    <i class="bi bi-check-lg me-1"></i> Mark as Satisfied
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Waive Modal -->
+<div class="modal fade" id="waiveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-shield text-info me-2"></i>
+                    Waive Requirement
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Waiving a requirement should only be done with proper authorization.
+                </div>
+                <form id="waiveForm">
+                    <input type="hidden" name="requirement_id" id="waiveReqId">
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Waiver <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="reason" rows="3" required
+                                  placeholder="Provide justification for waiving this requirement..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-info" id="confirmWaiveBtn">
+                    <i class="bi bi-shield-check me-1"></i> Confirm Waiver
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = '{{ csrf_token }}';
+    const updateUrl = '{% url "evaluation:update_requirement" session.public_id %}';
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Filter by stage
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const stage = this.dataset.stage;
+            const rows = document.querySelectorAll('.requirement-row');
+
+            rows.forEach(row => {
+                if (stage === 'all' || row.dataset.stage === stage) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Satisfy button
+    document.querySelectorAll('.satisfy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.requirement-row');
+            const reqId = row.dataset.requirementId;
+            document.getElementById('satisfyReqId').value = reqId;
+            new bootstrap.Modal(document.getElementById('satisfyModal')).show();
+        });
+    });
+
+    // Confirm satisfy
+    document.getElementById('confirmSatisfyBtn').addEventListener('click', function() {
+        const reqId = document.getElementById('satisfyReqId').value;
+        const notes = document.querySelector('#satisfyForm textarea[name="notes"]').value;
+
+        updateRequirement(reqId, 'satisfy', { notes: notes }).then(() => {
+            location.reload();
+        });
+    });
+
+    // N/A button
+    document.querySelectorAll('.na-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.requirement-row');
+            const reqId = row.dataset.requirementId;
+            const reason = prompt('Reason for marking as Not Applicable:');
+
+            if (reason !== null) {
+                updateRequirement(reqId, 'not_applicable', { reason: reason }).then(() => {
+                    location.reload();
+                });
+            }
+        });
+    });
+
+    // Waive button
+    document.querySelectorAll('.waive-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.requirement-row');
+            const reqId = row.dataset.requirementId;
+            document.getElementById('waiveReqId').value = reqId;
+            new bootstrap.Modal(document.getElementById('waiveModal')).show();
+        });
+    });
+
+    // Confirm waive
+    document.getElementById('confirmWaiveBtn').addEventListener('click', function() {
+        const reqId = document.getElementById('waiveReqId').value;
+        const reason = document.querySelector('#waiveForm textarea[name="reason"]').value;
+
+        if (reason.trim()) {
+            updateRequirement(reqId, 'waive', { reason: reason }).then(() => {
+                location.reload();
+            });
+        }
+    });
+
+    // Reset button
+    document.querySelectorAll('.reset-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('.requirement-row');
+            const reqId = row.dataset.requirementId;
+
+            if (confirm('Reset this requirement back to Pending?')) {
+                updateRequirement(reqId, 'reset', {}).then(() => {
+                    location.reload();
+                });
+            }
+        });
+    });
+
+    function updateRequirement(reqId, action, data) {
+        return fetch(updateUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                requirement_id: reqId,
+                action: action,
+                ...data
+            })
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Update failed');
+            }
+            return response.json();
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update requirement. Please try again.');
+        });
+    }
+});
+</script>
+{% endblock %}

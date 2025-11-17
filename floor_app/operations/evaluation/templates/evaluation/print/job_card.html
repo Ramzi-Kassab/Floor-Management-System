@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block title %}Print Job Card - Session #{{ session.id }} - Evaluation{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Print-friendly styling */
+.print-container {
+    background: white;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.company-header {
+    text-align: center;
+    border-bottom: 3px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.company-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.company-header p {
+    margin: 0;
+    color: #666;
+}
+
+.info-block {
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+}
+
+.info-block h5 {
+    border-bottom: 2px solid #0d6efd;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.info-label {
+    font-weight: 600;
+    width: 150px;
+    flex-shrink: 0;
+}
+
+.info-value {
+    flex-grow: 1;
+}
+
+.compact-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.compact-grid th,
+.compact-grid td {
+    border: 1px solid #333;
+    padding: 4px 6px;
+    text-align: center;
+}
+
+.compact-grid th {
+    background-color: #e9ecef;
+    font-weight: 600;
+}
+
+.compact-grid .section-cell {
+    background-color: #dee2e6;
+    font-weight: 700;
+}
+
+.inspection-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.inspection-table th,
+.inspection-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: left;
+}
+
+.inspection-table th {
+    background-color: #f1f3f5;
+    width: 200px;
+}
+
+.instructions-list {
+    list-style-type: decimal;
+    padding-left: 20px;
+}
+
+.instructions-list li {
+    margin-bottom: 8px;
+    padding: 5px 0;
+}
+
+.requirements-checklist {
+    list-style-type: none;
+    padding: 0;
+}
+
+.requirements-checklist li {
+    padding: 8px 0;
+    border-bottom: 1px dotted #dee2e6;
+}
+
+.requirements-checklist .status-pass {
+    color: #198754;
+    font-weight: 600;
+}
+
+.requirements-checklist .status-fail {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.signature-block {
+    border: 1px solid #333;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
+}
+
+.signature-block h6 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.signature-line {
+    border-bottom: 1px solid #333;
+    height: 30px;
+    margin-bottom: 5px;
+}
+
+.signature-label {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.print-actions {
+    margin-bottom: 20px;
+}
+
+/* Print-specific styles */
+@media print {
+    body {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+
+    .navbar,
+    .sidebar,
+    .sidebar-backdrop,
+    .breadcrumb,
+    footer,
+    .print-actions,
+    .btn {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .print-container {
+        padding: 0;
+        max-width: none;
+        box-shadow: none;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #333 !important;
+        page-break-inside: avoid;
+    }
+
+    .company-header {
+        margin-top: 0;
+    }
+
+    .info-block {
+        background-color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .compact-grid th,
+    .compact-grid .section-cell {
+        background-color: #e9ecef !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .signature-block {
+        page-break-inside: avoid;
+    }
+
+    @page {
+        margin: 1cm;
+        size: A4;
+    }
+}
+
+@media screen {
+    .print-container {
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 8px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="container-fluid mt-3">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Evaluation Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:session_detail' session.id %}">Session #{{ session.id }}</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-printer"></i> Print Job Card
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Print Actions -->
+    <div class="print-actions">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Print Job Card
+        </button>
+        <a href="{% url 'evaluation:session_detail' session.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Session
+        </a>
+    </div>
+
+    <!-- Printable Content -->
+    <div class="print-container">
+        <!-- Company Header -->
+        <div class="company-header">
+            <h1>PDC BIT MANUFACTURING</h1>
+            <p>Quality Control & Evaluation Department</p>
+            <p><strong>EVALUATION JOB CARD</strong></p>
+        </div>
+
+        <!-- Evaluation Information Block -->
+        <div class="info-block">
+            <h5><i class="bi bi-info-circle"></i> Evaluation Information</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <span class="info-label">Session ID:</span>
+                        <span class="info-value">{{ session.id }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Serial Number:</span>
+                        <span class="info-value">{{ session.serial_unit.serial_number|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">MAT:</span>
+                        <span class="info-value">{{ session.serial_unit.mat_revision.code|default:"N/A" }}</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <span class="info-label">Type:</span>
+                        <span class="info-value">{{ session.bit_type.name|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Customer:</span>
+                        <span class="info-value">{{ session.customer|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Project:</span>
+                        <span class="info-value">{{ session.project|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cutter Grid Summary -->
+        <div class="info-block">
+            <h5><i class="bi bi-grid-3x3"></i> Cutter Grid Summary</h5>
+            <div class="table-responsive">
+                <table class="compact-grid">
+                    <thead>
+                        <tr>
+                            <th>Section</th>
+                            <th>Pos</th>
+                            {% for blade in blades %}
+                            <th>B{{ blade }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for section in sections %}
+                        {% for position in section.positions %}
+                        <tr>
+                            {% if forloop.first %}
+                            <td class="section-cell" rowspan="{{ section.positions|length }}">{{ section.code }}</td>
+                            {% endif %}
+                            <td>P{{ position.number }}</td>
+                            {% for cell in position.cells %}
+                            <td>{{ cell.code|default:"-" }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Thread Inspection Results -->
+        <div class="info-block">
+            <h5><i class="bi bi-gear"></i> Thread Inspection Results</h5>
+            <table class="inspection-table">
+                <tr>
+                    <th>Thread Type</th>
+                    <td>{{ thread_inspection.thread_type|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Thread Size</th>
+                    <td>{{ thread_inspection.thread_size|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Pitch Diameter</th>
+                    <td>{{ thread_inspection.pitch_diameter|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Lead</th>
+                    <td>{{ thread_inspection.lead|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Taper</th>
+                    <td>{{ thread_inspection.taper|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Result</th>
+                    <td>
+                        {% if thread_inspection.result %}
+                        <strong class="text-success">PASS</strong>
+                        {% else %}
+                        <strong class="text-danger">FAIL</strong>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- NDT Inspection Results -->
+        <div class="info-block">
+            <h5><i class="bi bi-shield-check"></i> NDT Inspection Results</h5>
+            <table class="inspection-table">
+                <tr>
+                    <th>Inspection Type</th>
+                    <td>{{ ndt_inspection.inspection_type|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Inspector</th>
+                    <td>{{ ndt_inspection.inspector|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>{{ ndt_inspection.date|date:"M d, Y"|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>Findings</th>
+                    <td>{{ ndt_inspection.findings|default:"None" }}</td>
+                </tr>
+                <tr>
+                    <th>Result</th>
+                    <td>
+                        {% if ndt_inspection.result %}
+                        <strong class="text-success">PASS</strong>
+                        {% else %}
+                        <strong class="text-danger">FAIL</strong>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Technical Instructions -->
+        <div class="info-block">
+            <h5><i class="bi bi-list-check"></i> Technical Instructions (Accepted)</h5>
+            {% if instructions %}
+            <ol class="instructions-list">
+                {% for instruction in instructions %}
+                <li>{{ instruction.description }}</li>
+                {% endfor %}
+            </ol>
+            {% else %}
+            <p class="text-muted">No technical instructions available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Requirements Checklist -->
+        <div class="info-block">
+            <h5><i class="bi bi-clipboard-check"></i> Requirements Checklist</h5>
+            <ul class="requirements-checklist">
+                {% for requirement in requirements %}
+                <li>
+                    {% if requirement.status %}
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <span class="status-pass">PASS</span>
+                    {% else %}
+                    <i class="bi bi-x-circle-fill text-danger"></i>
+                    <span class="status-fail">FAIL</span>
+                    {% endif %}
+                    - {{ requirement.name }}
+                </li>
+                {% empty %}
+                <li class="text-muted">No requirements defined.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Signature Blocks -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="signature-block">
+                    <h6>Evaluator</h6>
+                    <div class="signature-line"></div>
+                    <div class="d-flex justify-content-between">
+                        <span class="signature-label">Signature</span>
+                        <span class="signature-label">Date: ________</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="signature-block">
+                    <h6>Technical Engineer</h6>
+                    <div class="signature-line"></div>
+                    <div class="d-flex justify-content-between">
+                        <span class="signature-label">Signature</span>
+                        <span class="signature-label">Date: ________</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="signature-block">
+                    <h6>Department Manager</h6>
+                    <div class="signature-line"></div>
+                    <div class="d-flex justify-content-between">
+                        <span class="signature-label">Signature</span>
+                        <span class="signature-label">Date: ________</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="signature-block">
+                    <h6>QC Inspector</h6>
+                    <div class="signature-line"></div>
+                    <div class="d-flex justify-content-between">
+                        <span class="signature-label">Signature</span>
+                        <span class="signature-label">Date: ________</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

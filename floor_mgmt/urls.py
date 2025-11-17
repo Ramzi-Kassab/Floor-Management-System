@@ -37,5 +37,8 @@ urlpatterns = [
 
     # === Production & Evaluation ===
     path("production/", include(("floor_app.operations.production.urls", "production"), namespace="production")),
+
+    # === Evaluation & Technical Instructions ===
+    path("evaluation/", include(("floor_app.operations.evaluation.urls", "evaluation"), namespace="evaluation")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

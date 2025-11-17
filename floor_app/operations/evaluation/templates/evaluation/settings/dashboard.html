@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Evaluation{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="container-fluid mt-3">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Evaluation Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-gear"></i> Settings
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-gear text-primary"></i> Evaluation Settings
+            </h2>
+            <p class="text-muted">Manage evaluation module configurations and templates</p>
+        </div>
+    </div>
+
+    <!-- Settings Cards Grid -->
+    <div class="row">
+        <!-- Cutter Codes Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-code-square text-primary" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Cutter Codes</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Define cutter evaluation codes with actions, colors, and replacement/repair flags.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-primary mb-0">{{ cutter_codes_count }}</h3>
+                        <small class="text-muted">Total Codes</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'evaluation:codes_list' %}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Cutter Codes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Codes Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-diamond-fill text-info" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Feature Codes</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Configure feature codes with geometry types and visual color indicators.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-info mb-0">{{ feature_codes_count }}</h3>
+                        <small class="text-muted">Total Features</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'evaluation:features_list' %}" class="btn btn-info btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Feature Codes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bit Sections Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-layers text-warning" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Bit Sections</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Define bit sections (CONE, NOSE, TAPER, SHOULDER, GAUGE) with sequences.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-warning mb-0">{{ bit_sections_count }}</h3>
+                        <small class="text-muted">Total Sections</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'evaluation:sections_list' %}" class="btn btn-warning btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Sections
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bit Types Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-bullseye text-success" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Bit Types</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Configure bit types (HDBS, SMI Legacy, SMI New) with descriptions.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-success mb-0">{{ bit_types_count }}</h3>
+                        <small class="text-muted">Total Types</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'evaluation:types_list' %}" class="btn btn-success btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Bit Types
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instruction Templates Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-list-task text-danger" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Instruction Templates</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Create and manage technical instruction templates for evaluations.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-danger mb-0">{{ instruction_templates_count }}</h3>
+                        <small class="text-muted">Total Templates</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'evaluation:instruction_templates_list' %}" class="btn btn-danger btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Instructions
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requirement Templates Card -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-secondary bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-clipboard-check text-secondary" style="font-size: 1.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">Requirement Templates</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Define requirement checklists and validation rules for evaluations.
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="alert alert-light border-0 text-center mb-3">
+                        <h3 class="text-secondary mb-0">{{ requirement_templates_count }}</h3>
+                        <small class="text-muted">Total Templates</small>
+                    </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-light border-top">
+                    <a href="{% url 'evaluation:requirement_templates_list' %}" class="btn btn-secondary btn-sm w-100">
+                        <i class="bi bi-arrow-right"></i> Manage Requirements
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information Section -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Settings Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        The Evaluation module settings allow you to configure:
+                    </p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Cutter Codes:</strong> Define evaluation codes with actions and color indicators
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Feature Codes:</strong> Configure geometry types and feature identifiers
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Bit Sections:</strong> Define sections of the bit for structured evaluation
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Bit Types:</strong> Configure different bit type classifications
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Instruction Templates:</strong> Create reusable technical instruction templates
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Requirement Templates:</strong> Build validation checklists for quality control
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.bg-opacity-10 {
+    opacity: 0.1;
+}
+</style>
+{% endblock %}

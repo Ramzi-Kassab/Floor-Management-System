@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit Evaluation Session{% else %}Create New Evaluation Session{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #6366f1;
+        border-color: #6366f1;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-list li {
+        color: #dc3545;
+        font-size: 0.875rem;
+        padding: 0.25rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'evaluation:dashboard' %}">Evaluation</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'evaluation:session_list' %}">Sessions</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'evaluation:session_detail' form.instance.pk %}">{{ form.instance.public_id.hex|slice:":8"|upper }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New Session</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-primary me-2"></i>
+                        {% if form.instance.pk %}Edit Evaluation Session{% else %}Create New Evaluation Session{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update evaluation session information
+                        {% else %}
+                        Start a new PDC bit evaluation session
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="error-list mt-2 mb-0">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Bit Selection -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-upc-scan me-2"></i>
+                Bit Selection
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.serial_unit.id_for_label }}" class="form-label required-field">Serial Unit</label>
+                    {% if form.serial_unit %}
+                    {% render_field form.serial_unit class="form-select" %}
+                    {% if form.serial_unit.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.serial_unit.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.serial_unit.help_text %}
+                    <div class="form-text">{{ form.serial_unit.help_text|safe }}</div>
+                    {% endif %}
+                    {% else %}
+                    <select class="form-select" id="id_serial_unit" name="serial_unit">
+                        <option value="">Select Serial Unit</option>
+                    </select>
+                    <div class="form-text">Select the physical bit to evaluate</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.mat_revision.id_for_label }}" class="form-label required-field">MAT/Bit Design Revision</label>
+                    {% if form.mat_revision %}
+                    {% render_field form.mat_revision class="form-select" %}
+                    {% if form.mat_revision.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.mat_revision.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.mat_revision.help_text %}
+                    <div class="form-text">{{ form.mat_revision.help_text|safe }}</div>
+                    {% endif %}
+                    {% else %}
+                    <select class="form-select" id="id_mat_revision" name="mat_revision">
+                        <option value="">Select MAT Revision</option>
+                    </select>
+                    <div class="form-text">Reference design for evaluation</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation Context -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-clipboard-data me-2"></i>
+                Evaluation Context
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.context.id_for_label }}" class="form-label required-field">Context</label>
+                    {% if form.context %}
+                    {% render_field form.context class="form-select" %}
+                    {% if form.context.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.context.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <select class="form-select" id="id_context" name="context">
+                        <option value="REPAIR_INTAKE">Repair Intake</option>
+                        <option value="NEW_BIT">New Bit Production</option>
+                        <option value="AFTER_RUN">After Run Evaluation</option>
+                        <option value="POST_REPAIR">Post-Repair Verification</option>
+                        <option value="RECLAIM_ONLY">Reclaim/Salvage Only</option>
+                        <option value="RETROFIT_INTENT">Retrofit Intent Evaluation</option>
+                    </select>
+                    {% endif %}
+                    <div class="form-text">Purpose of this evaluation</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.customer_name.id_for_label }}" class="form-label">Customer Name</label>
+                    {% if form.customer_name %}
+                    {% render_field form.customer_name class="form-control" placeholder="e.g., Oil Company ABC" %}
+                    {% if form.customer_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customer_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <input type="text" class="form-control" id="id_customer_name" name="customer_name" placeholder="e.g., Oil Company ABC">
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.project_name.id_for_label }}" class="form-label">Project/Well Name</label>
+                    {% if form.project_name %}
+                    {% render_field form.project_name class="form-control" placeholder="e.g., Well A-123" %}
+                    {% if form.project_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.project_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <input type="text" class="form-control" id="id_project_name" name="project_name" placeholder="e.g., Well A-123">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Production -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-link-45deg me-2"></i>
+                Related Production (Optional)
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.job_card.id_for_label }}" class="form-label">Job Card</label>
+                    {% if form.job_card %}
+                    {% render_field form.job_card class="form-select" %}
+                    {% if form.job_card.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.job_card.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <select class="form-select" id="id_job_card" name="job_card">
+                        <option value="">No Job Card</option>
+                    </select>
+                    {% endif %}
+                    <div class="form-text">Link to existing job card (if applicable)</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.batch_order.id_for_label }}" class="form-label">Batch Order</label>
+                    {% if form.batch_order %}
+                    {% render_field form.batch_order class="form-select" %}
+                    {% if form.batch_order.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.batch_order.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <select class="form-select" id="id_batch_order" name="batch_order">
+                        <option value="">No Batch Order</option>
+                    </select>
+                    {% endif %}
+                    <div class="form-text">Link to batch order (if applicable)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Configuration -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-grid-3x3 me-2"></i>
+                Grid Configuration
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="id_total_blades" class="form-label">Total Blades</label>
+                    <input type="number" class="form-control" id="id_total_blades" name="total_blades"
+                           value="{{ form.total_blades.value|default:6 }}" min="1" max="20">
+                    <div class="form-text">Number of blades on the bit (typically 4-8)</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_positions_per_blade" class="form-label">Positions Per Blade</label>
+                    <input type="number" class="form-control" id="id_positions_per_blade" name="positions_per_blade"
+                           value="{{ form.positions_per_blade.value|default:12 }}" min="1" max="50">
+                    <div class="form-text">Maximum cutter positions per blade</div>
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                Grid configuration determines the evaluation grid size. Total cells = Blades x Positions per blade.
+            </div>
+        </div>
+
+        <!-- Personnel -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-person me-2"></i>
+                Personnel
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.evaluator.id_for_label }}" class="form-label required-field">Evaluator</label>
+                    {% if form.evaluator %}
+                    {% render_field form.evaluator class="form-select" %}
+                    {% if form.evaluator.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.evaluator.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <select class="form-select" id="id_evaluator" name="evaluator">
+                        <option value="">Select Evaluator</option>
+                    </select>
+                    {% endif %}
+                    <div class="form-text">Employee performing the evaluation</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'evaluation:session_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>{% if form.instance.pk %}Save Changes{% else %}Create Session{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on serial unit field for new sessions
+    {% if not form.instance.pk %}
+    const serialField = document.getElementById('id_serial_unit');
+    if (serialField) {
+        serialField.focus();
+    }
+    {% endif %}
+
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+
+    // Calculate total cells when grid configuration changes
+    const totalBladesInput = document.getElementById('id_total_blades');
+    const positionsPerBladeInput = document.getElementById('id_positions_per_blade');
+
+    function updateTotalCells() {
+        const blades = parseInt(totalBladesInput.value) || 0;
+        const positions = parseInt(positionsPerBladeInput.value) || 0;
+        const total = blades * positions;
+        // Could display this somewhere if needed
+    }
+
+    if (totalBladesInput && positionsPerBladeInput) {
+        totalBladesInput.addEventListener('change', updateTotalCells);
+        positionsPerBladeInput.addEventListener('change', updateTotalCells);
+    }
+});
+</script>
+{% endblock %}

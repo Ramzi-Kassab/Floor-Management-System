@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Thread Inspection - {{ session.serial_unit.serial_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inspection-card {
+        border-left: 4px solid #667eea;
+    }
+    .result-badge {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    .history-item {
+        border-left: 3px solid #dee2e6;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+    }
+    .history-item.OK { border-color: #28a745; }
+    .history-item.MINOR_DAMAGE { border-color: #ffc107; }
+    .history-item.MAJOR_DAMAGE { border-color: #fd7e14; }
+    .history-item.REPAIRABLE { border-color: #17a2b8; }
+    .history-item.SCRAP { border-color: #dc3545; }
+    .measurement-group {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-2 px-4 bg-light">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:dashboard' %}">Evaluation</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'evaluation:session_detail' session.public_id %}">{{ session.serial_unit.serial_number }}</a></li>
+        <li class="breadcrumb-item active">Thread Inspection</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm inspection-card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-gear-wide-connected me-2"></i>
+                        Thread Inspection Form
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="threadInspectionForm">
+                        {% csrf_token %}
+
+                        <!-- Thread Identification -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Thread Type</label>
+                                <select class="form-select" name="thread_type" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="API_REG" {% if inspection.thread_type == 'API_REG' %}selected{% endif %}>API Regular</option>
+                                    <option value="API_IF" {% if inspection.thread_type == 'API_IF' %}selected{% endif %}>API Internal Flush</option>
+                                    <option value="API_FH" {% if inspection.thread_type == 'API_FH' %}selected{% endif %}>API Full Hole</option>
+                                    <option value="API_NC" {% if inspection.thread_type == 'API_NC' %}selected{% endif %}>API Numbered Connection</option>
+                                    <option value="HT" {% if inspection.thread_type == 'HT' %}selected{% endif %}>Hi-Torque</option>
+                                    <option value="OTHER" {% if inspection.thread_type == 'OTHER' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Connection Type</label>
+                                <select class="form-select" name="connection_type" required>
+                                    <option value="PIN" {% if inspection.connection_type == 'PIN' %}selected{% endif %}>Pin (Male)</option>
+                                    <option value="BOX" {% if inspection.connection_type == 'BOX' %}selected{% endif %}>Box (Female)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Thread Size</label>
+                                <input type="text" class="form-control" name="thread_size"
+                                       value="{{ inspection.thread_size|default:'' }}"
+                                       placeholder="e.g., 4-1/2 REG">
+                            </div>
+                        </div>
+
+                        <!-- Inspection Result -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Inspection Result <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-lg" name="result" required id="resultSelect">
+                                <option value="">-- Select Result --</option>
+                                <option value="OK" {% if inspection.result == 'OK' %}selected{% endif %}>OK - No Issues</option>
+                                <option value="MINOR_DAMAGE" {% if inspection.result == 'MINOR_DAMAGE' %}selected{% endif %}>Minor Damage - Acceptable</option>
+                                <option value="MAJOR_DAMAGE" {% if inspection.result == 'MAJOR_DAMAGE' %}selected{% endif %}>Major Damage - Needs Attention</option>
+                                <option value="REPAIRABLE" {% if inspection.result == 'REPAIRABLE' %}selected{% endif %}>Repairable</option>
+                                <option value="SCRAP" {% if inspection.result == 'SCRAP' %}selected{% endif %}>Scrap - Beyond Repair</option>
+                            </select>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Detailed Description</label>
+                            <textarea class="form-control" name="description" rows="4"
+                                      placeholder="Describe the condition of the threads, any damage observed, etc.">{{ inspection.description|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Thread Conditions -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Thread Crest Condition</label>
+                                <input type="text" class="form-control" name="thread_crest_condition"
+                                       value="{{ inspection.thread_crest_condition|default:'' }}"
+                                       placeholder="e.g., Good, Worn, Damaged">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Thread Root Condition</label>
+                                <input type="text" class="form-control" name="thread_root_condition"
+                                       value="{{ inspection.thread_root_condition|default:'' }}"
+                                       placeholder="e.g., Good, Corroded">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Shoulder Condition</label>
+                                <input type="text" class="form-control" name="shoulder_condition"
+                                       value="{{ inspection.shoulder_condition|default:'' }}"
+                                       placeholder="e.g., Good, Scored">
+                            </div>
+                        </div>
+
+                        <!-- Observations -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="galling_observed"
+                                           id="gallingCheck" {% if inspection.galling_observed %}checked{% endif %}>
+                                    <label class="form-check-label" for="gallingCheck">
+                                        <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                                        Galling Observed
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="corrosion_observed"
+                                           id="corrosionCheck" {% if inspection.corrosion_observed %}checked{% endif %}>
+                                    <label class="form-check-label" for="corrosionCheck">
+                                        <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                                        Corrosion Observed
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Measurements -->
+                        <div class="measurement-group">
+                            <h6 class="mb-3"><i class="bi bi-rulers me-2"></i>Thread Measurements</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Pitch Diameter (in)</label>
+                                    <input type="number" class="form-control" name="pitch_diameter"
+                                           step="0.0001" value="{{ measurements.pitch_diameter|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Lead (TPI)</label>
+                                    <input type="number" class="form-control" name="lead"
+                                           step="0.01" value="{{ measurements.lead|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Taper (in/ft)</label>
+                                    <input type="number" class="form-control" name="taper"
+                                           step="0.0001" value="{{ measurements.taper|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Standoff (in)</label>
+                                    <input type="number" class="form-control" name="standoff"
+                                           step="0.001" value="{{ measurements.standoff|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Thread Height (in)</label>
+                                    <input type="number" class="form-control" name="thread_height"
+                                           step="0.0001" value="{{ measurements.thread_height|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">OD (in)</label>
+                                    <input type="number" class="form-control" name="od"
+                                           step="0.001" value="{{ measurements.od|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">ID (in)</label>
+                                    <input type="number" class="form-control" name="id"
+                                           step="0.001" value="{{ measurements.id|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Length (in)</label>
+                                    <input type="number" class="form-control" name="length"
+                                           step="0.01" value="{{ measurements.length|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Repair Recommendation -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Repair Recommendation</label>
+                            <textarea class="form-control" name="repair_recommendation" rows="3"
+                                      placeholder="Recommended repair actions, if any...">{{ inspection.repair_recommendation|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Repair Actions -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="requires_recut"
+                                           id="recutCheck" {% if inspection.requires_recut %}checked{% endif %}>
+                                    <label class="form-check-label" for="recutCheck">
+                                        <i class="bi bi-tools text-primary me-1"></i>
+                                        Requires Thread Recut
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="requires_replacement"
+                                           id="replacementCheck" {% if inspection.requires_replacement %}checked{% endif %}>
+                                    <label class="form-check-label" for="replacementCheck">
+                                        <i class="bi bi-arrow-repeat text-danger me-1"></i>
+                                        Requires Connection Replacement
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'evaluation:session_detail' session.public_id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Session
+                            </a>
+                            <div>
+                                <button type="submit" name="action" value="save" class="btn btn-primary">
+                                    <i class="bi bi-save me-1"></i> Save Inspection
+                                </button>
+                                <button type="submit" name="action" value="save_and_continue" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-1"></i> Save & Continue
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar - History & Info -->
+        <div class="col-lg-4">
+            <!-- Current Status -->
+            {% if inspection.pk %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Current Status</h5>
+                </div>
+                <div class="card-body text-center">
+                    <span class="badge result-badge bg-{% if inspection.result == 'OK' %}success{% elif inspection.result == 'MINOR_DAMAGE' %}warning{% elif inspection.result == 'MAJOR_DAMAGE' %}danger{% elif inspection.result == 'REPAIRABLE' %}info{% else %}dark{% endif %}">
+                        {{ inspection.get_result_display }}
+                    </span>
+                    <p class="text-muted mt-2 mb-0">
+                        Inspected by: {{ inspection.inspected_by }}<br>
+                        <small>{{ inspection.inspected_at|date:"M d, Y H:i" }}</small>
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Previous Inspections -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Inspection History</h5>
+                </div>
+                <div class="card-body">
+                    {% if previous_inspections %}
+                        {% for prev in previous_inspections %}
+                        <div class="history-item {{ prev.result }}">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ prev.get_result_display }}</strong>
+                                <small class="text-muted">{{ prev.inspected_at|date:"M d, Y" }}</small>
+                            </div>
+                            <small class="text-muted">
+                                {{ prev.connection_type }} - {{ prev.thread_type }}<br>
+                                By: {{ prev.inspected_by }}
+                            </small>
+                            {% if prev.description %}
+                            <p class="mt-1 mb-0 small">{{ prev.description|truncatewords:20 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center mb-0">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            No previous inspections found.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Visual feedback on result selection
+    const resultSelect = document.getElementById('resultSelect');
+    resultSelect.addEventListener('change', function() {
+        const value = this.value;
+        const colors = {
+            'OK': '#d4edda',
+            'MINOR_DAMAGE': '#fff3cd',
+            'MAJOR_DAMAGE': '#f8d7da',
+            'REPAIRABLE': '#d1ecf1',
+            'SCRAP': '#d6d8d9'
+        };
+
+        this.style.backgroundColor = colors[value] || '';
+    });
+
+    // Trigger initial color
+    if (resultSelect.value) {
+        resultSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

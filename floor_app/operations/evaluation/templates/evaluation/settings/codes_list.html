@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Cutter Evaluation Codes - Settings - Evaluation{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="container-fluid mt-3">
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Evaluation Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'evaluation:settings_dashboard' %}">Settings</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-code-square"></i> Cutter Evaluation Codes
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-code-square text-primary"></i> Cutter Evaluation Codes
+            </h2>
+            <p class="text-muted">Manage cutter evaluation codes and their properties</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'evaluation:code_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Add New Code
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="get" action="{% url 'evaluation:codes_list' %}" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text"
+                           class="form-control"
+                           name="search"
+                           placeholder="Search by code or name..."
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" name="is_active">
+                        <option value="">All Status</option>
+                        <option value="true" {% if request.GET.is_active == "true" %}selected{% endif %}>Active Only</option>
+                        <option value="false" {% if request.GET.is_active == "false" %}selected{% endif %}>Inactive Only</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                        <a href="{% url 'evaluation:codes_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Codes Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0">
+                <i class="bi bi-list"></i> Cutter Codes ({{ codes.count }})
+            </h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 100px;">Code</th>
+                        <th>Name</th>
+                        <th style="width: 150px;">Action</th>
+                        <th style="width: 120px;">Color</th>
+                        <th style="width: 100px;">Is Active</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for code in codes %}
+                    <tr>
+                        <td class="fw-semibold text-primary">{{ code.code }}</td>
+                        <td>
+                            <strong>{{ code.name }}</strong>
+                            {% if code.description %}
+                            <br>
+                            <small class="text-muted">{{ code.description|truncatewords:10 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if code.action %}
+                            <span class="badge bg-info">{{ code.action }}</span>
+                            {% else %}
+                            <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div style="width: 24px; height: 24px; background-color: {{ code.color|default:'#cccccc' }}; border-radius: 4px; border: 1px solid #dee2e6;" class="me-2"></div>
+                                <small class="text-muted">{{ code.color|default:"N/A" }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if code.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-x-circle"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'evaluation:code_edit' code.id %}"
+                                   class="btn btn-outline-primary"
+                                   data-bs-toggle="tooltip"
+                                   title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button"
+                                        class="btn btn-outline-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal"
+                                        data-id="{{ code.id }}"
+                                        data-name="{{ code.name }}"
+                                        title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox"></i> No cutter codes found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Footer with Pagination -->
+        {% if is_paginated %}
+        <div class="card-footer bg-light border-top">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10 border-danger">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Delete Cutter Code?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the cutter code <strong id="codeName"></strong>?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="#" id="deleteForm" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const codeId = button.getAttribute('data-id');
+        const codeName = button.getAttribute('data-name');
+        document.getElementById('codeName').textContent = codeName;
+        const deleteForm = document.getElementById('deleteForm');
+        deleteForm.action = `/evaluation/settings/codes/${codeId}/delete/`;
+    });
+});
+</script>
+
+<style>
+.table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

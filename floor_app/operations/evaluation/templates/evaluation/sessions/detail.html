@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Evaluation Session {{ session.public_id.hex|slice:":8"|upper }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .session-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .session-id-large {
+        font-family: monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        background: rgba(255,255,255,0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+    }
+
+    .status-badge-large {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .status-draft { background: #e2e8f0; color: #475569; }
+    .status-under_review { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-locked { background: #dbeafe; color: #1e40af; }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        height: 100%;
+    }
+
+    .info-card h6 {
+        color: #6366f1;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #6366f1;
+    }
+
+    .info-item {
+        margin-bottom: 0.75rem;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+    }
+
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    .stat-box {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .stat-box .value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .stat-box .label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+        border: none;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #6366f1;
+        border-bottom: 3px solid #6366f1;
+        background: transparent;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-color: transparent;
+        color: #6366f1;
+    }
+
+    .tab-content {
+        background: white;
+        border-radius: 0 0 10px 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .action-btn {
+        min-width: 140px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'evaluation:dashboard' %}">Evaluation</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'evaluation:session_list' %}">Sessions</a></li>
+            <li class="breadcrumb-item active">{{ session.public_id.hex|slice:":8"|upper }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Session Header -->
+    <div class="session-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="session-id-large">{{ session.public_id.hex|slice:":8"|upper }}</span>
+                    <span class="status-badge-large status-{{ session.status|lower }}">
+                        <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                        {{ session.get_status_display }}
+                    </span>
+                </div>
+                <h4 class="mb-1">{{ session.serial_unit.serial_number }}</h4>
+                <p class="mb-0 opacity-75">
+                    MAT: {{ session.mat_revision.revision_code|default:"N/A" }} |
+                    Context: {{ session.get_context_display }}
+                </p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                {% if session.status == 'DRAFT' %}
+                <a href="{% url 'evaluation:session_submit' session.pk %}" class="btn btn-warning action-btn">
+                    <i class="bi bi-send me-1"></i> Submit for Review
+                </a>
+                {% elif session.status == 'UNDER_REVIEW' %}
+                <a href="{% url 'evaluation:session_approve' session.pk %}" class="btn btn-success action-btn">
+                    <i class="bi bi-check-circle me-1"></i> Approve
+                </a>
+                {% elif session.status == 'APPROVED' %}
+                <a href="{% url 'evaluation:session_lock' session.pk %}" class="btn btn-info action-btn">
+                    <i class="bi bi-lock me-1"></i> Lock
+                </a>
+                {% endif %}
+
+                {% if session.is_editable %}
+                <a href="{% url 'evaluation:session_edit' session.pk %}" class="btn btn-light action-btn">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+                {% endif %}
+
+                <a href="{% url 'evaluation:session_print' session.pk %}" class="btn btn-outline-light action-btn" target="_blank">
+                    <i class="bi bi-printer me-1"></i> Print
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="stat-box">
+                <div class="value">{{ session.total_cells }}</div>
+                <div class="label">Total Cells</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-box">
+                <div class="value text-success">{{ session.ok_count }}</div>
+                <div class="label">OK (O)</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-box">
+                <div class="value text-danger">{{ session.replace_count }}</div>
+                <div class="label">Replace (X)</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-box">
+                <div class="value text-warning">{{ session.braze_count }}</div>
+                <div class="label">Braze Fill (S)</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-box">
+                <div class="value text-info">{{ session.rotate_count }}</div>
+                <div class="label">Rotate (R)</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-box">
+                <div class="value text-purple" style="color: #800080;">{{ session.lost_count }}</div>
+                <div class="label">Lost (L)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabbed Interface -->
+    <ul class="nav nav-tabs" id="sessionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                <i class="bi bi-info-circle me-1"></i> Overview
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="cutter-tab" data-bs-toggle="tab" data-bs-target="#cutter" type="button" role="tab">
+                <i class="bi bi-grid-3x3 me-1"></i> Cutter Grid
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="thread-tab" data-bs-toggle="tab" data-bs-target="#thread" type="button" role="tab">
+                <i class="bi bi-nut me-1"></i> Thread
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ndt-tab" data-bs-toggle="tab" data-bs-target="#ndt" type="button" role="tab">
+                <i class="bi bi-search me-1"></i> NDT
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="instructions-tab" data-bs-toggle="tab" data-bs-target="#instructions" type="button" role="tab">
+                <i class="bi bi-list-task me-1"></i> Instructions
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="requirements-tab" data-bs-toggle="tab" data-bs-target="#requirements" type="button" role="tab">
+                <i class="bi bi-check2-square me-1"></i> Requirements
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+                <i class="bi bi-clock-history me-1"></i> History
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="sessionTabContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <h6><i class="bi bi-clipboard-data me-2"></i>Evaluation Details</h6>
+                        <div class="info-item">
+                            <div class="info-label">Context</div>
+                            <div class="info-value">{{ session.get_context_display }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Customer</div>
+                            <div class="info-value">{{ session.customer_name|default:"Not specified" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Project</div>
+                            <div class="info-value">{{ session.project_name|default:"Not specified" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Health Score</div>
+                            <div class="info-value">
+                                <span class="badge {% if session.health_score >= 80 %}bg-success{% elif session.health_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ session.health_score }}%
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Damage Percentage</div>
+                            <div class="info-value">{{ session.damage_percentage }}%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <h6><i class="bi bi-people me-2"></i>Personnel & Dates</h6>
+                        <div class="info-item">
+                            <div class="info-label">Evaluator</div>
+                            <div class="info-value">{{ session.evaluator.full_name|default:"Not assigned" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Reviewing Engineer</div>
+                            <div class="info-value">{{ session.reviewing_engineer.full_name|default:"Not assigned" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Created</div>
+                            <div class="info-value">{{ session.created_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Submitted</div>
+                            <div class="info-value">{{ session.submitted_at|date:"M d, Y H:i"|default:"Not submitted" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Approved</div>
+                            <div class="info-value">{{ session.approved_at|date:"M d, Y H:i"|default:"Not approved" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Locked</div>
+                            <div class="info-value">{{ session.locked_at|date:"M d, Y H:i"|default:"Not locked" }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="info-card">
+                        <h6><i class="bi bi-card-text me-2"></i>Notes & Recommendations</h6>
+                        <div class="info-item">
+                            <div class="info-label">General Notes</div>
+                            <div class="info-value">{{ session.general_notes|default:"No notes"|linebreaksbr }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Wear Pattern Notes</div>
+                            <div class="info-value">{{ session.wear_pattern_notes|default:"No notes"|linebreaksbr }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Damage Assessment</div>
+                            <div class="info-value">{{ session.damage_assessment|default:"No assessment"|linebreaksbr }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Recommendations</div>
+                            <div class="info-value">{{ session.recommendations|default:"No recommendations"|linebreaksbr }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cutter Grid Tab -->
+        <div class="tab-pane fade" id="cutter" role="tabpanel">
+            <div class="text-center py-5">
+                <i class="bi bi-grid-3x3 display-4 text-muted"></i>
+                <p class="text-muted mt-2">Cutter grid evaluation interface will be displayed here.</p>
+                <p class="text-muted">Interactive grid showing blade positions and cutter evaluations.</p>
+            </div>
+        </div>
+
+        <!-- Thread Tab -->
+        <div class="tab-pane fade" id="thread" role="tabpanel">
+            <div class="text-center py-5">
+                <i class="bi bi-nut display-4 text-muted"></i>
+                <p class="text-muted mt-2">Thread inspection results will be displayed here.</p>
+                <p class="text-muted">Pin and box thread measurements and condition assessment.</p>
+            </div>
+        </div>
+
+        <!-- NDT Tab -->
+        <div class="tab-pane fade" id="ndt" role="tabpanel">
+            <div class="text-center py-5">
+                <i class="bi bi-search display-4 text-muted"></i>
+                <p class="text-muted mt-2">NDT inspection results will be displayed here.</p>
+                <p class="text-muted">Non-destructive testing findings and dimensional checks.</p>
+            </div>
+        </div>
+
+        <!-- Instructions Tab -->
+        <div class="tab-pane fade" id="instructions" role="tabpanel">
+            <div class="text-center py-5">
+                <i class="bi bi-list-task display-4 text-muted"></i>
+                <p class="text-muted mt-2">Technical instructions will be displayed here.</p>
+                <p class="text-muted">Auto-generated and manual technical instructions for this evaluation.</p>
+            </div>
+        </div>
+
+        <!-- Requirements Tab -->
+        <div class="tab-pane fade" id="requirements" role="tabpanel">
+            <div class="text-center py-5">
+                <i class="bi bi-check2-square display-4 text-muted"></i>
+                <p class="text-muted mt-2">Requirements checklist will be displayed here.</p>
+                <p class="text-muted">Mandatory requirements and approvals for this evaluation.</p>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-pane fade" id="history" role="tabpanel">
+            <div class="text-center py-5">
+                <i class="bi bi-clock-history display-4 text-muted"></i>
+                <p class="text-muted mt-2">Audit history will be displayed here.</p>
+                <p class="text-muted">Complete change log and workflow history for this session.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preserve active tab on page reload
+    const hash = window.location.hash;
+    if (hash) {
+        const tab = document.querySelector(`button[data-bs-target="${hash}"]`);
+        if (tab) {
+            const tabInstance = new bootstrap.Tab(tab);
+            tabInstance.show();
+        }
+    }
+
+    // Update URL hash when tab changes
+    const tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabButtons.forEach(function(button) {
+        button.addEventListener('shown.bs.tab', function(event) {
+            const targetId = event.target.getAttribute('data-bs-target');
+            history.replaceState(null, null, targetId);
+        });
+    });
+});
+</script>
+{% endblock %}

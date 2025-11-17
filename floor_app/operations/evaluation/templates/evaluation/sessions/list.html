@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Evaluation Sessions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .session-table th {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .session-id {
+        font-family: monospace;
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .status-draft {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .status-under_review {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-locked {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .context-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+        background: #f0f0f0;
+        color: #333;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'evaluation:dashboard' %}">Evaluation</a></li>
+            <li class="breadcrumb-item active">Evaluation Sessions</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-clipboard-check text-primary me-2"></i>
+                        Evaluation Sessions
+                    </h2>
+                    <p class="text-muted mb-0">Manage PDC bit evaluation sessions and technical assessments</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'evaluation:session_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Session
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                            <option value="UNDER_REVIEW" {% if request.GET.status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
+                            <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                            <option value="LOCKED" {% if request.GET.status == 'LOCKED' %}selected{% endif %}>Locked</option>
+                        </select>
+                        <label for="status">Status</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="context" name="context">
+                            <option value="">All Contexts</option>
+                            <option value="NEW_BIT" {% if request.GET.context == 'NEW_BIT' %}selected{% endif %}>New Bit Production</option>
+                            <option value="AFTER_RUN" {% if request.GET.context == 'AFTER_RUN' %}selected{% endif %}>After Run</option>
+                            <option value="REPAIR_INTAKE" {% if request.GET.context == 'REPAIR_INTAKE' %}selected{% endif %}>Repair Intake</option>
+                            <option value="POST_REPAIR" {% if request.GET.context == 'POST_REPAIR' %}selected{% endif %}>Post-Repair</option>
+                            <option value="RECLAIM_ONLY" {% if request.GET.context == 'RECLAIM_ONLY' %}selected{% endif %}>Reclaim Only</option>
+                            <option value="RETROFIT_INTENT" {% if request.GET.context == 'RETROFIT_INTENT' %}selected{% endif %}>Retrofit Intent</option>
+                        </select>
+                        <label for="context">Context</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="customer" name="customer"
+                               value="{{ request.GET.customer }}" placeholder="Customer">
+                        <label for="customer">Customer</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="date_from" name="date_from"
+                               value="{{ request.GET.date_from }}">
+                        <label for="date_from">Date From</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="date_to" name="date_to"
+                               value="{{ request.GET.date_to }}">
+                        <label for="date_to">Date To</label>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-10">
+                    <select class="form-select" id="evaluator" name="evaluator">
+                        <option value="">All Evaluators</option>
+                        {% for evaluator in evaluators %}
+                        <option value="{{ evaluator.pk }}" {% if request.GET.evaluator == evaluator.pk|stringformat:"i" %}selected{% endif %}>
+                            {{ evaluator.full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sessions Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover session-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Session #</th>
+                            <th>Serial Number</th>
+                            <th>MAT</th>
+                            <th>Context</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Evaluator</th>
+                            <th>Created</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'evaluation:session_detail' session.pk %}" class="text-decoration-none">
+                                    <span class="session-id">{{ session.public_id.hex|slice:":8"|upper }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'evaluation:session_detail' session.pk %}" class="text-decoration-none text-dark">
+                                    <strong>{{ session.serial_unit.serial_number }}</strong>
+                                </a>
+                            </td>
+                            <td>{{ session.mat_revision.revision_code|default:"-" }}</td>
+                            <td>
+                                <span class="context-badge">
+                                    {{ session.get_context_display }}
+                                </span>
+                            </td>
+                            <td>{{ session.customer_name|default:"-" }}</td>
+                            <td>
+                                <span class="status-badge status-{{ session.status|lower }}">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.4rem;"></i>
+                                    {{ session.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ session.evaluator.full_name|default:"-" }}</td>
+                            <td>{{ session.created_at|date:"Y-m-d H:i" }}</td>
+                            <td class="action-buttons">
+                                <a href="{% url 'evaluation:session_detail' session.pk %}"
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if session.is_editable %}
+                                <a href="{% url 'evaluation:session_edit' session.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No evaluation sessions found</p>
+                                <a href="{% url 'evaluation:session_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First Session
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if sessions.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if sessions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ sessions.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.context %}&context={{ request.GET.context }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.evaluator %}&evaluator={{ request.GET.evaluator }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in sessions.paginator.page_range %}
+                        {% if num == sessions.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > sessions.number|add:'-3' and num < sessions.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.context %}&context={{ request.GET.context }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.evaluator %}&evaluator={{ request.GET.evaluator }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if sessions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ sessions.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.context %}&context={{ request.GET.context }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.evaluator %}&evaluator={{ request.GET.evaluator }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "evaluation:session_list" %}';
+}
+</script>
+{% endblock %}
