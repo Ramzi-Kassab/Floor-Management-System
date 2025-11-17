@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inventory Transactions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .txn-table th {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .txn-number {
+        font-family: monospace;
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    .type-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .type-receipt { background: #d4edda; color: #155724; }
+    .type-issue { background: #f8d7da; color: #721c24; }
+    .type-transfer { background: #cce5ff; color: #004085; }
+    .type-adjustment { background: #fff3cd; color: #856404; }
+    .type-scrap { background: #f5c6cb; color: #721c24; }
+    .type-condition_change { background: #d1ecf1; color: #0c5460; }
+    .type-ownership_change { background: #e2e3e5; color: #383d41; }
+    .type-reserve { background: #d6d8d9; color: #1b1e21; }
+    .type-unreserve { background: #fefefe; color: #818182; }
+    .type-retrofit { background: #c3e6cb; color: #155724; }
+    .type-production { background: #b8daff; color: #004085; }
+    .type-consumption { background: #ffeeba; color: #856404; }
+    .type-return { background: #bee5eb; color: #0c5460; }
+    .type-reclassification { background: #fdfdfe; color: #818182; }
+
+    .qty-positive {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .qty-negative {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .reversed-badge {
+        background: #ffc107;
+        color: #212529;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .location-flow {
+        font-size: 0.85rem;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item active">Transactions</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-arrow-left-right text-primary me-2"></i>
+                        Inventory Transactions
+                    </h2>
+                    <p class="text-muted mb-0">Track all inventory movements and state changes</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:transaction_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>New Transaction
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search by Transaction#, Item SKU, or Serial Number</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select class="form-select" id="type" name="type">
+                            <option value="">All Types</option>
+                            <option value="RECEIPT" {% if request.GET.type == 'RECEIPT' %}selected{% endif %}>Receipt</option>
+                            <option value="ISSUE" {% if request.GET.type == 'ISSUE' %}selected{% endif %}>Issue</option>
+                            <option value="TRANSFER" {% if request.GET.type == 'TRANSFER' %}selected{% endif %}>Transfer</option>
+                            <option value="ADJUSTMENT" {% if request.GET.type == 'ADJUSTMENT' %}selected{% endif %}>Adjustment</option>
+                            <option value="SCRAP" {% if request.GET.type == 'SCRAP' %}selected{% endif %}>Scrap/Disposal</option>
+                            <option value="CONDITION_CHANGE" {% if request.GET.type == 'CONDITION_CHANGE' %}selected{% endif %}>Condition Change</option>
+                            <option value="OWNERSHIP_CHANGE" {% if request.GET.type == 'OWNERSHIP_CHANGE' %}selected{% endif %}>Ownership Transfer</option>
+                            <option value="RESERVE" {% if request.GET.type == 'RESERVE' %}selected{% endif %}>Reserve Stock</option>
+                            <option value="UNRESERVE" {% if request.GET.type == 'UNRESERVE' %}selected{% endif %}>Unreserve Stock</option>
+                            <option value="RETROFIT" {% if request.GET.type == 'RETROFIT' %}selected{% endif %}>Retrofit</option>
+                            <option value="PRODUCTION" {% if request.GET.type == 'PRODUCTION' %}selected{% endif %}>Production Output</option>
+                            <option value="CONSUMPTION" {% if request.GET.type == 'CONSUMPTION' %}selected{% endif %}>Production Consumption</option>
+                            <option value="RETURN" {% if request.GET.type == 'RETURN' %}selected{% endif %}>Return to Stock</option>
+                            <option value="RECLASSIFICATION" {% if request.GET.type == 'RECLASSIFICATION' %}selected{% endif %}>Reclassification</option>
+                        </select>
+                        <label for="type">Transaction Type</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover txn-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Transaction#</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Item/Serial</th>
+                            <th>Quantity</th>
+                            <th>From / To Location</th>
+                            <th>Reference</th>
+                            <th>Status</th>
+                            <th width="80">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in transactions %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'inventory:transaction_detail' txn.pk %}" class="text-decoration-none">
+                                    <span class="txn-number">{{ txn.transaction_number }}</span>
+                                </a>
+                            </td>
+                            <td>{{ txn.transaction_date|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <span class="type-badge type-{{ txn.transaction_type|lower }}">
+                                    {{ txn.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if txn.serial_unit %}
+                                <code>{{ txn.serial_unit.serial_number }}</code>
+                                <br>
+                                <small class="text-muted">{{ txn.serial_unit.item.sku }}</small>
+                                {% elif txn.item %}
+                                <code>{{ txn.item.sku }}</code>
+                                <br>
+                                <small class="text-muted">{{ txn.item.name|truncatechars:30 }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if txn.quantity >= 0 %}
+                                <span class="qty-positive">+{{ txn.quantity }}</span>
+                                {% else %}
+                                <span class="qty-negative">{{ txn.quantity }}</span>
+                                {% endif %}
+                                {% if txn.uom %}
+                                <small class="text-muted">{{ txn.uom.code }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="location-flow">
+                                {% if txn.from_location or txn.to_location %}
+                                {{ txn.from_location.code|default:"-" }}
+                                <i class="bi bi-arrow-right mx-1"></i>
+                                {{ txn.to_location.code|default:"-" }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if txn.reference_type %}
+                                <small>
+                                    <strong>{{ txn.reference_type }}</strong>
+                                    {% if txn.reference_id %}
+                                    <br>{{ txn.reference_id }}
+                                    {% endif %}
+                                </small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if txn.is_reversed %}
+                                <span class="reversed-badge">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>REVERSED
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success">Active</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'inventory:transaction_detail' txn.pk %}"
+                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No transactions found</p>
+                                <a href="{% url 'inventory:transaction_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First Transaction
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if transactions.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if transactions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in transactions.paginator.page_range %}
+                        {% if num == transactions.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if transactions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ transactions.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clear filters
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "inventory:transaction_list" %}';
+}
+</script>
+{% endblock %}

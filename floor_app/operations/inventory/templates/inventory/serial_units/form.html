@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Serial Unit{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .required-field label::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .btn-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 1rem;
+        border-top: 1px solid #e9ecef;
+        border-radius: 0 0 10px 10px;
+        margin: -2rem -2rem 0 -2rem;
+        padding: 1rem 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:serialunit_list' %}">Serial Units</a></li>
+            <li class="breadcrumb-item active">
+                {% if form.instance.pk %}Edit {{ form.instance.serial_number }}{% else %}Create New{% endif %}
+            </li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Form Header -->
+    <div class="form-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-upc-scan me-2"></i>
+                    {% if form.instance.pk %}
+                    Edit Serial Unit
+                    {% else %}
+                    Create New Serial Unit
+                    {% endif %}
+                </h2>
+                <p class="mb-0 opacity-90">
+                    {% if form.instance.pk %}
+                    Update information for {{ form.instance.serial_number }}
+                    {% else %}
+                    Register a new serialized inventory unit
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Display non-field errors -->
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <p class="mb-0">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-lg-6">
+                <!-- Core Identification -->
+                <div class="form-card">
+                    <h5 class="card-title">
+                        <i class="bi bi-fingerprint me-2"></i>
+                        Core Identification
+                    </h5>
+
+                    <div class="mb-3 required-field">
+                        <label for="{{ form.item.id_for_label }}" class="form-label">Item</label>
+                        {% render_field form.item class="form-select" %}
+                        {% if form.item.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.item.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Select the item master record this unit belongs to (must be serialized)</small>
+                    </div>
+
+                    <div class="mb-3 required-field">
+                        <label for="{{ form.serial_number.id_for_label }}" class="form-label">Serial Number</label>
+                        {% render_field form.serial_number class="form-control" placeholder="e.g., PDC-2024-00123" %}
+                        {% if form.serial_number.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.serial_number.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Unique serial number for this physical unit</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.current_mat.id_for_label }}" class="form-label">Current MAT Revision</label>
+                        {% render_field form.current_mat class="form-select" %}
+                        {% if form.current_mat.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.current_mat.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Current MAT revision (may differ from Item after retrofit)</small>
+                    </div>
+                </div>
+
+                <!-- Current State -->
+                <div class="form-card">
+                    <h5 class="card-title">
+                        <i class="bi bi-toggles me-2"></i>
+                        Current State
+                    </h5>
+
+                    <div class="mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                        {% render_field form.location class="form-select" %}
+                        {% if form.location.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.location.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Current physical location of the unit</small>
+                    </div>
+
+                    <div class="mb-3 required-field">
+                        <label for="{{ form.condition.id_for_label }}" class="form-label">Condition</label>
+                        {% render_field form.condition class="form-select" %}
+                        {% if form.condition.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.condition.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Current physical condition of the unit</small>
+                    </div>
+
+                    <div class="mb-3 required-field">
+                        <label for="{{ form.ownership.id_for_label }}" class="form-label">Ownership</label>
+                        {% render_field form.ownership class="form-select" %}
+                        {% if form.ownership.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.ownership.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Current ownership (ARDT, ENO, customer, etc.)</small>
+                    </div>
+
+                    <div class="mb-3 required-field">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                        {% render_field form.status class="form-select" %}
+                        {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.status.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Current status of the unit</small>
+                    </div>
+                </div>
+
+                <!-- Lifecycle Dates -->
+                <div class="form-card">
+                    <h5 class="card-title">
+                        <i class="bi bi-calendar3 me-2"></i>
+                        Lifecycle Dates
+                    </h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.manufacture_date.id_for_label }}" class="form-label">Manufacture Date</label>
+                            {% render_field form.manufacture_date class="form-control" type="date" %}
+                            {% if form.manufacture_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.manufacture_date.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.received_date.id_for_label }}" class="form-label">Received Date</label>
+                            {% render_field form.received_date class="form-control" type="date" %}
+                            {% if form.received_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.received_date.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_run_date.id_for_label }}" class="form-label">Last Run Date</label>
+                            {% render_field form.last_run_date class="form-control" type="date" %}
+                            {% if form.last_run_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.last_run_date.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.warranty_expiry.id_for_label }}" class="form-label">Warranty Expiry</label>
+                            {% render_field form.warranty_expiry class="form-control" type="date" %}
+                            {% if form.warranty_expiry.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.warranty_expiry.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-6">
+                <!-- Cost Information -->
+                <div class="form-card">
+                    <h5 class="card-title">
+                        <i class="bi bi-currency-dollar me-2"></i>
+                        Cost Information
+                    </h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.acquisition_cost.id_for_label }}" class="form-label">Acquisition Cost</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {% render_field form.acquisition_cost class="form-control" placeholder="0.00" %}
+                            </div>
+                            {% if form.acquisition_cost.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.acquisition_cost.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text">Original acquisition cost</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.current_book_value.id_for_label }}" class="form-label">Current Book Value</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {% render_field form.current_book_value class="form-control" placeholder="0.00" %}
+                            </div>
+                            {% if form.current_book_value.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.current_book_value.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text">Current book value after depreciation</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer / Job Information -->
+                <div class="form-card">
+                    <h5 class="card-title">
+                        <i class="bi bi-briefcase me-2"></i>
+                        Customer / Job Information
+                    </h5>
+
+                    <div class="mb-3">
+                        <label for="{{ form.current_customer.id_for_label }}" class="form-label">Current Customer</label>
+                        {% render_field form.current_customer class="form-control" placeholder="Customer name" %}
+                        {% if form.current_customer.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.current_customer.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Current customer using this unit</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.current_job_reference.id_for_label }}" class="form-label">Job Reference</label>
+                        {% render_field form.current_job_reference class="form-control" placeholder="e.g., JOB-2024-001" %}
+                        {% if form.current_job_reference.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.current_job_reference.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text">Current job card or work order reference</small>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-card">
+                    <h5 class="card-title">
+                        <i class="bi bi-sticky me-2"></i>
+                        Notes
+                    </h5>
+
+                    <div class="mb-0">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Additional Notes</label>
+                        {% render_field form.notes class="form-control" rows="5" placeholder="Enter any additional notes about this serial unit..." %}
+                        {% if form.notes.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-card">
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{% if form.instance.pk %}{% url 'inventory:serialunit_detail' form.instance.pk %}{% else %}{% url 'inventory:serialunit_list' %}{% endif %}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {% if form.instance.pk %}Update{% else %}Create{% endif %} Serial Unit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on first empty required field
+    const requiredFields = document.querySelectorAll('.required-field input, .required-field select');
+    for (let field of requiredFields) {
+        if (!field.value) {
+            field.focus();
+            break;
+        }
+    }
+
+    // Add validation classes on blur
+    const formInputs = document.querySelectorAll('input, select, textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

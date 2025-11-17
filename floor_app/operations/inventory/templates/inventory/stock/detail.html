@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Stock Detail - {{ stock.item.sku }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stock-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 160px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-low {
+        background: rgba(220, 53, 69, 0.2);
+        color: white;
+    }
+
+    .status-ok {
+        background: rgba(40, 167, 69, 0.2);
+        color: white;
+    }
+
+    .sku-display {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .qty-highlight {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #6366f1;
+    }
+
+    .qty-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .transaction-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .transaction-table td {
+        font-size: 0.9rem;
+    }
+
+    .badge-condition,
+    .badge-ownership {
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:stock_list' %}">Stock Overview</a></li>
+            <li class="breadcrumb-item active">{{ stock.item.sku }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Stock Header -->
+    <div class="stock-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="sku-display">{{ stock.item.sku }}</span>
+                    {% if stock.is_below_reorder_point %}
+                    <span class="status-badge-large status-low">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Low Stock
+                    </span>
+                    {% else %}
+                    <span class="status-badge-large status-ok">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Stock OK
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="mb-2">{{ stock.item.name }}</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    {% if stock.location %}
+                    <span>
+                        <i class="bi bi-geo-alt me-2"></i>
+                        {{ stock.location.code }}
+                    </span>
+                    {% endif %}
+                    <span class="badge-condition">
+                        <i class="bi bi-shield-check me-1"></i>
+                        {{ stock.condition.name }}
+                    </span>
+                    <span class="badge-ownership">
+                        <i class="bi bi-person-badge me-1"></i>
+                        {{ stock.ownership.name }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:stock_adjust' %}" class="btn btn-light">
+                        <i class="bi bi-sliders me-2"></i>Adjust Stock
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Item Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Item Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">SKU:</span>
+                    <span class="detail-value"><code>{{ stock.item.sku }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ stock.item.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span class="detail-value">
+                        {% if stock.location %}
+                        {{ stock.location.code }} - {{ stock.location.name }}
+                        {% else %}
+                        <span class="text-muted">No location assigned</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Condition:</span>
+                    <span class="detail-value">{{ stock.condition.name }} ({{ stock.condition.code }})</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Ownership:</span>
+                    <span class="detail-value">{{ stock.ownership.name }} ({{ stock.ownership.code }})</span>
+                </div>
+            </div>
+
+            <!-- Quantities -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Quantities
+                </h5>
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="qty-label">On Hand</div>
+                        <div class="qty-highlight">{{ stock.quantity_on_hand|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="qty-label">Reserved</div>
+                        <div class="qty-highlight text-warning">{{ stock.quantity_reserved|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="qty-label">Available</div>
+                        <div class="qty-highlight text-success">{{ stock.quantity_available|floatformat:2 }}</div>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">On Order:</span>
+                    <span class="detail-value">
+                        <strong>{{ stock.quantity_on_order|floatformat:2 }}</strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Reorder Settings -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-arrow-repeat me-2"></i>
+                    Reorder Settings
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Reorder Point:</span>
+                    <span class="detail-value">
+                        {% if stock.reorder_point %}
+                        {{ stock.reorder_point|floatformat:2 }}
+                        {% else %}
+                        <span class="text-muted">Not set (using item default)</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Safety Stock:</span>
+                    <span class="detail-value">
+                        {% if stock.safety_stock %}
+                        {{ stock.safety_stock|floatformat:2 }}
+                        {% else %}
+                        <span class="text-muted">Not set (using item default)</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Cost Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Cost Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Unit Cost:</span>
+                    <span class="detail-value">
+                        {% if stock.unit_cost %}
+                        ${{ stock.unit_cost|floatformat:4 }}
+                        {% else %}
+                        <span class="text-muted">Not set</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Value:</span>
+                    <span class="detail-value">
+                        {% if stock.total_value %}
+                        <strong>${{ stock.total_value|floatformat:2 }}</strong>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Audit Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Audit Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Last Counted:</span>
+                    <span class="detail-value">
+                        {% if stock.last_counted_at %}
+                        {{ stock.last_counted_at|date:"Y-m-d H:i" }}
+                        {% else %}
+                        <span class="text-muted">Never</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Last Movement:</span>
+                    <span class="detail-value">
+                        {% if stock.last_movement_at %}
+                        {{ stock.last_movement_at|date:"Y-m-d H:i" }}
+                        {% else %}
+                        <span class="text-muted">No movements</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value">{{ stock.created_at|date:"Y-m-d H:i" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Updated:</span>
+                    <span class="detail-value">{{ stock.updated_at|date:"Y-m-d H:i" }}</span>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-arrow-left-right me-2"></i>
+                    Recent Transactions
+                </h5>
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-sm transaction-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-end">Quantity</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in recent_transactions %}
+                            <tr>
+                                <td>{{ txn.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ txn.get_transaction_type_display|default:txn.transaction_type }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    {% if txn.quantity > 0 %}
+                                    <span class="text-success">+{{ txn.quantity|floatformat:2 }}</span>
+                                    {% else %}
+                                    <span class="text-danger">{{ txn.quantity|floatformat:2 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ txn.reference|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No recent transactions for this stock record</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any stock detail specific JavaScript here
+</script>
+{% endblock %}

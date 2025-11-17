@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Serial Units - PDC Bits{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .serial-table th {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.65rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-in_stock {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-reserved {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-at_rig {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-under_repair {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-under_inspection {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-in_transit {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .status-scrapped {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-sold {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .status-lost {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .serial-code {
+        font-family: monospace;
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    .sku-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #e9ecef;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-family: monospace;
+    }
+
+    .mat-code {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item active">Serial Units</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-upc-scan text-primary me-2"></i>
+                        Serial Units
+                    </h2>
+                    <p class="text-muted mb-0">Track individual serialized inventory units (PDC bits, tools)</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:serialunit_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Add Serial Unit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search Serial Number / SKU</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Status</option>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label for="status">Status</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="ownership" name="ownership">
+                            <option value="">All Ownership</option>
+                            {% for ownership in ownerships %}
+                            <option value="{{ ownership.id }}" {% if request.GET.ownership == ownership.id|stringformat:"s" %}selected{% endif %}>
+                                {{ ownership.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label for="ownership">Ownership</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="location" name="location">
+                            <option value="">All Locations</option>
+                            {% for location in locations %}
+                            <option value="{{ location.id }}" {% if request.GET.location == location.id|stringformat:"s" %}selected{% endif %}>
+                                {{ location.code }} - {{ location.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label for="location">Location</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Serial Units Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover serial-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Item SKU</th>
+                            <th>Current MAT</th>
+                            <th>Status</th>
+                            <th>Location</th>
+                            <th>Condition</th>
+                            <th>Ownership</th>
+                            <th width="100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for unit in units %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'inventory:serialunit_detail' unit.pk %}" class="text-decoration-none">
+                                    <span class="serial-code">{{ unit.serial_number }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <span class="sku-tag">{{ unit.item.sku }}</span>
+                            </td>
+                            <td>
+                                {% if unit.current_mat %}
+                                <code class="mat-code">{{ unit.current_mat.mat_number }}</code>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ unit.status|lower }}">
+                                    {{ unit.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if unit.location %}
+                                {{ unit.location.code }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ unit.condition|default:"-" }}
+                            </td>
+                            <td>
+                                {{ unit.ownership|default:"-" }}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'inventory:serialunit_detail' unit.pk %}"
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'inventory:serialunit_edit' unit.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No serial units found</p>
+                                <a href="{% url 'inventory:serialunit_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Add First Serial Unit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if units.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if units.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ units.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.ownership %}&ownership={{ request.GET.ownership }}{% endif %}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in units.paginator.page_range %}
+                        {% if num == units.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > units.number|add:'-3' and num < units.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.ownership %}&ownership={{ request.GET.ownership }}{% endif %}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if units.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ units.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.ownership %}&ownership={{ request.GET.ownership }}{% endif %}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clear filters
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "inventory:serialunit_list" %}';
+}
+</script>
+{% endblock %}

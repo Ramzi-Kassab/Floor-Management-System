@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ txn.transaction_number }} - Transaction Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .txn-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 180px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .txn-number-display {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .status-reversed {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .type-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .type-receipt { background: #d4edda; color: #155724; }
+    .type-issue { background: #f8d7da; color: #721c24; }
+    .type-transfer { background: #cce5ff; color: #004085; }
+    .type-adjustment { background: #fff3cd; color: #856404; }
+    .type-scrap { background: #f5c6cb; color: #721c24; }
+    .type-condition_change { background: #d1ecf1; color: #0c5460; }
+    .type-ownership_change { background: #e2e3e5; color: #383d41; }
+    .type-reserve { background: #d6d8d9; color: #1b1e21; }
+    .type-unreserve { background: #fefefe; color: #818182; }
+    .type-retrofit { background: #c3e6cb; color: #155724; }
+    .type-production { background: #b8daff; color: #004085; }
+    .type-consumption { background: #ffeeba; color: #856404; }
+    .type-return { background: #bee5eb; color: #0c5460; }
+    .type-reclassification { background: #fdfdfe; color: #818182; }
+
+    .qty-positive {
+        color: #28a745;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .qty-negative {
+        color: #dc3545;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .from-to-section {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+
+    .from-to-section h6 {
+        color: #495057;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+
+    .arrow-indicator {
+        font-size: 1.5rem;
+        color: #6366f1;
+        text-align: center;
+        margin: 1rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:transaction_list' %}">Transactions</a></li>
+            <li class="breadcrumb-item active">{{ txn.transaction_number }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Transaction Header -->
+    <div class="txn-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="txn-number-display">{{ txn.transaction_number }}</span>
+                    {% if txn.is_reversed %}
+                    <span class="status-badge-large status-reversed">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        REVERSED
+                    </span>
+                    {% else %}
+                    <span class="status-badge-large status-active">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Active
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="mb-2">Transaction Detail</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    <span class="type-badge type-{{ txn.transaction_type|lower }}">
+                        {{ txn.get_transaction_type_display }}
+                    </span>
+                    <span>
+                        <i class="bi bi-calendar me-2"></i>
+                        {{ txn.transaction_date|date:"Y-m-d H:i:s" }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:transaction_list' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                    <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print Transaction</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-pdf me-2"></i>Export PDF</a></li>
+                        {% if not txn.is_reversed %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-warning" href="#"><i class="bi bi-arrow-counterclockwise me-2"></i>Reverse Transaction</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Item/Serial Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Item Information
+                </h5>
+                {% if txn.serial_unit %}
+                <div class="detail-row">
+                    <span class="detail-label">Type:</span>
+                    <span class="detail-value"><span class="badge bg-primary">Serialized Unit</span></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Serial Number:</span>
+                    <span class="detail-value"><code>{{ txn.serial_unit.serial_number }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Item SKU:</span>
+                    <span class="detail-value"><code>{{ txn.serial_unit.item.sku }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Item Name:</span>
+                    <span class="detail-value">{{ txn.serial_unit.item.name }}</span>
+                </div>
+                {% if txn.serial_unit.current_mat %}
+                <div class="detail-row">
+                    <span class="detail-label">Current MAT:</span>
+                    <span class="detail-value"><code>{{ txn.serial_unit.current_mat.mat_number }}</code></span>
+                </div>
+                {% endif %}
+                {% elif txn.item %}
+                <div class="detail-row">
+                    <span class="detail-label">Type:</span>
+                    <span class="detail-value"><span class="badge bg-secondary">Non-Serialized Item</span></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Item SKU:</span>
+                    <span class="detail-value"><code>{{ txn.item.sku }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Item Name:</span>
+                    <span class="detail-value">{{ txn.item.name }}</span>
+                </div>
+                {% if txn.item.category %}
+                <div class="detail-row">
+                    <span class="detail-label">Category:</span>
+                    <span class="detail-value">{{ txn.item.category.name }}</span>
+                </div>
+                {% endif %}
+                {% else %}
+                <p class="text-muted">No item information available</p>
+                {% endif %}
+            </div>
+
+            <!-- Quantity Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-123 me-2"></i>
+                    Quantity
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Quantity Changed:</span>
+                    <span class="detail-value">
+                        {% if txn.quantity >= 0 %}
+                        <span class="qty-positive">+{{ txn.quantity }}</span>
+                        {% else %}
+                        <span class="qty-negative">{{ txn.quantity }}</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Unit of Measure:</span>
+                    <span class="detail-value">{{ txn.uom|default:"-" }}</span>
+                </div>
+            </div>
+
+            <!-- From/To Sections -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-arrow-left-right me-2"></i>
+                    Movement Details
+                </h5>
+
+                <div class="from-to-section">
+                    <h6><i class="bi bi-box-arrow-right me-2"></i>From</h6>
+                    <div class="detail-row">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value">{{ txn.from_location|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Condition:</span>
+                        <span class="detail-value">{{ txn.from_condition|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Ownership:</span>
+                        <span class="detail-value">{{ txn.from_ownership|default:"-" }}</span>
+                    </div>
+                </div>
+
+                <div class="arrow-indicator">
+                    <i class="bi bi-arrow-down-circle-fill"></i>
+                </div>
+
+                <div class="from-to-section">
+                    <h6><i class="bi bi-box-arrow-in-right me-2"></i>To</h6>
+                    <div class="detail-row">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value">{{ txn.to_location|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Condition:</span>
+                        <span class="detail-value">{{ txn.to_condition|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Ownership:</span>
+                        <span class="detail-value">{{ txn.to_ownership|default:"-" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAT Changes (for Retrofit) -->
+            {% if txn.from_mat or txn.to_mat %}
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-tools me-2"></i>
+                    MAT Revision Changes
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">From MAT:</span>
+                    <span class="detail-value">
+                        {% if txn.from_mat %}
+                        <code>{{ txn.from_mat.mat_number }}</code>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">To MAT:</span>
+                    <span class="detail-value">
+                        {% if txn.to_mat %}
+                        <code>{{ txn.to_mat.mat_number }}</code>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Reference Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-link-45deg me-2"></i>
+                    Reference Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Reference Type:</span>
+                    <span class="detail-value">{{ txn.reference_type|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Reference ID:</span>
+                    <span class="detail-value">
+                        {% if txn.reference_id %}
+                        <code>{{ txn.reference_id }}</code>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Batch ID:</span>
+                    <span class="detail-value">{{ txn.batch_id|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Job Card ID:</span>
+                    <span class="detail-value">{{ txn.job_card_id|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Work Order ID:</span>
+                    <span class="detail-value">{{ txn.work_order_id|default:"-" }}</span>
+                </div>
+            </div>
+
+            <!-- Cost Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Cost Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Unit Cost:</span>
+                    <span class="detail-value">
+                        {% if txn.unit_cost %}
+                        {{ txn.currency }} {{ txn.unit_cost|floatformat:4 }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Cost:</span>
+                    <span class="detail-value">
+                        {% if txn.total_cost %}
+                        <strong>{{ txn.currency }} {{ txn.total_cost|floatformat:4 }}</strong>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Currency:</span>
+                    <span class="detail-value">{{ txn.currency }}</span>
+                </div>
+            </div>
+
+            <!-- Audit Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Audit Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Created By:</span>
+                    <span class="detail-value">{{ txn.created_by|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Created At:</span>
+                    <span class="detail-value">{{ txn.created_at|date:"Y-m-d H:i:s" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Reason Code:</span>
+                    <span class="detail-value">{{ txn.reason_code|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Notes:</span>
+                    <span class="detail-value">
+                        {% if txn.notes %}
+                        {{ txn.notes|linebreaksbr }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Reversal Status -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>
+                    Reversal Status
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Is Reversed:</span>
+                    <span class="detail-value">
+                        {% if txn.is_reversed %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-check-circle me-1"></i>Yes
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-x-circle me-1"></i>No
+                        </span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if txn.reversed_by %}
+                <div class="detail-row">
+                    <span class="detail-label">Reversed By Transaction:</span>
+                    <span class="detail-value">
+                        <a href="{% url 'inventory:transaction_detail' txn.reversed_by.pk %}">
+                            <code>{{ txn.reversed_by.transaction_number }}</code>
+                        </a>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any transaction-specific JavaScript here
+</script>
+{% endblock %}

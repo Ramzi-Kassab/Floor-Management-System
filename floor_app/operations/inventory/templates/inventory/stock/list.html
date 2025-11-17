@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Stock Overview - Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stock-table th {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-low {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-ok {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .sku-code {
+        font-family: monospace;
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    .qty-cell {
+        font-weight: 600;
+        font-family: monospace;
+    }
+
+    .condition-badge,
+    .ownership-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        background: #e9ecef;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item active">Stock Overview</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-boxes text-primary me-2"></i>
+                        Stock Overview
+                    </h2>
+                    <p class="text-muted mb-0">Monitor inventory stock levels across all locations</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:stock_adjust' %}" class="btn btn-primary">
+                        <i class="bi bi-sliders me-2"></i>Stock Adjustment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search by Item SKU or Name</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="condition" name="condition">
+                            <option value="">All Conditions</option>
+                            {% for condition in conditions %}
+                            <option value="{{ condition.id }}" {% if request.GET.condition == condition.id|stringformat:"s" %}selected{% endif %}>
+                                {{ condition.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label for="condition">Condition</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="ownership" name="ownership">
+                            <option value="">All Ownership</option>
+                            {% for ownership in ownerships %}
+                            <option value="{{ ownership.id }}" {% if request.GET.ownership == ownership.id|stringformat:"s" %}selected{% endif %}>
+                                {{ ownership.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label for="ownership">Ownership</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="low_stock" name="low_stock" value="yes"
+                               {% if request.GET.low_stock == 'yes' %}checked{% endif %}>
+                        <label class="form-check-label" for="low_stock">
+                            <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                            Low Stock Only
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stock Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover stock-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item SKU</th>
+                            <th>Item Name</th>
+                            <th>Location</th>
+                            <th>Condition</th>
+                            <th>Ownership</th>
+                            <th class="text-end">Qty On Hand</th>
+                            <th class="text-end">Qty Reserved</th>
+                            <th class="text-end">Available</th>
+                            <th class="text-center">Status</th>
+                            <th width="80">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in stocks %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'inventory:stock_detail' stock.pk %}" class="text-decoration-none">
+                                    <span class="sku-code">{{ stock.item.sku }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'inventory:stock_detail' stock.pk %}" class="text-decoration-none text-dark">
+                                    <strong>{{ stock.item.name }}</strong>
+                                </a>
+                            </td>
+                            <td>
+                                {% if stock.location %}
+                                {{ stock.location.code }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="condition-badge">
+                                    {{ stock.condition.code }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="ownership-badge">
+                                    {{ stock.ownership.code }}
+                                </span>
+                            </td>
+                            <td class="text-end qty-cell">
+                                {{ stock.quantity_on_hand|floatformat:2 }}
+                            </td>
+                            <td class="text-end qty-cell">
+                                {{ stock.quantity_reserved|floatformat:2 }}
+                            </td>
+                            <td class="text-end qty-cell">
+                                {{ stock.quantity_available|floatformat:2 }}
+                            </td>
+                            <td class="text-center">
+                                {% if stock.is_below_reorder_point %}
+                                <span class="status-badge status-low">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Low
+                                </span>
+                                {% else %}
+                                <span class="status-badge status-ok">
+                                    <i class="bi bi-check-circle me-1"></i>OK
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'inventory:stock_detail' stock.pk %}"
+                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No stock records found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if stocks.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if stocks.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ stocks.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.condition %}&condition={{ request.GET.condition }}{% endif %}{% if request.GET.ownership %}&ownership={{ request.GET.ownership }}{% endif %}{% if request.GET.low_stock %}&low_stock={{ request.GET.low_stock }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in stocks.paginator.page_range %}
+                        {% if num == stocks.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > stocks.number|add:'-3' and num < stocks.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.condition %}&condition={{ request.GET.condition }}{% endif %}{% if request.GET.ownership %}&ownership={{ request.GET.ownership }}{% endif %}{% if request.GET.low_stock %}&low_stock={{ request.GET.low_stock }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if stocks.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ stocks.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.condition %}&condition={{ request.GET.condition }}{% endif %}{% if request.GET.ownership %}&ownership={{ request.GET.ownership }}{% endif %}{% if request.GET.low_stock %}&low_stock={{ request.GET.low_stock }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clear filters
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "inventory:stock_list" %}';
+}
+</script>
+{% endblock %}

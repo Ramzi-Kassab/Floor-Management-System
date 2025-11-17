@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit {{ form.instance.sku }}{% else %}Create New Item{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #6366f1;
+        border-color: #6366f1;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .checkbox-group {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .checkbox-group .form-check {
+        padding: 0.5rem 0;
+        margin-left: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:item_list' %}">Item Master</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'inventory:item_detail' form.instance.pk %}">{{ form.instance.sku }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New Item</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-primary me-2"></i>
+                        {% if form.instance.pk %}Edit {{ form.instance.sku }}{% else %}Create New Item{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update item information and settings
+                        {% else %}
+                        Add a new item to the inventory master
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-info-circle me-2"></i>
+                Basic Information
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.sku.id_for_label }}" class="form-label required-field">SKU</label>
+                    {% render_field form.sku class="form-control" placeholder="Enter SKU code" %}
+                    {% if form.sku.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.sku.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.sku.help_text %}
+                    <div class="form-text">{{ form.sku.help_text }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label required-field">Name</label>
+                    {% render_field form.name class="form-control" placeholder="Enter item name" %}
+                    {% if form.name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.short_name.id_for_label }}" class="form-label">Short Name</label>
+                    {% render_field form.short_name class="form-control" placeholder="Enter short name" %}
+                    {% if form.short_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.short_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                    {% render_field form.category class="form-select" %}
+                    {% if form.category.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.category.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.uom.id_for_label }}" class="form-label">Unit of Measure</label>
+                    {% render_field form.uom class="form-select" %}
+                    {% if form.uom.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.uom.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.bit_design_revision.id_for_label }}" class="form-label">Bit Design Revision</label>
+                    {% render_field form.bit_design_revision class="form-select" %}
+                    {% if form.bit_design_revision.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.bit_design_revision.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Planning -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-clipboard-data me-2"></i>
+                Inventory Planning
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.min_stock_qty.id_for_label }}" class="form-label">Minimum Stock Quantity</label>
+                    {% render_field form.min_stock_qty class="form-control" placeholder="0" %}
+                    {% if form.min_stock_qty.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.min_stock_qty.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.reorder_point.id_for_label }}" class="form-label">Reorder Point</label>
+                    {% render_field form.reorder_point class="form-control" placeholder="0" %}
+                    {% if form.reorder_point.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.reorder_point.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.reorder_qty.id_for_label }}" class="form-label">Reorder Quantity</label>
+                    {% render_field form.reorder_qty class="form-control" placeholder="0" %}
+                    {% if form.reorder_qty.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.reorder_qty.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.safety_stock.id_for_label }}" class="form-label">Safety Stock</label>
+                    {% render_field form.safety_stock class="form-control" placeholder="0" %}
+                    {% if form.safety_stock.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.safety_stock.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.lead_time_days.id_for_label }}" class="form-label">Lead Time (Days)</label>
+                    {% render_field form.lead_time_days class="form-control" placeholder="0" %}
+                    {% if form.lead_time_days.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.lead_time_days.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-currency-dollar me-2"></i>
+                Cost Information
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.standard_cost.id_for_label }}" class="form-label">Standard Cost</label>
+                    {% render_field form.standard_cost class="form-control" placeholder="0.00" %}
+                    {% if form.standard_cost.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.standard_cost.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.currency.id_for_label }}" class="form-label">Currency</label>
+                    {% render_field form.currency class="form-select" %}
+                    {% if form.currency.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.currency.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Flags -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-flag me-2"></i>
+                Status Flags
+            </h5>
+            <div class="checkbox-group">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            {% render_field form.is_active class="form-check-input" %}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                <i class="bi bi-check-circle me-1 text-success"></i>
+                                Active
+                            </label>
+                            {% if form.is_active.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.is_active.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-check">
+                            {% render_field form.is_purchasable class="form-check-input" %}
+                            <label class="form-check-label" for="{{ form.is_purchasable.id_for_label }}">
+                                <i class="bi bi-cart-check me-1 text-primary"></i>
+                                Purchasable
+                            </label>
+                            {% if form.is_purchasable.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.is_purchasable.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-check">
+                            {% render_field form.is_producible class="form-check-input" %}
+                            <label class="form-check-label" for="{{ form.is_producible.id_for_label }}">
+                                <i class="bi bi-gear-wide-connected me-1 text-warning"></i>
+                                Producible
+                            </label>
+                            {% if form.is_producible.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.is_producible.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            {% render_field form.is_sellable class="form-check-input" %}
+                            <label class="form-check-label" for="{{ form.is_sellable.id_for_label }}">
+                                <i class="bi bi-bag-check me-1 text-info"></i>
+                                Sellable
+                            </label>
+                            {% if form.is_sellable.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.is_sellable.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-check">
+                            {% render_field form.is_stockable class="form-check-input" %}
+                            <label class="form-check-label" for="{{ form.is_stockable.id_for_label }}">
+                                <i class="bi bi-boxes me-1 text-secondary"></i>
+                                Stockable
+                            </label>
+                            {% if form.is_stockable.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.is_stockable.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-truck me-2"></i>
+                Supplier Information
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.primary_supplier.id_for_label }}" class="form-label">Primary Supplier</label>
+                    {% render_field form.primary_supplier class="form-select" %}
+                    {% if form.primary_supplier.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.primary_supplier.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.manufacturer_name.id_for_label }}" class="form-label">Manufacturer Name</label>
+                    {% render_field form.manufacturer_name class="form-control" placeholder="Enter manufacturer name" %}
+                    {% if form.manufacturer_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.manufacturer_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.manufacturer_part_number.id_for_label }}" class="form-label">Manufacturer Part Number</label>
+                    {% render_field form.manufacturer_part_number class="form-control" placeholder="Enter part number" %}
+                    {% if form.manufacturer_part_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.manufacturer_part_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Physical Attributes -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-rulers me-2"></i>
+                Physical Attributes
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.weight_kg.id_for_label }}" class="form-label">Weight (kg)</label>
+                    {% render_field form.weight_kg class="form-control" placeholder="0.00" %}
+                    {% if form.weight_kg.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.weight_kg.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.volume_cbm.id_for_label }}" class="form-label">Volume (CBM)</label>
+                    {% render_field form.volume_cbm class="form-control" placeholder="0.00" %}
+                    {% if form.volume_cbm.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.volume_cbm.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Details -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-card-text me-2"></i>
+                Additional Details
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.barcode.id_for_label }}" class="form-label">Barcode</label>
+                    {% render_field form.barcode class="form-control" placeholder="Enter barcode" %}
+                    {% if form.barcode.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.barcode.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    {% render_field form.description class="form-control" rows="4" placeholder="Enter item description..." %}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'inventory:item_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>Save Item
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on SKU field for new items
+    {% if not form.instance.pk %}
+    const skuField = document.getElementById('{{ form.sku.id_for_label }}');
+    if (skuField) {
+        skuField.focus();
+    }
+    {% endif %}
+
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

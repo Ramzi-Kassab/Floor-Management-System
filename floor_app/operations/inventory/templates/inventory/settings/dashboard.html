@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inventory Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid #e9ecef;
+        text-decoration: none;
+        display: block;
+    }
+
+    .settings-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        border-color: #6366f1;
+    }
+
+    .settings-card .icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
+    }
+
+    .icon-condition {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .icon-ownership {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+    }
+
+    .icon-category {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+    }
+
+    .icon-location {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+
+    .icon-uom {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .settings-card h5 {
+        color: #1f2937;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .settings-card p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: #f3f4f6;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .count-badge i {
+        color: #6366f1;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item active">Settings</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="mb-2">
+                    <i class="bi bi-gear-fill me-2"></i>
+                    Inventory Settings
+                </h2>
+                <p class="mb-0 opacity-90">Configure inventory reference data and lookup tables</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Cards -->
+    <div class="row g-4">
+        <!-- Condition Types -->
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'inventory:condition_list' %}" class="settings-card">
+                <div class="icon-wrapper icon-condition">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <h5>Condition Types</h5>
+                <p>Manage physical condition classifications for inventory items (NEW, RECLAIMED, REGROUND, etc.)</p>
+                <div class="count-badge">
+                    <i class="bi bi-hash"></i>
+                    {{ condition_count }} conditions
+                </div>
+            </a>
+        </div>
+
+        <!-- Ownership Types -->
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'inventory:ownership_list' %}" class="settings-card">
+                <div class="icon-wrapper icon-ownership">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h5>Ownership Types</h5>
+                <p>Define ownership categories (ARDT, ENO, customer consignment, JV partners, etc.)</p>
+                <div class="count-badge">
+                    <i class="bi bi-hash"></i>
+                    {{ ownership_count }} ownerships
+                </div>
+            </a>
+        </div>
+
+        <!-- Item Categories -->
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'inventory:category_list' %}" class="settings-card">
+                <div class="icon-wrapper icon-category">
+                    <i class="bi bi-tags-fill"></i>
+                </div>
+                <h5>Item Categories</h5>
+                <p>Organize items into hierarchical categories (BIT_FULL_ASSEMBLY, CUTTER, CONSUMABLE, etc.)</p>
+                <div class="count-badge">
+                    <i class="bi bi-hash"></i>
+                    {{ category_count }} categories
+                </div>
+            </a>
+        </div>
+
+        <!-- Locations -->
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'inventory:location_list' %}" class="settings-card">
+                <div class="icon-wrapper icon-location">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <h5>Locations</h5>
+                <p>Manage storage locations hierarchy (warehouses, zones, bins, rigs, customer sites)</p>
+                <div class="count-badge">
+                    <i class="bi bi-hash"></i>
+                    {{ location_count }} locations
+                </div>
+            </a>
+        </div>
+
+        <!-- Units of Measure -->
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'inventory:uom_list' %}" class="settings-card">
+                <div class="icon-wrapper icon-uom">
+                    <i class="bi bi-rulers"></i>
+                </div>
+                <h5>Units of Measure</h5>
+                <p>Define standard units for inventory tracking (PC, KG, L, SET, BOX, etc.)</p>
+                <div class="count-badge">
+                    <i class="bi bi-hash"></i>
+                    {{ uom_count }} units
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any settings-specific JavaScript here
+</script>
+{% endblock %}

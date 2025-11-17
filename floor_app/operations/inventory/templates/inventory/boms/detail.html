@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ bom.bom_number }} - BOM Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bom-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 160px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .bom-number-display {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .lines-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .lines-table td {
+        font-size: 0.9rem;
+        vertical-align: middle;
+    }
+
+    .component-sku {
+        font-family: monospace;
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    .optional-badge {
+        background: #fff3cd;
+        color: #856404;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .estimate-highlight {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #6366f1;
+    }
+
+    .estimate-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .condition-badge,
+    .ownership-badge {
+        display: inline-block;
+        padding: 0.2rem 0.4rem;
+        background: #e9ecef;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:bom_list' %}">Bill of Materials</a></li>
+            <li class="breadcrumb-item active">{{ bom.bom_number }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- BOM Header -->
+    <div class="bom-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="bom-number-display">{{ bom.bom_number }}</span>
+                    <span class="status-badge-large">
+                        {{ bom.get_status_display }}
+                    </span>
+                    {% if bom.is_active %}
+                    <span class="status-badge-large">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Active
+                    </span>
+                    {% else %}
+                    <span class="status-badge-large">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Inactive
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="mb-2">{{ bom.name }}</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    <span class="type-badge">
+                        <i class="bi bi-diagram-3 me-1"></i>
+                        {{ bom.get_bom_type_display }}
+                    </span>
+                    <span>
+                        <i class="bi bi-file-code me-2"></i>
+                        Target: {{ bom.target_mat.mat_number }}
+                    </span>
+                    <span>
+                        <i class="bi bi-tag me-2"></i>
+                        Rev: {{ bom.revision }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:bom_edit' bom.pk %}" class="btn btn-light">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print BOM</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-copy me-2"></i>Copy as New Revision</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-5 mb-4">
+            <!-- Header Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Header Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">BOM Number:</span>
+                    <span class="detail-value"><code>{{ bom.bom_number }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ bom.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">BOM Type:</span>
+                    <span class="detail-value">{{ bom.get_bom_type_display }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Target MAT:</span>
+                    <span class="detail-value">
+                        <code>{{ bom.target_mat.mat_number }}</code>
+                    </span>
+                </div>
+                {% if bom.source_mat %}
+                <div class="detail-row">
+                    <span class="detail-label">Source MAT:</span>
+                    <span class="detail-value">
+                        <code>{{ bom.source_mat.mat_number }}</code>
+                    </span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Revision:</span>
+                    <span class="detail-value"><span class="badge bg-secondary">{{ bom.revision }}</span></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">{{ bom.get_status_display }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Effective Date:</span>
+                    <span class="detail-value">
+                        {% if bom.effective_date %}
+                        {{ bom.effective_date|date:"Y-m-d" }}
+                        {% else %}
+                        <span class="text-muted">Not set</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if bom.description %}
+                <div class="detail-row">
+                    <span class="detail-label">Description:</span>
+                    <span class="detail-value">{{ bom.description }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Estimates -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-calculator me-2"></i>
+                    Estimates
+                </h5>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="estimate-label">Labor Hours</div>
+                        <div class="estimate-highlight">
+                            {% if bom.estimated_labor_hours %}
+                            {{ bom.estimated_labor_hours|floatformat:2 }}
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="estimate-label">Material Cost</div>
+                        <div class="estimate-highlight">
+                            {% if bom.estimated_material_cost %}
+                            ${{ bom.estimated_material_cost|floatformat:2 }}
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if bom.notes %}
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-sticky me-2"></i>
+                    Notes
+                </h5>
+                <p class="mb-0">{{ bom.notes|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - BOM Lines -->
+        <div class="col-lg-7 mb-4">
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-list-ol me-2"></i>
+                    BOM Lines ({{ bom.total_component_count }} components)
+                </h5>
+                {% if bom_lines %}
+                <div class="table-responsive">
+                    <table class="table table-sm lines-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="60">Line #</th>
+                                <th>Component Item</th>
+                                <th class="text-end">Qty</th>
+                                <th>UoM</th>
+                                <th>Condition</th>
+                                <th>Ownership</th>
+                                <th class="text-center">Optional</th>
+                                <th class="text-end">Scrap %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in bom_lines %}
+                            <tr>
+                                <td class="text-center">
+                                    <strong>{{ line.line_number }}</strong>
+                                </td>
+                                <td>
+                                    <span class="component-sku">{{ line.component_item.sku }}</span>
+                                    <br>
+                                    <small class="text-muted">{{ line.component_item.name }}</small>
+                                </td>
+                                <td class="text-end">
+                                    <strong>{{ line.quantity_required|floatformat:2 }}</strong>
+                                </td>
+                                <td>
+                                    {{ line.uom.symbol|default:line.uom.name }}
+                                </td>
+                                <td>
+                                    {% if line.required_condition %}
+                                    <span class="condition-badge">
+                                        {{ line.required_condition.code }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">Any</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if line.required_ownership %}
+                                    <span class="ownership-badge">
+                                        {{ line.required_ownership.code }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">Any</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if line.is_optional %}
+                                    <span class="optional-badge">
+                                        <i class="bi bi-question-circle me-1"></i>Optional
+                                    </span>
+                                    {% else %}
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if line.scrap_factor > 0 %}
+                                    {{ line.scrap_factor|floatformat:2 }}%
+                                    {% else %}
+                                    <span class="text-muted">0%</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No BOM lines defined yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any BOM detail specific JavaScript here
+</script>
+{% endblock %}

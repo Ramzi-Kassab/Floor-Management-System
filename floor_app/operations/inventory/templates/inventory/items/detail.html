@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ item.sku }} - Item Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .item-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 160px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .status-inactive {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .flag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin: 0.2rem;
+    }
+
+    .flag-enabled {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .flag-disabled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .sku-display {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .stock-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .stock-table td {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:item_list' %}">Item Master</a></li>
+            <li class="breadcrumb-item active">{{ item.sku }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Item Header -->
+    <div class="item-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="sku-display">{{ item.sku }}</span>
+                    {% if item.is_active %}
+                    <span class="status-badge-large status-active">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Active
+                    </span>
+                    {% else %}
+                    <span class="status-badge-large status-inactive">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Inactive
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="mb-2">{{ item.name }}</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    {% if item.category %}
+                    <span>
+                        <i class="bi bi-tag me-2"></i>
+                        {{ item.category.name }}
+                    </span>
+                    {% endif %}
+                    <span>
+                        <i class="bi bi-rulers me-2"></i>
+                        {{ item.uom|default:"N/A" }}
+                    </span>
+                    {% if item.mat_number %}
+                    <span>
+                        <i class="bi bi-file-code me-2"></i>
+                        MAT: {{ item.mat_number }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-light">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print Details</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Basic Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Basic Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">SKU:</span>
+                    <span class="detail-value"><code>{{ item.sku }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ item.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Category:</span>
+                    <span class="detail-value">{{ item.category.name|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Unit of Measure:</span>
+                    <span class="detail-value">{{ item.uom|default:"-" }}</span>
+                </div>
+                {% if item.mat_number %}
+                <div class="detail-row">
+                    <span class="detail-label">MAT Number:</span>
+                    <span class="detail-value"><code>{{ item.mat_number }}</code></span>
+                </div>
+                {% endif %}
+                {% if item.description %}
+                <div class="detail-row">
+                    <span class="detail-label">Description:</span>
+                    <span class="detail-value">{{ item.description }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Inventory Planning -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-clipboard-data me-2"></i>
+                    Inventory Planning
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Reorder Point:</span>
+                    <span class="detail-value">{{ item.reorder_point|default:"0" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Safety Stock:</span>
+                    <span class="detail-value">{{ item.safety_stock|default:"0" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Lead Time:</span>
+                    <span class="detail-value">{{ item.lead_time|default:"0" }} days</span>
+                </div>
+                {% if item.minimum_order_qty %}
+                <div class="detail-row">
+                    <span class="detail-label">Min Order Qty:</span>
+                    <span class="detail-value">{{ item.minimum_order_qty }}</span>
+                </div>
+                {% endif %}
+                {% if item.maximum_stock %}
+                <div class="detail-row">
+                    <span class="detail-label">Max Stock:</span>
+                    <span class="detail-value">{{ item.maximum_stock }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Cost Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Cost Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Standard Cost:</span>
+                    <span class="detail-value">
+                        {% if item.standard_cost %}
+                        {{ item.currency|default:"USD" }} {{ item.standard_cost|floatformat:2 }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Currency:</span>
+                    <span class="detail-value">{{ item.currency|default:"USD" }}</span>
+                </div>
+                {% if item.last_purchase_price %}
+                <div class="detail-row">
+                    <span class="detail-label">Last Purchase Price:</span>
+                    <span class="detail-value">{{ item.currency|default:"USD" }} {{ item.last_purchase_price|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Status Flags -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-flag me-2"></i>
+                    Status Flags
+                </h5>
+                <div class="d-flex flex-wrap">
+                    {% if item.is_active %}
+                    <span class="flag-badge flag-enabled">
+                        <i class="bi bi-check-circle"></i> Active
+                    </span>
+                    {% else %}
+                    <span class="flag-badge flag-disabled">
+                        <i class="bi bi-x-circle"></i> Inactive
+                    </span>
+                    {% endif %}
+
+                    {% if item.is_purchasable %}
+                    <span class="flag-badge flag-enabled">
+                        <i class="bi bi-cart-check"></i> Purchasable
+                    </span>
+                    {% else %}
+                    <span class="flag-badge flag-disabled">
+                        <i class="bi bi-cart-x"></i> Not Purchasable
+                    </span>
+                    {% endif %}
+
+                    {% if item.is_producible %}
+                    <span class="flag-badge flag-enabled">
+                        <i class="bi bi-gear-wide-connected"></i> Producible
+                    </span>
+                    {% else %}
+                    <span class="flag-badge flag-disabled">
+                        <i class="bi bi-gear"></i> Not Producible
+                    </span>
+                    {% endif %}
+
+                    {% if item.is_sellable %}
+                    <span class="flag-badge flag-enabled">
+                        <i class="bi bi-bag-check"></i> Sellable
+                    </span>
+                    {% else %}
+                    <span class="flag-badge flag-disabled">
+                        <i class="bi bi-bag-x"></i> Not Sellable
+                    </span>
+                    {% endif %}
+
+                    {% if item.is_serialized %}
+                    <span class="flag-badge flag-enabled">
+                        <i class="bi bi-upc-scan"></i> Serialized
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stock Information -->
+            {% if item.is_serialized %}
+            <!-- Serialized Units -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-upc-scan me-2"></i>
+                    Serial Units
+                </h5>
+                {% if serial_units %}
+                <div class="table-responsive">
+                    <table class="table table-sm stock-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Serial Number</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                                <th>Condition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for unit in serial_units %}
+                            <tr>
+                                <td><code>{{ unit.serial_number }}</code></td>
+                                <td>
+                                    <span class="badge bg-{{ unit.status|lower }}">
+                                        {{ unit.get_status_display|default:unit.status }}
+                                    </span>
+                                </td>
+                                <td>{{ unit.location|default:"-" }}</td>
+                                <td>{{ unit.condition|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No serial units found</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <!-- Stock Records -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-boxes me-2"></i>
+                    Stock Records
+                </h5>
+                {% if stock_records %}
+                <div class="table-responsive">
+                    <table class="table table-sm stock-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Location</th>
+                                <th>Condition</th>
+                                <th>Ownership</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in stock_records %}
+                            <tr>
+                                <td>{{ stock.location|default:"-" }}</td>
+                                <td>{{ stock.condition|default:"-" }}</td>
+                                <td>{{ stock.ownership|default:"-" }}</td>
+                                <td><strong>{{ stock.quantity }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No stock records found</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Recent Transactions -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-arrow-left-right me-2"></i>
+                    Recent Transactions
+                </h5>
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-sm stock-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in recent_transactions %}
+                            <tr>
+                                <td>{{ txn.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ txn.get_transaction_type_display|default:txn.transaction_type }}
+                                    </span>
+                                </td>
+                                <td>{{ txn.quantity }}</td>
+                                <td>{{ txn.reference|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No recent transactions</p>
+                {% endif %}
+            </div>
+
+            <!-- BOM Usages -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-list-nested me-2"></i>
+                    BOM Usages
+                </h5>
+                {% if bom_usages %}
+                <div class="table-responsive">
+                    <table class="table table-sm stock-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Parent Item</th>
+                                <th>Quantity</th>
+                                <th>Position</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usage in bom_usages %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'inventory:item_detail' usage.parent_item.pk %}">
+                                        {{ usage.parent_item.sku }}
+                                    </a>
+                                </td>
+                                <td>{{ usage.quantity }}</td>
+                                <td>{{ usage.position|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Not used in any BOM</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any item-specific JavaScript here
+</script>
+{% endblock %}

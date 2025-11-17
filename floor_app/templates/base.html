@@ -210,6 +210,71 @@
                         </ul>
                     </li>
 
+                    <!-- Inventory & Materials Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="inventory-section">
+                            <i class="bi bi-box-seam-fill"></i>
+                            <span>Inventory & Materials</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="inventory-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Inventory Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:item_list' %}">
+                                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                                    <span>Item Master</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:bitdesign_list' %}">
+                                    <i class="bi bi-bullseye"></i>
+                                    <span>Bit Designs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:mat_list' %}">
+                                    <i class="bi bi-file-earmark-code"></i>
+                                    <span>MAT Revisions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:serialunit_list' %}">
+                                    <i class="bi bi-upc-scan"></i>
+                                    <span>Serial Units</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:stock_list' %}">
+                                    <i class="bi bi-boxes"></i>
+                                    <span>Stock Overview</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:bom_list' %}">
+                                    <i class="bi bi-list-nested"></i>
+                                    <span>Bill of Materials</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:transaction_list' %}">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                    <span>Transactions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'inventory:settings' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Production Section (Coming Soon) -->
                     <li class="nav-item">
                         <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">

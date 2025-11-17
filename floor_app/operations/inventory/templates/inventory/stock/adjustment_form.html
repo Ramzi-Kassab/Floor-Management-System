@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Stock Adjustment - Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .quantity-input {
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .adjustment-warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .adjustment-warning i {
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:stock_list' %}">Stock Overview</a></li>
+            <li class="breadcrumb-item active">Stock Adjustment</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-sliders text-primary me-2"></i>
+                        Stock Adjustment
+                    </h2>
+                    <p class="text-muted mb-0">Manually adjust inventory stock quantities</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adjustment Warning -->
+    <div class="adjustment-warning">
+        <div class="d-flex align-items-start">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+                <strong>Important:</strong> Stock adjustments are permanent and will be recorded in the transaction history.
+                Use positive numbers to increase stock and negative numbers to decrease stock.
+                Please ensure you have proper authorization before making adjustments.
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Stock Identification -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-box-seam me-2"></i>
+                Stock Identification
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.item.id_for_label }}" class="form-label required-field">Item</label>
+                    {% render_field form.item class="form-select" %}
+                    {% if form.item.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.item.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Select the item to adjust</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.location.id_for_label }}" class="form-label required-field">Location</label>
+                    {% render_field form.location class="form-select" %}
+                    {% if form.location.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.location.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Where is this stock located?</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.condition.id_for_label }}" class="form-label required-field">Condition</label>
+                    {% render_field form.condition class="form-select" %}
+                    {% if form.condition.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.condition.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Physical condition of the stock</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.ownership.id_for_label }}" class="form-label required-field">Ownership</label>
+                    {% render_field form.ownership class="form-select" %}
+                    {% if form.ownership.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.ownership.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Who owns this stock?</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adjustment Details -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-plus-slash-minus me-2"></i>
+                Adjustment Details
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.quantity.id_for_label }}" class="form-label required-field">Quantity Adjustment</label>
+                    {% render_field form.quantity class="form-control quantity-input" placeholder="0" %}
+                    {% if form.quantity.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.quantity.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Enter positive numbers to increase stock, negative numbers to decrease stock
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.reason.id_for_label }}" class="form-label required-field">Reason</label>
+                    {% render_field form.reason class="form-select" %}
+                    {% if form.reason.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.reason.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Why is this adjustment being made?</div>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {% render_field form.notes class="form-control" rows="4" placeholder="Enter any additional notes or details about this adjustment..." %}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Optional: Provide additional context for this adjustment</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'inventory:stock_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>Submit Adjustment
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+
+    // Highlight quantity input based on value
+    const quantityInput = document.querySelector('.quantity-input');
+    if (quantityInput) {
+        quantityInput.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value > 0) {
+                this.style.color = '#28a745';
+            } else if (value < 0) {
+                this.style.color = '#dc3545';
+            } else {
+                this.style.color = '#212529';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

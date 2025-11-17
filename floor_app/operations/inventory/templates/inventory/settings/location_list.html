@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Locations - Inventory Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-table th {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .code-badge {
+        font-family: monospace;
+        background: #e9ecef;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .type-warehouse { background: #fef3c7; color: #92400e; }
+    .type-zone { background: #fde68a; color: #92400e; }
+    .type-bin { background: #fcd34d; color: #78350f; }
+    .type-rig { background: #fed7aa; color: #c2410c; }
+    .type-customer_site { background: #dbeafe; color: #1e40af; }
+    .type-repair_shop { background: #e0e7ff; color: #3730a3; }
+    .type-inspection { background: #d1fae5; color: #065f46; }
+    .type-quarantine { background: #fee2e2; color: #991b1b; }
+    .type-transit { background: #f3e8ff; color: #6b21a8; }
+    .type-scrap { background: #fecaca; color: #991b1b; }
+    .type-other { background: #f3f4f6; color: #374151; }
+
+    .parent-badge {
+        background: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:settings_dashboard' %}">Settings</a></li>
+            <li class="breadcrumb-item active">Locations</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+                        Locations
+                    </h2>
+                    <p class="text-muted mb-0">Manage inventory storage locations hierarchy</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:settings_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Settings
+                    </a>
+                    <a href="{% url 'inventory:location_create' %}" class="btn btn-warning">
+                        <i class="bi bi-plus-circle me-2"></i>Add Location
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Locations Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover settings-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Parent Location</th>
+                            <th>Active</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for location in locations %}
+                        <tr>
+                            <td>
+                                <span class="code-badge">{{ location.code }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ location.name }}</strong>
+                                {% if location.address %}
+                                <br>
+                                <small class="text-muted">{{ location.address|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="type-badge type-{{ location.location_type|lower }}">
+                                    {% if location.location_type == 'WAREHOUSE' %}
+                                    <i class="bi bi-building"></i>
+                                    {% elif location.location_type == 'ZONE' %}
+                                    <i class="bi bi-diagram-3"></i>
+                                    {% elif location.location_type == 'BIN' %}
+                                    <i class="bi bi-box"></i>
+                                    {% elif location.location_type == 'RIG' %}
+                                    <i class="bi bi-cone-striped"></i>
+                                    {% elif location.location_type == 'CUSTOMER_SITE' %}
+                                    <i class="bi bi-pin-map"></i>
+                                    {% elif location.location_type == 'REPAIR_SHOP' %}
+                                    <i class="bi bi-tools"></i>
+                                    {% elif location.location_type == 'INSPECTION' %}
+                                    <i class="bi bi-search"></i>
+                                    {% elif location.location_type == 'QUARANTINE' %}
+                                    <i class="bi bi-shield-exclamation"></i>
+                                    {% elif location.location_type == 'TRANSIT' %}
+                                    <i class="bi bi-truck"></i>
+                                    {% elif location.location_type == 'SCRAP' %}
+                                    <i class="bi bi-trash"></i>
+                                    {% else %}
+                                    <i class="bi bi-question-circle"></i>
+                                    {% endif %}
+                                    {{ location.get_location_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if location.parent_location %}
+                                <span class="parent-badge">
+                                    <i class="bi bi-folder2 me-1"></i>{{ location.parent_location.code }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if location.is_active %}
+                                <span class="status-badge status-active">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="status-badge status-inactive">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'inventory:location_edit' location.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No locations found</p>
+                                <a href="{% url 'inventory:location_create' %}" class="btn btn-warning">
+                                    <i class="bi bi-plus-circle me-2"></i>Add First Location
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any location specific JavaScript here
+</script>
+{% endblock %}

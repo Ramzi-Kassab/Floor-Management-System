@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit {{ form.instance.bom_number }}{% else %}Create New BOM{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #6366f1;
+        border-color: #6366f1;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .checkbox-group {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .checkbox-group .form-check {
+        padding: 0.5rem 0;
+        margin-left: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:bom_list' %}">Bill of Materials</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'inventory:bom_detail' form.instance.pk %}">{{ form.instance.bom_number }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New BOM</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-primary me-2"></i>
+                        {% if form.instance.pk %}Edit {{ form.instance.bom_number }}{% else %}Create New BOM{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update bill of materials information
+                        {% else %}
+                        Define a new bill of materials for production, retrofit, or repair
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-info-circle me-2"></i>
+                Basic Information
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.bom_number.id_for_label }}" class="form-label required-field">BOM Number</label>
+                    {% render_field form.bom_number class="form-control" placeholder="e.g., BOM-HP-X123-M2-PROD" %}
+                    {% if form.bom_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.bom_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Unique identifier for this BOM</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label required-field">Name</label>
+                    {% render_field form.name class="form-control" placeholder="Enter descriptive name" %}
+                    {% if form.name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    {% render_field form.description class="form-control" rows="3" placeholder="Enter detailed description..." %}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Type and Target -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-diagram-3 me-2"></i>
+                Type and Target
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.bom_type.id_for_label }}" class="form-label required-field">BOM Type</label>
+                    {% render_field form.bom_type class="form-select" %}
+                    {% if form.bom_type.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.bom_type.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Production, Retrofit, or Repair</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.target_mat.id_for_label }}" class="form-label required-field">Target MAT</label>
+                    {% render_field form.target_mat class="form-select" %}
+                    {% if form.target_mat.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.target_mat.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">MAT revision this BOM produces</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.source_mat.id_for_label }}" class="form-label">Source MAT</label>
+                    {% render_field form.source_mat class="form-select" %}
+                    {% if form.source_mat.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.source_mat.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">For RETROFIT: the source MAT being converted</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Versioning and Status -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-tags me-2"></i>
+                Versioning and Status
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.revision.id_for_label }}" class="form-label required-field">Revision</label>
+                    {% render_field form.revision class="form-control" placeholder="e.g., A, B, 1, 2" %}
+                    {% if form.revision.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.revision.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">BOM revision code</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label required-field">Status</label>
+                    {% render_field form.status class="form-select" %}
+                    {% if form.status.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.effective_date.id_for_label }}" class="form-label">Effective Date</label>
+                    {% render_field form.effective_date class="form-control" type="date" %}
+                    {% if form.effective_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.effective_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">When this BOM becomes effective</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estimates -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-calculator me-2"></i>
+                Estimates
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.estimated_labor_hours.id_for_label }}" class="form-label">Estimated Labor Hours</label>
+                    {% render_field form.estimated_labor_hours class="form-control" placeholder="0.00" %}
+                    {% if form.estimated_labor_hours.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.estimated_labor_hours.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Total labor hours to complete</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.estimated_material_cost.id_for_label }}" class="form-label">Estimated Material Cost</label>
+                    {% render_field form.estimated_material_cost class="form-control" placeholder="0.00" %}
+                    {% if form.estimated_material_cost.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.estimated_material_cost.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Total material cost estimate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-sticky me-2"></i>
+                Additional Information
+            </h5>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {% render_field form.notes class="form-control" rows="4" placeholder="Enter any additional notes or instructions..." %}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'inventory:bom_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>Save BOM
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on BOM Number field for new BOMs
+    {% if not form.instance.pk %}
+    const bomNumberField = document.getElementById('{{ form.bom_number.id_for_label }}');
+    if (bomNumberField) {
+        bomNumberField.focus();
+    }
+    {% endif %}
+
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+
+    // Toggle source MAT requirement based on BOM type
+    const bomTypeField = document.getElementById('{{ form.bom_type.id_for_label }}');
+    const sourceMatField = document.getElementById('{{ form.source_mat.id_for_label }}');
+    const sourceMatLabel = sourceMatField.previousElementSibling;
+
+    if (bomTypeField && sourceMatField) {
+        bomTypeField.addEventListener('change', function() {
+            if (this.value === 'RETROFIT') {
+                sourceMatLabel.classList.add('required-field');
+                sourceMatField.required = true;
+            } else {
+                sourceMatLabel.classList.remove('required-field');
+                sourceMatField.required = false;
+            }
+        });
+
+        // Trigger change event on load
+        bomTypeField.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

@@ -31,5 +31,8 @@ urlpatterns = [
     # === HR / Operations module ===
     # All HR URLs under "/hr/" and namespaced as "hr"
     path("hr/", include(("floor_app.operations.hr.urls", "hr"), namespace="hr")),
+
+    # === Inventory / Materials Management ===
+    path("inventory/", include(("floor_app.operations.inventory.urls", "inventory"), namespace="inventory")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

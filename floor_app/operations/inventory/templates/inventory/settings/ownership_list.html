@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ownership Types - Inventory Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-table th {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .code-badge {
+        font-family: monospace;
+        background: #e9ecef;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .flag-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin: 0.1rem;
+    }
+
+    .flag-yes {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .flag-no {
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:settings_dashboard' %}">Settings</a></li>
+            <li class="breadcrumb-item active">Ownership Types</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        Ownership Types
+                    </h2>
+                    <p class="text-muted mb-0">Define inventory ownership categories</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:settings_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Settings
+                    </a>
+                    <a href="{% url 'inventory:ownership_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Add Ownership Type
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ownership Types Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover settings-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Is Internal</th>
+                            <th>Is Consignment</th>
+                            <th>Active</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ownership in ownerships %}
+                        <tr>
+                            <td>
+                                <span class="code-badge">{{ ownership.code }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ ownership.name }}</strong>
+                                {% if ownership.description %}
+                                <br>
+                                <small class="text-muted">{{ ownership.description|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ownership.is_internal %}
+                                <span class="flag-badge flag-yes">
+                                    <i class="bi bi-building"></i>Internal
+                                </span>
+                                {% else %}
+                                <span class="flag-badge flag-no">
+                                    <i class="bi bi-x"></i>No
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ownership.is_consignment %}
+                                <span class="flag-badge flag-yes">
+                                    <i class="bi bi-box-seam"></i>Consignment
+                                </span>
+                                {% else %}
+                                <span class="flag-badge flag-no">
+                                    <i class="bi bi-x"></i>No
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ownership.is_active %}
+                                <span class="status-badge status-active">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="status-badge status-inactive">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'inventory:ownership_edit' ownership.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No ownership types found</p>
+                                <a href="{% url 'inventory:ownership_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Add First Ownership Type
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any ownership type specific JavaScript here
+</script>
+{% endblock %}

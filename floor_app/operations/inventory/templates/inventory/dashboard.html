@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inventory Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        background: white;
+        min-height: 200px;
+        border-radius: 12px;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border-color: #0d6efd;
+    }
+
+    .dashboard-card .card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #495057;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.2;
+    }
+
+    .quick-action-btn {
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid;
+    }
+
+    .quick-action-btn:hover {
+        transform: translateX(5px);
+    }
+
+    .section-header {
+        border-left: 4px solid #0d6efd;
+        padding-left: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        color: #212529;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .section-description {
+        color: #495057;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Inventory</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2" style="color: #212529; font-weight: 700;">
+                        <i class="bi bi-box-seam-fill text-primary me-2"></i>
+                        Inventory & Materials
+                    </h2>
+                    <p class="mb-0" style="color: #495057;">
+                        Track and manage inventory, bits, and materials
+                    </p>
+                </div>
+
+                <div>
+                    <a href="{% url 'inventory:item_create' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>New Item
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row g-3 mb-5">
+        <!-- Total Items -->
+        <div class="col-lg-2 col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-primary">
+                            {{ total_items|default:"0" }}
+                        </div>
+                        <div class="stat-label">Total Items</div>
+                    </div>
+                    <i class="bi bi-box-fill text-primary stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Serial Units -->
+        <div class="col-lg-2 col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-info">
+                            {{ total_serial_units|default:"0" }}
+                        </div>
+                        <div class="stat-label">Serial Units</div>
+                    </div>
+                    <i class="bi bi-upc-scan text-info stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div class="col-lg-2 col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-danger">
+                            {{ low_stock_count|default:"0" }}
+                        </div>
+                        <div class="stat-label">Low Stock Alerts</div>
+                    </div>
+                    <i class="bi bi-exclamation-triangle-fill text-danger stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bits In Stock -->
+        <div class="col-lg-2 col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-success">
+                            {{ bits_in_stock|default:"0" }}
+                        </div>
+                        <div class="stat-label">Bits In Stock</div>
+                    </div>
+                    <i class="bi bi-gear-fill text-success stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bits At Rig -->
+        <div class="col-lg-2 col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number text-warning">
+                            {{ bits_at_rig|default:"0" }}
+                        </div>
+                        <div class="stat-label">Bits At Rig</div>
+                    </div>
+                    <i class="bi bi-wrench-adjustable text-warning stat-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Under Repair -->
+        <div class="col-lg-2 col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-number" style="color: #6610f2;">
+                            {{ bits_under_repair|default:"0" }}
+                        </div>
+                        <div class="stat-label">Under Repair</div>
+                    </div>
+                    <i class="bi bi-tools stat-icon" style="color: #6610f2;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="card shadow-sm border-0 mb-5" style="background: #f8f9fa;">
+        <div class="card-body p-4">
+            <h5 class="mb-3" style="color: #212529; font-weight: 600;">
+                <i class="bi bi-lightning-fill text-warning me-2"></i>
+                Quick Actions
+            </h5>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'inventory:item_create' %}" class="btn quick-action-btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>New Item
+                </a>
+                <a href="{% url 'inventory:serial_unit_create' %}" class="btn quick-action-btn btn-info text-white">
+                    <i class="bi bi-upc-scan me-2"></i>Add Serial Unit
+                </a>
+                <a href="{% url 'inventory:stock_adjustment_create' %}" class="btn quick-action-btn btn-success text-white">
+                    <i class="bi bi-plus-slash-minus me-2"></i>Stock Adjustment
+                </a>
+                <a href="{% url 'inventory:bom_create' %}" class="btn quick-action-btn" style="background: #ffc107; color: #212529; border-color: #ffc107;">
+                    <i class="bi bi-diagram-3 me-2"></i>Create BOM
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Section -->
+    <div class="section-header">
+        <h4 class="section-title" style="color: #dc3545;">Alerts & Warnings</h4>
+        <p class="section-description">Items requiring immediate attention</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Low Stock Items -->
+        <div class="col-lg-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-danger bg-gradient text-white">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Low Stock Items</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Items below minimum stock level
+                    </p>
+
+                    {% if low_stock_items %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Current</th>
+                                    <th>Minimum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in low_stock_items %}
+                                <tr>
+                                    <td>{{ stock.item.name }}</td>
+                                    <td><span class="badge bg-danger">{{ stock.quantity }}</span></td>
+                                    <td>{{ stock.item.minimum_stock }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        All items are adequately stocked.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Serial Units -->
+        <div class="col-lg-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon" style="background: #fd7e14; color: white;">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Critical Serial Units</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Units requiring immediate attention
+                    </p>
+
+                    {% if critical_units %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Serial #</th>
+                                    <th>Status</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unit in critical_units %}
+                                <tr>
+                                    <td>{{ unit.serial_number }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ unit.get_status_display }}</span></td>
+                                    <td>{{ unit.current_location|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        No critical units at this time.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions Section -->
+    <div class="section-header">
+        <h4 class="section-title" style="color: #0dcaf0;">Recent Transactions</h4>
+        <p class="section-description">Latest inventory movements and adjustments</p>
+    </div>
+
+    <div class="card dashboard-card mb-5">
+        <div class="card-body p-4">
+            <div class="card-icon bg-info bg-gradient text-white">
+                <i class="bi bi-arrow-left-right"></i>
+            </div>
+
+            {% if recent_transactions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Reference</th>
+                            <th>User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in recent_transactions %}
+                        <tr>
+                            <td>{{ txn.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ txn.get_transaction_type_display }}</span>
+                            </td>
+                            <td>{{ txn.item.name }}</td>
+                            <td>
+                                {% if txn.quantity > 0 %}
+                                <span class="text-success">+{{ txn.quantity }}</span>
+                                {% else %}
+                                <span class="text-danger">{{ txn.quantity }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ txn.reference|default:"-" }}</td>
+                            <td>{{ txn.created_by|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-3">
+                <a href="{% url 'inventory:transaction_list' %}" class="btn btn-outline-info">
+                    <i class="bi bi-list me-2"></i>View All Transactions
+                </a>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                No recent transactions found.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation Cards Section -->
+    <div class="section-header">
+        <h4 class="section-title" style="color: #198754;">Inventory Management</h4>
+        <p class="section-description">Navigate to different inventory modules</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Items Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-primary bg-gradient text-white">
+                        <i class="bi bi-box-fill"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Items</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Manage inventory items and products
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'inventory:item_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>View All Items
+                            <span class="badge bg-secondary float-end">{{ total_items|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'inventory:item_create' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>Add New Item
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bit Designs Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-success bg-gradient text-white">
+                        <i class="bi bi-gear-wide-connected"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Bit Designs</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        PDC bit design specifications
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'inventory:bit_design_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>View All Designs
+                        </a>
+                        <a href="{% url 'inventory:bit_design_create' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>Add New Design
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Serial Units Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-info bg-gradient text-white">
+                        <i class="bi bi-upc-scan"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Serial Units</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Track serialized inventory units
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'inventory:serial_unit_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>View All Units
+                            <span class="badge bg-secondary float-end">{{ total_serial_units|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'inventory:serial_unit_create' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>Add Serial Unit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%); color: white;">
+                        <i class="bi bi-stack"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Stock</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Monitor stock levels and locations
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'inventory:stock_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>View Stock Levels
+                        </a>
+                        <a href="{% url 'inventory:stock_adjustment_create' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-plus-slash-minus me-2 text-warning"></i>Stock Adjustment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOMs Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">BOMs</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        Bill of Materials management
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'inventory:bom_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>View All BOMs
+                        </a>
+                        <a href="{% url 'inventory:bom_create' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>Create New BOM
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body p-4">
+                    <div class="card-icon bg-secondary bg-gradient text-white">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <h5 class="card-title" style="color: #212529; font-weight: 600;">Transactions</h5>
+                    <p class="mb-3" style="color: #495057;">
+                        View inventory movement history
+                    </p>
+
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'inventory:transaction_list' %}" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>View All Transactions
+                        </a>
+                        <a href="{% url 'inventory:transaction_list' %}?type=IN" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-box-arrow-in-down me-2 text-success"></i>Inbound Only
+                        </a>
+                        <a href="{% url 'inventory:transaction_list' %}?type=OUT" class="list-group-item list-group-item-action border-0 px-0" style="color: #212529;">
+                            <i class="bi bi-box-arrow-up me-2 text-danger"></i>Outbound Only
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
