@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Planning & KPI Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .dashboard-card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 600;
+    }
+    .kpi-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .kpi-on-target { background: #10b981; color: white; }
+    .kpi-warning { background: #f59e0b; color: white; }
+    .kpi-critical { background: #dc2626; color: white; }
+    .health-score {
+        font-size: 3rem;
+        font-weight: 700;
+    }
+    .health-good { color: #10b981; }
+    .health-fair { color: #f59e0b; }
+    .health-poor { color: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Planning & KPI Dashboard</h1>
+            <p class="text-muted mb-0">Monitor schedules, KPIs, WIP status, and delivery performance</p>
+        </div>
+        <div>
+            <a href="{% url 'planning:schedule_create' %}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-lg me-1"></i> New Schedule
+            </a>
+            <a href="{% url 'planning:kpi_value_record' %}" class="btn btn-outline-primary">
+                <i class="bi bi-graph-up me-1"></i> Record KPI
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Statistics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ schedule_stats.total_schedules }}</div>
+                        <div class="stat-label">Total Schedules</div>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value text-danger">{{ at_risk_count }}</div>
+                        <div class="stat-label">Jobs At Risk</div>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value text-warning">{{ overdue_operations }}</div>
+                        <div class="stat-label">Overdue Operations</div>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ resource_stats.total_resources }}</div>
+                        <div class="stat-label">Active Resources</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-gear"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <!-- KPI Summary -->
+        <div class="col-lg-8">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span>Key Performance Indicators</span>
+                    <a href="{% url 'planning:kpi_dashboard' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>KPI</th>
+                                <th>Current Value</th>
+                                <th>Target</th>
+                                <th>Status</th>
+                                <th>Period</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for kpi in recent_kpis %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ kpi.kpi_definition.code }}</div>
+                                    <small class="text-muted">{{ kpi.kpi_definition.name }}</small>
+                                </td>
+                                <td>{{ kpi.value }} {{ kpi.kpi_definition.unit }}</td>
+                                <td>{{ kpi.kpi_definition.target_value|default:"-" }} {{ kpi.kpi_definition.unit }}</td>
+                                <td>
+                                    {% if kpi.is_on_target %}
+                                    <span class="kpi-badge kpi-on-target">On Target</span>
+                                    {% else %}
+                                    <span class="kpi-badge kpi-warning">Off Target</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ kpi.period_start }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">No KPI data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- WIP Health Score -->
+        <div class="col-lg-4">
+            {% if latest_wip %}
+            <div class="dashboard-card mb-4">
+                <div class="dashboard-card-header">WIP Health Score</div>
+                <div class="p-3 text-center">
+                    <div class="health-score {% if latest_wip.health_score >= 80 %}health-good{% elif latest_wip.health_score >= 60 %}health-fair{% else %}health-poor{% endif %}">
+                        {{ latest_wip.health_score|floatformat:0 }}
+                    </div>
+                    <div class="text-muted">Last Updated: {{ latest_wip.snapshot_time|date:"M d, H:i" }}</div>
+                    <hr>
+                    <div class="row text-start">
+                        <div class="col-6">
+                            <div class="small text-muted">Total WIP</div>
+                            <div class="fw-bold">{{ latest_wip.total_jobs_in_wip }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="small text-muted">On Track</div>
+                            <div class="fw-bold text-success">{{ latest_wip.jobs_on_track }}</div>
+                        </div>
+                        <div class="col-6 mt-2">
+                            <div class="small text-muted">At Risk</div>
+                            <div class="fw-bold text-warning">{{ latest_wip.jobs_at_risk }}</div>
+                        </div>
+                        <div class="col-6 mt-2">
+                            <div class="small text-muted">Delayed</div>
+                            <div class="fw-bold text-danger">{{ latest_wip.jobs_delayed }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Active Schedule -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">Active Schedule</div>
+                <div class="p-3">
+                    {% if schedule_stats.active %}
+                    <div class="mb-3">
+                        <div class="fw-bold">{{ schedule_stats.active.name }}</div>
+                        <small class="text-muted">{{ schedule_stats.active.schedule_date }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Operations</span>
+                            <span class="fw-bold">{{ schedule_stats.active.operation_count }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Horizon</span>
+                            <span class="fw-bold">{{ schedule_stats.active.planning_horizon_days }} days</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'planning:schedule_detail' schedule_stats.active.pk %}" class="btn btn-primary btn-sm w-100">
+                        View Schedule
+                    </a>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        No active schedule
+                        <div class="mt-2">
+                            <a href="{% url 'planning:schedule_create' %}" class="btn btn-sm btn-outline-primary">
+                                Create Schedule
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts & Quick Actions -->
+    <div class="row g-4 mt-2">
+        {% if escalation_needed > 0 %}
+        <div class="col-12">
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <div>
+                    <strong>{{ escalation_needed }}</strong> job(s) require escalation due to delivery risk.
+                    <a href="{% url 'planning:at_risk_jobs' %}" class="alert-link">View at-risk jobs</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">Quick Actions</div>
+                <div class="p-3">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{% url 'planning:schedule_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-calendar-check me-1"></i> All Schedules
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'planning:wip_board' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-kanban me-1"></i> WIP Board
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'planning:capacity_overview' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-bar-chart me-1"></i> Capacity Planning
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'planning:forecast_list' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-truck me-1"></i> Delivery Forecasts
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

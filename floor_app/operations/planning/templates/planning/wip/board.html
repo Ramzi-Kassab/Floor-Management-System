@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}WIP Board - Planning{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Work In Progress Board</h1>
+        <div>
+            <a href="{% url 'planning:wip_snapshot' %}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-camera me-1"></i> Take Snapshot
+            </a>
+            <a href="{% url 'planning:wip_history' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-clock-history me-1"></i> History
+            </a>
+        </div>
+    </div>
+
+    {% if wip %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-4 fw-bold">{{ wip.total_jobs_in_wip }}</div>
+                    <div class="text-muted">Total Jobs in WIP</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-success bg-opacity-10">
+                <div class="card-body">
+                    <div class="display-4 fw-bold text-success">{{ wip.jobs_on_track }}</div>
+                    <div class="text-muted">On Track</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-warning bg-opacity-10">
+                <div class="card-body">
+                    <div class="display-4 fw-bold text-warning">{{ wip.jobs_at_risk }}</div>
+                    <div class="text-muted">At Risk</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-danger bg-opacity-10">
+                <div class="card-body">
+                    <div class="display-4 fw-bold text-danger">{{ wip.jobs_delayed }}</div>
+                    <div class="text-muted">Delayed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">Jobs by Stage</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <strong>In Evaluation</strong>
+                                <div class="fs-4">{{ wip.jobs_in_evaluation }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <strong>Awaiting Approval</strong>
+                                <div class="fs-4">{{ wip.jobs_awaiting_approval }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <strong>Awaiting Materials</strong>
+                                <div class="fs-4">{{ wip.jobs_awaiting_materials }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <strong>In Production</strong>
+                                <div class="fs-4">{{ wip.jobs_in_production }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <strong>Under QC</strong>
+                                <div class="fs-4">{{ wip.jobs_under_qc }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <strong>On Hold</strong>
+                                <div class="fs-4 text-danger">{{ wip.jobs_on_hold }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">Metrics</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Total WIP Value</strong>
+                        <div class="fs-4">{{ wip.total_wip_value|floatformat:2 }} SAR</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Average Age</strong>
+                        <div class="fs-4">{{ wip.avg_age_days|floatformat:1 }} days</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Max Age</strong>
+                        <div class="fs-4">{{ wip.max_age_days }} days</div>
+                    </div>
+                    <div>
+                        <strong>Last Updated</strong>
+                        <div class="text-muted">{{ wip.snapshot_time|date:"M d, Y H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if wip.bottleneck_resources_json %}
+    <div class="card mt-4">
+        <div class="card-header">Bottleneck Resources</div>
+        <div class="card-body">
+            {% for bottleneck in wip.bottleneck_resources_json %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>{{ bottleneck.resource }}</span>
+                <span class="badge bg-danger">{{ bottleneck.utilization }}% utilization</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-info">
+        No WIP snapshot available. <a href="{% url 'planning:wip_snapshot' %}" class="alert-link">Take a snapshot now</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

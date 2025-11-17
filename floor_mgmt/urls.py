@@ -52,5 +52,11 @@ urlpatterns = [
 
     # === Maintenance & Asset Management ===
     path("maintenance/", include(("floor_app.operations.maintenance.urls", "maintenance"), namespace="maintenance")),
+
+    # === Quality Management ===
+    path("quality/", include(("floor_app.operations.quality.urls", "quality"), namespace="quality")),
+
+    # === Planning & KPI ===
+    path("planning/", include(("floor_app.operations.planning.urls", "planning"), namespace="planning")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
