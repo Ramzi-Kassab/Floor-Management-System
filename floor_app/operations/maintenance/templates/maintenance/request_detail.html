@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Request: {{ request_obj.request_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">{{ request_obj.request_number }}</h1>
+            <h5 class="text-muted">{{ request_obj.title }}</h5>
+        </div>
+        <div>
+            {% if request_obj.status == 'NEW' or request_obj.status == 'UNDER_REVIEW' %}
+            <a href="{% url 'maintenance:request_review' request_obj.pk %}" class="btn btn-warning">
+                <i class="fas fa-check-circle"></i> Review Request
+            </a>
+            {% elif request_obj.status == 'APPROVED' %}
+            <a href="{% url 'maintenance:request_convert_to_wo' request_obj.pk %}" class="btn btn-success">
+                <i class="fas fa-clipboard-list"></i> Convert to Work Order
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Request Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Request Number</dt>
+                        <dd class="col-sm-9">{{ request_obj.request_number }}</dd>
+
+                        <dt class="col-sm-3">Asset</dt>
+                        <dd class="col-sm-9">
+                            {% if request_obj.asset %}
+                            <a href="{% url 'maintenance:asset_detail' request_obj.asset.asset_code %}">
+                                {{ request_obj.asset.asset_code }} - {{ request_obj.asset.name }}
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-3">Title</dt>
+                        <dd class="col-sm-9">{{ request_obj.title }}</dd>
+
+                        <dt class="col-sm-3">Description</dt>
+                        <dd class="col-sm-9">{{ request_obj.description|linebreaks }}</dd>
+
+                        <dt class="col-sm-3">Priority</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-{% if request_obj.priority == 'CRITICAL' %}danger{% elif request_obj.priority == 'HIGH' %}warning{% elif request_obj.priority == 'MEDIUM' %}info{% else %}secondary{% endif %} fs-6">
+                                {{ request_obj.priority }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-3">Department</dt>
+                        <dd class="col-sm-9">{{ request_obj.department|default:"-" }}</dd>
+
+                        <dt class="col-sm-3">Requested By</dt>
+                        <dd class="col-sm-9">{{ request_obj.requested_by|default:"-" }}</dd>
+
+                        <dt class="col-sm-3">Created At</dt>
+                        <dd class="col-sm-9">{{ request_obj.created_at|date:"Y-m-d H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if request_obj.rejection_reason %}
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Rejection Reason</h5>
+                </div>
+                <div class="card-body">
+                    {{ request_obj.rejection_reason|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if request_obj.converted_work_order %}
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Converted Work Order</h5>
+                </div>
+                <div class="card-body">
+                    <p>This request has been converted to:</p>
+                    <a href="{% url 'maintenance:workorder_detail' request_obj.converted_work_order.work_order_number %}" class="btn btn-success">
+                        <i class="fas fa-clipboard-list"></i> {{ request_obj.converted_work_order.work_order_number }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Status</h6>
+                    <span class="badge bg-{% if request_obj.status == 'NEW' %}info{% elif request_obj.status == 'UNDER_REVIEW' %}warning{% elif request_obj.status == 'APPROVED' %}success{% elif request_obj.status == 'REJECTED' %}danger{% else %}secondary{% endif %} fs-4 px-4 py-2">
+                        {{ request_obj.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Review Info -->
+            {% if request_obj.reviewed_by %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Review Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Reviewed By</dt>
+                        <dd class="col-6">{{ request_obj.reviewed_by }}</dd>
+
+                        <dt class="col-6">Reviewed At</dt>
+                        <dd class="col-6">{{ request_obj.reviewed_at|date:"Y-m-d H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Timeline</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-circle text-primary me-2"></i>
+                            <strong>Created</strong><br>
+                            <small class="text-muted">{{ request_obj.created_at|date:"Y-m-d H:i" }}</small>
+                        </li>
+                        {% if request_obj.reviewed_at %}
+                        <li class="mb-2">
+                            <i class="fas fa-circle text-warning me-2"></i>
+                            <strong>Reviewed</strong><br>
+                            <small class="text-muted">{{ request_obj.reviewed_at|date:"Y-m-d H:i" }}</small>
+                        </li>
+                        {% endif %}
+                        {% if request_obj.converted_work_order %}
+                        <li>
+                            <i class="fas fa-circle text-success me-2"></i>
+                            <strong>Converted to WO</strong><br>
+                            <small class="text-muted">{{ request_obj.converted_work_order.created_at|date:"Y-m-d H:i" }}</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

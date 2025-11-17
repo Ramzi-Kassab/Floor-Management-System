@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Production Impact Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Production Impact Report</h1>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    {{ form.end_date }}
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <a href="{% url 'maintenance:downtime_impact' %}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Revenue at Risk</h6>
+                    <h3 class="mb-0">{{ summary.total_revenue_at_risk|floatformat:2 }}</h3>
+                    <small>SAR</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6 class="card-title">Total Delay Hours</h6>
+                    <h3 class="mb-0">{{ summary.total_delay_hours }}</h3>
+                    <small>hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Lost Revenue</h6>
+                    <h3 class="mb-0">{{ summary.total_lost_revenue|floatformat:2 }}</h3>
+                    <small>SAR (confirmed)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Delayed Revenue</h6>
+                    <h3 class="mb-0">{{ summary.total_delayed_revenue|floatformat:2 }}</h3>
+                    <small>SAR (recoverable)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top Downtime Assets -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Top Downtime Assets (Last 30 Days)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Asset</th>
+                                    <th>Total Hours</th>
+                                    <th>Events</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for asset in top_assets %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ asset.asset__asset_code }}</strong><br>
+                                        <small class="text-muted">{{ asset.asset__name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-danger">{{ asset.total_minutes|floatformat:0 }} min</span>
+                                    </td>
+                                    <td>{{ asset.event_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No data</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Downtime by Reason -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Downtime by Reason Category</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Reason</th>
+                                    <th>Events</th>
+                                    <th>Total Minutes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reason in by_reason %}
+                                <tr>
+                                    <td>{{ reason.reason_category|default:"Not specified" }}</td>
+                                    <td>{{ reason.count }}</td>
+                                    <td>{{ reason.total_minutes|floatformat:0 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No data</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Additional Statistics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <dl class="row">
+                        <dt class="col-8">Confirmed Impacts</dt>
+                        <dd class="col-4">{{ summary.confirmed_impacts }}</dd>
+
+                        <dt class="col-8">Lost Sales Records</dt>
+                        <dd class="col-4">{{ summary.lost_sales_records }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control {
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Work Order: {{ work_order.work_order_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">{{ work_order.work_order_number }}</h1>
+            <h5 class="text-muted">{{ work_order.title }}</h5>
+        </div>
+        <div>
+            {% if work_order.status == 'PLANNED' %}
+            <a href="{% url 'maintenance:workorder_assign' work_order.work_order_number %}" class="btn btn-warning">
+                <i class="fas fa-user-plus"></i> Assign
+            </a>
+            {% elif work_order.status == 'ASSIGNED' or work_order.status == 'IN_PROGRESS' %}
+            <a href="{% url 'maintenance:workorder_complete' work_order.work_order_number %}" class="btn btn-success">
+                <i class="fas fa-check"></i> Complete
+            </a>
+            {% endif %}
+            <a href="{% url 'maintenance:workorder_edit' work_order.work_order_number %}" class="btn btn-outline-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Core Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Work Order Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">WO Number</dt>
+                                <dd class="col-sm-7">{{ work_order.work_order_number }}</dd>
+
+                                <dt class="col-sm-5">Asset</dt>
+                                <dd class="col-sm-7">
+                                    <a href="{% url 'maintenance:asset_detail' work_order.asset.asset_code %}">
+                                        {{ work_order.asset.asset_code }}
+                                    </a>
+                                </dd>
+
+                                <dt class="col-sm-5">Type</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-{% if work_order.work_order_type == 'EMERGENCY' %}danger{% elif work_order.work_order_type == 'CORRECTIVE' %}warning{% else %}info{% endif %}">
+                                        {{ work_order.get_work_order_type_display }}
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-5">Priority</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-{% if work_order.priority == 'CRITICAL' %}danger{% elif work_order.priority == 'HIGH' %}warning{% else %}info{% endif %} fs-6">
+                                        {{ work_order.priority }}
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-5">Status</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-{% if work_order.status == 'COMPLETED' %}success{% elif work_order.status == 'IN_PROGRESS' %}warning{% elif work_order.status == 'WAITING_PARTS' %}danger{% else %}secondary{% endif %} fs-6">
+                                        {{ work_order.get_status_display }}
+                                    </span>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Assigned To</dt>
+                                <dd class="col-sm-7">{{ work_order.assigned_to|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Assigned By</dt>
+                                <dd class="col-sm-7">{{ work_order.assigned_by|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Created</dt>
+                                <dd class="col-sm-7">{{ work_order.created_at|date:"Y-m-d H:i" }}</dd>
+
+                                <dt class="col-sm-5">Created By</dt>
+                                <dd class="col-sm-7">{{ work_order.created_by|default:"-" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6>Description</h6>
+                    <p>{{ work_order.description|linebreaks }}</p>
+                </div>
+            </div>
+
+            <!-- Scheduling -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Scheduling</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Planned</h6>
+                            <dl class="row">
+                                <dt class="col-6">Start</dt>
+                                <dd class="col-6">{{ work_order.planned_start|date:"Y-m-d H:i"|default:"-" }}</dd>
+                                <dt class="col-6">End</dt>
+                                <dd class="col-6">{{ work_order.planned_end|date:"Y-m-d H:i"|default:"-" }}</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Actual</h6>
+                            <dl class="row">
+                                <dt class="col-6">Start</dt>
+                                <dd class="col-6">{{ work_order.actual_start|date:"Y-m-d H:i"|default:"-" }}</dd>
+                                <dt class="col-6">End</dt>
+                                <dd class="col-6">{{ work_order.actual_end|date:"Y-m-d H:i"|default:"-" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Performed (if completed) -->
+            {% if work_order.work_performed %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Work Performed</h5>
+                </div>
+                <div class="card-body">
+                    {{ work_order.work_performed|linebreaks }}
+
+                    {% if work_order.solution_summary %}
+                    <h6 class="mt-3">Solution Summary</h6>
+                    <p>{{ work_order.solution_summary }}</p>
+                    {% endif %}
+
+                    {% if work_order.root_cause_category %}
+                    <h6 class="mt-3">Root Cause</h6>
+                    <p><strong>{{ work_order.get_root_cause_category_display }}</strong></p>
+                    {% if work_order.root_cause_detail %}
+                    <p>{{ work_order.root_cause_detail }}</p>
+                    {% endif %}
+                    {% endif %}
+
+                    {% if work_order.recommendations %}
+                    <h6 class="mt-3">Recommendations</h6>
+                    <p>{{ work_order.recommendations }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Notes & Updates</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add Note Form -->
+                    <form method="post" action="{% url 'maintenance:workorder_add_note' work_order.work_order_number %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ note_form.note_type }}
+                            </div>
+                            <div class="col-md-7">
+                                {{ note_form.content }}
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Add Note</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Notes List -->
+                    {% for note in notes %}
+                    <div class="border-start border-4 border-{% if note.note_type == 'ISSUE' %}danger{% elif note.note_type == 'RESOLUTION' %}success{% elif note.note_type == 'PROGRESS' %}warning{% else %}info{% endif %} ps-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ note.get_note_type_display }}</strong>
+                            <small class="text-muted">{{ note.created_at|date:"Y-m-d H:i" }} by {{ note.created_by }}</small>
+                        </div>
+                        <p class="mb-0">{{ note.content }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No notes yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Parts Used -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Parts Used</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add Part Form -->
+                    <form method="post" action="{% url 'maintenance:workorder_add_part' work_order.work_order_number %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="row g-2">
+                            <div class="col-md-2">
+                                {{ part_form.part_number }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ part_form.part_description }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ part_form.quantity_used }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ part_form.unit_cost }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ part_form.warehouse_location }}
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-primary w-100">+</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Parts Table -->
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Part #</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Unit Cost</th>
+                                    <th>Total</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for part in parts %}
+                                <tr>
+                                    <td>{{ part.part_number }}</td>
+                                    <td>{{ part.part_description }}</td>
+                                    <td>{{ part.quantity_used }}</td>
+                                    <td>{{ part.unit_cost }}</td>
+                                    <td>{{ part.total_cost }}</td>
+                                    <td>{{ part.warehouse_location|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No parts recorded</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Costs -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Cost Summary</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-7">Labor Hours</dt>
+                        <dd class="col-5 text-end">{{ work_order.labor_hours|default:"0" }}</dd>
+
+                        <dt class="col-7">Labor Cost</dt>
+                        <dd class="col-5 text-end">{{ work_order.labor_cost|default:"0" }}</dd>
+
+                        <dt class="col-7">Parts Cost</dt>
+                        <dd class="col-5 text-end">{{ work_order.parts_cost|default:"0" }}</dd>
+
+                        <dt class="col-7">External Cost</dt>
+                        <dd class="col-5 text-end">{{ work_order.external_cost|default:"0" }}</dd>
+
+                        <dt class="col-7 fw-bold">Total Cost</dt>
+                        <dd class="col-5 text-end fw-bold">{{ work_order.total_cost|default:"0" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Flags -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Flags</h6>
+                </div>
+                <div class="card-body">
+                    {% if work_order.requires_shutdown %}
+                    <span class="badge bg-danger mb-2">Requires Shutdown</span><br>
+                    {% endif %}
+                    {% if work_order.safety_permit_required %}
+                    <span class="badge bg-warning text-dark mb-2">Safety Permit Required</span><br>
+                    {% endif %}
+                    {% if work_order.contractor_involved %}
+                    <span class="badge bg-info mb-2">Contractor Involved</span><br>
+                    {% endif %}
+                    {% if not work_order.requires_shutdown and not work_order.safety_permit_required and not work_order.contractor_involved %}
+                    <span class="text-muted">No special flags</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Source -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Source</h6>
+                </div>
+                <div class="card-body">
+                    {% if work_order.source_request %}
+                    <p class="mb-2"><strong>From Request:</strong></p>
+                    <a href="{% url 'maintenance:request_detail' work_order.source_request.pk %}" class="btn btn-outline-primary btn-sm">
+                        {{ work_order.source_request.request_number }}
+                    </a>
+                    {% elif work_order.source_pm_task %}
+                    <p class="mb-2"><strong>From PM Task:</strong></p>
+                    <a href="{% url 'maintenance:pm_task_detail' work_order.source_pm_task.pk %}" class="btn btn-outline-info btn-sm">
+                        PM Task #{{ work_order.source_pm_task.pk }}
+                    </a>
+                    {% else %}
+                    <span class="text-muted">Manually created</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Downtime Events -->
+            {% if downtime_events %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Related Downtime</h6>
+                </div>
+                <div class="card-body">
+                    {% for event in downtime_events %}
+                    <div class="mb-2">
+                        <strong>{{ event.get_event_type_display }}</strong><br>
+                        <small>{{ event.start_time|date:"Y-m-d H:i" }} - {{ event.end_time|date:"H:i"|default:"Ongoing" }}</small><br>
+                        <span class="badge bg-{% if event.severity == 'CRITICAL' %}danger{% else %}warning{% endif %}">{{ event.duration_hours }}h</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.5rem;
+    }
+</style>
+{% endblock %}

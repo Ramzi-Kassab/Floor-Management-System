@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Maintenance Request{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <h1 class="h3">Submit Maintenance Request</h1>
+        <p class="text-muted">Report an issue or request maintenance for an asset</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below:</strong>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                <li>{{ field }}: {{ error }}</li>
+                                {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Asset *</label>
+                            {{ form.asset }}
+                            <small class="text-muted">Select the asset requiring maintenance</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            {{ form.title }}
+                            <small class="text-muted">Brief summary of the issue</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            {{ form.description }}
+                            <small class="text-muted">Describe the problem, symptoms, or maintenance needed in detail</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Priority *</label>
+                                {{ form.priority }}
+                                <small class="text-muted">
+                                    <strong>LOW:</strong> Can wait a few days<br>
+                                    <strong>MEDIUM:</strong> Should be addressed soon<br>
+                                    <strong>HIGH:</strong> Urgent, affecting production<br>
+                                    <strong>CRITICAL:</strong> Immediate attention required
+                                </small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Department</label>
+                                {{ form.department }}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'maintenance:request_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6>Request Process</h6>
+                    <ol class="mb-0">
+                        <li class="mb-2">Submit request with details</li>
+                        <li class="mb-2">Maintenance team reviews</li>
+                        <li class="mb-2">Request approved or rejected</li>
+                        <li class="mb-2">If approved, converted to work order</li>
+                        <li>Work order assigned and executed</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>Tips for Good Requests</h6>
+                    <ul class="small mb-0">
+                        <li>Be specific about the problem</li>
+                        <li>Include error codes if applicable</li>
+                        <li>Note when the issue started</li>
+                        <li>Describe any unusual sounds or behaviors</li>
+                        <li>Mention safety concerns immediately</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}

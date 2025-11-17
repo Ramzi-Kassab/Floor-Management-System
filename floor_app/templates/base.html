@@ -266,13 +266,57 @@
                         </a>
                     </li>
 
-                    <!-- Maintenance Section (Coming Soon) -->
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
+                    <!-- Maintenance & Assets Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="maintenance-section">
                             <i class="bi bi-tools"></i>
-                            <span>Maintenance</span>
-                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
-                        </a>
+                            <span>Maintenance & Assets</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="maintenance-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Maintenance Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:asset_list' %}">
+                                    <i class="bi bi-gear-fill"></i>
+                                    <span>Assets</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:request_list' %}">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <span>Requests</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:workorder_list' %}">
+                                    <i class="bi bi-clipboard-check-fill"></i>
+                                    <span>Work Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:pm_calendar' %}">
+                                    <i class="bi bi-calendar-check-fill"></i>
+                                    <span>PM Calendar</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:downtime_list' %}">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Downtime Events</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:reports_dashboard' %}">
+                                    <i class="bi bi-bar-chart-fill"></i>
+                                    <span>Reports</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- Logistics Section (Coming Soon) -->

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <h1 class="h3">{{ title }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'maintenance:asset_list' %}">Assets</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Please correct the errors below:</strong>
+            <ul class="mb-0">
+                {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <li>{{ field }}: {{ error }}</li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Basic Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Asset Code *</label>
+                                {{ form.asset_code }}
+                                {% if form.asset_code.errors %}
+                                <div class="invalid-feedback d-block">{{ form.asset_code.errors|first }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Name *</label>
+                                {{ form.name }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Category</label>
+                                {{ form.category }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location</label>
+                                {{ form.location }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Status *</label>
+                                {{ form.status }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Criticality *</label>
+                                {{ form.criticality }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Critical Flag</label>
+                                <div class="form-check mt-2">
+                                    {{ form.is_critical }}
+                                    <label class="form-check-label">Mark as Critical Asset</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Equipment Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Manufacturer</label>
+                                {{ form.manufacturer }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Model Number</label>
+                                {{ form.model_number }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Serial Number</label>
+                                {{ form.serial_number }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Year Manufactured</label>
+                                {{ form.year_manufactured }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Financial Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Purchase Date</label>
+                                {{ form.purchase_date }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Purchase Cost</label>
+                                {{ form.purchase_cost }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Warranty Expires</label>
+                                {{ form.warranty_expires }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Vendor</label>
+                                {{ form.vendor }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">ERP Asset Number</label>
+                                {{ form.erp_asset_number }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operations -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Operations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Installation Date</label>
+                                {{ form.installation_date }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Responsible Department</label>
+                                {{ form.responsible_department }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Primary Operator</label>
+                                {{ form.primary_operator }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Meter Reading</label>
+                                {{ form.meter_reading }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Meter Unit</label>
+                                {{ form.meter_unit }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Flags -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Safety & Compliance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            {{ form.requires_certification }}
+                            <label class="form-check-label">Requires Operator Certification</label>
+                        </div>
+                        <div class="form-check">
+                            {{ form.has_safety_lockout }}
+                            <label class="form-check-label">Has Safety Lockout Procedure</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Info -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Technical Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Specifications (JSON)</label>
+                            {{ form.specifications }}
+                            <small class="text-muted">Enter as JSON object</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-save"></i> Save Asset
+                        </button>
+                        <a href="{% url 'maintenance:asset_list' %}" class="btn btn-outline-secondary w-100">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, .form-select {
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}

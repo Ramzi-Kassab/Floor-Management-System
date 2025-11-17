@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}PM Calendar{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Preventive Maintenance Calendar</h1>
+        <a href="{% url 'maintenance:pm_task_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list"></i> View All Tasks
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Overdue PMs -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Overdue ({{ overdue|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for pm in overdue %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'maintenance:asset_detail' pm.asset.asset_code %}">
+                                            {{ pm.asset.asset_code }}
+                                        </a>
+                                        - {{ pm.asset.name }}
+                                    </h6>
+                                    <p class="mb-1 text-muted">{{ pm.pm_template.name }}</p>
+                                    <small class="text-danger">
+                                        <i class="fas fa-calendar"></i> Due: {{ pm.next_due_date }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-danger">Overdue</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-success">
+                            <i class="fas fa-check-circle"></i> No overdue PMs
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- This Week -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock"></i> Due This Week ({{ this_week|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for pm in this_week %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'maintenance:asset_detail' pm.asset.asset_code %}">
+                                            {{ pm.asset.asset_code }}
+                                        </a>
+                                        - {{ pm.asset.name }}
+                                    </h6>
+                                    <p class="mb-1 text-muted">{{ pm.pm_template.name }}</p>
+                                    <small class="text-warning">
+                                        <i class="fas fa-calendar"></i> Due: {{ pm.next_due_date }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-warning text-dark">This Week</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            No PMs due this week
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- This Month -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Due This Month ({{ this_month|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                        {% for pm in this_month %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ pm.asset.asset_code }} - {{ pm.asset.name }}</h6>
+                                    <p class="mb-1 text-muted small">{{ pm.pm_template.name }}</p>
+                                    <small class="text-info">
+                                        <i class="fas fa-calendar"></i> {{ pm.next_due_date }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            No PMs due this month
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Future -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-plus"></i> Future PMs (Next 20)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                        {% for pm in future %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ pm.asset.asset_code }} - {{ pm.asset.name }}</h6>
+                                    <p class="mb-1 text-muted small">{{ pm.pm_template.name }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> {{ pm.next_due_date }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            No future PMs scheduled
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <a href="{% url 'maintenance:pm_template_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-file-alt"></i> PM Templates
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'maintenance:pm_task_list' %}" class="btn btn-outline-info w-100 mb-2">
+                        <i class="fas fa-tasks"></i> All PM Tasks
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'maintenance:reports_dashboard' %}" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

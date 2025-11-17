@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Downtime Event{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Downtime Event</h1>
+        <a href="{% url 'maintenance:production_impact_create' event.pk %}" class="btn btn-danger">
+            <i class="fas fa-dollar-sign"></i> Add Production Impact
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Event Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Asset</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'maintenance:asset_detail' event.asset.asset_code %}">
+                                {{ event.asset.asset_code }} - {{ event.asset.name }}
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Event Type</dt>
+                        <dd class="col-sm-8">{{ event.get_event_type_display }}</dd>
+
+                        <dt class="col-sm-4">Start Time</dt>
+                        <dd class="col-sm-8">{{ event.start_time|date:"Y-m-d H:i" }}</dd>
+
+                        <dt class="col-sm-4">End Time</dt>
+                        <dd class="col-sm-8">
+                            {% if event.end_time %}
+                            {{ event.end_time|date:"Y-m-d H:i" }}
+                            {% else %}
+                            <span class="badge bg-warning">Ongoing</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Duration</dt>
+                        <dd class="col-sm-8">
+                            {% if event.duration_hours %}
+                            <span class="fs-5 fw-bold">{{ event.duration_hours }} hours</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Severity</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{% if event.severity == 'CRITICAL' %}danger{% elif event.severity == 'MAJOR' %}warning{% else %}info{% endif %} fs-6">
+                                {{ event.get_severity_display }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Planned</dt>
+                        <dd class="col-sm-8">
+                            {% if event.is_planned %}
+                            <span class="badge bg-info">Planned</span>
+                            {% else %}
+                            <span class="badge bg-danger">Unplanned</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Reason Category</dt>
+                        <dd class="col-sm-8">{{ event.get_reason_category_display|default:"-" }}</dd>
+
+                        <dt class="col-sm-4">Reported By</dt>
+                        <dd class="col-sm-8">{{ event.reported_by|default:"-" }}</dd>
+                    </dl>
+
+                    {% if event.reason_description %}
+                    <hr>
+                    <h6>Reason Description</h6>
+                    <p>{{ event.reason_description|linebreaks }}</p>
+                    {% endif %}
+
+                    {% if event.notes %}
+                    <hr>
+                    <h6>Notes</h6>
+                    <p>{{ event.notes|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Production Impacts -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Production Impacts</h5>
+                </div>
+                <div class="card-body">
+                    {% if impacts %}
+                    {% for impact in impacts %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>{{ impact.get_impact_type_display }}</h6>
+                                <dl class="row mb-0">
+                                    <dt class="col-6">Batch/Job</dt>
+                                    <dd class="col-6">{{ impact.batch_reference|default:impact.job_card_number|default:"-" }}</dd>
+
+                                    <dt class="col-6">Customer</dt>
+                                    <dd class="col-6">{{ impact.customer_name|default:"-" }}</dd>
+
+                                    <dt class="col-6">Delay</dt>
+                                    <dd class="col-6">{{ impact.delay_hours }} hours</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Financial Impact</h6>
+                                <dl class="row mb-0">
+                                    <dt class="col-6">Revenue at Risk</dt>
+                                    <dd class="col-6">{{ impact.lost_or_delayed_revenue|default:"0" }} {{ impact.currency }}</dd>
+
+                                    <dt class="col-6">Confirmed</dt>
+                                    <dd class="col-6">
+                                        {% if impact.is_revenue_confirmed %}
+                                        <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                        {% if impact.impact_description %}
+                        <hr>
+                        <p class="mb-0 small">{{ impact.impact_description }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-center text-muted">No production impacts recorded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Work Order Link -->
+            {% if event.work_order %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Related Work Order</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'maintenance:workorder_detail' event.work_order.work_order_number %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-clipboard-list"></i> {{ event.work_order.work_order_number }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Impact Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Impact Summary</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-7">Has Impact</dt>
+                        <dd class="col-5">
+                            {% if event.has_production_impact %}
+                            <span class="badge bg-danger">Yes</span>
+                            {% else %}
+                            <span class="badge bg-success">No</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-7">Impact Records</dt>
+                        <dd class="col-5">{{ impacts.count }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

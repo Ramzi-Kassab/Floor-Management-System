@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}PM Templates{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">PM Templates</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Frequency</th>
+                            <th>Duration</th>
+                            <th>Category</th>
+                            <th>Skill Level</th>
+                            <th>Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                        <tr>
+                            <td class="fw-bold">{{ template.code }}</td>
+                            <td>{{ template.name }}</td>
+                            <td>
+                                {{ template.get_frequency_type_display }}<br>
+                                <small class="text-muted">Every {{ template.frequency_days }} days</small>
+                            </td>
+                            <td>{{ template.estimated_duration_minutes }} min</td>
+                            <td>{{ template.applies_to_category|default:"-" }}</td>
+                            <td>{{ template.get_skill_level_required_display }}</td>
+                            <td>
+                                {% if template.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No PM templates found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

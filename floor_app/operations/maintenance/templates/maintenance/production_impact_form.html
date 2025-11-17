@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Add Production Impact{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <h1 class="h3">Record Production Impact</h1>
+        <p class="text-muted">Link downtime to production and financial impact</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="alert alert-info">
+                            <strong>Downtime Event:</strong> {{ downtime_event.asset.asset_code }} - {{ downtime_event.get_event_type_display }}<br>
+                            <strong>Duration:</strong> {{ downtime_event.duration_hours }} hours
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Impact Type *</label>
+                            {{ form.impact_type }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Batch Reference</label>
+                                {{ form.batch_reference }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Job Card Number</label>
+                                {{ form.job_card_number }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Customer Name</label>
+                                {{ form.customer_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Product Description</label>
+                                {{ form.product_description }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Expected Completion</label>
+                                {{ form.expected_completion_date }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Actual Completion</label>
+                                {{ form.actual_completion_date }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Delay (minutes)</label>
+                                {{ form.delay_minutes }}
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">Financial Impact</h5>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Lost/Delayed Revenue</label>
+                                {{ form.lost_or_delayed_revenue }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Currency</label>
+                                {{ form.currency }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Confirmed</label>
+                                <div class="form-check mt-2">
+                                    {{ form.is_revenue_confirmed }}
+                                    <label class="form-check-label">Confirmed</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Impact Description</label>
+                            {{ form.impact_description }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'maintenance:downtime_detail' downtime_event.pk %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-save"></i> Save Impact
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6>Impact Recording</h6>
+                    <p class="small">Recording production impact helps:</p>
+                    <ul class="small mb-0">
+                        <li>Quantify financial losses</li>
+                        <li>Prioritize maintenance investments</li>
+                        <li>Track customer impact</li>
+                        <li>Justify equipment upgrades</li>
+                        <li>Improve scheduling decisions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}

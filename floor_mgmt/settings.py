@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'floor_app.apps.FloorAppConfig',
     'floor_app.operations.hr.apps.HRConfig',
     'floor_app.operations.knowledge.apps.KnowledgeConfig',
+    'floor_app.operations.maintenance.apps.MaintenanceConfig',
     "core",
     "widget_tweaks",
 ]

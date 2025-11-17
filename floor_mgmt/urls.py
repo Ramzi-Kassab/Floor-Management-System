@@ -35,5 +35,9 @@ urlpatterns = [
     # === Knowledge & Instructions module ===
     # All Knowledge URLs under "/knowledge/" and namespaced as "knowledge"
     path("knowledge/", include(("floor_app.operations.knowledge.urls", "knowledge"), namespace="knowledge")),
+
+    # === Maintenance, Asset & Downtime module ===
+    # All Maintenance URLs under "/maintenance/" and namespaced as "maintenance"
+    path("maintenance/", include(("floor_app.operations.maintenance.urls", "maintenance"), namespace="maintenance")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
