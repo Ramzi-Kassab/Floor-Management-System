@@ -40,5 +40,8 @@ urlpatterns = [
 
     # === Evaluation & Technical Instructions ===
     path("evaluation/", include(("floor_app.operations.evaluation.urls", "evaluation"), namespace="evaluation")),
+
+    # === QR Codes & Scanning ===
+    path("qrcodes/", include(("floor_app.operations.qrcodes.urls", "qrcodes"), namespace="qrcodes")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

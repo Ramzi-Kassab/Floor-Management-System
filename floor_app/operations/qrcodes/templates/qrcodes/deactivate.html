@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Deactivate QR Code{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Deactivate QR Code</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to deactivate this QR code?</p>
+                    <p><strong>Token:</strong> <code>{{ qcode.token_short }}</code></p>
+                    <p><strong>Label:</strong> {{ qcode.label }}</p>
+                    <p class="text-warning">This will prevent the QR code from being scanned.</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Reason for deactivation</label>
+                            <textarea name="reason" class="form-control" rows="3" placeholder="Optional"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-x-circle"></i> Deactivate
+                        </button>
+                        <a href="{% url 'qrcodes:detail' token=qcode.token %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

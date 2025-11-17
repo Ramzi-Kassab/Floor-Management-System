@@ -339,13 +339,51 @@
                         </ul>
                     </li>
 
-                    <!-- Maintenance Section (Coming Soon) -->
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
-                            <i class="bi bi-tools"></i>
-                            <span>Maintenance</span>
-                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
-                        </a>
+                    <!-- QR Codes & Scanning Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="qrcodes-section">
+                            <i class="bi bi-qr-code"></i>
+                            <span>QR Codes & Scanning</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="qrcodes-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'qrcodes:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>QR Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'qrcodes:list' %}">
+                                    <i class="bi bi-qr-code-scan"></i>
+                                    <span>All QR Codes</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'qrcodes:equipment_list' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Equipment</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'qrcodes:maintenance_list' %}">
+                                    <i class="bi bi-tools"></i>
+                                    <span>Maintenance</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'qrcodes:container_list' %}">
+                                    <i class="bi bi-box"></i>
+                                    <span>Containers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'qrcodes:scan_logs' %}">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Scan Logs</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- Logistics Section (Coming Soon) -->

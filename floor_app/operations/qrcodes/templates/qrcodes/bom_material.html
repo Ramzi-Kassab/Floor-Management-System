@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}BOM Material{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-box-seam"></i> BOM Material</h1>
+    <p>BOM Line ID: {{ bom_line_id }}</p>
+    <div class="d-grid gap-2">
+        <a href="{% url 'qrcodes:bom_pickup' bom_line_id=bom_line_id %}" class="btn btn-primary">Pickup Material</a>
+        <a href="{% url 'qrcodes:bom_return' bom_line_id=bom_line_id %}" class="btn btn-warning">Return Material</a>
+    </div>
+</div>
+{% endblock %}

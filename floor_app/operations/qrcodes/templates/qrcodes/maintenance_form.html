@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Report Maintenance Issue{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="bi bi-exclamation-triangle"></i> Report Maintenance Issue</h1>
+    <p>Equipment: <strong>{{ equipment.code }} - {{ equipment.name }}</strong></p>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Issue Title *</label>
+                    {{ form.title }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description *</label>
+                    {{ form.description }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Priority</label>
+                        {{ form.priority }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Maintenance Type</label>
+                        {{ form.maintenance_type }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-send"></i> Submit Request
+                </button>
+                <a href="{% url 'qrcodes:equipment_detail' pk=equipment.pk %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

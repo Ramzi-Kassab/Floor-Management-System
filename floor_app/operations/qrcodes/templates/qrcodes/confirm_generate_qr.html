@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Generate QR Code{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-qr-code"></i> Generate QR Code</h5>
+                </div>
+                <div class="card-body">
+                    <p>Generate a QR code for this {{ object_type }}?</p>
+                    <p><strong>{{ object }}</strong></p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Generate QR Code
+                        </button>
+                        <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

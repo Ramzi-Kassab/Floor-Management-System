@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Process Action{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear-wide-connected"></i> Process Execution</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Operation</dt>
+                        <dd class="col-sm-8">{{ execution.operation_name }}</dd>
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge {% if execution.status == 'IN_PROGRESS' %}bg-success{% elif execution.status == 'PAUSED' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ execution.get_status_display }}
+                            </span>
+                        </dd>
+                        <dt class="col-sm-4">Start Time</dt>
+                        <dd class="col-sm-8">{{ execution.start_time|date:"M d, Y H:i:s" }}</dd>
+                        <dt class="col-sm-4">Duration</dt>
+                        <dd class="col-sm-8">{{ execution.duration_minutes|floatformat:1 }} minutes</dd>
+                        <dt class="col-sm-4">Operator</dt>
+                        <dd class="col-sm-8">{{ execution.operator_name }}</dd>
+                    </dl>
+
+                    <hr>
+
+                    {% if execution.status == 'IN_PROGRESS' %}
+                    <div class="d-flex gap-2">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-stop-fill"></i> End Process
+                            </button>
+                        </form>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="pause">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-pause-fill"></i> Pause
+                            </button>
+                        </form>
+                    </div>
+                    {% elif execution.status == 'PAUSED' %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="resume">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-play-fill"></i> Resume
+                        </button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted">Process completed.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

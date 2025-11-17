@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Start Process{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-play-circle"></i> Start Process Step</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="route_step_id" value="{{ route_step_id }}">
+                        <div class="mb-3">
+                            <label class="form-label">Job Card ID</label>
+                            <input type="number" name="job_card_id" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Operation Name</label>
+                            <input type="text" name="operation_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Work Center</label>
+                            <input type="text" name="work_center" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-play-fill"></i> Start
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Container: {{ container.code }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-box"></i> {{ container.code }}</h1>
+        <a href="{% url 'qrcodes:container_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Code</dt>
+                        <dd class="col-sm-9">{{ container.code }}</dd>
+                        <dt class="col-sm-3">Type</dt>
+                        <dd class="col-sm-9">{{ container.get_container_type_display }}</dd>
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">{{ container.get_status_display }}</dd>
+                        <dt class="col-sm-3">Location</dt>
+                        <dd class="col-sm-9">{{ container.location_name|default:"-" }}</dd>
+                        <dt class="col-sm-3">Current/Max</dt>
+                        <dd class="col-sm-9">{{ container.current_count }}/{{ container.max_capacity|default:"Unlimited" }}</dd>
+                    </dl>
+                    <hr>
+                    {% if not container.qcode_id %}
+                    <a href="{% url 'qrcodes:container_generate_qr' pk=container.pk %}" class="btn btn-success">
+                        <i class="bi bi-qr-code"></i> Generate QR Code
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            {% if qcode %}
+            <div class="card">
+                <div class="card-header">QR Code</div>
+                <div class="card-body text-center">
+                    <img src="{% url 'qrcodes:image' token=qcode.token format='png' %}" alt="QR" class="img-fluid" style="max-width: 200px;">
+                    <p class="mt-2"><code>{{ qcode.token_short }}</code></p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

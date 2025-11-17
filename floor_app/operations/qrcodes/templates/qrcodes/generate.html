@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Generate QR Code{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="bi bi-qr-code"></i> Generate QR Code</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">QR Code Type</label>
+                            {{ form.qcode_type }}
+                            <small class="form-text text-muted">Select the type of object this QR code will represent.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Object ID</label>
+                            {{ form.object_id }}
+                            <small class="form-text text-muted">The database ID of the target object.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Label (Optional)</label>
+                            {{ form.label }}
+                            <small class="form-text text-muted">Human-readable label for this QR code.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Generate QR Code
+                        </button>
+                        <a href="{% url 'qrcodes:list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Maintenance{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="bi bi-check-circle"></i> Complete Maintenance Request</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Resolution Notes</label>
+                    {{ form.resolution_notes }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Parts Used</label>
+                    {{ form.parts_used }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Labor Hours</label>
+                        {{ form.labor_hours }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Total Cost</label>
+                        {{ form.total_cost }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Mark as Complete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

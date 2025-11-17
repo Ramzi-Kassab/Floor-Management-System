@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Result{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if result.success %}
+                    <i class="bi bi-check-circle text-success fs-1 mb-3"></i>
+                    <h4 class="text-success">Success</h4>
+                    {% else %}
+                    <i class="bi bi-x-circle text-danger fs-1 mb-3"></i>
+                    <h4 class="text-danger">Failed</h4>
+                    {% endif %}
+                    <p>{{ result.message }}</p>
+                    <a href="{% url 'qrcodes:dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

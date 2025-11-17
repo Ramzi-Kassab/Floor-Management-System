@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Reactivate QR Code{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle"></i> Reactivate QR Code</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to reactivate this QR code?</p>
+                    <p><strong>Token:</strong> <code>{{ qcode.token_short }}</code></p>
+                    <p><strong>Label:</strong> {{ qcode.label }}</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Reactivate
+                        </button>
+                        <a href="{% url 'qrcodes:detail' token=qcode.token %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

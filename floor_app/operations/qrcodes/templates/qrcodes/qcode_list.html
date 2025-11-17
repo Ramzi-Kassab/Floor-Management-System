@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}QR Codes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-qr-code"></i> QR Codes</h1>
+        <a href="{% url 'qrcodes:generate' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Generate New
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for key, label in qcode_types %}
+                        <option value="{{ key }}" {% if current_type == key %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="active" class="form-select">
+                        <option value="">All</option>
+                        <option value="true" {% if current_active == 'true' %}selected{% endif %}>Active</option>
+                        <option value="false" {% if current_active == 'false' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="Token, label, or description">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- QCodes Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Type</th>
+                            <th>Label</th>
+                            <th>Status</th>
+                            <th>Scans</th>
+                            <th>Last Scanned</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for qcode in qcodes %}
+                        <tr>
+                            <td><code>{{ qcode.token_short }}</code></td>
+                            <td>{{ qcode.get_qcode_type_display }}</td>
+                            <td>{{ qcode.label|truncatechars:30 }}</td>
+                            <td>
+                                {% if qcode.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ qcode.scan_count }}</td>
+                            <td>
+                                {% if qcode.last_scanned_at %}
+                                {{ qcode.last_scanned_at|date:"M d, H:i" }}
+                                {% else %}
+                                <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ qcode.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'qrcodes:detail' token=qcode.token %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No QR codes found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&type={{ current_type }}&active={{ current_active }}&search={{ search }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&type={{ current_type }}&active={{ current_active }}&search={{ search }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

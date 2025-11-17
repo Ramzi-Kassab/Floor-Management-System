@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Equipment{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-gear"></i> Equipment</h1>
+        <a href="{% url 'qrcodes:equipment_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Equipment
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Location</th>
+                            <th>Next Maintenance</th>
+                            <th>QR Code</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for eq in equipment_list %}
+                        <tr>
+                            <td><strong>{{ eq.code }}</strong></td>
+                            <td>{{ eq.name }}</td>
+                            <td>{{ eq.get_equipment_type_display }}</td>
+                            <td>
+                                <span class="badge {% if eq.status == 'OPERATIONAL' %}bg-success{% elif eq.status == 'UNDER_MAINTENANCE' %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ eq.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ eq.location_name|default:"-" }}</td>
+                            <td>
+                                {% if eq.next_maintenance_date %}
+                                {% if eq.needs_maintenance %}
+                                <span class="text-danger">{{ eq.next_maintenance_date }} (Overdue)</span>
+                                {% else %}
+                                {{ eq.next_maintenance_date }}
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">Not scheduled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if eq.qcode_id %}
+                                <span class="badge bg-success">Has QR</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No QR</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'qrcodes:equipment_detail' pk=eq.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'qrcodes:equipment_edit' pk=eq.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No equipment found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.has_other_pages %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

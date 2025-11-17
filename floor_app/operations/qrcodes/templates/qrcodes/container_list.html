@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Containers{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-box"></i> Containers</h1>
+        <a href="{% url 'qrcodes:container_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Container
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Location</th>
+                            <th>Capacity</th>
+                            <th>QR Code</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for container in containers %}
+                        <tr>
+                            <td><strong>{{ container.code }}</strong></td>
+                            <td>{{ container.get_container_type_display }}</td>
+                            <td>
+                                <span class="badge {% if container.status == 'AVAILABLE' %}bg-success{% elif container.status == 'IN_USE' %}bg-primary{% else %}bg-warning{% endif %}">
+                                    {{ container.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ container.location_name|default:"-" }}</td>
+                            <td>{{ container.current_count }}/{{ container.max_capacity|default:"?" }}</td>
+                            <td>
+                                {% if container.qcode_id %}
+                                <span class="badge bg-success">Has QR</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No QR</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'qrcodes:container_detail' pk=container.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No containers found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

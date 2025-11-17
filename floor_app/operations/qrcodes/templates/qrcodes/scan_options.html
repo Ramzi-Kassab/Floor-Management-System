@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Options{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-qr-code-scan"></i> Scan Result</h4>
+                </div>
+                <div class="card-body text-center">
+                    {% if result.success %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle fs-1"></i>
+                        <h5>{{ result.message }}</h5>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle fs-1"></i>
+                        <h5>{{ result.message }}</h5>
+                    </div>
+                    {% endif %}
+
+                    {% if result.show_options and result.options %}
+                    <h5 class="mt-4">Available Actions:</h5>
+                    <div class="d-grid gap-2 mt-3">
+                        {% for option in result.options %}
+                        <a href="{{ option.url|default:'#' }}"
+                           class="btn btn-lg btn-outline-primary"
+                           {% if not option.url %}onclick="alert('Action: {{ option.action }}')"{% endif %}>
+                            {{ option.label }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if result.redirect_url %}
+                    <div class="mt-4">
+                        <a href="{{ result.redirect_url }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-right"></i> Continue
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

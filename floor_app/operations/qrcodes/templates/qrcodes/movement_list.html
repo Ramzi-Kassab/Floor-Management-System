@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Movement Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="bi bi-arrow-left-right"></i> Movement Logs</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Type</th>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movements %}
+                        <tr>
+                            <td>{{ mov.moved_at|date:"M d, H:i" }}</td>
+                            <td>{{ mov.get_movement_type_display }}</td>
+                            <td>{{ mov.item_name|default:mov.item_sku }}</td>
+                            <td>{{ mov.quantity }}</td>
+                            <td>{{ mov.from_location_name|default:"-" }}</td>
+                            <td>{{ mov.to_location_name|default:"-" }}</td>
+                            <td>{{ mov.moved_by_name }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No movements</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

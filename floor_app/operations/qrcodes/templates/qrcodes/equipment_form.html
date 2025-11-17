@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if object %}Edit Equipment{% else %}Add Equipment{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-gear"></i>
+        {% if object %}Edit Equipment: {{ object.code }}{% else %}Add New Equipment{% endif %}
+    </h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Code *</label>
+                        {{ form.code }}
+                        {% if form.code.errors %}
+                        <div class="text-danger small">{{ form.code.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Name *</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Type</label>
+                        {{ form.equipment_type }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Maintenance Interval (days)</label>
+                        {{ form.maintenance_interval_days }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Manufacturer</label>
+                        {{ form.manufacturer }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Model Number</label>
+                        {{ form.model_number }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Serial Number</label>
+                        {{ form.serial_number }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Location ID</label>
+                        {{ form.location_id }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Location Name</label>
+                        {{ form.location_name }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Department ID</label>
+                        {{ form.department_id }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Department Name</label>
+                        {{ form.department_name }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Purchase Date</label>
+                        {{ form.purchase_date }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Installation Date</label>
+                        {{ form.installation_date }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Warranty Expiry</label>
+                        {{ form.warranty_expiry_date }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Purchase Cost</label>
+                        {{ form.purchase_cost }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Current Value</label>
+                        {{ form.current_value }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+
+                <hr>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Save
+                    </button>
+                    <a href="{% url 'qrcodes:equipment_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

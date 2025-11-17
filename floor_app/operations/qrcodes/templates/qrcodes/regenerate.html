@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Regenerate Token{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-octagon"></i> Regenerate Token</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <strong>Warning!</strong> This action will:
+                        <ul>
+                            <li>Generate a completely new token</li>
+                            <li>Invalidate all existing printed QR codes</li>
+                            <li>Require reprinting and re-labeling</li>
+                        </ul>
+                    </div>
+                    <p><strong>Current Token:</strong> <code>{{ qcode.token_short }}</code></p>
+                    <p><strong>Label:</strong> {{ qcode.label }}</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-arrow-repeat"></i> Regenerate Token
+                        </button>
+                        <a href="{% url 'qrcodes:detail' token=qcode.token %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

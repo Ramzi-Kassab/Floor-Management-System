@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}BOM Material Return{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-box-arrow-in-down"></i> BOM Material Return</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Quantity</label>
+                    {{ form.quantity }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    {{ form.notes }}
+                </div>
+                <button type="submit" class="btn btn-warning">Record Return</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
