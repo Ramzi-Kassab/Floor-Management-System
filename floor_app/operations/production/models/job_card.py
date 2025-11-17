@@ -319,6 +319,21 @@ class JobCard(PublicIdMixin, AuditMixin, SoftDeleteMixin):
         help_text="Future: Link to shipping/logistics"
     )
 
+    # ERP Integration
+    erp_production_order_number = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='ERP Production Order Number'
+    )
+    cost_center = models.ForeignKey(
+        'core.CostCenter',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='job_cards',
+        help_text='Cost center for this job'
+    )
+
     class Meta:
         db_table = "production_job_card"
         verbose_name = "Job Card"

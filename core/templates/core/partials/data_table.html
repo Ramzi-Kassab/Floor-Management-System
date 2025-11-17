@@ -1,0 +1,452 @@
+{% load static %}
+{#
+Global Reusable Data Table Component
+
+Usage in view:
+    context['table_config'] = {
+        'id': 'employee_table',
+        'title': 'Employees',
+        'columns': [
+            {'key': 'id', 'label': 'ID', 'sortable': True, 'type': 'number'},
+            {'key': 'name', 'label': 'Name', 'sortable': True, 'type': 'text'},
+            {'key': 'status', 'label': 'Status', 'sortable': True, 'type': 'badge'},
+            {'key': 'created_at', 'label': 'Created', 'sortable': True, 'type': 'date'},
+        ],
+        'data': queryset,
+        'page_obj': page_obj,
+        'enable_search': True,
+        'enable_bulk_actions': True,
+        'enable_export': True,
+        'enable_column_toggle': True,
+        'row_actions': [
+            {'name': 'view', 'label': 'View', 'icon': 'bi-eye', 'url_name': 'hr:employee_detail'},
+            {'name': 'edit', 'label': 'Edit', 'icon': 'bi-pencil', 'url_name': 'hr:employee_edit'},
+            {'name': 'delete', 'label': 'Delete', 'icon': 'bi-trash', 'url_name': 'hr:employee_delete', 'class': 'text-danger'},
+        ],
+        'bulk_actions': [
+            {'name': 'delete', 'label': 'Delete Selected', 'icon': 'bi-trash', 'class': 'btn-danger'},
+            {'name': 'export', 'label': 'Export Selected', 'icon': 'bi-download', 'class': 'btn-info'},
+        ],
+        'filters': [
+            {'key': 'status', 'label': 'Status', 'type': 'select', 'options': [('active', 'Active'), ('inactive', 'Inactive')]},
+            {'key': 'department', 'label': 'Department', 'type': 'select', 'options': dept_choices},
+        ],
+        'default_visible_columns': ['id', 'name', 'status', 'created_at'],
+        'view_name': 'employee_list',  # For column preference persistence
+    }
+
+Usage in template:
+    {% include 'core/partials/data_table.html' with config=table_config %}
+#}
+
+<div class="data-table-wrapper" id="{{ config.id }}_wrapper" data-view-name="{{ config.view_name|default:config.id }}">
+    {# Table Toolbar #}
+    <div class="table-toolbar mb-3">
+        <div class="row g-3 align-items-center">
+            {# Search Box #}
+            {% if config.enable_search %}
+            <div class="col-md-4">
+                <div class="search-box">
+                    <input type="search"
+                           class="form-control table-search-input"
+                           placeholder="Search {{ config.title|default:'records' }}..."
+                           data-table-id="{{ config.id }}"
+                           value="{{ request.GET.search|default:'' }}">
+                    <button class="btn btn-outline-primary btn-sm search-btn" type="button">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Filters #}
+            {% if config.filters %}
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    {% for filter in config.filters %}
+                    {% if filter.type == 'select' %}
+                    <select class="form-select form-select-sm table-filter"
+                            data-filter-key="{{ filter.key }}"
+                            data-table-id="{{ config.id }}">
+                        <option value="">All {{ filter.label }}</option>
+                        {% for value, label in filter.options %}
+                        <option value="{{ value }}" {% if request.GET|get_item:filter.key == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% elif filter.type == 'date_range' %}
+                    <input type="date"
+                           class="form-control form-control-sm table-filter"
+                           data-filter-key="{{ filter.key }}_from"
+                           data-table-id="{{ config.id }}"
+                           placeholder="From"
+                           value="{{ request.GET|get_item:filter.key|default:'' }}">
+                    <input type="date"
+                           class="form-control form-control-sm table-filter"
+                           data-filter-key="{{ filter.key }}_to"
+                           data-table-id="{{ config.id }}"
+                           placeholder="To">
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# Toolbar Actions #}
+            <div class="col-md-4 text-end">
+                <div class="btn-group">
+                    {# Column Visibility Toggle #}
+                    {% if config.enable_column_toggle %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside">
+                            <i class="bi bi-layout-three-columns me-1"></i>
+                            Columns
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end column-toggle-menu">
+                            <li><h6 class="dropdown-header">Show/Hide Columns</h6></li>
+                            {% for col in config.columns %}
+                            <li>
+                                <label class="dropdown-item">
+                                    <input type="checkbox"
+                                           class="form-check-input me-2 column-toggle"
+                                           data-column-key="{{ col.key }}"
+                                           data-table-id="{{ config.id }}"
+                                           {% if col.key in config.default_visible_columns or not config.default_visible_columns %}checked{% endif %}>
+                                    {{ col.label }}
+                                </label>
+                            </li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button class="dropdown-item text-primary save-column-config"
+                                        data-table-id="{{ config.id }}">
+                                    <i class="bi bi-save me-2"></i>Save Preferences
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {# Export Button #}
+                    {% if config.enable_export %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown">
+                            <i class="bi bi-download me-1"></i>
+                            Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item export-table" href="#" data-format="csv" data-table-id="{{ config.id }}">
+                                    <i class="bi bi-filetype-csv me-2"></i>CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item export-table" href="#" data-format="excel" data-table-id="{{ config.id }}">
+                                    <i class="bi bi-file-earmark-excel me-2"></i>Excel
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item export-table" href="#" data-format="pdf" data-table-id="{{ config.id }}">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i>PDF
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {# Page Size Selector #}
+                    <select class="form-select form-select-sm page-size-selector"
+                            data-table-id="{{ config.id }}"
+                            style="width: auto;">
+                        <option value="10" {% if config.page_size == 10 %}selected{% endif %}>10</option>
+                        <option value="25" {% if config.page_size == 25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if config.page_size == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if config.page_size == 100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {# Bulk Actions Bar (appears when items selected) #}
+        {% if config.enable_bulk_actions %}
+        <div class="bulk-actions-bar mt-2 d-none" id="{{ config.id }}_bulk_actions">
+            <div class="d-flex align-items-center gap-2">
+                <span class="selected-count badge bg-primary">0 selected</span>
+                {% for action in config.bulk_actions %}
+                <button class="btn {{ action.class|default:'btn-secondary' }} btn-sm bulk-action-btn"
+                        data-action="{{ action.name }}"
+                        data-table-id="{{ config.id }}">
+                    <i class="{{ action.icon }} me-1"></i>
+                    {{ action.label }}
+                </button>
+                {% endfor %}
+                <button class="btn btn-outline-secondary btn-sm clear-selection" data-table-id="{{ config.id }}">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {# The Data Table #}
+    <div class="table-responsive">
+        <table class="table table-hover data-table {% if table_density == 'compact' %}table-sm{% elif table_density == 'relaxed' %}table-relaxed{% endif %}"
+               id="{{ config.id }}"
+               data-view-name="{{ config.view_name|default:config.id }}">
+            <thead>
+                <tr>
+                    {# Checkbox for bulk selection #}
+                    {% if config.enable_bulk_actions %}
+                    <th class="checkbox-column" style="width: 40px;">
+                        <input type="checkbox" class="form-check-input select-all-rows" data-table-id="{{ config.id }}">
+                    </th>
+                    {% endif %}
+
+                    {# Column Headers #}
+                    {% for col in config.columns %}
+                    <th class="{% if col.sortable %}sortable-column{% endif %} column-{{ col.key }}"
+                        data-column-key="{{ col.key }}"
+                        data-sort-direction=""
+                        {% if col.key not in config.default_visible_columns and config.default_visible_columns %}style="display: none;"{% endif %}>
+                        {{ col.label }}
+                        {% if col.sortable %}
+                        <span class="sort-indicator">
+                            <i class="bi bi-arrow-down-up text-muted"></i>
+                        </span>
+                        {% endif %}
+                    </th>
+                    {% endfor %}
+
+                    {# Actions Column #}
+                    {% if config.row_actions %}
+                    <th class="actions-column text-end" style="width: 120px;">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in config.data %}
+                <tr data-row-id="{{ item.pk|default:item.id }}">
+                    {# Checkbox #}
+                    {% if config.enable_bulk_actions %}
+                    <td class="checkbox-column">
+                        <input type="checkbox" class="form-check-input row-checkbox" value="{{ item.pk|default:item.id }}">
+                    </td>
+                    {% endif %}
+
+                    {# Data Columns #}
+                    {% for col in config.columns %}
+                    <td class="column-{{ col.key }}"
+                        {% if col.key not in config.default_visible_columns and config.default_visible_columns %}style="display: none;"{% endif %}>
+                        {% if col.type == 'badge' %}
+                            {% with value=item|get_attr:col.key %}
+                            <span class="badge {% if value == 'active' or value == 'Active' %}bg-success{% elif value == 'inactive' or value == 'Inactive' %}bg-secondary{% elif value == 'pending' or value == 'Pending' %}bg-warning{% elif value == 'error' or value == 'Error' %}bg-danger{% else %}bg-info{% endif %}">
+                                {{ value }}
+                            </span>
+                            {% endwith %}
+                        {% elif col.type == 'date' %}
+                            {% with value=item|get_attr:col.key %}
+                            {{ value|date:"M d, Y"|default:"-" }}
+                            {% endwith %}
+                        {% elif col.type == 'datetime' %}
+                            {% with value=item|get_attr:col.key %}
+                            {{ value|date:"M d, Y H:i"|default:"-" }}
+                            {% endwith %}
+                        {% elif col.type == 'boolean' %}
+                            {% with value=item|get_attr:col.key %}
+                            {% if value %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% endif %}
+                            {% endwith %}
+                        {% elif col.type == 'currency' %}
+                            {% with value=item|get_attr:col.key %}
+                            {{ value|floatformat:2 }} {{ col.currency|default:"SAR" }}
+                            {% endwith %}
+                        {% elif col.type == 'link' %}
+                            {% with value=item|get_attr:col.key %}
+                            <a href="{{ value.url }}" class="text-decoration-none">{{ value.text }}</a>
+                            {% endwith %}
+                        {% else %}
+                            {{ item|get_attr:col.key|default:"-" }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+
+                    {# Row Actions #}
+                    {% if config.row_actions %}
+                    <td class="actions-column text-end">
+                        <div class="btn-group">
+                            {% for action in config.row_actions %}
+                            <a href="{% url action.url_name item.pk|default:item.id %}"
+                               class="btn btn-sm btn-outline-secondary {{ action.class|default:'' }}"
+                               title="{{ action.label }}"
+                               {% if action.confirm %}onclick="return confirm('{{ action.confirm }}')"{% endif %}>
+                                <i class="{{ action.icon }}"></i>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="100%" class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No records found.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Pagination #}
+    {% if config.page_obj %}
+    <div class="table-pagination mt-3">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <p class="text-muted mb-0">
+                    Showing {{ config.page_obj.start_index }} to {{ config.page_obj.end_index }}
+                    of {{ config.page_obj.paginator.count }} entries
+                </p>
+            </div>
+            <div class="col-md-6">
+                <nav aria-label="Table navigation">
+                    <ul class="pagination justify-content-end mb-0">
+                        {% if config.page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ config.page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                        </li>
+                        {% endif %}
+
+                        {# Page Numbers #}
+                        {% for num in config.page_obj.paginator.page_range %}
+                            {% if config.page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > config.page_obj.number|add:'-3' and num < config.page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% elif num == config.page_obj.number|add:'-3' or num == config.page_obj.number|add:'3' %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if config.page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ config.page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ config.page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{# Mobile Card View (shown on small screens) #}
+<div class="data-table-cards d-md-none" id="{{ config.id }}_cards">
+    {% for item in config.data %}
+    <div class="card mb-2 data-card">
+        <div class="card-body">
+            {% if config.enable_bulk_actions %}
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input card-checkbox" value="{{ item.pk|default:item.id }}">
+                <label class="form-check-label small text-muted">Select</label>
+            </div>
+            {% endif %}
+
+            {% for col in config.columns %}
+            <div class="d-flex justify-content-between mb-1">
+                <strong class="text-muted">{{ col.label }}:</strong>
+                <span>
+                    {% if col.type == 'badge' %}
+                    {% with value=item|get_attr:col.key %}
+                    <span class="badge {% if value == 'active' %}bg-success{% elif value == 'inactive' %}bg-secondary{% else %}bg-info{% endif %}">
+                        {{ value }}
+                    </span>
+                    {% endwith %}
+                    {% elif col.type == 'date' %}
+                    {{ item|get_attr:col.key|date:"M d, Y"|default:"-" }}
+                    {% elif col.type == 'boolean' %}
+                    {% if item|get_attr:col.key %}
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    {% else %}
+                    <i class="bi bi-x-circle-fill text-danger"></i>
+                    {% endif %}
+                    {% else %}
+                    {{ item|get_attr:col.key|default:"-" }}
+                    {% endif %}
+                </span>
+            </div>
+            {% endfor %}
+
+            {% if config.row_actions %}
+            <div class="mt-2 pt-2 border-top">
+                <div class="btn-group w-100">
+                    {% for action in config.row_actions %}
+                    <a href="{% url action.url_name item.pk|default:item.id %}"
+                       class="btn btn-sm btn-outline-secondary {{ action.class|default:'' }} flex-fill">
+                        <i class="{{ action.icon }} me-1"></i>
+                        {{ action.label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-4">
+        <div class="text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            No records found.
+        </div>
+    </div>
+    {% endfor %}
+</div>

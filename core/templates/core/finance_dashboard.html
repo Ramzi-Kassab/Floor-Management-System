@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid py-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Finance Dashboard</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+            <i class="bi bi-currency-dollar me-2"></i>
+            Finance & ERP Integration Dashboard
+        </h4>
+        <div class="btn-group">
+            <a href="{% url 'core:erpreference_list' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-link-45deg me-1"></i>
+                ERP References
+            </a>
+            <a href="{% url 'core:lossofsale_list' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-graph-down me-1"></i>
+                Loss of Sale
+            </a>
+            <a href="{% url 'core:costcenter_list' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-building me-1"></i>
+                Cost Centers
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-primary-soft text-primary">
+                    <i class="bi bi-link-45deg"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">ERP References</div>
+                    <div class="metric-value">{{ total_erp_references }}</div>
+                    <div class="metric-change">
+                        Total linked documents
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-warning-soft text-warning">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Pending Sync</div>
+                    <div class="metric-value">{{ pending_sync }}</div>
+                    <div class="metric-change">
+                        Awaiting ERP synchronization
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-danger-soft text-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Sync Errors</div>
+                    <div class="metric-value">{{ sync_errors }}</div>
+                    <div class="metric-change">
+                        References with sync issues
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-icon bg-info-soft text-info">
+                    <i class="bi bi-graph-down-arrow"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Loss of Sale Events</div>
+                    <div class="metric-value">{{ total_loss_events }}</div>
+                    <div class="metric-change">
+                        Total: {{ total_loss_amount|floatformat:2 }} SAR
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ERP Document Types -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        ERP Document Types
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>References</th>
+                                    <th class="text-end">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc_type in document_types %}
+                                <tr>
+                                    <td><strong>{{ doc_type.code }}</strong></td>
+                                    <td>{{ doc_type.name }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ doc_type.ref_count }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        {% if doc_type.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <i class="bi bi-info-circle text-muted d-block fs-4 mb-2"></i>
+                                        No document types configured yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent ERP References -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Recent ERP References
+                    </h6>
+                    <a href="{% url 'core:erpreference_list' %}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for ref in recent_references %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ ref.document_type.code }}: {{ ref.erp_number }}</strong>
+                                    {% if ref.erp_line_number %}
+                                    <span class="text-muted">/{{ ref.erp_line_number }}</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ ref.content_type.model|title }} #{{ ref.object_id }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge {% if ref.sync_status == 'synced' %}bg-success{% elif ref.sync_status == 'pending' %}bg-warning{% elif ref.sync_status == 'error' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        {{ ref.get_sync_status_display }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">{{ ref.created_at|date:"M d, H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <i class="bi bi-info-circle text-muted d-block fs-4 mb-2"></i>
+                            No ERP references yet.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Loss of Sale Events -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-graph-down me-2"></i>
+                        Recent Loss of Sale Events
+                    </h6>
+                    <a href="{% url 'core:lossofsale_create' %}" class="btn btn-sm btn-warning">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Report New Event
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Title</th>
+                                    <th>Cause</th>
+                                    <th>Event Date</th>
+                                    <th class="text-end">Estimated Loss</th>
+                                    <th class="text-end">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in recent_loss_events %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'core:lossofsale_detail' event.pk %}" class="text-decoration-none">
+                                            <strong>{{ event.reference_number }}</strong>
+                                        </a>
+                                    </td>
+                                    <td>{{ event.title|truncatechars:40 }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ event.cause.name }}</span>
+                                    </td>
+                                    <td>{{ event.event_date|date:"M d, Y" }}</td>
+                                    <td class="text-end">
+                                        <strong class="text-danger">{{ event.estimated_loss_amount|floatformat:2 }} {{ event.currency }}</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge {% if event.status == 'approved' %}bg-success{% elif event.status == 'draft' %}bg-info{% elif event.status == 'submitted' %}bg-primary{% elif event.status == 'reviewed' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ event.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="bi bi-check-circle text-success d-block fs-4 mb-2"></i>
+                                        No loss of sale events recorded.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Status Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                <div>
+                    <strong>ERP Integration Status:</strong> Manual mode active.
+                    ERP references are manually entered and linked to internal records.
+                    API sync can be enabled in future releases for automatic synchronization with Microsoft Dynamics or similar ERP systems.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

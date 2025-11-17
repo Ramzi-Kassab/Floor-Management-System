@@ -30,6 +30,21 @@ class Department(models.Model):
         help_text="Category of department"
     )
 
+    # ERP Integration
+    cost_center = models.ForeignKey(
+        'core.CostCenter',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='departments',
+        help_text='Cost center for this department'
+    )
+    erp_department_code = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='ERP Department Code'
+    )
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

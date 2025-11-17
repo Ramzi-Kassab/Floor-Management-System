@@ -133,6 +133,20 @@ class BOMHeader(PublicIdMixin, AuditMixin, SoftDeleteMixin):
         help_text="Estimated total material cost"
     )
 
+    # ERP Integration
+    erp_bom_number = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='ERP BOM Number'
+    )
+    total_material_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Calculated total material cost'
+    )
+
     notes = models.TextField(blank=True, default="")
 
     class Meta:
