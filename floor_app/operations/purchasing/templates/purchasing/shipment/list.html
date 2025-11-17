@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shipments - Logistics Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .status-draft { background-color: #e9ecef; color: #495057; }
+    .status-confirmed { background-color: #cce5ff; color: #004085; }
+    .status-picking { background-color: #fff3cd; color: #856404; }
+    .status-packed { background-color: #d1ecf1; color: #0c5460; }
+    .status-shipped { background-color: #b8daff; color: #004085; }
+    .status-in_transit { background-color: #ffeeba; color: #856404; }
+    .status-delivered { background-color: #c8e6c9; color: #1b5e20; }
+    .status-cancelled { background-color: #f5f5f5; color: #424242; }
+
+    .type-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .type-standard { background: #e3f2fd; color: #1565c0; }
+    .type-express { background: #fff3e0; color: #e65100; }
+    .type-overnight { background: #fce4ec; color: #c62828; }
+    .type-freight { background: #f3e5f5; color: #6a1b9a; }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .shipment-number {
+        font-weight: 600;
+        color: #6366f1;
+        font-family: monospace;
+    }
+
+    .value-display {
+        font-weight: 600;
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 border-bottom bg-white">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item active">Shipments</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 fw-bold">
+                <i class="bi bi-truck me-2"></i>Customer Shipments
+            </h1>
+            <p class="text-muted mb-0 mt-1">Manage outbound shipments to customers</p>
+        </div>
+        <div>
+            <a href="{% url 'purchasing:shipment_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Shipment
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label fw-600">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="search" name="search"
+                           placeholder="Shipment #, Customer, Tracking..."
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label fw-600">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                    <option value="CONFIRMED" {% if request.GET.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                    <option value="PICKING" {% if request.GET.status == 'PICKING' %}selected{% endif %}>Picking</option>
+                    <option value="PACKED" {% if request.GET.status == 'PACKED' %}selected{% endif %}>Packed</option>
+                    <option value="SHIPPED" {% if request.GET.status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                    <option value="IN_TRANSIT" {% if request.GET.status == 'IN_TRANSIT' %}selected{% endif %}>In Transit</option>
+                    <option value="DELIVERED" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                    <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="type" class="form-label fw-600">Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">All Types</option>
+                    <option value="STANDARD" {% if request.GET.type == 'STANDARD' %}selected{% endif %}>Standard</option>
+                    <option value="EXPRESS" {% if request.GET.type == 'EXPRESS' %}selected{% endif %}>Express</option>
+                    <option value="OVERNIGHT" {% if request.GET.type == 'OVERNIGHT' %}selected{% endif %}>Overnight</option>
+                    <option value="FREIGHT" {% if request.GET.type == 'FREIGHT' %}selected{% endif %}>Freight</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Count -->
+    <div class="mb-3">
+        <small class="text-muted">
+            Showing <strong>{{ shipments.paginator.count|default:shipments|length }}</strong> shipment(s)
+            {% if request.GET %}(filtered){% endif %}
+        </small>
+    </div>
+
+    <!-- Shipments Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-600">Shipment #</th>
+                        <th class="fw-600">Type</th>
+                        <th class="fw-600">Status</th>
+                        <th class="fw-600">Customer</th>
+                        <th class="fw-600">Created Date</th>
+                        <th class="fw-600">Scheduled Ship Date</th>
+                        <th class="fw-600">Tracking #</th>
+                        <th class="fw-600">Total Value</th>
+                        <th class="fw-600 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if shipments %}
+                        {% for shipment in shipments %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'purchasing:shipment_detail' shipment.pk %}" class="shipment-number text-decoration-none">
+                                        {{ shipment.shipment_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="type-badge type-{{ shipment.type|lower }}">
+                                        {{ shipment.get_type_display|default:shipment.type }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ shipment.status|lower }}">
+                                        {{ shipment.get_status_display|default:shipment.status }}
+                                    </span>
+                                </td>
+                                <td>{{ shipment.customer_name|default:"-" }}</td>
+                                <td>{{ shipment.created_date|date:"Y-m-d" }}</td>
+                                <td>{{ shipment.scheduled_ship_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>
+                                    {% if shipment.tracking_number %}
+                                    <code>{{ shipment.tracking_number }}</code>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="value-display">${{ shipment.total_value|floatformat:2|default:"0.00" }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'purchasing:shipment_detail' shipment.pk %}"
+                                           class="btn btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'purchasing:shipment_edit' shipment.pk %}"
+                                           class="btn btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    <p>No shipments found.</p>
+                                    {% if request.GET %}
+                                        <p class="small">Try adjusting your filters.</p>
+                                    {% else %}
+                                        <a href="{% url 'purchasing:shipment_create' %}" class="btn btn-sm btn-primary">
+                                            Create your first shipment
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

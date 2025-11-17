@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit GRN{% else %}Create Goods Receipt Note{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #10b981;
+        border-bottom: 2px solid #10b981;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #10b981;
+        border-color: #10b981;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="#">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:grn_list' %}">Goods Receipt Notes</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:grn_detail' form.instance.pk %}">{{ form.instance.grn_number }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New GRN</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-success me-2"></i>
+                        {% if form.instance.pk %}Edit GRN{{ form.instance.grn_number }}{% else %}Create Goods Receipt Note{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update goods receipt information
+                        {% else %}
+                        Record receipt of goods from supplier
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Purchase Order Reference -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-file-text me-2"></i>
+                Purchase Order Reference
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.purchase_order.id_for_label }}" class="form-label required-field">Purchase Order</label>
+                    {% render_field form.purchase_order class="form-select" %}
+                    {% if form.purchase_order.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.purchase_order.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Select the purchase order for this receipt</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-calendar-check me-2"></i>
+                Receipt Information
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.receipt_date.id_for_label }}" class="form-label required-field">Receipt Date</label>
+                    {% render_field form.receipt_date class="form-control" type="date" %}
+                    {% if form.receipt_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.receipt_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.receipt_time.id_for_label }}" class="form-label required-field">Receipt Time</label>
+                    {% render_field form.receipt_time class="form-control" type="time" %}
+                    {% if form.receipt_time.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.receipt_time.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.delivery_note_number.id_for_label }}" class="form-label">Delivery Note Number</label>
+                    {% render_field form.delivery_note_number class="form-control" placeholder="Supplier's delivery note" %}
+                    {% if form.delivery_note_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.delivery_note_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.waybill_number.id_for_label }}" class="form-label">Waybill Number</label>
+                    {% render_field form.waybill_number class="form-control" placeholder="Enter waybill number" %}
+                    {% if form.waybill_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.waybill_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-truck me-2"></i>
+                Shipping Information
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.carrier_name.id_for_label }}" class="form-label">Carrier Name</label>
+                    {% render_field form.carrier_name class="form-control" placeholder="Enter carrier/logistics company" %}
+                    {% if form.carrier_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.carrier_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.vehicle_number.id_for_label }}" class="form-label">Vehicle Number</label>
+                    {% render_field form.vehicle_number class="form-control" placeholder="Enter vehicle/truck number" %}
+                    {% if form.vehicle_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.vehicle_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.driver_name.id_for_label }}" class="form-label">Driver Name</label>
+                    {% render_field form.driver_name class="form-control" placeholder="Enter driver name" %}
+                    {% if form.driver_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.driver_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.driver_id.id_for_label }}" class="form-label">Driver ID</label>
+                    {% render_field form.driver_id class="form-control" placeholder="Enter driver ID/license" %}
+                    {% if form.driver_id.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.driver_id.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Package Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-box me-2"></i>
+                Package Information
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.total_packages.id_for_label }}" class="form-label required-field">Total Packages</label>
+                    {% render_field form.total_packages class="form-control" placeholder="0" %}
+                    {% if form.total_packages.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.total_packages.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.total_weight_kg.id_for_label }}" class="form-label">Total Weight (kg)</label>
+                    {% render_field form.total_weight_kg class="form-control" placeholder="0.000" %}
+                    {% if form.total_weight_kg.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.total_weight_kg.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.package_condition.id_for_label }}" class="form-label">Package Condition</label>
+                    {% render_field form.package_condition class="form-select" %}
+                    {% if form.package_condition.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.package_condition.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="{{ form.damage_notes.id_for_label }}" class="form-label">Damage Notes</label>
+                    {% render_field form.damage_notes class="form-control" rows="3" placeholder="Describe any damage observed..." %}
+                    {% if form.damage_notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.damage_notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Inspection Settings -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-clipboard-check me-2"></i>
+                Inspection Settings
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        {% render_field form.requires_inspection class="form-check-input" %}
+                        <label class="form-check-label" for="{{ form.requires_inspection.id_for_label }}">
+                            <i class="bi bi-search me-1 text-info"></i>
+                            Requires Quality Inspection
+                        </label>
+                        {% if form.requires_inspection.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.requires_inspection.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customs & Compliance -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-shield-check me-2"></i>
+                Customs & Compliance (Saudi Arabia)
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.customs_declaration_number.id_for_label }}" class="form-label">Customs Declaration Number</label>
+                    {% render_field form.customs_declaration_number class="form-control" placeholder="Saudi Customs declaration" %}
+                    {% if form.customs_declaration_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customs_declaration_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.customs_clearance_date.id_for_label }}" class="form-label">Customs Clearance Date</label>
+                    {% render_field form.customs_clearance_date class="form-control" type="date" %}
+                    {% if form.customs_clearance_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customs_clearance_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.import_permit_number.id_for_label }}" class="form-label">Import Permit Number</label>
+                    {% render_field form.import_permit_number class="form-control" placeholder="Enter import permit" %}
+                    {% if form.import_permit_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.import_permit_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.certificate_of_origin.id_for_label }}" class="form-label">Certificate of Origin</label>
+                    {% render_field form.certificate_of_origin class="form-control" placeholder="Enter certificate number" %}
+                    {% if form.certificate_of_origin.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.certificate_of_origin.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.certificate_of_conformity.id_for_label }}" class="form-label">Certificate of Conformity</label>
+                    {% render_field form.certificate_of_conformity class="form-control" placeholder="Enter conformity certificate" %}
+                    {% if form.certificate_of_conformity.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.certificate_of_conformity.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-sticky me-2"></i>
+                Notes
+            </h5>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {% render_field form.notes class="form-control" rows="3" placeholder="General notes..." %}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="{{ form.internal_notes.id_for_label }}" class="form-label">Internal Notes</label>
+                    {% render_field form.internal_notes class="form-control" rows="3" placeholder="Internal notes (not visible to supplier)..." %}
+                    {% if form.internal_notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.internal_notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'purchasing:grn_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle me-2"></i>Save GRN
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

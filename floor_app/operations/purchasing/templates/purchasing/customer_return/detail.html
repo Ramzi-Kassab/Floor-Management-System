@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ return.return_number }} - Customer Return Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .return-header {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #f59e0b;
+        border-bottom: 2px solid #f59e0b;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 180px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .return-number-display {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-requested { background: #fff3cd; color: #856404; }
+    .status-authorized { background: #cce5ff; color: #004085; }
+    .status-received { background: #d1ecf1; color: #0c5460; }
+    .status-inspecting { background: #ffeeba; color: #856404; }
+    .status-approved { background: #d4edda; color: #155724; }
+    .status-rejected { background: #f8d7da; color: #721c24; }
+    .status-refunded { background: #c8e6c9; color: #1b5e20; }
+    .status-replaced { background: #b8daff; color: #004085; }
+    .status-closed { background: #e9ecef; color: #495057; }
+    .status-cancelled { background: #f5f5f5; color: #424242; }
+
+    .reason-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .reason-defective { background: #fce4ec; color: #c62828; }
+    .reason-wrong_item { background: #fff3e0; color: #e65100; }
+    .reason-damaged { background: #ffebee; color: #b71c1c; }
+    .reason-not_as_described { background: #f3e5f5; color: #6a1b9a; }
+    .reason-changed_mind { background: #e3f2fd; color: #1565c0; }
+    .reason-other { background: #e0e0e0; color: #424242; }
+
+    .inspection-section {
+        background: #fff8e1;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border: 1px solid #ffe082;
+    }
+
+    .inspection-section h6 {
+        color: #f57f17;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+
+    .lines-table th {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .total-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #dc3545;
+    }
+
+    .inspection-result {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .result-pass { background: #d4edda; color: #155724; }
+    .result-fail { background: #f8d7da; color: #721c24; }
+    .result-pending { background: #fff3cd; color: #856404; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:customer_return_list' %}">Customer Returns</a></li>
+            <li class="breadcrumb-item active">{{ return.return_number }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Return Header -->
+    <div class="return-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="return-number-display">{{ return.return_number }}</span>
+                    <span class="status-badge-large status-{{ return.status|lower }}">
+                        {{ return.get_status_display|default:return.status }}
+                    </span>
+                </div>
+                <h1 class="mb-2">Customer Return Detail</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    <span class="reason-badge reason-{{ return.reason|lower }}">
+                        {{ return.get_reason_display|default:return.reason }}
+                    </span>
+                    <span>
+                        <i class="bi bi-person me-2"></i>
+                        {{ return.customer_name|default:"No Customer" }}
+                    </span>
+                    <span>
+                        <i class="bi bi-calendar me-2"></i>
+                        {{ return.return_request_date|date:"Y-m-d" }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'purchasing:customer_return_list' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                    {% if return.status == 'REQUESTED' %}
+                    <a href="{% url 'purchasing:customer_return_authorize' return.pk %}" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Authorize
+                    </a>
+                    {% endif %}
+                    {% if return.status == 'AUTHORIZED' %}
+                    <a href="{% url 'purchasing:customer_return_receive' return.pk %}" class="btn btn-info">
+                        <i class="bi bi-box-seam me-2"></i>Receive
+                    </a>
+                    {% endif %}
+                    {% if return.status == 'INSPECTING' %}
+                    <a href="{% url 'purchasing:customer_return_complete_inspection' return.pk %}" class="btn btn-primary">
+                        <i class="bi bi-clipboard-check me-2"></i>Complete Inspection
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'purchasing:customer_return_edit' return.pk %}"><i class="bi bi-pencil me-2"></i>Edit Return</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print RMA</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-pdf me-2"></i>Export PDF</a></li>
+                        {% if return.status != 'CANCELLED' and return.status != 'CLOSED' %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'purchasing:customer_return_cancel' return.pk %}"><i class="bi bi-x-circle me-2"></i>Cancel Return</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Return Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Return Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Return Number:</span>
+                    <span class="detail-value"><code>{{ return.return_number }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">RMA Number:</span>
+                    <span class="detail-value">
+                        {% if return.rma_number %}
+                        <code>{{ return.rma_number }}</code>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">{{ return.get_status_display|default:return.status }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Reason:</span>
+                    <span class="detail-value">{{ return.get_reason_display|default:return.reason }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Request Date:</span>
+                    <span class="detail-value">{{ return.return_request_date|date:"Y-m-d" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Original Order:</span>
+                    <span class="detail-value">
+                        {% if return.original_order_number %}
+                        <code>{{ return.original_order_number }}</code>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Original Shipment:</span>
+                    <span class="detail-value">
+                        {% if return.original_shipment_number %}
+                        <code>{{ return.original_shipment_number }}</code>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-person me-2"></i>
+                    Customer Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Customer Name:</span>
+                    <span class="detail-value">{{ return.customer_name|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Customer ID:</span>
+                    <span class="detail-value">
+                        {% if return.customer_id %}
+                        <code>{{ return.customer_id }}</code>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Contact Person:</span>
+                    <span class="detail-value">{{ return.contact_person|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Contact Phone:</span>
+                    <span class="detail-value">{{ return.contact_phone|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Contact Email:</span>
+                    <span class="detail-value">{{ return.contact_email|default:"-" }}</span>
+                </div>
+            </div>
+
+            <!-- Value Summary -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Value Summary
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Total Value:</span>
+                    <span class="detail-value">
+                        <span class="total-value">${{ return.total_value|floatformat:2|default:"0.00" }}</span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Refund Amount:</span>
+                    <span class="detail-value">${{ return.refund_amount|floatformat:2|default:"0.00" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Restocking Fee:</span>
+                    <span class="detail-value">${{ return.restocking_fee|floatformat:2|default:"0.00" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Inspection Results -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    Inspection Results
+                </h5>
+                <div class="inspection-section">
+                    <h6><i class="bi bi-search me-2"></i>Inspection Status</h6>
+                    <div class="detail-row">
+                        <span class="detail-label">Inspection Date:</span>
+                        <span class="detail-value">{{ return.inspection_date|date:"Y-m-d"|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Inspected By:</span>
+                        <span class="detail-value">{{ return.inspected_by|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Overall Result:</span>
+                        <span class="detail-value">
+                            {% if return.inspection_result %}
+                            <span class="inspection-result result-{{ return.inspection_result|lower }}">
+                                {{ return.get_inspection_result_display|default:return.inspection_result }}
+                            </span>
+                            {% else %}
+                            <span class="inspection-result result-pending">Pending</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Condition:</span>
+                        <span class="detail-value">{{ return.item_condition|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Inspection Notes:</span>
+                        <span class="detail-value">
+                            {% if return.inspection_notes %}
+                            {{ return.inspection_notes|linebreaksbr }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resolution Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-check2-square me-2"></i>
+                    Resolution Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Resolution Type:</span>
+                    <span class="detail-value">{{ return.get_resolution_type_display|default:return.resolution_type|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Resolved Date:</span>
+                    <span class="detail-value">{{ return.resolved_date|date:"Y-m-d"|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Resolved By:</span>
+                    <span class="detail-value">{{ return.resolved_by|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Resolution Notes:</span>
+                    <span class="detail-value">
+                        {% if return.resolution_notes %}
+                        {{ return.resolution_notes|linebreaksbr }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Audit Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Audit Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Created By:</span>
+                    <span class="detail-value">{{ return.created_by|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Created At:</span>
+                    <span class="detail-value">{{ return.created_at|date:"Y-m-d H:i:s" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Authorized By:</span>
+                    <span class="detail-value">{{ return.authorized_by|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Authorized At:</span>
+                    <span class="detail-value">{{ return.authorized_at|date:"Y-m-d H:i:s"|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Customer Notes:</span>
+                    <span class="detail-value">
+                        {% if return.customer_notes %}
+                        {{ return.customer_notes|linebreaksbr }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Lines -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-list-ul me-2"></i>
+            Return Lines
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-hover lines-table mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item SKU</th>
+                        <th>Item Name</th>
+                        <th>Return Qty</th>
+                        <th>Received Qty</th>
+                        <th>UOM</th>
+                        <th>Unit Price</th>
+                        <th>Line Total</th>
+                        <th>Inspection Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in return.lines.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><code>{{ line.item_sku }}</code></td>
+                        <td>{{ line.item_name }}</td>
+                        <td>{{ line.return_quantity }}</td>
+                        <td>{{ line.received_quantity|default:0 }}</td>
+                        <td>{{ line.uom|default:"EA" }}</td>
+                        <td>${{ line.unit_price|floatformat:2|default:"0.00" }}</td>
+                        <td><strong>${{ line.line_total|floatformat:2|default:"0.00" }}</strong></td>
+                        <td>
+                            {% if line.inspection_result %}
+                            <span class="inspection-result result-{{ line.inspection_result|lower }}">
+                                {{ line.get_inspection_result_display|default:line.inspection_result }}
+                            </span>
+                            {% else %}
+                            <span class="inspection-result result-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <i class="bi bi-inbox display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No return lines found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any customer return-specific JavaScript here
+</script>
+{% endblock %}

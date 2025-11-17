@@ -1,0 +1,719 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ supplier.code }} - Supplier Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .supplier-header {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #059669;
+        border-bottom: 2px solid #059669;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 180px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .status-inactive {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .classification-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .supplier-code-display {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .metric-card {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #059669;
+    }
+
+    .metric-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .rating-stars {
+        color: #ffc107;
+        font-size: 1.2rem;
+    }
+
+    .data-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .data-table td {
+        font-size: 0.9rem;
+    }
+
+    .cert-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 0.2rem;
+    }
+
+    .cert-expired {
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:supplier_list' %}">Suppliers</a></li>
+            <li class="breadcrumb-item active">{{ supplier.code }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Supplier Header -->
+    <div class="supplier-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
+                    <span class="supplier-code-display">{{ supplier.code }}</span>
+                    {% if supplier.status == 'active' %}
+                    <span class="status-badge-large status-active">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Active
+                    </span>
+                    {% elif supplier.status == 'inactive' %}
+                    <span class="status-badge-large status-inactive">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Inactive
+                    </span>
+                    {% elif supplier.status == 'pending' %}
+                    <span class="status-badge-large">
+                        <i class="bi bi-clock-fill"></i>
+                        Pending Approval
+                    </span>
+                    {% elif supplier.status == 'blocked' %}
+                    <span class="status-badge-large">
+                        <i class="bi bi-ban"></i>
+                        Blocked
+                    </span>
+                    {% else %}
+                    <span class="status-badge-large">
+                        {{ supplier.get_status_display|default:supplier.status }}
+                    </span>
+                    {% endif %}
+                    {% if supplier.classification %}
+                    <span class="classification-badge">
+                        <i class="bi bi-award"></i>
+                        {{ supplier.get_classification_display|default:supplier.classification }}
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="mb-2">{{ supplier.name }}</h1>
+                {% if supplier.legal_name and supplier.legal_name != supplier.name %}
+                <p class="mb-2 opacity-90">Legal Name: {{ supplier.legal_name }}</p>
+                {% endif %}
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    {% if supplier.currency %}
+                    <span>
+                        <i class="bi bi-currency-exchange me-2"></i>
+                        {{ supplier.currency }}
+                    </span>
+                    {% endif %}
+                    {% if supplier.payment_terms %}
+                    <span>
+                        <i class="bi bi-calendar-check me-2"></i>
+                        {{ supplier.payment_terms }}
+                    </span>
+                    {% endif %}
+                    {% if supplier.quality_rating %}
+                    <span>
+                        <i class="bi bi-star-fill me-2"></i>
+                        Rating: {{ supplier.quality_rating|floatformat:1 }}/5.0
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'purchasing:supplier_edit' supplier.pk %}" class="btn btn-light">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print Details</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-cart-plus me-2"></i>Create PO</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-value">{{ total_pos|default:0 }}</div>
+                <div class="metric-label">Total Purchase Orders</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-value">{{ on_time_delivery|default:"N/A" }}{% if on_time_delivery %}%{% endif %}</div>
+                <div class="metric-label">On-Time Delivery</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-value">{{ quality_score|default:"N/A" }}{% if quality_score %}%{% endif %}</div>
+                <div class="metric-label">Quality Score</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-value">{{ total_spend|default:"$0" }}</div>
+                <div class="metric-label">Total Spend (YTD)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Basic Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Basic Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Supplier Code:</span>
+                    <span class="detail-value"><code>{{ supplier.code }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ supplier.name }}</span>
+                </div>
+                {% if supplier.legal_name %}
+                <div class="detail-row">
+                    <span class="detail-label">Legal Name:</span>
+                    <span class="detail-value">{{ supplier.legal_name }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Classification:</span>
+                    <span class="detail-value">{{ supplier.get_classification_display|default:supplier.classification|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">{{ supplier.get_status_display|default:supplier.status }}</span>
+                </div>
+                {% if supplier.description %}
+                <div class="detail-row">
+                    <span class="detail-label">Description:</span>
+                    <span class="detail-value">{{ supplier.description }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Contact Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-telephone me-2"></i>
+                    Contact Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Primary Phone:</span>
+                    <span class="detail-value">{{ supplier.phone|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Primary Email:</span>
+                    <span class="detail-value">
+                        {% if supplier.email %}
+                        <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Website:</span>
+                    <span class="detail-value">
+                        {% if supplier.website %}
+                        <a href="{{ supplier.website }}" target="_blank">{{ supplier.website }}</a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Fax:</span>
+                    <span class="detail-value">{{ supplier.fax|default:"-" }}</span>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-geo-alt me-2"></i>
+                    Address Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Street Address:</span>
+                    <span class="detail-value">{{ supplier.street_address|default:"-" }}</span>
+                </div>
+                {% if supplier.street_address_2 %}
+                <div class="detail-row">
+                    <span class="detail-label">Address Line 2:</span>
+                    <span class="detail-value">{{ supplier.street_address_2 }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">City:</span>
+                    <span class="detail-value">{{ supplier.city|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">State/Province:</span>
+                    <span class="detail-value">{{ supplier.state_province|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Postal Code:</span>
+                    <span class="detail-value">{{ supplier.postal_code|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Country:</span>
+                    <span class="detail-value">{{ supplier.country|default:"-" }}</span>
+                </div>
+            </div>
+
+            <!-- Tax & Registration -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Tax & Registration
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Tax ID:</span>
+                    <span class="detail-value">{{ supplier.tax_id|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">VAT Number:</span>
+                    <span class="detail-value">{{ supplier.vat_number|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Registration Number:</span>
+                    <span class="detail-value">{{ supplier.registration_number|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">DUNS Number:</span>
+                    <span class="detail-value">{{ supplier.duns_number|default:"-" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Commercial Terms -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-cash-stack me-2"></i>
+                    Commercial Terms
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Currency:</span>
+                    <span class="detail-value">{{ supplier.currency|default:"USD" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Terms:</span>
+                    <span class="detail-value">{{ supplier.payment_terms|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Credit Limit:</span>
+                    <span class="detail-value">
+                        {% if supplier.credit_limit %}
+                        {{ supplier.currency|default:"USD" }} {{ supplier.credit_limit|floatformat:2 }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Discount Terms:</span>
+                    <span class="detail-value">{{ supplier.discount_terms|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Incoterms:</span>
+                    <span class="detail-value">{{ supplier.incoterms|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Min Order Value:</span>
+                    <span class="detail-value">
+                        {% if supplier.minimum_order_value %}
+                        {{ supplier.currency|default:"USD" }} {{ supplier.minimum_order_value|floatformat:2 }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Banking Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-bank me-2"></i>
+                    Banking Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Bank Name:</span>
+                    <span class="detail-value">{{ supplier.bank_name|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Bank Account:</span>
+                    <span class="detail-value">{{ supplier.bank_account|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Bank Routing:</span>
+                    <span class="detail-value">{{ supplier.bank_routing|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">SWIFT/BIC:</span>
+                    <span class="detail-value">{{ supplier.swift_code|default:"-" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">IBAN:</span>
+                    <span class="detail-value">{{ supplier.iban|default:"-" }}</span>
+                </div>
+            </div>
+
+            <!-- Certifications -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-patch-check me-2"></i>
+                    Certifications
+                </h5>
+                {% if supplier.certifications %}
+                <div class="d-flex flex-wrap">
+                    {% for cert in supplier.certifications %}
+                    <span class="cert-badge {% if cert.expired %}cert-expired{% endif %}">
+                        <i class="bi bi-award me-1"></i>
+                        {{ cert.name }}
+                        {% if cert.expiry_date %}
+                        <small>({{ cert.expiry_date|date:"Y-m-d" }})</small>
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No certifications on file</p>
+                {% endif %}
+            </div>
+
+            <!-- Quality Rating -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-star me-2"></i>
+                    Quality Rating
+                </h5>
+                {% if supplier.quality_rating %}
+                <div class="text-center py-3">
+                    <div class="rating-stars mb-2">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= supplier.quality_rating %}
+                            <i class="bi bi-star-fill"></i>
+                            {% else %}
+                            <i class="bi bi-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="metric-value">{{ supplier.quality_rating|floatformat:1 }} / 5.0</div>
+                    <div class="metric-label">Overall Quality Rating</div>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Not yet rated</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Contacts -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-people me-2"></i>
+            Supplier Contacts
+        </h5>
+        {% if contacts %}
+        <div class="table-responsive">
+            <table class="table table-sm data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Title</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Primary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts %}
+                    <tr>
+                        <td><strong>{{ contact.name }}</strong></td>
+                        <td>{{ contact.title|default:"-" }}</td>
+                        <td>
+                            {% if contact.email %}
+                            <a href="mailto:{{ contact.email }}">{{ contact.email }}</a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ contact.phone|default:"-" }}</td>
+                        <td>
+                            {% if contact.is_primary %}
+                            <i class="bi bi-check-circle text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle text-muted"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No contacts found for this supplier</p>
+        {% endif %}
+    </div>
+
+    <!-- Supplier Items -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-box-seam me-2"></i>
+            Supplier Items
+        </h5>
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-sm data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Item SKU</th>
+                        <th>Item Name</th>
+                        <th>Supplier Part #</th>
+                        <th>Unit Price</th>
+                        <th>Lead Time</th>
+                        <th>Preferred</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><code>{{ item.item.sku|default:item.sku }}</code></td>
+                        <td>{{ item.item.name|default:item.name }}</td>
+                        <td>{{ item.supplier_part_number|default:"-" }}</td>
+                        <td>
+                            {% if item.unit_price %}
+                            {{ supplier.currency|default:"USD" }} {{ item.unit_price|floatformat:2 }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ item.lead_time_days|default:"-" }} days</td>
+                        <td>
+                            {% if item.is_preferred %}
+                            <i class="bi bi-check-circle text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle text-muted"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No items linked to this supplier</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Purchase Orders -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-cart me-2"></i>
+            Recent Purchase Orders
+        </h5>
+        {% if recent_pos %}
+        <div class="table-responsive">
+            <table class="table table-sm data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total Amount</th>
+                        <th>Delivery Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in recent_pos %}
+                    <tr>
+                        <td>
+                            <a href="#">
+                                <code>{{ po.po_number }}</code>
+                            </a>
+                        </td>
+                        <td>{{ po.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ po.get_status_display|default:po.status }}
+                            </span>
+                        </td>
+                        <td>{{ supplier.currency|default:"USD" }} {{ po.total_amount|floatformat:2 }}</td>
+                        <td>{{ po.expected_delivery|date:"Y-m-d"|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No recent purchase orders</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Invoices -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-receipt me-2"></i>
+            Recent Invoices
+        </h5>
+        {% if recent_invoices %}
+        <div class="table-responsive">
+            <table class="table table-sm data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice Number</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in recent_invoices %}
+                    <tr>
+                        <td><code>{{ invoice.invoice_number }}</code></td>
+                        <td>{{ invoice.invoice_date|date:"Y-m-d" }}</td>
+                        <td>{{ supplier.currency|default:"USD" }} {{ invoice.amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ invoice.get_status_display|default:invoice.status }}
+                            </span>
+                        </td>
+                        <td>{{ invoice.due_date|date:"Y-m-d"|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No recent invoices</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any supplier-specific JavaScript here
+</script>
+{% endblock %}

@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit Invoice{% else %}Create Supplier Invoice{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #f59e0b;
+        border-bottom: 2px solid #f59e0b;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #f59e0b;
+        border-color: #f59e0b;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="#">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:invoice_list' %}">Supplier Invoices</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:invoice_detail' form.instance.pk %}">{{ form.instance.internal_reference }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New Invoice</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-warning me-2"></i>
+                        {% if form.instance.pk %}Edit Invoice {{ form.instance.internal_reference }}{% else %}Create Supplier Invoice{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update supplier invoice information
+                        {% else %}
+                        Record new supplier invoice for three-way matching
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Supplier & Invoice Number -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-building me-2"></i>
+                Supplier & Invoice Identification
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.supplier.id_for_label }}" class="form-label required-field">Supplier</label>
+                    {% render_field form.supplier class="form-select" %}
+                    {% if form.supplier.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.supplier.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.invoice_number.id_for_label }}" class="form-label required-field">Invoice Number</label>
+                    {% render_field form.invoice_number class="form-control" placeholder="Supplier's invoice number" %}
+                    {% if form.invoice_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.invoice_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Enter the invoice number as it appears on the supplier's invoice</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.invoice_type.id_for_label }}" class="form-label">Invoice Type</label>
+                    {% render_field form.invoice_type class="form-select" %}
+                    {% if form.invoice_type.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.invoice_type.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- References -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-link-45deg me-2"></i>
+                References for Matching
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.purchase_order.id_for_label }}" class="form-label">Purchase Order</label>
+                    {% render_field form.purchase_order class="form-select" %}
+                    {% if form.purchase_order.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.purchase_order.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Link to PO for three-way matching</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.grn.id_for_label }}" class="form-label">Goods Receipt Note</label>
+                    {% render_field form.grn class="form-select" %}
+                    {% if form.grn.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.grn.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Link to GRN for three-way matching</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-calendar me-2"></i>
+                Dates
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.invoice_date.id_for_label }}" class="form-label required-field">Invoice Date</label>
+                    {% render_field form.invoice_date class="form-control" type="date" %}
+                    {% if form.invoice_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.invoice_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.received_date.id_for_label }}" class="form-label">Received Date</label>
+                    {% render_field form.received_date class="form-control" type="date" %}
+                    {% if form.received_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.received_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                    {% render_field form.due_date class="form-control" type="date" %}
+                    {% if form.due_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.due_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.posting_date.id_for_label }}" class="form-label">Posting Date</label>
+                    {% render_field form.posting_date class="form-control" type="date" %}
+                    {% if form.posting_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.posting_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Currency & Terms -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-currency-exchange me-2"></i>
+                Currency & Payment Terms
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.currency.id_for_label }}" class="form-label">Currency</label>
+                    {% render_field form.currency class="form-select" %}
+                    {% if form.currency.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.currency.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.payment_terms.id_for_label }}" class="form-label">Payment Terms</label>
+                    {% render_field form.payment_terms class="form-select" %}
+                    {% if form.payment_terms.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.payment_terms.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.exchange_rate.id_for_label }}" class="form-label">Exchange Rate</label>
+                    {% render_field form.exchange_rate class="form-control" placeholder="1.000000" %}
+                    {% if form.exchange_rate.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.exchange_rate.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Rate to base currency (SAR)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Amounts -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-calculator me-2"></i>
+                Amounts
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.subtotal.id_for_label }}" class="form-label">Subtotal</label>
+                    {% render_field form.subtotal class="form-control" placeholder="0.00" %}
+                    {% if form.subtotal.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.subtotal.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.discount_amount.id_for_label }}" class="form-label">Discount Amount</label>
+                    {% render_field form.discount_amount class="form-control" placeholder="0.00" %}
+                    {% if form.discount_amount.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.discount_amount.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax Amount</label>
+                    {% render_field form.tax_amount class="form-control" placeholder="0.00" %}
+                    {% if form.tax_amount.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.tax_amount.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.withholding_tax.id_for_label }}" class="form-label">Withholding Tax</label>
+                    {% render_field form.withholding_tax class="form-control" placeholder="0.00" %}
+                    {% if form.withholding_tax.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.withholding_tax.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.shipping_charges.id_for_label }}" class="form-label">Shipping Charges</label>
+                    {% render_field form.shipping_charges class="form-control" placeholder="0.00" %}
+                    {% if form.shipping_charges.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.shipping_charges.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.other_charges.id_for_label }}" class="form-label">Other Charges</label>
+                    {% render_field form.other_charges class="form-control" placeholder="0.00" %}
+                    {% if form.other_charges.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.other_charges.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.total_amount.id_for_label }}" class="form-label required-field">Total Amount</label>
+                    {% render_field form.total_amount class="form-control" placeholder="0.00" %}
+                    {% if form.total_amount.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.total_amount.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounting -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-journal-text me-2"></i>
+                Accounting Information
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.gl_account.id_for_label }}" class="form-label">GL Account</label>
+                    {% render_field form.gl_account class="form-control" placeholder="General Ledger account" %}
+                    {% if form.gl_account.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.gl_account.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.cost_center.id_for_label }}" class="form-label">Cost Center</label>
+                    {% render_field form.cost_center class="form-control" placeholder="Cost center code" %}
+                    {% if form.cost_center.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.cost_center.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-sticky me-2"></i>
+                Notes
+            </h5>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {% render_field form.notes class="form-control" rows="3" placeholder="General notes..." %}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="{{ form.internal_notes.id_for_label }}" class="form-label">Internal Notes</label>
+                    {% render_field form.internal_notes class="form-control" rows="3" placeholder="Internal notes (not visible to supplier)..." %}
+                    {% if form.internal_notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.internal_notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'purchasing:invoice_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle me-2"></i>Save Invoice
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+
+    // Auto-calculate total when amounts change
+    const subtotalField = document.querySelector('[name="subtotal"]');
+    const discountField = document.querySelector('[name="discount_amount"]');
+    const taxField = document.querySelector('[name="tax_amount"]');
+    const withholdingField = document.querySelector('[name="withholding_tax"]');
+    const shippingField = document.querySelector('[name="shipping_charges"]');
+    const otherField = document.querySelector('[name="other_charges"]');
+    const totalField = document.querySelector('[name="total_amount"]');
+
+    function calculateTotal() {
+        const subtotal = parseFloat(subtotalField.value) || 0;
+        const discount = parseFloat(discountField.value) || 0;
+        const tax = parseFloat(taxField.value) || 0;
+        const withholding = parseFloat(withholdingField.value) || 0;
+        const shipping = parseFloat(shippingField.value) || 0;
+        const other = parseFloat(otherField.value) || 0;
+
+        const total = subtotal - discount + tax - withholding + shipping + other;
+        totalField.value = total.toFixed(2);
+    }
+
+    [subtotalField, discountField, taxField, withholdingField, shippingField, otherField].forEach(field => {
+        if (field) {
+            field.addEventListener('input', calculateTotal);
+        }
+    });
+});
+</script>
+{% endblock %}

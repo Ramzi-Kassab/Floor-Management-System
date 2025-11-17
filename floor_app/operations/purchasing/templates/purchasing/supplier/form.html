@@ -1,0 +1,601 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit {{ form.instance.code }}{% else %}Create New Supplier{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #059669;
+        border-bottom: 2px solid #059669;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #059669;
+        box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #059669;
+        border-color: #059669;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(5, 150, 105, 0.1);
+        color: #059669;
+    }
+
+    .accordion-button:focus {
+        box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25);
+    }
+
+    .section-icon {
+        font-size: 1.2rem;
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:supplier_list' %}">Suppliers</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:supplier_detail' form.instance.pk %}">{{ form.instance.code }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New Supplier</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-success me-2"></i>
+                        {% if form.instance.pk %}Edit {{ form.instance.code }}{% else %}Create New Supplier{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update supplier information and settings
+                        {% else %}
+                        Add a new supplier to the purchasing system
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="accordion" id="supplierFormAccordion">
+            <!-- Basic Information -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#basicInfo">
+                        <i class="bi bi-info-circle section-icon"></i>
+                        Basic Information
+                    </button>
+                </h2>
+                <div id="basicInfo" class="accordion-collapse collapse show" data-bs-parent="#supplierFormAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label required-field">Supplier Code</label>
+                                {% render_field form.code class="form-control" placeholder="Enter unique code" %}
+                                {% if form.code.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.code.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                {% if form.code.help_text %}
+                                <div class="form-text">{{ form.code.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label required-field">Supplier Name</label>
+                                {% render_field form.name class="form-control" placeholder="Enter supplier name" %}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.legal_name.id_for_label }}" class="form-label">Legal Name</label>
+                                {% render_field form.legal_name class="form-control" placeholder="Enter legal/registered name" %}
+                                {% if form.legal_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.legal_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.classification.id_for_label }}" class="form-label">Classification</label>
+                                {% render_field form.classification class="form-select" %}
+                                {% if form.classification.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.classification.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label required-field">Status</label>
+                                {% render_field form.status class="form-select" %}
+                                {% if form.status.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                {% render_field form.description class="form-control" rows="3" placeholder="Enter supplier description..." %}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#contactInfo">
+                        <i class="bi bi-telephone section-icon"></i>
+                        Contact Information
+                    </button>
+                </h2>
+                <div id="contactInfo" class="accordion-collapse collapse" data-bs-parent="#supplierFormAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">Primary Phone</label>
+                                {% render_field form.phone class="form-control" placeholder="+1 (555) 123-4567" %}
+                                {% if form.phone.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fax.id_for_label }}" class="form-label">Fax</label>
+                                {% render_field form.fax class="form-control" placeholder="+1 (555) 123-4568" %}
+                                {% if form.fax.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.fax.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">Primary Email</label>
+                                {% render_field form.email class="form-control" type="email" placeholder="contact@supplier.com" %}
+                                {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.website.id_for_label }}" class="form-label">Website</label>
+                                {% render_field form.website class="form-control" type="url" placeholder="https://www.supplier.com" %}
+                                {% if form.website.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.website.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#addressInfo">
+                        <i class="bi bi-geo-alt section-icon"></i>
+                        Address Information
+                    </button>
+                </h2>
+                <div id="addressInfo" class="accordion-collapse collapse" data-bs-parent="#supplierFormAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.street_address.id_for_label }}" class="form-label">Street Address</label>
+                                {% render_field form.street_address class="form-control" placeholder="123 Main Street" %}
+                                {% if form.street_address.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.street_address.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.street_address_2.id_for_label }}" class="form-label">Address Line 2</label>
+                                {% render_field form.street_address_2 class="form-control" placeholder="Suite 100" %}
+                                {% if form.street_address_2.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.street_address_2.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                                {% render_field form.city class="form-control" placeholder="City name" %}
+                                {% if form.city.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.city.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.state_province.id_for_label }}" class="form-label">State/Province</label>
+                                {% render_field form.state_province class="form-control" placeholder="State or Province" %}
+                                {% if form.state_province.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.state_province.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.postal_code.id_for_label }}" class="form-label">Postal Code</label>
+                                {% render_field form.postal_code class="form-control" placeholder="12345" %}
+                                {% if form.postal_code.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">Country</label>
+                                {% render_field form.country class="form-control" placeholder="Country" %}
+                                {% if form.country.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.country.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commercial Terms -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#commercialTerms">
+                        <i class="bi bi-cash-stack section-icon"></i>
+                        Commercial Terms
+                    </button>
+                </h2>
+                <div id="commercialTerms" class="accordion-collapse collapse" data-bs-parent="#supplierFormAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.currency.id_for_label }}" class="form-label">Currency</label>
+                                {% render_field form.currency class="form-select" %}
+                                {% if form.currency.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.currency.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.payment_terms.id_for_label }}" class="form-label">Payment Terms</label>
+                                {% render_field form.payment_terms class="form-control" placeholder="Net 30" %}
+                                {% if form.payment_terms.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.payment_terms.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.credit_limit.id_for_label }}" class="form-label">Credit Limit</label>
+                                {% render_field form.credit_limit class="form-control" placeholder="0.00" %}
+                                {% if form.credit_limit.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.credit_limit.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.discount_terms.id_for_label }}" class="form-label">Discount Terms</label>
+                                {% render_field form.discount_terms class="form-control" placeholder="2/10 Net 30" %}
+                                {% if form.discount_terms.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.discount_terms.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.incoterms.id_for_label }}" class="form-label">Incoterms</label>
+                                {% render_field form.incoterms class="form-select" %}
+                                {% if form.incoterms.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.incoterms.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.minimum_order_value.id_for_label }}" class="form-label">Minimum Order Value</label>
+                                {% render_field form.minimum_order_value class="form-control" placeholder="0.00" %}
+                                {% if form.minimum_order_value.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.minimum_order_value.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax & Registration -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#taxRegistration">
+                        <i class="bi bi-file-earmark-text section-icon"></i>
+                        Tax & Registration
+                    </button>
+                </h2>
+                <div id="taxRegistration" class="accordion-collapse collapse" data-bs-parent="#supplierFormAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tax_id.id_for_label }}" class="form-label">Tax ID</label>
+                                {% render_field form.tax_id class="form-control" placeholder="Tax identification number" %}
+                                {% if form.tax_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.tax_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.vat_number.id_for_label }}" class="form-label">VAT Number</label>
+                                {% render_field form.vat_number class="form-control" placeholder="VAT registration number" %}
+                                {% if form.vat_number.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.vat_number.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.registration_number.id_for_label }}" class="form-label">Registration Number</label>
+                                {% render_field form.registration_number class="form-control" placeholder="Company registration number" %}
+                                {% if form.registration_number.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.registration_number.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.duns_number.id_for_label }}" class="form-label">DUNS Number</label>
+                                {% render_field form.duns_number class="form-control" placeholder="D-U-N-S number" %}
+                                {% if form.duns_number.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.duns_number.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banking Information -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bankingInfo">
+                        <i class="bi bi-bank section-icon"></i>
+                        Banking Information
+                    </button>
+                </h2>
+                <div id="bankingInfo" class="accordion-collapse collapse" data-bs-parent="#supplierFormAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bank_name.id_for_label }}" class="form-label">Bank Name</label>
+                                {% render_field form.bank_name class="form-control" placeholder="Bank name" %}
+                                {% if form.bank_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.bank_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bank_account.id_for_label }}" class="form-label">Bank Account</label>
+                                {% render_field form.bank_account class="form-control" placeholder="Account number" %}
+                                {% if form.bank_account.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.bank_account.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bank_routing.id_for_label }}" class="form-label">Bank Routing</label>
+                                {% render_field form.bank_routing class="form-control" placeholder="Routing number" %}
+                                {% if form.bank_routing.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.bank_routing.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.swift_code.id_for_label }}" class="form-label">SWIFT/BIC Code</label>
+                                {% render_field form.swift_code class="form-control" placeholder="SWIFT code" %}
+                                {% if form.swift_code.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.swift_code.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.iban.id_for_label }}" class="form-label">IBAN</label>
+                                {% render_field form.iban class="form-control" placeholder="International Bank Account Number" %}
+                                {% if form.iban.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.iban.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Rating -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#qualityRating">
+                        <i class="bi bi-star section-icon"></i>
+                        Quality & Performance
+                    </button>
+                </h2>
+                <div id="qualityRating" class="accordion-collapse collapse" data-bs-parent="#supplierFormAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quality_rating.id_for_label }}" class="form-label">Quality Rating (1-5)</label>
+                                {% render_field form.quality_rating class="form-control" placeholder="0.0" min="0" max="5" step="0.1" %}
+                                {% if form.quality_rating.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.quality_rating.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Rate from 1.0 (poor) to 5.0 (excellent)</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.lead_time_days.id_for_label }}" class="form-label">Default Lead Time (Days)</label>
+                                {% render_field form.lead_time_days class="form-control" placeholder="0" %}
+                                {% if form.lead_time_days.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.lead_time_days.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% if form.instance.pk %}{% url 'purchasing:supplier_detail' form.instance.pk %}{% else %}{% url 'purchasing:supplier_list' %}{% endif %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle me-2"></i>Save Supplier
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on code field for new suppliers
+    {% if not form.instance.pk %}
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    if (codeField) {
+        codeField.focus();
+    }
+    {% endif %}
+
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+
+        // Expand accordion section with errors
+        const accordionBody = feedback.closest('.accordion-body');
+        if (accordionBody) {
+            const collapseElement = accordionBody.closest('.accordion-collapse');
+            if (collapseElement && !collapseElement.classList.contains('show')) {
+                const bsCollapse = new bootstrap.Collapse(collapseElement, { toggle: true });
+            }
+        }
+    });
+
+    // Keep accordion sections open when they have errors
+    {% if form.errors %}
+    const firstInvalidField = document.querySelector('.is-invalid');
+    if (firstInvalidField) {
+        firstInvalidField.focus();
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

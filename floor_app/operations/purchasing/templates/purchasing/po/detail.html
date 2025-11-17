@@ -1,0 +1,638 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ po.po_number }} - Purchase Order{% endblock %}
+
+{% block extra_css %}
+<style>
+    .po-header {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 160px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .po-number-display {
+        font-family: monospace;
+        font-size: 1.2rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .lines-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .lines-table td {
+        font-size: 0.9rem;
+    }
+
+    .value-highlight {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #28a745;
+    }
+
+    .action-button-group .btn {
+        min-width: 120px;
+    }
+
+    .related-docs-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .related-docs-table td {
+        font-size: 0.9rem;
+    }
+
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .supplier-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .workflow-step {
+        position: relative;
+        padding-left: 30px;
+        margin-bottom: 0.5rem;
+    }
+
+    .workflow-step::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 6px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #e9ecef;
+    }
+
+    .workflow-step.active::before {
+        background: #28a745;
+    }
+
+    .workflow-step.current::before {
+        background: #ffc107;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:po_list' %}">Purchase Orders</a></li>
+            <li class="breadcrumb-item active">{{ po.po_number }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- PO Header -->
+    <div class="po-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
+                    <span class="po-number-display">{{ po.po_number }}</span>
+                    <span class="status-badge-large">
+                        <i class="bi bi-{% if po.status == 'draft' %}pencil{% elif po.status == 'submitted' %}send{% elif po.status == 'approved' %}check-circle{% elif po.status == 'sent' %}envelope{% elif po.status == 'acknowledged' %}hand-thumbs-up{% elif po.status == 'partially_received' %}box-arrow-in-down{% elif po.status == 'received' %}box-seam{% elif po.status == 'invoiced' %}receipt{% elif po.status == 'completed' %}check-all{% else %}slash-circle{% endif %}"></i>
+                        {{ po.get_status_display|default:po.status }}
+                    </span>
+                </div>
+                <h1 class="mb-2">Purchase Order</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    <span>
+                        <i class="bi bi-building me-2"></i>
+                        {% if po.supplier %}
+                        {{ po.supplier.name }}
+                        {% else %}
+                        {{ po.supplier_name|default:"N/A" }}
+                        {% endif %}
+                    </span>
+                    <span>
+                        <i class="bi bi-calendar me-2"></i>
+                        {{ po.order_date|date:"F d, Y" }}
+                    </span>
+                    <span>
+                        <i class="bi bi-currency-dollar me-2"></i>
+                        {{ po.currency|default:"USD" }} {{ po.total_amount|floatformat:2|default:"0.00" }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2 flex-wrap action-button-group">
+                    {% if po.status == 'draft' %}
+                    <a href="{% url 'purchasing:po_edit' po.pk %}" class="btn btn-light">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <form method="post" action="{% url 'purchasing:po_submit' po.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-send me-2"></i>Submit for Approval
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if po.status == 'submitted' and can_approve %}
+                    <form method="post" action="{% url 'purchasing:po_approve' po.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Approve
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if po.status == 'approved' %}
+                    <form method="post" action="{% url 'purchasing:po_send' po.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="bi bi-envelope me-2"></i>Send to Supplier
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if po.status in 'sent,acknowledged,partially_received' %}
+                    <a href="{% url 'purchasing:grn_create' po.pk %}" class="btn btn-success">
+                        <i class="bi bi-box-arrow-in-down me-2"></i>Create GRN
+                    </a>
+                    {% endif %}
+
+                    <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print PO</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-pdf me-2"></i>Export PDF</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-envelope me-2"></i>Email to Supplier</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% if po.status == 'draft' %}
+                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Basic Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Basic Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">PO Number:</span>
+                    <span class="detail-value"><code>{{ po.po_number }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-{% if po.status == 'completed' %}success{% elif po.status == 'cancelled' %}danger{% elif po.status == 'sent' or po.status == 'acknowledged' %}info{% elif po.status == 'approved' %}primary{% elif po.status == 'submitted' %}warning{% else %}secondary{% endif %}">
+                            {{ po.get_status_display|default:po.status }}
+                        </span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Date:</span>
+                    <span class="detail-value">{{ po.order_date|date:"F d, Y" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Expected Delivery:</span>
+                    <span class="detail-value">
+                        {% if po.expected_delivery_date %}
+                        <span class="{% if po.expected_delivery_date < today %}text-danger fw-bold{% endif %}">
+                            {{ po.expected_delivery_date|date:"F d, Y" }}
+                        </span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                {% if po.purchase_requisition %}
+                <div class="detail-row">
+                    <span class="detail-label">Source PR:</span>
+                    <span class="detail-value">
+                        <a href="{% url 'purchasing:pr_detail' po.purchase_requisition.pk %}">
+                            {{ po.purchase_requisition.pr_number }}
+                        </a>
+                    </span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value">{{ po.created_at|date:"F d, Y H:i" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Last Updated:</span>
+                    <span class="detail-value">{{ po.updated_at|date:"F d, Y H:i" }}</span>
+                </div>
+            </div>
+
+            <!-- Supplier Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-building me-2"></i>
+                    Supplier Information
+                </h5>
+                <div class="supplier-card">
+                    <div class="detail-row">
+                        <span class="detail-label">Supplier Name:</span>
+                        <span class="detail-value fw-bold">
+                            {% if po.supplier %}
+                            {{ po.supplier.name }}
+                            {% else %}
+                            {{ po.supplier_name|default:"-" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% if po.supplier %}
+                    <div class="detail-row">
+                        <span class="detail-label">Contact:</span>
+                        <span class="detail-value">{{ po.supplier.contact_person|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">{{ po.supplier.email|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value">{{ po.supplier.phone|default:"-" }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Address:</span>
+                        <span class="detail-value">{{ po.supplier.address|default:"-" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment & Delivery Terms -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-file-text me-2"></i>
+                    Terms & Conditions
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Terms:</span>
+                    <span class="detail-value">{{ po.payment_terms|default:"Net 30" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Delivery Terms:</span>
+                    <span class="detail-value">{{ po.delivery_terms|default:"FOB Destination" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Ship To:</span>
+                    <span class="detail-value">{{ po.ship_to_address|default:"-" }}</span>
+                </div>
+                {% if po.notes %}
+                <div class="detail-row">
+                    <span class="detail-label">Notes:</span>
+                    <span class="detail-value">{{ po.notes }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6 mb-4">
+            <!-- Value Summary -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Value Summary
+                </h5>
+                <div class="text-center py-3">
+                    <div class="value-highlight">
+                        {{ po.currency|default:"USD" }} {{ po.total_amount|floatformat:2|default:"0.00" }}
+                    </div>
+                    <small class="text-muted">Total Order Value</small>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Subtotal:</span>
+                    <span class="detail-value">{{ po.currency|default:"USD" }} {{ po.subtotal|floatformat:2|default:"0.00" }}</span>
+                </div>
+                {% if po.tax_amount %}
+                <div class="detail-row">
+                    <span class="detail-label">Tax:</span>
+                    <span class="detail-value">{{ po.currency|default:"USD" }} {{ po.tax_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if po.shipping_cost %}
+                <div class="detail-row">
+                    <span class="detail-label">Shipping:</span>
+                    <span class="detail-value">{{ po.currency|default:"USD" }} {{ po.shipping_cost|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if po.discount_amount %}
+                <div class="detail-row">
+                    <span class="detail-label">Discount:</span>
+                    <span class="detail-value text-success">-{{ po.currency|default:"USD" }} {{ po.discount_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Receiving Progress -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Receiving Progress
+                </h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold">Lines Received</span>
+                        <span>{{ received_lines_count|default:0 }} / {{ total_lines_count|default:0 }}</span>
+                    </div>
+                    <div class="progress progress-bar-custom">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: {% widthratio received_lines_count|default:0 total_lines_count|default:1 100 %}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold">Quantity Received</span>
+                        <span>{{ total_received_qty|default:0 }} / {{ total_ordered_qty|default:0 }}</span>
+                    </div>
+                    <div class="progress progress-bar-custom">
+                        <div class="progress-bar bg-info" role="progressbar"
+                             style="width: {% widthratio total_received_qty|default:0 total_ordered_qty|default:1 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Status -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    Workflow Status
+                </h5>
+                <div class="workflow-step {% if po.status != 'draft' %}active{% else %}current{% endif %}">
+                    <div>Draft</div>
+                </div>
+                <div class="workflow-step {% if po.status in 'submitted,approved,sent,acknowledged,partially_received,received,invoiced,completed' %}active{% elif po.status == 'submitted' %}current{% endif %}">
+                    <div>Submitted</div>
+                </div>
+                <div class="workflow-step {% if po.status in 'approved,sent,acknowledged,partially_received,received,invoiced,completed' %}active{% elif po.status == 'approved' %}current{% endif %}">
+                    <div>Approved</div>
+                </div>
+                <div class="workflow-step {% if po.status in 'sent,acknowledged,partially_received,received,invoiced,completed' %}active{% elif po.status == 'sent' %}current{% endif %}">
+                    <div>Sent to Supplier</div>
+                </div>
+                <div class="workflow-step {% if po.status in 'acknowledged,partially_received,received,invoiced,completed' %}active{% elif po.status == 'acknowledged' %}current{% endif %}">
+                    <div>Acknowledged</div>
+                </div>
+                <div class="workflow-step {% if po.status in 'received,invoiced,completed' %}active{% elif po.status == 'partially_received' %}current{% endif %}">
+                    <div>Goods Received</div>
+                </div>
+                <div class="workflow-step {% if po.status in 'invoiced,completed' %}active{% elif po.status == 'invoiced' %}current{% endif %}">
+                    <div>Invoiced</div>
+                </div>
+                <div class="workflow-step {% if po.status == 'completed' %}active{% endif %}">
+                    <div>Completed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PO Lines -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-list-ul me-2"></i>
+            Order Lines
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-hover lines-table mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item</th>
+                        <th>Description</th>
+                        <th>Ordered Qty</th>
+                        <th>Received Qty</th>
+                        <th>UoM</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in po.lines.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            {% if line.item %}
+                            <a href="{% url 'inventory:item_detail' line.item.pk %}">
+                                {{ line.item.sku }}
+                            </a>
+                            {% else %}
+                            {{ line.item_code|default:"-" }}
+                            {% endif %}
+                        </td>
+                        <td>{{ line.description|default:"-" }}</td>
+                        <td class="fw-bold">{{ line.quantity }}</td>
+                        <td>
+                            <span class="{% if line.received_quantity >= line.quantity %}text-success{% elif line.received_quantity > 0 %}text-warning{% endif %}">
+                                {{ line.received_quantity|default:0 }}
+                            </span>
+                        </td>
+                        <td>{{ line.uom|default:"-" }}</td>
+                        <td>{{ po.currency|default:"USD" }} {{ line.unit_price|floatformat:2|default:"0.00" }}</td>
+                        <td class="fw-bold">{{ po.currency|default:"USD" }} {{ line.total_price|floatformat:2|default:"0.00" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-3">
+                            <span class="text-muted">No lines added yet</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if po.lines.all %}
+                <tfoot>
+                    <tr class="table-light">
+                        <td colspan="7" class="text-end fw-bold">Total:</td>
+                        <td class="fw-bold text-success">{{ po.currency|default:"USD" }} {{ po.total_amount|floatformat:2|default:"0.00" }}</td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+
+    <!-- Related GRNs -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-box-arrow-in-down me-2"></i>
+            Goods Receipt Notes (GRNs)
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-hover related-docs-table mb-0">
+                <thead>
+                    <tr>
+                        <th>GRN Number</th>
+                        <th>Receipt Date</th>
+                        <th>Received By</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grn in po.grns.all %}
+                    <tr>
+                        <td><a href="{% url 'purchasing:grn_detail' grn.pk %}">{{ grn.grn_number }}</a></td>
+                        <td>{{ grn.receipt_date|date:"Y-m-d" }}</td>
+                        <td>{{ grn.received_by.get_full_name|default:grn.received_by.username }}</td>
+                        <td>
+                            <span class="badge bg-{% if grn.status == 'completed' %}success{% elif grn.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                {{ grn.get_status_display|default:grn.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'purchasing:grn_detail' grn.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-3">
+                            <span class="text-muted">No GRNs created yet</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Related Invoices -->
+    <div class="info-card">
+        <h5 class="card-title">
+            <i class="bi bi-receipt me-2"></i>
+            Supplier Invoices
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-hover related-docs-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice Number</th>
+                        <th>Invoice Date</th>
+                        <th>Due Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in po.invoices.all %}
+                    <tr>
+                        <td><a href="{% url 'purchasing:invoice_detail' invoice.pk %}">{{ invoice.invoice_number }}</a></td>
+                        <td>{{ invoice.invoice_date|date:"Y-m-d" }}</td>
+                        <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
+                        <td class="fw-bold">{{ po.currency|default:"USD" }} {{ invoice.total_amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge bg-{% if invoice.status == 'paid' %}success{% elif invoice.status == 'overdue' %}danger{% elif invoice.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                {{ invoice.get_status_display|default:invoice.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'purchasing:invoice_detail' invoice.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-3">
+                            <span class="text-muted">No invoices recorded yet</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any PO detail-specific JavaScript here
+</script>
+{% endblock %}

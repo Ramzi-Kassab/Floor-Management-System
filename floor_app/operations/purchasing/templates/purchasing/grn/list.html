@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Goods Receipt Notes - Purchasing{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .grn-table th {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-draft {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-inspection {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .status-complete {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-posted {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .inspection-badge {
+        padding: 0.2rem 0.4rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .inspection-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .inspection-passed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .inspection-failed {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .inspection-conditional {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .grn-number {
+        font-family: monospace;
+        font-weight: 600;
+        color: #10b981;
+    }
+
+    .po-reference {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #6366f1;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="#">Purchasing</a></li>
+            <li class="breadcrumb-item active">Goods Receipt Notes</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-box-seam text-success me-2"></i>
+                        Goods Receipt Notes
+                    </h2>
+                    <p class="text-muted mb-0">Manage receipt of goods from suppliers</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'purchasing:grn_create' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Create GRN
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search by GRN Number or PO</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                            <option value="PENDING_INSPECTION" {% if request.GET.status == 'PENDING_INSPECTION' %}selected{% endif %}>Pending Inspection</option>
+                            <option value="UNDER_INSPECTION" {% if request.GET.status == 'UNDER_INSPECTION' %}selected{% endif %}>Under Inspection</option>
+                            <option value="INSPECTION_COMPLETE" {% if request.GET.status == 'INSPECTION_COMPLETE' %}selected{% endif %}>Inspection Complete</option>
+                            <option value="POSTED" {% if request.GET.status == 'POSTED' %}selected{% endif %}>Posted</option>
+                            <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                        <label for="status">Status</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="inspection_status" name="inspection_status">
+                            <option value="">All Inspection Status</option>
+                            <option value="PENDING" {% if request.GET.inspection_status == 'PENDING' %}selected{% endif %}>Pending</option>
+                            <option value="IN_PROGRESS" {% if request.GET.inspection_status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                            <option value="PASSED" {% if request.GET.inspection_status == 'PASSED' %}selected{% endif %}>Passed</option>
+                            <option value="FAILED" {% if request.GET.inspection_status == 'FAILED' %}selected{% endif %}>Failed</option>
+                            <option value="CONDITIONAL" {% if request.GET.inspection_status == 'CONDITIONAL' %}selected{% endif %}>Conditional</option>
+                        </select>
+                        <label for="inspection_status">Inspection Status</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-success h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- GRN Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover grn-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>GRN Number</th>
+                            <th>Purchase Order</th>
+                            <th>Status</th>
+                            <th>Receipt Date</th>
+                            <th>Inspection Status</th>
+                            <th>Total Packages</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grn in grns %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'purchasing:grn_detail' grn.pk %}" class="text-decoration-none">
+                                    <span class="grn-number">{{ grn.grn_number }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'purchasing:po_detail' grn.purchase_order.pk %}" class="text-decoration-none">
+                                    <span class="po-reference">{{ grn.purchase_order.po_number }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                {% if grn.status == 'DRAFT' %}
+                                <span class="status-badge status-draft">
+                                    <i class="bi bi-file-earmark me-1"></i>Draft
+                                </span>
+                                {% elif grn.status == 'PENDING_INSPECTION' %}
+                                <span class="status-badge status-pending">
+                                    <i class="bi bi-hourglass-split me-1"></i>Pending Inspection
+                                </span>
+                                {% elif grn.status == 'UNDER_INSPECTION' %}
+                                <span class="status-badge status-inspection">
+                                    <i class="bi bi-search me-1"></i>Under Inspection
+                                </span>
+                                {% elif grn.status == 'INSPECTION_COMPLETE' %}
+                                <span class="status-badge status-complete">
+                                    <i class="bi bi-check-circle me-1"></i>Inspection Complete
+                                </span>
+                                {% elif grn.status == 'POSTED' %}
+                                <span class="status-badge status-posted">
+                                    <i class="bi bi-check2-all me-1"></i>Posted
+                                </span>
+                                {% elif grn.status == 'CANCELLED' %}
+                                <span class="status-badge status-cancelled">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelled
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ grn.receipt_date|date:"Y-m-d" }}</td>
+                            <td>
+                                {% if grn.inspection_status == 'PENDING' %}
+                                <span class="inspection-badge inspection-pending">Pending</span>
+                                {% elif grn.inspection_status == 'IN_PROGRESS' %}
+                                <span class="inspection-badge inspection-pending">In Progress</span>
+                                {% elif grn.inspection_status == 'PASSED' %}
+                                <span class="inspection-badge inspection-passed">Passed</span>
+                                {% elif grn.inspection_status == 'FAILED' %}
+                                <span class="inspection-badge inspection-failed">Failed</span>
+                                {% elif grn.inspection_status == 'CONDITIONAL' %}
+                                <span class="inspection-badge inspection-conditional">Conditional</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ grn.total_packages }}</span>
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'purchasing:grn_detail' grn.pk %}"
+                                   class="btn btn-sm btn-outline-success" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if grn.status == 'DRAFT' %}
+                                <a href="{% url 'purchasing:grn_edit' grn.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No Goods Receipt Notes found</p>
+                                <a href="{% url 'purchasing:grn_create' %}" class="btn btn-success">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First GRN
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if grns.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if grns.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ grns.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.inspection_status %}&inspection_status={{ request.GET.inspection_status }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in grns.paginator.page_range %}
+                        {% if num == grns.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > grns.number|add:'-3' and num < grns.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.inspection_status %}&inspection_status={{ request.GET.inspection_status }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if grns.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ grns.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.inspection_status %}&inspection_status={{ request.GET.inspection_status }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "purchasing:grn_list" %}';
+}
+</script>
+{% endblock %}

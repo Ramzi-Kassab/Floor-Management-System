@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit Transfer{% else %}Create Transfer{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .location-group {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .location-group h6 {
+        color: #495057;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+
+    .arrow-separator {
+        text-align: center;
+        font-size: 1.5rem;
+        color: #6366f1;
+        margin: 0.5rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:transfer_list' %}">Transfers</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create Transfer</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-primary me-2"></i>
+                        {% if form.instance.pk %}Edit Transfer{% else %}Create Transfer{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update transfer information
+                        {% else %}
+                        Create a new inventory transfer between locations
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Transfer Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-info-circle me-2"></i>
+                Transfer Information
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.type.id_for_label }}" class="form-label required-field">Transfer Type</label>
+                    {% if form.type %}
+                    {% render_field form.type class="form-select" %}
+                    {% else %}
+                    <select class="form-select" name="type" id="id_type">
+                        <option value="INTERNAL">Internal</option>
+                        <option value="EXTERNAL">External</option>
+                        <option value="INTERCOMPANY">Intercompany</option>
+                    </select>
+                    {% endif %}
+                    {% if form.type.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.type.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.priority.id_for_label }}" class="form-label required-field">Priority</label>
+                    {% if form.priority %}
+                    {% render_field form.priority class="form-select" %}
+                    {% else %}
+                    <select class="form-select" name="priority" id="id_priority">
+                        <option value="LOW">Low</option>
+                        <option value="NORMAL" selected>Normal</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                        <option value="CRITICAL">Critical</option>
+                    </select>
+                    {% endif %}
+                    {% if form.priority.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.priority.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.request_date.id_for_label }}" class="form-label required-field">Request Date</label>
+                    {% if form.request_date %}
+                    {% render_field form.request_date class="form-control" type="date" %}
+                    {% else %}
+                    <input type="date" class="form-control" name="request_date" id="id_request_date">
+                    {% endif %}
+                    {% if form.request_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.request_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.expected_date.id_for_label }}" class="form-label">Expected Date</label>
+                    {% if form.expected_date %}
+                    {% render_field form.expected_date class="form-control" type="date" %}
+                    {% else %}
+                    <input type="date" class="form-control" name="expected_date" id="id_expected_date">
+                    {% endif %}
+                    {% if form.expected_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.expected_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-geo-alt me-2"></i>
+                Location Information
+            </h5>
+
+            <div class="location-group">
+                <h6><i class="bi bi-box-arrow-right me-2"></i>Source Location</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.source_location_name.id_for_label }}" class="form-label required-field">Location Name</label>
+                        {% if form.source_location_name %}
+                        {% render_field form.source_location_name class="form-control" placeholder="Enter source location name" %}
+                        {% else %}
+                        <input type="text" class="form-control" name="source_location_name" id="id_source_location_name" placeholder="Enter source location name">
+                        {% endif %}
+                        {% if form.source_location_name.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.source_location_name.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.source_address.id_for_label }}" class="form-label">Address</label>
+                        {% if form.source_address %}
+                        {% render_field form.source_address class="form-control" placeholder="Enter source address" %}
+                        {% else %}
+                        <input type="text" class="form-control" name="source_address" id="id_source_address" placeholder="Enter source address">
+                        {% endif %}
+                        {% if form.source_address.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.source_address.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-separator">
+                <i class="bi bi-arrow-down-circle-fill"></i>
+            </div>
+
+            <div class="location-group">
+                <h6><i class="bi bi-box-arrow-in-right me-2"></i>Destination Location</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.destination_location_name.id_for_label }}" class="form-label required-field">Location Name</label>
+                        {% if form.destination_location_name %}
+                        {% render_field form.destination_location_name class="form-control" placeholder="Enter destination location name" %}
+                        {% else %}
+                        <input type="text" class="form-control" name="destination_location_name" id="id_destination_location_name" placeholder="Enter destination location name">
+                        {% endif %}
+                        {% if form.destination_location_name.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.destination_location_name.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.destination_address.id_for_label }}" class="form-label">Address</label>
+                        {% if form.destination_address %}
+                        {% render_field form.destination_address class="form-control" placeholder="Enter destination address" %}
+                        {% else %}
+                        <input type="text" class="form-control" name="destination_address" id="id_destination_address" placeholder="Enter destination address">
+                        {% endif %}
+                        {% if form.destination_address.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.destination_address.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-truck me-2"></i>
+                Shipping Information (Optional)
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.carrier.id_for_label }}" class="form-label">Carrier</label>
+                    {% if form.carrier %}
+                    {% render_field form.carrier class="form-control" placeholder="Enter carrier name" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="carrier" id="id_carrier" placeholder="Enter carrier name">
+                    {% endif %}
+                    {% if form.carrier.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.carrier.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.tracking_number.id_for_label }}" class="form-label">Tracking Number</label>
+                    {% if form.tracking_number %}
+                    {% render_field form.tracking_number class="form-control" placeholder="Enter tracking number" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="tracking_number" id="id_tracking_number" placeholder="Enter tracking number">
+                    {% endif %}
+                    {% if form.tracking_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.tracking_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-chat-left-text me-2"></i>
+                Additional Information
+            </h5>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {% if form.notes %}
+                    {% render_field form.notes class="form-control" rows="4" placeholder="Enter any additional notes or comments..." %}
+                    {% else %}
+                    <textarea class="form-control" name="notes" id="id_notes" rows="4" placeholder="Enter any additional notes or comments..."></textarea>
+                    {% endif %}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'purchasing:transfer_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-2"></i>Save Transfer
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+
+    // Set default date to today if not already set
+    const requestDateField = document.getElementById('id_request_date');
+    if (requestDateField && !requestDateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        requestDateField.value = today;
+    }
+});
+</script>
+{% endblock %}

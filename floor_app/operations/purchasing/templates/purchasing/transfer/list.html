@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Transfers - Logistics Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-in_transit { background-color: #cce5ff; color: #004085; }
+    .status-received { background-color: #c8e6c9; color: #1b5e20; }
+    .status-cancelled { background-color: #f5f5f5; color: #424242; }
+    .status-partial { background-color: #e1bee7; color: #6a1b9a; }
+
+    .priority-critical { background-color: #dc3545; color: white; }
+    .priority-urgent { background-color: #fd7e14; color: white; }
+    .priority-high { background-color: #ffc107; color: #000; }
+    .priority-normal { background-color: #17a2b8; color: white; }
+    .priority-low { background-color: #6c757d; color: white; }
+
+    .type-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .type-internal { background: #e3f2fd; color: #1565c0; }
+    .type-external { background: #fce4ec; color: #c62828; }
+    .type-intercompany { background: #f3e5f5; color: #6a1b9a; }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .transfer-number {
+        font-weight: 600;
+        color: #6366f1;
+        font-family: monospace;
+    }
+
+    .location-flow {
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 border-bottom bg-white">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item active">Transfers</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 fw-bold">
+                <i class="bi bi-arrow-left-right me-2"></i>Inventory Transfers
+            </h1>
+            <p class="text-muted mb-0 mt-1">Manage stock movements between locations</p>
+        </div>
+        <div>
+            <a href="{% url 'purchasing:transfer_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Transfer
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label fw-600">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="search" name="search"
+                           placeholder="Transfer #, Location..."
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label fw-600">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                    <option value="IN_TRANSIT" {% if request.GET.status == 'IN_TRANSIT' %}selected{% endif %}>In Transit</option>
+                    <option value="RECEIVED" {% if request.GET.status == 'RECEIVED' %}selected{% endif %}>Received</option>
+                    <option value="PARTIAL" {% if request.GET.status == 'PARTIAL' %}selected{% endif %}>Partial</option>
+                    <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="priority" class="form-label fw-600">Priority</label>
+                <select class="form-select" id="priority" name="priority">
+                    <option value="">All Priorities</option>
+                    <option value="CRITICAL" {% if request.GET.priority == 'CRITICAL' %}selected{% endif %}>Critical</option>
+                    <option value="URGENT" {% if request.GET.priority == 'URGENT' %}selected{% endif %}>Urgent</option>
+                    <option value="HIGH" {% if request.GET.priority == 'HIGH' %}selected{% endif %}>High</option>
+                    <option value="NORMAL" {% if request.GET.priority == 'NORMAL' %}selected{% endif %}>Normal</option>
+                    <option value="LOW" {% if request.GET.priority == 'LOW' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Count -->
+    <div class="mb-3">
+        <small class="text-muted">
+            Showing <strong>{{ transfers.paginator.count|default:transfers|length }}</strong> transfer(s)
+            {% if request.GET %}(filtered){% endif %}
+        </small>
+    </div>
+
+    <!-- Transfers Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-600">Transfer #</th>
+                        <th class="fw-600">Type</th>
+                        <th class="fw-600">Status</th>
+                        <th class="fw-600">Priority</th>
+                        <th class="fw-600">From / To Location</th>
+                        <th class="fw-600">Request Date</th>
+                        <th class="fw-600">Total Items</th>
+                        <th class="fw-600 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if transfers %}
+                        {% for transfer in transfers %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'purchasing:transfer_detail' transfer.pk %}" class="transfer-number text-decoration-none">
+                                        {{ transfer.transfer_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="type-badge type-{{ transfer.type|lower }}">
+                                        {{ transfer.get_type_display|default:transfer.type }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ transfer.status|lower }}">
+                                        {{ transfer.get_status_display|default:transfer.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge priority-{{ transfer.priority|lower }}">
+                                        {{ transfer.get_priority_display|default:transfer.priority }}
+                                    </span>
+                                </td>
+                                <td class="location-flow">
+                                    {{ transfer.source_location_name|default:"-" }}
+                                    <i class="bi bi-arrow-right mx-1 text-primary"></i>
+                                    {{ transfer.destination_location_name|default:"-" }}
+                                </td>
+                                <td>{{ transfer.request_date|date:"Y-m-d" }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ transfer.total_items|default:0 }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'purchasing:transfer_detail' transfer.pk %}"
+                                           class="btn btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'purchasing:transfer_edit' transfer.pk %}"
+                                           class="btn btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    <p>No transfers found.</p>
+                                    {% if request.GET %}
+                                        <p class="small">Try adjusting your filters.</p>
+                                    {% else %}
+                                        <a href="{% url 'purchasing:transfer_create' %}" class="btn btn-sm btn-primary">
+                                            Create your first transfer
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

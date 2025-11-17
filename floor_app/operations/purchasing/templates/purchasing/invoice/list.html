@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Supplier Invoices - Purchasing{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .invoice-table th {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-draft {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .status-received {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .status-verified {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-disputed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-paid {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .payment-badge {
+        padding: 0.2rem 0.4rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .payment-not-paid {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .payment-partial {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .payment-paid {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .payment-overdue {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .invoice-reference {
+        font-family: monospace;
+        font-weight: 600;
+        color: #f59e0b;
+    }
+
+    .supplier-name {
+        font-size: 0.9rem;
+        color: #4b5563;
+    }
+
+    .amount-cell {
+        font-family: monospace;
+        text-align: right;
+    }
+
+    .amount-outstanding {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .amount-paid {
+        color: #16a34a;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="#">Purchasing</a></li>
+            <li class="breadcrumb-item active">Supplier Invoices</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-receipt text-warning me-2"></i>
+                        Supplier Invoices
+                    </h2>
+                    <p class="text-muted mb-0">Manage supplier invoices and three-way matching</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'purchasing:invoice_create' %}" class="btn btn-warning">
+                        <i class="bi bi-plus-circle me-2"></i>Create Invoice
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search by Reference or Invoice Number</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                            <option value="RECEIVED" {% if request.GET.status == 'RECEIVED' %}selected{% endif %}>Received</option>
+                            <option value="VERIFIED" {% if request.GET.status == 'VERIFIED' %}selected{% endif %}>Verified</option>
+                            <option value="DISPUTED" {% if request.GET.status == 'DISPUTED' %}selected{% endif %}>Disputed</option>
+                            <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                            <option value="PAID" {% if request.GET.status == 'PAID' %}selected{% endif %}>Paid</option>
+                            <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                        <label for="status">Status</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="payment_status" name="payment_status">
+                            <option value="">All Payment Status</option>
+                            <option value="NOT_PAID" {% if request.GET.payment_status == 'NOT_PAID' %}selected{% endif %}>Not Paid</option>
+                            <option value="PARTIAL" {% if request.GET.payment_status == 'PARTIAL' %}selected{% endif %}>Partially Paid</option>
+                            <option value="PAID" {% if request.GET.payment_status == 'PAID' %}selected{% endif %}>Paid</option>
+                            <option value="OVERDUE" {% if request.GET.payment_status == 'OVERDUE' %}selected{% endif %}>Overdue</option>
+                        </select>
+                        <label for="payment_status">Payment Status</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-warning h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover invoice-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Internal Ref</th>
+                            <th>Invoice Number</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                            <th>Payment Status</th>
+                            <th>Invoice Date</th>
+                            <th>Due Date</th>
+                            <th class="text-end">Total Amount</th>
+                            <th class="text-end">Amount Paid</th>
+                            <th class="text-end">Outstanding</th>
+                            <th width="100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'purchasing:invoice_detail' invoice.pk %}" class="text-decoration-none">
+                                    <span class="invoice-reference">{{ invoice.internal_reference }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <code>{{ invoice.invoice_number }}</code>
+                            </td>
+                            <td>
+                                <span class="supplier-name">{{ invoice.supplier.name }}</span>
+                            </td>
+                            <td>
+                                {% if invoice.status == 'DRAFT' %}
+                                <span class="status-badge status-draft">
+                                    <i class="bi bi-file-earmark me-1"></i>Draft
+                                </span>
+                                {% elif invoice.status == 'RECEIVED' %}
+                                <span class="status-badge status-received">
+                                    <i class="bi bi-envelope-open me-1"></i>Received
+                                </span>
+                                {% elif invoice.status == 'UNDER_VERIFICATION' %}
+                                <span class="status-badge status-received">
+                                    <i class="bi bi-search me-1"></i>Verifying
+                                </span>
+                                {% elif invoice.status == 'VERIFIED' %}
+                                <span class="status-badge status-verified">
+                                    <i class="bi bi-check-circle me-1"></i>Verified
+                                </span>
+                                {% elif invoice.status == 'DISPUTED' %}
+                                <span class="status-badge status-disputed">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Disputed
+                                </span>
+                                {% elif invoice.status == 'APPROVED' %}
+                                <span class="status-badge status-approved">
+                                    <i class="bi bi-check2-circle me-1"></i>Approved
+                                </span>
+                                {% elif invoice.status == 'PENDING_PAYMENT' %}
+                                <span class="status-badge status-approved">
+                                    <i class="bi bi-hourglass me-1"></i>Pending Pay
+                                </span>
+                                {% elif invoice.status == 'PARTIALLY_PAID' %}
+                                <span class="status-badge status-approved">
+                                    <i class="bi bi-cash me-1"></i>Partial
+                                </span>
+                                {% elif invoice.status == 'PAID' %}
+                                <span class="status-badge status-paid">
+                                    <i class="bi bi-check2-all me-1"></i>Paid
+                                </span>
+                                {% elif invoice.status == 'CANCELLED' %}
+                                <span class="status-badge status-cancelled">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelled
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if invoice.payment_status == 'NOT_PAID' %}
+                                <span class="payment-badge payment-not-paid">Not Paid</span>
+                                {% elif invoice.payment_status == 'PARTIAL' %}
+                                <span class="payment-badge payment-partial">Partial</span>
+                                {% elif invoice.payment_status == 'PAID' %}
+                                <span class="payment-badge payment-paid">Paid</span>
+                                {% elif invoice.payment_status == 'OVERDUE' %}
+                                <span class="payment-badge payment-overdue">Overdue</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ invoice.invoice_date|date:"Y-m-d" }}</td>
+                            <td>
+                                {% if invoice.due_date %}
+                                    {% if invoice.payment_status == 'OVERDUE' %}
+                                    <span class="text-danger fw-bold">{{ invoice.due_date|date:"Y-m-d" }}</span>
+                                    {% else %}
+                                    {{ invoice.due_date|date:"Y-m-d" }}
+                                    {% endif %}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="amount-cell">
+                                {{ invoice.currency }} {{ invoice.total_amount|floatformat:2 }}
+                            </td>
+                            <td class="amount-cell amount-paid">
+                                {{ invoice.amount_paid|floatformat:2 }}
+                            </td>
+                            <td class="amount-cell amount-outstanding">
+                                {{ invoice.amount_outstanding|floatformat:2 }}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'purchasing:invoice_detail' invoice.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if invoice.status == 'DRAFT' %}
+                                <a href="{% url 'purchasing:invoice_edit' invoice.pk %}"
+                                   class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No Supplier Invoices found</p>
+                                <a href="{% url 'purchasing:invoice_create' %}" class="btn btn-warning">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First Invoice
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if invoices.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if invoices.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ invoices.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in invoices.paginator.page_range %}
+                        {% if num == invoices.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > invoices.number|add:'-3' and num < invoices.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if invoices.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ invoices.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "purchasing:invoice_list" %}';
+}
+</script>
+{% endblock %}

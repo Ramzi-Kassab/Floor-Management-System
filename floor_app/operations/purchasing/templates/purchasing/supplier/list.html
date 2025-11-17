@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Suppliers - Purchasing{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .supplier-table th {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-blocked {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .classification-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #e9ecef;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .classification-strategic {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .classification-preferred {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .classification-approved {
+        background: #fff3cd;
+        color: #664d03;
+    }
+
+    .classification-probationary {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .supplier-code {
+        font-family: monospace;
+        font-weight: 600;
+        color: #059669;
+    }
+
+    .rating-stars {
+        color: #ffc107;
+    }
+
+    .rating-value {
+        font-weight: 600;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item active">Suppliers</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-building text-success me-2"></i>
+                        Supplier Management
+                    </h2>
+                    <p class="text-muted mb-0">Manage all suppliers and vendor relationships</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'purchasing:supplier_create' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Supplier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search by Code or Name</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending Approval</option>
+                            <option value="blocked" {% if request.GET.status == 'blocked' %}selected{% endif %}>Blocked</option>
+                        </select>
+                        <label for="status">Status</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="classification" name="classification">
+                            <option value="">All Classifications</option>
+                            <option value="strategic" {% if request.GET.classification == 'strategic' %}selected{% endif %}>Strategic</option>
+                            <option value="preferred" {% if request.GET.classification == 'preferred' %}selected{% endif %}>Preferred</option>
+                            <option value="approved" {% if request.GET.classification == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="probationary" {% if request.GET.classification == 'probationary' %}selected{% endif %}>Probationary</option>
+                        </select>
+                        <label for="classification">Classification</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex gap-2 h-100">
+                        <button type="submit" class="btn btn-success flex-grow-1">
+                            <i class="bi bi-funnel me-2"></i>Filter
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Suppliers Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover supplier-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Classification</th>
+                            <th>Status</th>
+                            <th>Currency</th>
+                            <th>Payment Terms</th>
+                            <th>Quality Rating</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for supplier in suppliers %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'purchasing:supplier_detail' supplier.pk %}" class="text-decoration-none">
+                                    <span class="supplier-code">{{ supplier.code }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'purchasing:supplier_detail' supplier.pk %}" class="text-decoration-none text-dark">
+                                    <strong>{{ supplier.name }}</strong>
+                                </a>
+                                {% if supplier.legal_name and supplier.legal_name != supplier.name %}
+                                <br><small class="text-muted">{{ supplier.legal_name }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if supplier.classification %}
+                                <span class="classification-tag classification-{{ supplier.classification|lower }}">
+                                    {{ supplier.get_classification_display|default:supplier.classification }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if supplier.status == 'active' %}
+                                <span class="status-badge status-active">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% elif supplier.status == 'inactive' %}
+                                <span class="status-badge status-inactive">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% elif supplier.status == 'pending' %}
+                                <span class="status-badge status-pending">
+                                    <i class="bi bi-clock me-1"></i>Pending
+                                </span>
+                                {% elif supplier.status == 'blocked' %}
+                                <span class="status-badge status-blocked">
+                                    <i class="bi bi-ban me-1"></i>Blocked
+                                </span>
+                                {% else %}
+                                <span class="status-badge">{{ supplier.get_status_display|default:supplier.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ supplier.currency|default:"USD" }}
+                            </td>
+                            <td>
+                                {{ supplier.payment_terms|default:"-" }}
+                            </td>
+                            <td>
+                                {% if supplier.quality_rating %}
+                                <span class="rating-stars">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= supplier.quality_rating %}
+                                        <i class="bi bi-star-fill"></i>
+                                        {% else %}
+                                        <i class="bi bi-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                                <span class="rating-value ms-1">{{ supplier.quality_rating|floatformat:1 }}</span>
+                                {% else %}
+                                <span class="text-muted">Not rated</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'purchasing:supplier_detail' supplier.pk %}"
+                                   class="btn btn-sm btn-outline-success" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'purchasing:supplier_edit' supplier.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-building display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No suppliers found</p>
+                                <a href="{% url 'purchasing:supplier_create' %}" class="btn btn-success">
+                                    <i class="bi bi-plus-circle me-2"></i>Add First Supplier
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if suppliers.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if suppliers.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ suppliers.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.classification %}&classification={{ request.GET.classification }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in suppliers.paginator.page_range %}
+                        {% if num == suppliers.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > suppliers.number|add:'-3' and num < suppliers.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.classification %}&classification={{ request.GET.classification }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if suppliers.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ suppliers.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.classification %}&classification={{ request.GET.classification }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "purchasing:supplier_list" %}';
+}
+</script>
+{% endblock %}

@@ -386,13 +386,69 @@
                         </ul>
                     </li>
 
-                    <!-- Logistics Section (Coming Soon) -->
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#" style="opacity: 0.5; cursor: not-allowed;">
-                            <i class="bi bi-truck"></i>
-                            <span>Logistics</span>
-                            <small class="ms-auto text-muted" style="font-size: 0.65rem;">Soon</small>
-                        </a>
+                    <!-- Purchasing & Logistics Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="purchasing-section">
+                            <i class="bi bi-cart-check-fill"></i>
+                            <span>Purchasing & Logistics</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="purchasing-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:supplier_list' %}">
+                                    <i class="bi bi-building"></i>
+                                    <span>Suppliers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:pr_list' %}">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Purchase Requisitions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:po_list' %}">
+                                    <i class="bi bi-receipt"></i>
+                                    <span>Purchase Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:grn_list' %}">
+                                    <i class="bi bi-box-arrow-in-down"></i>
+                                    <span>Goods Receipt</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:invoice_list' %}">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                                    <span>Supplier Invoices</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:transfer_list' %}">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                    <span>Internal Transfers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:shipment_list' %}">
+                                    <i class="bi bi-truck"></i>
+                                    <span>Outbound Shipments</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'purchasing:customer_return_list' %}">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    <span>Customer Returns</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- System Administration Section -->

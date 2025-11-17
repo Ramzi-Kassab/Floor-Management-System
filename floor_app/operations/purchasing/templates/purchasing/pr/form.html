@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit {{ form.instance.pr_number }}{% else %}Create Purchase Requisition{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .lines-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .lines-table td {
+        vertical-align: middle;
+    }
+
+    .line-remove-btn {
+        color: #dc3545;
+        cursor: pointer;
+    }
+
+    .line-remove-btn:hover {
+        color: #a71d2a;
+    }
+
+    .add-line-btn {
+        border: 2px dashed #6366f1;
+        background: transparent;
+        color: #6366f1;
+        font-weight: 500;
+    }
+
+    .add-line-btn:hover {
+        background: #6366f1;
+        color: white;
+    }
+
+    .line-total {
+        font-weight: 600;
+        color: #28a745;
+    }
+
+    .grand-total {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:pr_list' %}">Purchase Requisitions</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:pr_detail' form.instance.pk %}">{{ form.instance.pr_number }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create New PR</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-primary me-2"></i>
+                        {% if form.instance.pk %}Edit {{ form.instance.pr_number }}{% else %}Create Purchase Requisition{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update requisition details and lines
+                        {% else %}
+                        Create a new purchase requisition request
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate id="prForm">
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-info-circle me-2"></i>
+                Basic Information
+            </h5>
+            <div class="row">
+                {% if form.instance.pk %}
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">PR Number</label>
+                    <input type="text" class="form-control" value="{{ form.instance.pr_number }}" readonly>
+                </div>
+                {% endif %}
+                <div class="col-md-6 mb-3">
+                    <label for="id_type" class="form-label required-field">Type</label>
+                    <select name="type" id="id_type" class="form-select" required>
+                        <option value="">Select Type</option>
+                        <option value="standard" {% if form.type.value == 'standard' %}selected{% endif %}>Standard</option>
+                        <option value="urgent" {% if form.type.value == 'urgent' %}selected{% endif %}>Urgent</option>
+                        <option value="blanket" {% if form.type.value == 'blanket' %}selected{% endif %}>Blanket</option>
+                        <option value="emergency" {% if form.type.value == 'emergency' %}selected{% endif %}>Emergency</option>
+                    </select>
+                    {% if form.type.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.type.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_priority" class="form-label required-field">Priority</label>
+                    <select name="priority" id="id_priority" class="form-select" required>
+                        <option value="low" {% if form.priority.value == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if form.priority.value == 'medium' or not form.priority.value %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if form.priority.value == 'high' %}selected{% endif %}>High</option>
+                        <option value="urgent" {% if form.priority.value == 'urgent' %}selected{% endif %}>Urgent</option>
+                    </select>
+                    {% if form.priority.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.priority.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_department" class="form-label">Department</label>
+                    <input type="text" name="department" id="id_department" class="form-control"
+                           value="{{ form.department.value|default:'' }}" placeholder="Enter department">
+                    {% if form.department.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.department.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_required_by_date" class="form-label">Required By Date</label>
+                    <input type="date" name="required_by_date" id="id_required_by_date" class="form-control"
+                           value="{{ form.required_by_date.value|date:'Y-m-d' }}">
+                    {% if form.required_by_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.required_by_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">When do you need these items?</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Currency & Value -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-currency-dollar me-2"></i>
+                Currency & Estimated Value
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="id_currency" class="form-label">Currency</label>
+                    <select name="currency" id="id_currency" class="form-select">
+                        <option value="USD" {% if form.currency.value == 'USD' or not form.currency.value %}selected{% endif %}>USD - US Dollar</option>
+                        <option value="EUR" {% if form.currency.value == 'EUR' %}selected{% endif %}>EUR - Euro</option>
+                        <option value="GBP" {% if form.currency.value == 'GBP' %}selected{% endif %}>GBP - British Pound</option>
+                        <option value="CAD" {% if form.currency.value == 'CAD' %}selected{% endif %}>CAD - Canadian Dollar</option>
+                        <option value="AUD" {% if form.currency.value == 'AUD' %}selected{% endif %}>AUD - Australian Dollar</option>
+                    </select>
+                    {% if form.currency.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.currency.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Total Estimated Value</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="currency-symbol">$</span>
+                        <input type="text" class="form-control grand-total" id="grandTotal" value="0.00" readonly>
+                    </div>
+                    <div class="form-text">Automatically calculated from line items</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requisition Lines -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-list-ul me-2"></i>
+                Requisition Lines
+            </h5>
+            <div class="table-responsive">
+                <table class="table lines-table" id="linesTable">
+                    <thead>
+                        <tr>
+                            <th width="30">#</th>
+                            <th>Item / Description</th>
+                            <th width="120">Quantity</th>
+                            <th width="100">UoM</th>
+                            <th width="150">Est. Unit Price</th>
+                            <th width="150">Est. Total</th>
+                            <th width="50">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="linesBody">
+                        {% for line in lines %}
+                        <tr class="line-row" data-index="{{ forloop.counter0 }}">
+                            <td class="line-number">{{ forloop.counter }}</td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm"
+                                       name="line_description_{{ forloop.counter0 }}"
+                                       value="{{ line.description }}"
+                                       placeholder="Item description" required>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm line-qty"
+                                       name="line_quantity_{{ forloop.counter0 }}"
+                                       value="{{ line.quantity }}"
+                                       min="1" step="1" required>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm"
+                                       name="line_uom_{{ forloop.counter0 }}"
+                                       value="{{ line.uom|default:'EA' }}"
+                                       placeholder="EA">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm line-price"
+                                       name="line_unit_price_{{ forloop.counter0 }}"
+                                       value="{{ line.estimated_unit_price }}"
+                                       min="0" step="0.01" placeholder="0.00">
+                            </td>
+                            <td>
+                                <span class="line-total">0.00</span>
+                            </td>
+                            <td>
+                                <i class="bi bi-trash line-remove-btn" onclick="removeLine(this)"></i>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="line-row" data-index="0">
+                            <td class="line-number">1</td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm"
+                                       name="line_description_0"
+                                       placeholder="Item description" required>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm line-qty"
+                                       name="line_quantity_0"
+                                       value="1" min="1" step="1" required>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm"
+                                       name="line_uom_0"
+                                       value="EA" placeholder="EA">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm line-price"
+                                       name="line_unit_price_0"
+                                       min="0" step="0.01" placeholder="0.00">
+                            </td>
+                            <td>
+                                <span class="line-total">0.00</span>
+                            </td>
+                            <td>
+                                <i class="bi bi-trash line-remove-btn" onclick="removeLine(this)"></i>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7">
+                                <button type="button" class="btn add-line-btn w-100" onclick="addLine()">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Line Item
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <input type="hidden" name="line_count" id="lineCount" value="1">
+        </div>
+
+        <!-- Justification -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-chat-quote me-2"></i>
+                Justification / Notes
+            </h5>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="id_justification" class="form-label">Justification</label>
+                    <textarea name="justification" id="id_justification" class="form-control" rows="4"
+                              placeholder="Provide justification for this requisition...">{{ form.justification.value|default:'' }}</textarea>
+                    {% if form.justification.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.justification.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Explain why these items are needed and any relevant business context</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="{% url 'purchasing:pr_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <div class="d-flex gap-2">
+                <button type="submit" name="action" value="save" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Save as Draft
+                </button>
+                <button type="submit" name="action" value="submit" class="btn btn-success">
+                    <i class="bi bi-send me-2"></i>Save & Submit
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let lineIndex = document.querySelectorAll('.line-row').length;
+
+function addLine() {
+    const tbody = document.getElementById('linesBody');
+    const newRow = document.createElement('tr');
+    newRow.className = 'line-row';
+    newRow.setAttribute('data-index', lineIndex);
+
+    newRow.innerHTML = `
+        <td class="line-number">${lineIndex + 1}</td>
+        <td>
+            <input type="text" class="form-control form-control-sm"
+                   name="line_description_${lineIndex}"
+                   placeholder="Item description" required>
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm line-qty"
+                   name="line_quantity_${lineIndex}"
+                   value="1" min="1" step="1" required>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm"
+                   name="line_uom_${lineIndex}"
+                   value="EA" placeholder="EA">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm line-price"
+                   name="line_unit_price_${lineIndex}"
+                   min="0" step="0.01" placeholder="0.00">
+        </td>
+        <td>
+            <span class="line-total">0.00</span>
+        </td>
+        <td>
+            <i class="bi bi-trash line-remove-btn" onclick="removeLine(this)"></i>
+        </td>
+    `;
+
+    tbody.appendChild(newRow);
+    lineIndex++;
+    updateLineCount();
+    attachLineEvents();
+}
+
+function removeLine(btn) {
+    const rows = document.querySelectorAll('.line-row');
+    if (rows.length > 1) {
+        btn.closest('tr').remove();
+        updateLineNumbers();
+        calculateGrandTotal();
+    } else {
+        alert('At least one line item is required');
+    }
+}
+
+function updateLineNumbers() {
+    const rows = document.querySelectorAll('.line-row');
+    rows.forEach((row, index) => {
+        row.querySelector('.line-number').textContent = index + 1;
+    });
+    updateLineCount();
+}
+
+function updateLineCount() {
+    document.getElementById('lineCount').value = document.querySelectorAll('.line-row').length;
+}
+
+function calculateLineTotal(row) {
+    const qty = parseFloat(row.querySelector('.line-qty').value) || 0;
+    const price = parseFloat(row.querySelector('.line-price').value) || 0;
+    const total = qty * price;
+    row.querySelector('.line-total').textContent = total.toFixed(2);
+    return total;
+}
+
+function calculateGrandTotal() {
+    let grandTotal = 0;
+    document.querySelectorAll('.line-row').forEach(row => {
+        grandTotal += calculateLineTotal(row);
+    });
+    document.getElementById('grandTotal').value = grandTotal.toFixed(2);
+}
+
+function attachLineEvents() {
+    document.querySelectorAll('.line-qty, .line-price').forEach(input => {
+        input.removeEventListener('input', handleLineChange);
+        input.addEventListener('input', handleLineChange);
+    });
+}
+
+function handleLineChange(e) {
+    const row = e.target.closest('.line-row');
+    calculateLineTotal(row);
+    calculateGrandTotal();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    attachLineEvents();
+    calculateGrandTotal();
+    updateLineCount();
+
+    // Update currency symbol
+    document.getElementById('id_currency').addEventListener('change', function() {
+        const symbols = {
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'CAD': 'C$',
+            'AUD': 'A$'
+        };
+        document.getElementById('currency-symbol').textContent = symbols[this.value] || '$';
+    });
+});
+</script>
+{% endblock %}

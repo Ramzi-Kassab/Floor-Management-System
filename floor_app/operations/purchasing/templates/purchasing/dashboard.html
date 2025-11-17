@@ -1,0 +1,617 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Purchasing & Logistics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-shopping-cart me-2"></i>Purchasing & Logistics Dashboard
+            </h1>
+            <p class="text-muted mb-0">Overview of procurement, logistics, and supplier management</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'purchasing:pr_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> New PR
+            </a>
+            <a href="{% url 'purchasing:po_create' %}" class="btn btn-success">
+                <i class="fas fa-file-invoice me-1"></i> New PO
+            </a>
+            <a href="{% url 'purchasing:grn_create' %}" class="btn btn-info text-white">
+                <i class="fas fa-truck-loading me-1"></i> New GRN
+            </a>
+            <a href="{% url 'purchasing:shipment_create' %}" class="btn btn-warning">
+                <i class="fas fa-shipping-fast me-1"></i> New Shipment
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 1: Suppliers -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <h5 class="text-muted mb-3">
+                <i class="fas fa-building me-2"></i>Supplier Management
+            </h5>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-users fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total Suppliers</h6>
+                            <h3 class="mb-0">{{ total_suppliers|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:supplier_list' %}" class="text-decoration-none">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Active Suppliers</h6>
+                            <h3 class="mb-0 text-success">{{ active_suppliers|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <small class="text-muted">
+                        {{ active_suppliers|default:0 }} of {{ total_suppliers|default:0 }} suppliers active
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Pending Approval</h6>
+                            <h3 class="mb-0 text-warning">{{ pending_suppliers|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:supplier_list' %}?status=pending" class="text-decoration-none text-warning">
+                        Review Pending <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-file-signature fa-2x text-info"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">PRs Pending Approval</h6>
+                            <h3 class="mb-0 text-info">{{ prs_pending_approval|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:pr_list' %}?status=pending" class="text-decoration-none text-info">
+                        Review PRs <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 2: Purchase Orders -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <h5 class="text-muted mb-3">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Purchase Orders
+            </h5>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-file-alt fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Open POs</h6>
+                            <h3 class="mb-0">{{ open_pos|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:po_list' %}?status=open" class="text-decoration-none">
+                        View Open POs <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-hourglass-half fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">POs Pending Approval</h6>
+                            <h3 class="mb-0 text-warning">{{ pos_pending_approval|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:po_list' %}?status=pending_approval" class="text-decoration-none text-warning">
+                        Approve POs <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-12">
+            <div class="card border-0 shadow-sm h-100 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-white-50 mb-1">Total PO Value</h6>
+                            <h3 class="mb-0">${{ total_po_value|default:0|floatformat:2 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <small class="text-white-50">
+                        Total value of open purchase orders
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 3: Receiving & Invoices -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <h5 class="text-muted mb-3">
+                <i class="fas fa-warehouse me-2"></i>Receiving & Accounts Payable
+            </h5>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-search fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">GRNs Pending Inspection</h6>
+                            <h3 class="mb-0 text-warning">{{ pending_inspections|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:grn_list' %}?status=pending_inspection" class="text-decoration-none text-warning">
+                        Inspect GRNs <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-clipboard-check fa-2x text-info"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">GRNs to Post</h6>
+                            <h3 class="mb-0 text-info">{{ grns_to_post|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:grn_list' %}?status=to_post" class="text-decoration-none text-info">
+                        Post GRNs <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-file-invoice fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Invoices Pending Payment</h6>
+                            <h3 class="mb-0 text-warning">{{ invoices_pending_payment|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:invoice_list' %}?status=pending" class="text-decoration-none text-warning">
+                        View Invoices <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Overdue Invoices</h6>
+                            <h3 class="mb-0 text-danger">{{ overdue_invoices|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:invoice_list' %}?status=overdue" class="text-decoration-none text-danger">
+                        <strong>Urgent: Review Overdue</strong> <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 4: Logistics & Returns -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <h5 class="text-muted mb-3">
+                <i class="fas fa-truck me-2"></i>Logistics & Returns
+            </h5>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-shipping-fast fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Shipments In Progress</h6>
+                            <h3 class="mb-0">{{ shipments_in_progress|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:shipment_list' %}?status=in_progress" class="text-decoration-none">
+                        Track Shipments <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-exchange-alt fa-2x text-info"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Pending Transfers</h6>
+                            <h3 class="mb-0 text-info">{{ pending_transfers|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:transfer_list' %}?status=pending" class="text-decoration-none text-info">
+                        Process Transfers <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-undo-alt fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Customer Returns Pending</h6>
+                            <h3 class="mb-0 text-warning">{{ customer_returns_pending|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'purchasing:return_list' %}?status=pending" class="text-decoration-none text-warning">
+                        Process Returns <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 bg-gradient" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                                <i class="fas fa-money-bill-wave fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-white-50 mb-1">Total Payables</h6>
+                            <h3 class="mb-0">${{ total_payables|default:0|floatformat:2 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <small class="text-white-50">
+                        Outstanding accounts payable balance
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Documents Section -->
+    <div class="row g-4">
+        <!-- Recent Purchase Orders -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice-dollar text-primary me-2"></i>Recent Purchase Orders
+                        </h5>
+                        <a href="{% url 'purchasing:po_list' %}" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_pos %}
+                        <div class="list-group list-group-flush">
+                            {% for po in recent_pos %}
+                                <a href="{% url 'purchasing:po_detail' po.id %}" class="list-group-item list-group-item-action border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ po.po_number }}</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-building me-1"></i>{{ po.supplier.name|truncatechars:25 }}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge
+                                                {% if po.status == 'approved' %}bg-success
+                                                {% elif po.status == 'pending' %}bg-warning
+                                                {% elif po.status == 'draft' %}bg-secondary
+                                                {% else %}bg-info{% endif %}">
+                                                {{ po.get_status_display|default:po.status }}
+                                            </span>
+                                            <div class="small text-muted mt-1">
+                                                ${{ po.total_amount|floatformat:2 }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No recent purchase orders</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent GRNs -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck-loading text-info me-2"></i>Recent GRNs
+                        </h5>
+                        <a href="{% url 'purchasing:grn_list' %}" class="btn btn-sm btn-outline-info">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_grns %}
+                        <div class="list-group list-group-flush">
+                            {% for grn in recent_grns %}
+                                <a href="{% url 'purchasing:grn_detail' grn.id %}" class="list-group-item list-group-item-action border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ grn.grn_number }}</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>{{ grn.received_date|date:"M d, Y" }}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge
+                                                {% if grn.status == 'posted' %}bg-success
+                                                {% elif grn.status == 'pending_inspection' %}bg-warning
+                                                {% elif grn.status == 'inspected' %}bg-info
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ grn.get_status_display|default:grn.status }}
+                                            </span>
+                                            <div class="small text-muted mt-1">
+                                                {{ grn.items_count|default:0 }} items
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-truck-loading fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No recent goods receipts</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Shipments -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shipping-fast text-warning me-2"></i>Recent Shipments
+                        </h5>
+                        <a href="{% url 'purchasing:shipment_list' %}" class="btn btn-sm btn-outline-warning">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_shipments %}
+                        <div class="list-group list-group-flush">
+                            {% for shipment in recent_shipments %}
+                                <a href="{% url 'purchasing:shipment_detail' shipment.id %}" class="list-group-item list-group-item-action border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ shipment.tracking_number|default:"No Tracking" }}</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ shipment.destination|truncatechars:20 }}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge
+                                                {% if shipment.status == 'delivered' %}bg-success
+                                                {% elif shipment.status == 'in_transit' %}bg-primary
+                                                {% elif shipment.status == 'pending' %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ shipment.get_status_display|default:shipment.status }}
+                                            </span>
+                                            <div class="small text-muted mt-1">
+                                                {{ shipment.shipped_date|date:"M d, Y"|default:"Not shipped" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-shipping-fast fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No recent shipments</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Summary -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="py-2">
+                                <i class="fas fa-tasks fa-2x text-primary mb-2"></i>
+                                <h5 class="mb-1">{{ prs_approved|default:0 }}</h5>
+                                <small class="text-muted">PRs Approved This Month</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="py-2">
+                                <i class="fas fa-check-double fa-2x text-success mb-2"></i>
+                                <h5 class="mb-1">{{ open_pos|default:0 }}</h5>
+                                <small class="text-muted">Active Purchase Orders</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="py-2">
+                                <i class="fas fa-exclamation-circle fa-2x text-danger mb-2"></i>
+                                <h5 class="mb-1">{{ overdue_invoices|default:0 }}</h5>
+                                <small class="text-muted">Overdue Invoices</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="py-2">
+                                <i class="fas fa-globe fa-2x text-info mb-2"></i>
+                                <h5 class="mb-1">{{ shipments_in_progress|default:0 }}</h5>
+                                <small class="text-muted">Shipments En Route</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+
+    // Add animation to cards on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+    });
+</script>
+{% endblock %}

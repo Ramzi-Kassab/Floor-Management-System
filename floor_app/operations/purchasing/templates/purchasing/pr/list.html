@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Purchase Requisitions - Purchasing{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .pr-table th {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        font-weight: 500;
+        border: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-draft {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .status-submitted {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-cancelled {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .status-converted {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .priority-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .priority-low {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .priority-medium {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .priority-high {
+        background: #f5c6cb;
+        color: #721c24;
+    }
+
+    .priority-urgent {
+        background: #f8d7da;
+        color: #721c24;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .pr-number {
+        font-family: monospace;
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    .type-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #e9ecef;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .value-display {
+        font-weight: 600;
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item active">Purchase Requisitions</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                        Purchase Requisitions
+                    </h2>
+                    <p class="text-muted mb-0">Manage purchase requests and requisitions</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'purchasing:pr_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create New PR
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ request.GET.search }}" placeholder="Search...">
+                        <label for="search">Search PR Number</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                            <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>Submitted</option>
+                            <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="converted" {% if request.GET.status == 'converted' %}selected{% endif %}>Converted to PO</option>
+                        </select>
+                        <label for="status">Status</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="">All Priorities</option>
+                            <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Low</option>
+                            <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>High</option>
+                            <option value="urgent" {% if request.GET.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                        </select>
+                        <label for="priority">Priority</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary h-100 w-100">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- PRs Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover pr-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>PR Number</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Requester</th>
+                            <th>Request Date</th>
+                            <th>Required By</th>
+                            <th>Est. Value</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pr in purchase_requisitions %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'purchasing:pr_detail' pr.pk %}" class="text-decoration-none">
+                                    <span class="pr-number">{{ pr.pr_number }}</span>
+                                </a>
+                            </td>
+                            <td>
+                                <span class="type-tag">
+                                    {{ pr.get_type_display|default:pr.type }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ pr.status|lower }}">
+                                    <i class="bi bi-{% if pr.status == 'draft' %}pencil{% elif pr.status == 'submitted' %}send{% elif pr.status == 'approved' %}check-circle{% elif pr.status == 'rejected' %}x-circle{% elif pr.status == 'cancelled' %}slash-circle{% else %}arrow-right-circle{% endif %} me-1"></i>
+                                    {{ pr.get_status_display|default:pr.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-{{ pr.priority|lower }}">
+                                    {{ pr.get_priority_display|default:pr.priority }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if pr.requester %}
+                                {{ pr.requester.get_full_name|default:pr.requester.username }}
+                                {% else %}
+                                {{ pr.requester_id|default:"-" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ pr.request_date|date:"Y-m-d" }}
+                            </td>
+                            <td>
+                                {% if pr.required_by_date %}
+                                <span class="{% if pr.required_by_date < today %}text-danger{% endif %}">
+                                    {{ pr.required_by_date|date:"Y-m-d" }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="value-display">
+                                    {% if pr.total_estimated_value %}
+                                    {{ pr.currency|default:"USD" }} {{ pr.total_estimated_value|floatformat:2 }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'purchasing:pr_detail' pr.pk %}"
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if pr.status == 'draft' %}
+                                <a href="{% url 'purchasing:pr_edit' pr.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No purchase requisitions found</p>
+                                <a href="{% url 'purchasing:pr_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First PR
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if purchase_requisitions.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if purchase_requisitions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ purchase_requisitions.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in purchase_requisitions.paginator.page_range %}
+                        {% if num == purchase_requisitions.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > purchase_requisitions.number|add:'-3' and num < purchase_requisitions.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if purchase_requisitions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ purchase_requisitions.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clear filters
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = '{% url "purchasing:pr_list" %}';
+}
+</script>
+{% endblock %}

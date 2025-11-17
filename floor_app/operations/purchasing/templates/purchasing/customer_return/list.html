@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Customer Returns - Logistics Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .status-requested { background-color: #fff3cd; color: #856404; }
+    .status-authorized { background-color: #cce5ff; color: #004085; }
+    .status-received { background-color: #d1ecf1; color: #0c5460; }
+    .status-inspecting { background-color: #ffeeba; color: #856404; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-rejected { background-color: #f8d7da; color: #721c24; }
+    .status-refunded { background-color: #c8e6c9; color: #1b5e20; }
+    .status-replaced { background-color: #b8daff; color: #004085; }
+    .status-closed { background-color: #e9ecef; color: #495057; }
+    .status-cancelled { background-color: #f5f5f5; color: #424242; }
+
+    .reason-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .reason-defective { background: #fce4ec; color: #c62828; }
+    .reason-wrong_item { background: #fff3e0; color: #e65100; }
+    .reason-damaged { background: #ffebee; color: #b71c1c; }
+    .reason-not_as_described { background: #f3e5f5; color: #6a1b9a; }
+    .reason-changed_mind { background: #e3f2fd; color: #1565c0; }
+    .reason-other { background: #e0e0e0; color: #424242; }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .return-number {
+        font-weight: 600;
+        color: #f59e0b;
+        font-family: monospace;
+    }
+
+    .rma-number {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .value-display {
+        font-weight: 600;
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-3 border-bottom bg-white">
+    <div class="container-fluid">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item active">Customer Returns</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 fw-bold">
+                <i class="bi bi-arrow-return-left me-2"></i>Customer Returns
+            </h1>
+            <p class="text-muted mb-0 mt-1">Manage product returns from customers</p>
+        </div>
+        <div>
+            <a href="{% url 'purchasing:customer_return_create' %}" class="btn btn-warning">
+                <i class="bi bi-plus-circle me-2"></i>New Return
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label fw-600">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="search" name="search"
+                           placeholder="Return #, Customer, RMA..."
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label fw-600">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="REQUESTED" {% if request.GET.status == 'REQUESTED' %}selected{% endif %}>Requested</option>
+                    <option value="AUTHORIZED" {% if request.GET.status == 'AUTHORIZED' %}selected{% endif %}>Authorized</option>
+                    <option value="RECEIVED" {% if request.GET.status == 'RECEIVED' %}selected{% endif %}>Received</option>
+                    <option value="INSPECTING" {% if request.GET.status == 'INSPECTING' %}selected{% endif %}>Inspecting</option>
+                    <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                    <option value="REJECTED" {% if request.GET.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                    <option value="REFUNDED" {% if request.GET.status == 'REFUNDED' %}selected{% endif %}>Refunded</option>
+                    <option value="REPLACED" {% if request.GET.status == 'REPLACED' %}selected{% endif %}>Replaced</option>
+                    <option value="CLOSED" {% if request.GET.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                    <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="reason" class="form-label fw-600">Reason</label>
+                <select class="form-select" id="reason" name="reason">
+                    <option value="">All Reasons</option>
+                    <option value="DEFECTIVE" {% if request.GET.reason == 'DEFECTIVE' %}selected{% endif %}>Defective</option>
+                    <option value="WRONG_ITEM" {% if request.GET.reason == 'WRONG_ITEM' %}selected{% endif %}>Wrong Item</option>
+                    <option value="DAMAGED" {% if request.GET.reason == 'DAMAGED' %}selected{% endif %}>Damaged</option>
+                    <option value="NOT_AS_DESCRIBED" {% if request.GET.reason == 'NOT_AS_DESCRIBED' %}selected{% endif %}>Not as Described</option>
+                    <option value="CHANGED_MIND" {% if request.GET.reason == 'CHANGED_MIND' %}selected{% endif %}>Changed Mind</option>
+                    <option value="OTHER" {% if request.GET.reason == 'OTHER' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-warning w-100">
+                    <i class="bi bi-funnel me-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Count -->
+    <div class="mb-3">
+        <small class="text-muted">
+            Showing <strong>{{ returns.paginator.count|default:returns|length }}</strong> return(s)
+            {% if request.GET %}(filtered){% endif %}
+        </small>
+    </div>
+
+    <!-- Returns Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-600">Return #</th>
+                        <th class="fw-600">Status</th>
+                        <th class="fw-600">Customer</th>
+                        <th class="fw-600">Request Date</th>
+                        <th class="fw-600">Reason</th>
+                        <th class="fw-600">RMA #</th>
+                        <th class="fw-600">Total Value</th>
+                        <th class="fw-600 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if returns %}
+                        {% for return in returns %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'purchasing:customer_return_detail' return.pk %}" class="return-number text-decoration-none">
+                                        {{ return.return_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ return.status|lower }}">
+                                        {{ return.get_status_display|default:return.status }}
+                                    </span>
+                                </td>
+                                <td>{{ return.customer_name|default:"-" }}</td>
+                                <td>{{ return.return_request_date|date:"Y-m-d" }}</td>
+                                <td>
+                                    <span class="reason-badge reason-{{ return.reason|lower }}">
+                                        {{ return.get_reason_display|default:return.reason }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if return.rma_number %}
+                                    <code class="rma-number">{{ return.rma_number }}</code>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="value-display">${{ return.total_value|floatformat:2|default:"0.00" }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'purchasing:customer_return_detail' return.pk %}"
+                                           class="btn btn-outline-warning" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'purchasing:customer_return_edit' return.pk %}"
+                                           class="btn btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    <p>No customer returns found.</p>
+                                    {% if request.GET %}
+                                        <p class="small">Try adjusting your filters.</p>
+                                    {% else %}
+                                        <a href="{% url 'purchasing:customer_return_create' %}" class="btn btn-sm btn-warning">
+                                            Create your first return
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.reason %}&reason={{ request.GET.reason }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.reason %}&reason={{ request.GET.reason }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.reason %}&reason={{ request.GET.reason }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

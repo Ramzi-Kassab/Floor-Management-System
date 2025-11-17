@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit Customer Return{% else %}Create Customer Return{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-card .card-title {
+        color: #f59e0b;
+        border-bottom: 2px solid #f59e0b;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .reason-info {
+        background: #fff8e1;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border: 1px solid #ffe082;
+    }
+
+    .reason-info h6 {
+        color: #f57f17;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:dashboard' %}">Purchasing</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'purchasing:customer_return_list' %}">Customer Returns</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item active">Edit</li>
+            {% else %}
+            <li class="breadcrumb-item active">Create Return</li>
+            {% endif %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-warning me-2"></i>
+                        {% if form.instance.pk %}Edit Customer Return{% else %}Create Customer Return{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if form.instance.pk %}
+                        Update customer return information
+                        {% else %}
+                        Create a new customer return request
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Return Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-info-circle me-2"></i>
+                Return Information
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.reason.id_for_label }}" class="form-label required-field">Return Reason</label>
+                    {% if form.reason %}
+                    {% render_field form.reason class="form-select" %}
+                    {% else %}
+                    <select class="form-select" name="reason" id="id_reason">
+                        <option value="">Select Reason</option>
+                        <option value="DEFECTIVE">Defective</option>
+                        <option value="WRONG_ITEM">Wrong Item</option>
+                        <option value="DAMAGED">Damaged</option>
+                        <option value="NOT_AS_DESCRIBED">Not as Described</option>
+                        <option value="CHANGED_MIND">Changed Mind</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                    {% endif %}
+                    {% if form.reason.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.reason.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.return_request_date.id_for_label }}" class="form-label required-field">Request Date</label>
+                    {% if form.return_request_date %}
+                    {% render_field form.return_request_date class="form-control" type="date" %}
+                    {% else %}
+                    <input type="date" class="form-control" name="return_request_date" id="id_return_request_date">
+                    {% endif %}
+                    {% if form.return_request_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.return_request_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.rma_number.id_for_label }}" class="form-label">RMA Number</label>
+                    {% if form.rma_number %}
+                    {% render_field form.rma_number class="form-control" placeholder="Auto-generated if left blank" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="rma_number" id="id_rma_number" placeholder="Auto-generated if left blank">
+                    {% endif %}
+                    {% if form.rma_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.rma_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.original_order_number.id_for_label }}" class="form-label">Original Order Number</label>
+                    {% if form.original_order_number %}
+                    {% render_field form.original_order_number class="form-control" placeholder="Enter original order #" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="original_order_number" id="id_original_order_number" placeholder="Enter original order #">
+                    {% endif %}
+                    {% if form.original_order_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.original_order_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.original_shipment_number.id_for_label }}" class="form-label">Original Shipment Number</label>
+                    {% if form.original_shipment_number %}
+                    {% render_field form.original_shipment_number class="form-control" placeholder="Enter original shipment #" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="original_shipment_number" id="id_original_shipment_number" placeholder="Enter original shipment #">
+                    {% endif %}
+                    {% if form.original_shipment_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.original_shipment_number.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-person me-2"></i>
+                Customer Information
+            </h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.customer_name.id_for_label }}" class="form-label required-field">Customer Name</label>
+                    {% if form.customer_name %}
+                    {% render_field form.customer_name class="form-control" placeholder="Enter customer name" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="customer_name" id="id_customer_name" placeholder="Enter customer name">
+                    {% endif %}
+                    {% if form.customer_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customer_name.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.customer_id.id_for_label }}" class="form-label">Customer ID</label>
+                    {% if form.customer_id %}
+                    {% render_field form.customer_id class="form-control" placeholder="Enter customer ID" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="customer_id" id="id_customer_id" placeholder="Enter customer ID">
+                    {% endif %}
+                    {% if form.customer_id.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customer_id.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.contact_person.id_for_label }}" class="form-label">Contact Person</label>
+                    {% if form.contact_person %}
+                    {% render_field form.contact_person class="form-control" placeholder="Enter contact person" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="contact_person" id="id_contact_person" placeholder="Enter contact person">
+                    {% endif %}
+                    {% if form.contact_person.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.contact_person.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.contact_phone.id_for_label }}" class="form-label">Contact Phone</label>
+                    {% if form.contact_phone %}
+                    {% render_field form.contact_phone class="form-control" placeholder="Enter phone number" %}
+                    {% else %}
+                    <input type="text" class="form-control" name="contact_phone" id="id_contact_phone" placeholder="Enter phone number">
+                    {% endif %}
+                    {% if form.contact_phone.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.contact_phone.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.contact_email.id_for_label }}" class="form-label">Contact Email</label>
+                    {% if form.contact_email %}
+                    {% render_field form.contact_email class="form-control" placeholder="Enter email address" type="email" %}
+                    {% else %}
+                    <input type="email" class="form-control" name="contact_email" id="id_contact_email" placeholder="Enter email address">
+                    {% endif %}
+                    {% if form.contact_email.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.contact_email.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Reason Details -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Return Reason Details
+            </h5>
+            <div class="reason-info">
+                <h6><i class="bi bi-info-circle me-2"></i>Important Information</h6>
+                <p class="mb-0 small">Please provide detailed information about the reason for return. This helps us process the return more efficiently and improve our products/services.</p>
+            </div>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.customer_notes.id_for_label }}" class="form-label">Customer Notes / Reason Description</label>
+                    {% if form.customer_notes %}
+                    {% render_field form.customer_notes class="form-control" rows="4" placeholder="Describe the reason for return in detail..." %}
+                    {% else %}
+                    <textarea class="form-control" name="customer_notes" id="id_customer_notes" rows="4" placeholder="Describe the reason for return in detail..."></textarea>
+                    {% endif %}
+                    {% if form.customer_notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.customer_notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-currency-dollar me-2"></i>
+                Financial Information (Optional)
+            </h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.total_value.id_for_label }}" class="form-label">Total Value</label>
+                    {% if form.total_value %}
+                    {% render_field form.total_value class="form-control" placeholder="0.00" step="0.01" %}
+                    {% else %}
+                    <input type="number" class="form-control" name="total_value" id="id_total_value" placeholder="0.00" step="0.01">
+                    {% endif %}
+                    {% if form.total_value.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.total_value.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.restocking_fee.id_for_label }}" class="form-label">Restocking Fee</label>
+                    {% if form.restocking_fee %}
+                    {% render_field form.restocking_fee class="form-control" placeholder="0.00" step="0.01" %}
+                    {% else %}
+                    <input type="number" class="form-control" name="restocking_fee" id="id_restocking_fee" placeholder="0.00" step="0.01">
+                    {% endif %}
+                    {% if form.restocking_fee.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.restocking_fee.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.refund_amount.id_for_label }}" class="form-label">Expected Refund Amount</label>
+                    {% if form.refund_amount %}
+                    {% render_field form.refund_amount class="form-control" placeholder="0.00" step="0.01" %}
+                    {% else %}
+                    <input type="number" class="form-control" name="refund_amount" id="id_refund_amount" placeholder="0.00" step="0.01">
+                    {% endif %}
+                    {% if form.refund_amount.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.refund_amount.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="form-card">
+            <h5 class="card-title">
+                <i class="bi bi-chat-left-text me-2"></i>
+                Internal Notes
+            </h5>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.internal_notes.id_for_label }}" class="form-label">Internal Notes</label>
+                    {% if form.internal_notes %}
+                    {% render_field form.internal_notes class="form-control" rows="4" placeholder="Enter any internal notes (not visible to customer)..." %}
+                    {% else %}
+                    <textarea class="form-control" name="internal_notes" id="id_internal_notes" rows="4" placeholder="Enter any internal notes (not visible to customer)..."></textarea>
+                    {% endif %}
+                    {% if form.internal_notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.internal_notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a href="{% url 'purchasing:customer_return_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle me-2"></i>Save Return
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add visual feedback for invalid fields
+    const invalidFields = document.querySelectorAll('.invalid-feedback');
+    invalidFields.forEach(function(feedback) {
+        const field = feedback.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+
+    // Set default date to today if not already set
+    const requestDateField = document.getElementById('id_return_request_date');
+    if (requestDateField && !requestDateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        requestDateField.value = today;
+    }
+
+    // Calculate refund amount when values change
+    const totalValueField = document.getElementById('id_total_value');
+    const restockingFeeField = document.getElementById('id_restocking_fee');
+    const refundAmountField = document.getElementById('id_refund_amount');
+
+    function calculateRefund() {
+        if (totalValueField && restockingFeeField && refundAmountField) {
+            const total = parseFloat(totalValueField.value) || 0;
+            const fee = parseFloat(restockingFeeField.value) || 0;
+            refundAmountField.value = (total - fee).toFixed(2);
+        }
+    }
+
+    if (totalValueField) {
+        totalValueField.addEventListener('change', calculateRefund);
+    }
+    if (restockingFeeField) {
+        restockingFeeField.addEventListener('change', calculateRefund);
+    }
+});
+</script>
+{% endblock %}
