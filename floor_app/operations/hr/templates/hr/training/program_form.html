@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Training Program - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .form-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        border-left: 4px solid #667eea;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>
+                    <i class="bi bi-{% if form.instance.pk %}pencil{% else %}plus-circle{% endif %}"></i>
+                    {% if form.instance.pk %}Edit{% else %}Create{% endif %} Training Program
+                </h1>
+                <p class="text-muted">Configure training program details</p>
+            </div>
+            <a href="{% url 'hr:training_program_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Programs
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Form -->
+        <div class="form-card">
+            <form method="post" id="programForm">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h5 class="mb-3"><i class="bi bi-info-circle"></i> Basic Information</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                Program Code <span class="text-danger">*</span>
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">{{ form.code.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.training_type.id_for_label }}" class="form-label">
+                                Training Type <span class="text-danger">*</span>
+                            </label>
+                            {{ form.training_type }}
+                            {% if form.training_type.errors %}
+                                <div class="invalid-feedback d-block">{{ form.training_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            Program Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            Active Program
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Duration & Provider -->
+                <div class="form-section">
+                    <h5 class="mb-3"><i class="bi bi-clock"></i> Duration & Provider</h5>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.duration_hours.id_for_label }}" class="form-label">
+                                Duration (Hours) <span class="text-danger">*</span>
+                            </label>
+                            {{ form.duration_hours }}
+                            {% if form.duration_hours.errors %}
+                                <div class="invalid-feedback d-block">{{ form.duration_hours.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.duration_days.id_for_label }}" class="form-label">
+                                Duration (Days) <span class="text-danger">*</span>
+                            </label>
+                            {{ form.duration_days }}
+                            {% if form.duration_days.errors %}
+                                <div class="invalid-feedback d-block">{{ form.duration_days.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.max_participants.id_for_label }}" class="form-label">
+                                Max Participants
+                            </label>
+                            {{ form.max_participants }}
+                            {% if form.max_participants.errors %}
+                                <div class="invalid-feedback d-block">{{ form.max_participants.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.provider.id_for_label }}" class="form-label">
+                                Training Provider
+                            </label>
+                            {{ form.provider }}
+                            {% if form.provider.errors %}
+                                <div class="invalid-feedback d-block">{{ form.provider.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3 d-flex align-items-end">
+                            <div class="form-check">
+                                {{ form.is_internal }}
+                                <label class="form-check-label" for="{{ form.is_internal.id_for_label }}">
+                                    Internal Training
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prerequisites & Target Audience -->
+                <div class="form-section">
+                    <h5 class="mb-3"><i class="bi bi-list-check"></i> Prerequisites & Target Audience</h5>
+
+                    <div class="mb-3">
+                        <label for="{{ form.prerequisites.id_for_label }}" class="form-label">
+                            Prerequisites
+                        </label>
+                        {{ form.prerequisites }}
+                        {% if form.prerequisites.errors %}
+                            <div class="invalid-feedback d-block">{{ form.prerequisites.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.target_audience.id_for_label }}" class="form-label">
+                            Target Audience
+                        </label>
+                        {{ form.target_audience }}
+                        {% if form.target_audience.errors %}
+                            <div class="invalid-feedback d-block">{{ form.target_audience.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Assessment & Certification -->
+                <div class="form-section">
+                    <h5 class="mb-3"><i class="bi bi-award"></i> Assessment & Certification</h5>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ form.has_assessment }}
+                                <label class="form-check-label" for="{{ form.has_assessment.id_for_label }}">
+                                    <strong>Has Assessment</strong>
+                                </label>
+                            </div>
+
+                            <div class="mb-3" id="passingScoreField">
+                                <label for="{{ form.passing_score.id_for_label }}" class="form-label">
+                                    Passing Score (%)
+                                </label>
+                                {{ form.passing_score }}
+                                {% if form.passing_score.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.passing_score.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ form.grants_certificate }}
+                                <label class="form-check-label" for="{{ form.grants_certificate.id_for_label }}">
+                                    <strong>Grants Certificate</strong>
+                                </label>
+                            </div>
+
+                            <div class="mb-3" id="validityField">
+                                <label for="{{ form.certificate_validity_months.id_for_label }}" class="form-label">
+                                    Certificate Validity (Months)
+                                </label>
+                                {{ form.certificate_validity_months }}
+                                {% if form.certificate_validity_months.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.certificate_validity_months.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">0 = No expiry</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost -->
+                <div class="form-section">
+                    <h5 class="mb-3"><i class="bi bi-cash"></i> Cost</h5>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.cost_per_person.id_for_label }}" class="form-label">
+                                Cost Per Person
+                            </label>
+                            {{ form.cost_per_person }}
+                            {% if form.cost_per_person.errors %}
+                                <div class="invalid-feedback d-block">{{ form.cost_per_person.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.currency.id_for_label }}" class="form-label">
+                                Currency
+                            </label>
+                            {{ form.currency }}
+                            {% if form.currency.errors %}
+                                <div class="invalid-feedback d-block">{{ form.currency.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compliance -->
+                <div class="form-section">
+                    <h5 class="mb-3"><i class="bi bi-shield-check"></i> Compliance</h5>
+
+                    <div class="form-check">
+                        {{ form.is_mandatory }}
+                        <label class="form-check-label" for="{{ form.is_mandatory.id_for_label }}">
+                            <strong>Mandatory Training</strong>
+                        </label>
+                        <br>
+                        <small class="text-muted">Mark as mandatory for specific positions</small>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:training_program_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="submit-btn">
+                        <i class="bi bi-check-circle"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %} Program
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide assessment and certificate fields
+    const hasAssessment = document.querySelector('input[name="has_assessment"]');
+    const grantsCertificate = document.querySelector('input[name="grants_certificate"]');
+    const passingScoreField = document.getElementById('passingScoreField');
+    const validityField = document.getElementById('validityField');
+
+    function toggleFields() {
+        passingScoreField.style.display = hasAssessment.checked ? 'block' : 'none';
+        validityField.style.display = grantsCertificate.checked ? 'block' : 'none';
+    }
+
+    hasAssessment.addEventListener('change', toggleFields);
+    grantsCertificate.addEventListener('change', toggleFields);
+
+    // Initial state
+    toggleFields();
+</script>
+{% endblock %}
