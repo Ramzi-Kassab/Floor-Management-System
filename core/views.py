@@ -35,6 +35,14 @@ from .models import (
     LossOfSaleCause,
     LossOfSaleEvent,
 )
+from .forms import (
+    UserCreateForm,
+    UserUpdateForm,
+    UserPasswordChangeForm,
+    GroupForm,
+    UserPermissionsForm,
+)
+from .search_utils import GlobalSearch, SearchHistory
 
 
 @login_required
@@ -611,3 +619,738 @@ class SessionListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Active Sessions'
         return context
+
+
+# ============================================================================
+# USER CRUD VIEWS
+# ============================================================================
+
+class UserCreateView(LoginRequiredMixin, StaffRequiredMixin, CreateView):
+    """Create a new user"""
+    model = User
+    form_class = UserCreateForm
+    template_name = 'core/django_core/user_form.html'
+    success_url = reverse_lazy('core:user_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New User'
+        context['action'] = 'Create'
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f'User "{form.cleaned_data["username"]}" created successfully!')
+        return super().form_valid(form)
+
+
+class UserUpdateView(LoginRequiredMixin, StaffRequiredMixin, UpdateView):
+    """Update an existing user"""
+    model = User
+    form_class = UserUpdateForm
+    template_name = 'core/django_core/user_form.html'
+    success_url = reverse_lazy('core:user_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit User: {self.object.username}'
+        context['action'] = 'Update'
+        return context
+
+    def form_valid(self, form):
+        # Check if user is trying to deactivate themselves
+        if self.request.user == self.object and not form.cleaned_data.get('is_active'):
+            messages.error(self.request, 'You cannot deactivate your own account!')
+            return self.form_invalid(form)
+
+        messages.success(self.request, f'User "{self.object.username}" updated successfully!')
+        return super().form_valid(form)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_password_change(request, pk):
+    """Change user password (admin-initiated)"""
+    user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        form = UserPasswordChangeForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Password for "{user.username}" changed successfully!')
+            return redirect('core:user_detail', pk=pk)
+    else:
+        form = UserPasswordChangeForm(user)
+
+    return render(request, 'core/django_core/user_password_change.html', {
+        'title': f'Change Password: {user.username}',
+        'form': form,
+        'user_obj': user,
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_delete(request, pk):
+    """Delete (deactivate) a user"""
+    user = get_object_or_404(User, pk=pk)
+
+    # Prevent self-deletion
+    if request.user == user:
+        messages.error(request, 'You cannot delete your own account!')
+        return redirect('core:user_list')
+
+    # Prevent deleting last superuser
+    if user.is_superuser and User.objects.filter(is_superuser=True, is_active=True).count() == 1:
+        messages.error(request, 'Cannot delete the last active superuser!')
+        return redirect('core:user_list')
+
+    if request.method == 'POST':
+        # Soft delete by deactivating
+        user.is_active = False
+        user.save()
+        messages.success(request, f'User "{user.username}" deactivated successfully!')
+        return redirect('core:user_list')
+
+    return render(request, 'core/django_core/user_confirm_delete.html', {
+        'title': f'Deactivate User: {user.username}',
+        'user_obj': user,
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_toggle_active(request, pk):
+    """Toggle user active status"""
+    user = get_object_or_404(User, pk=pk)
+
+    # Prevent self-deactivation
+    if request.user == user and user.is_active:
+        messages.error(request, 'You cannot deactivate your own account!')
+        return redirect('core:user_detail', pk=pk)
+
+    user.is_active = not user.is_active
+    user.save()
+
+    status = 'activated' if user.is_active else 'deactivated'
+    messages.success(request, f'User "{user.username}" {status} successfully!')
+    return redirect('core:user_detail', pk=pk)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_permissions(request, pk):
+    """Manage user-specific permissions"""
+    user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        form = UserPermissionsForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Permissions for "{user.username}" updated successfully!')
+            return redirect('core:user_detail', pk=pk)
+    else:
+        form = UserPermissionsForm(instance=user)
+
+    # Group permissions by app and model
+    permissions_by_app = {}
+    for perm in Permission.objects.all().select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename'):
+        app_label = perm.content_type.app_label
+        model = perm.content_type.model
+
+        if app_label not in permissions_by_app:
+            permissions_by_app[app_label] = {}
+
+        if model not in permissions_by_app[app_label]:
+            permissions_by_app[app_label][model] = []
+
+        permissions_by_app[app_label][model].append(perm)
+
+    return render(request, 'core/django_core/user_permissions.html', {
+        'title': f'Manage Permissions: {user.username}',
+        'form': form,
+        'user_obj': user,
+        'permissions_by_app': permissions_by_app,
+    })
+
+
+# ============================================================================
+# GROUP CRUD VIEWS
+# ============================================================================
+
+class GroupCreateView(LoginRequiredMixin, StaffRequiredMixin, CreateView):
+    """Create a new group"""
+    model = Group
+    form_class = GroupForm
+    template_name = 'core/django_core/group_form.html'
+    success_url = reverse_lazy('core:group_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Group'
+        context['action'] = 'Create'
+
+        # Group permissions by app and model for better UX
+        permissions_by_app = {}
+        for perm in Permission.objects.all().select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename'):
+            app_label = perm.content_type.app_label
+            model = perm.content_type.model
+
+            if app_label not in permissions_by_app:
+                permissions_by_app[app_label] = {}
+
+            if model not in permissions_by_app[app_label]:
+                permissions_by_app[app_label][model] = []
+
+            permissions_by_app[app_label][model].append(perm)
+
+        context['permissions_by_app'] = permissions_by_app
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Group "{form.cleaned_data["name"]}" created successfully!')
+        return super().form_valid(form)
+
+
+class GroupUpdateView(LoginRequiredMixin, StaffRequiredMixin, UpdateView):
+    """Update an existing group"""
+    model = Group
+    form_class = GroupForm
+    template_name = 'core/django_core/group_form.html'
+    success_url = reverse_lazy('core:group_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Group: {self.object.name}'
+        context['action'] = 'Update'
+
+        # Group permissions by app and model for better UX
+        permissions_by_app = {}
+        for perm in Permission.objects.all().select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename'):
+            app_label = perm.content_type.app_label
+            model = perm.content_type.model
+
+            if app_label not in permissions_by_app:
+                permissions_by_app[app_label] = {}
+
+            if model not in permissions_by_app[app_label]:
+                permissions_by_app[app_label][model] = []
+
+            permissions_by_app[app_label][model].append(perm)
+
+        context['permissions_by_app'] = permissions_by_app
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Group "{self.object.name}" updated successfully!')
+        return super().form_valid(form)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def group_delete(request, pk):
+    """Delete a group"""
+    group = get_object_or_404(Group, pk=pk)
+
+    if request.method == 'POST':
+        group_name = group.name
+        # Check if group has members
+        member_count = group.user_set.count()
+
+        if member_count > 0:
+            messages.warning(request, f'Group "{group_name}" has {member_count} member(s). They will lose group permissions.')
+
+        group.delete()
+        messages.success(request, f'Group "{group_name}" deleted successfully!')
+        return redirect('core:group_list')
+
+    return render(request, 'core/django_core/group_confirm_delete.html', {
+        'title': f'Delete Group: {group.name}',
+        'group': group,
+        'member_count': group.user_set.count(),
+    })
+
+
+# ============================================================================
+# GLOBAL SEARCH
+# ============================================================================
+
+@login_required
+def global_search(request):
+    """Global search across all modules."""
+    query = request.GET.get('q', '').strip()
+    modules = request.GET.getlist('modules')  # Filter by specific modules
+
+    results = []
+    total_count = 0
+
+    if query and len(query) >= 2:
+        # Execute search
+        search = GlobalSearch(query=query, modules=modules, limit_per_model=10)
+        results = search.execute()
+
+        # Calculate total count
+        total_count = sum(r['count'] for r in results)
+
+        # Save to search history
+        SearchHistory.add_search(request.user, query, module=None)
+
+    # Get recent searches for sidebar
+    recent_searches = SearchHistory.get_recent_searches(request.user, limit=5)
+
+    context = {
+        'title': 'Global Search',
+        'query': query,
+        'results': results,
+        'total_count': total_count,
+        'selected_modules': modules,
+        'recent_searches': recent_searches,
+        'available_modules': [
+            'hr', 'inventory', 'core', 'production', 'sales',
+            'purchasing', 'evaluation', 'quality', 'planning',
+            'qrcodes', 'knowledge', 'maintenance'
+        ],
+    }
+
+    return render(request, 'core/search_results.html', context)
+
+
+@login_required
+def global_search_api(request):
+    """AJAX API endpoint for live search autocomplete."""
+    query = request.GET.get('q', '').strip()
+
+    if not query or len(query) < 2:
+        return JsonResponse({'results': []})
+
+    # Execute search with lower limit for autocomplete
+    search = GlobalSearch(query=query, limit_per_model=5)
+    results = search.execute()
+
+    # Format results for autocomplete
+    formatted_results = []
+    for model_group in results:
+        for item in model_group['results']:
+            formatted_results.append({
+                'id': item['id'],
+                'text': item['display'],
+                'icon': model_group['model_icon'],
+                'label': model_group['model_label'],
+                'url': request.build_absolute_uri(
+                    reverse(item['url_pattern'], kwargs={'pk': item['id']})
+                ),
+            })
+
+    return JsonResponse({'results': formatted_results[:20]})
+
+
+# ============================================================================
+# SAVED FILTERS & ADVANCED SEARCH
+# ============================================================================
+
+@login_required
+def saved_filters_list(request):
+    """List all saved filters for the current user."""
+    from .search_utils import SavedFilter
+
+    module = request.GET.get('module', None)
+    saved_filters = SavedFilter.get_saved_filters(request.user, module=module)
+
+    return JsonResponse({'filters': saved_filters})
+
+
+@login_required
+def save_filter(request):
+    """Save a filter preset."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .search_utils import SavedFilter
+        import json
+
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        filters = data.get('filters', {})
+        module = data.get('module', None)
+
+        if not name:
+            return JsonResponse({'error': 'Filter name is required'}, status=400)
+
+        if not filters:
+            return JsonResponse({'error': 'No filters provided'}, status=400)
+
+        SavedFilter.save_filter(request.user, name, filters, module=module)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Filter "{name}" saved successfully'
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def delete_filter(request, filter_key):
+    """Delete a saved filter."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .search_utils import SavedFilter
+
+        SavedFilter.delete_filter(request.user, filter_key)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Filter deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def clear_search_history(request):
+    """Clear user's search history."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        pref = UserPreference.get_or_create_for_user(request.user)
+        pref.preferences_json['search_history'] = []
+        pref.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Search history cleared successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============================================================================
+# NOTIFICATION API ENDPOINTS
+# ============================================================================
+
+@login_required
+def get_notifications(request):
+    """Get user's notifications with pagination."""
+    from .models import Notification
+    from django.utils.timesince import timesince
+
+    limit = int(request.GET.get('limit', 10))
+    offset = int(request.GET.get('offset', 0))
+    unread_only = request.GET.get('unread_only', 'false') == 'true'
+
+    # Base queryset
+    queryset = Notification.objects.filter(user=request.user)
+
+    if unread_only:
+        queryset = queryset.filter(is_read=False)
+
+    # Get total count
+    total_count = queryset.count()
+
+    # Apply pagination
+    notifications = queryset.order_by('-created_at')[offset:offset + limit]
+
+    # Format results
+    results = []
+    for notif in notifications:
+        results.append({
+            'id': notif.id,
+            'title': notif.title,
+            'message': notif.message,
+            'type': notif.notification_type,
+            'priority': notif.priority,
+            'is_read': notif.is_read,
+            'action_url': notif.action_url,
+            'action_text': notif.action_text,
+            'created_at': notif.created_at.isoformat(),
+            'time_ago': timesince(notif.created_at),
+            'icon': notif.get_icon(),
+        })
+
+    return JsonResponse({
+        'notifications': results,
+        'total': total_count,
+        'has_more': (offset + limit) < total_count,
+    })
+
+
+@login_required
+def get_unread_count(request):
+    """Get count of unread notifications."""
+    from .notification_utils import get_unread_count
+
+    count = get_unread_count(request.user)
+
+    return JsonResponse({'count': count})
+
+
+@login_required
+def mark_notification_read(request, notification_id):
+    """Mark a notification as read."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .models import Notification
+
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.mark_as_read()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Notification marked as read'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def mark_all_notifications_read(request):
+    """Mark all user's notifications as read."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .notification_utils import mark_all_read
+
+        count = mark_all_read(request.user)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{count} notification(s) marked as read',
+            'count': count
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def delete_notification(request, notification_id):
+    """Delete a notification."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .models import Notification
+
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.delete()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Notification deleted'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============================================================================
+# EXPORT ENDPOINTS
+# ============================================================================
+
+@login_required
+def export_data(request):
+    """
+    Generic export endpoint for any model.
+
+    Query parameters:
+    - model: App label and model name (e.g., 'hr.Person', 'inventory.Item')
+    - format: 'csv', 'excel', or 'pdf'
+    - fields: Comma-separated list of field names
+    - headers: Comma-separated list of header labels (optional)
+    - filters: JSON object with filter criteria (optional)
+    """
+    from django.apps import apps
+    from .export_utils import export_queryset
+    import json as json_lib
+
+    try:
+        # Get parameters
+        model_str = request.GET.get('model', '')
+        export_format = request.GET.get('format', 'csv')
+        fields_str = request.GET.get('fields', '')
+        headers_str = request.GET.get('headers', '')
+        filters_str = request.GET.get('filters', '{}')
+
+        # Validate parameters
+        if not model_str or not fields_str:
+            return JsonResponse({'error': 'model and fields parameters required'}, status=400)
+
+        # Parse model
+        try:
+            app_label, model_name = model_str.split('.')
+            model_class = apps.get_model(app_label, model_name)
+        except (ValueError, LookupError):
+            return JsonResponse({'error': 'Invalid model specified'}, status=400)
+
+        # Parse fields and headers
+        fields = [f.strip() for f in fields_str.split(',')]
+        headers = [h.strip() for h in headers_str.split(',')] if headers_str else fields
+
+        # Get queryset
+        queryset = model_class.objects.all()
+
+        # Apply filters if provided
+        try:
+            filters = json_lib.loads(filters_str)
+            if filters:
+                queryset = queryset.filter(**filters)
+        except json_lib.JSONDecodeError:
+            pass  # Ignore invalid filter JSON
+
+        # Filter out soft-deleted records if model has is_deleted field
+        if hasattr(model_class, 'is_deleted'):
+            queryset = queryset.filter(is_deleted=False)
+
+        # Generate filename
+        filename = f"{model_class._meta.verbose_name_plural.replace(' ', '_').lower()}_export"
+
+        # Export
+        response = export_queryset(
+            request=request,
+            queryset=queryset,
+            fields=fields,
+            headers=headers,
+            filename=filename,
+            format=export_format
+        )
+
+        # Log the export
+        from .notification_utils import log_export
+        log_export(
+            user=request.user,
+            model_name=model_class._meta.verbose_name_plural,
+            record_count=queryset.count(),
+            export_format=export_format,
+            request=request
+        )
+
+        return response
+
+    except Exception as e:
+        return JsonResponse({'error': f'Export failed: {str(e)}'}, status=500)
+
+
+# ============================================================================
+# SECURITY ENDPOINTS
+# ============================================================================
+
+@login_required
+def validate_password_strength(request):
+    """Validate password strength via API."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .security import PasswordValidator
+        import json as json_lib
+
+        data = json_lib.loads(request.body)
+        password = data.get('password', '')
+
+        if not password:
+            return JsonResponse({'error': 'Password is required'}, status=400)
+
+        result = PasswordValidator.validate_strength(password, user=request.user)
+
+        return JsonResponse(result)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def get_active_sessions(request):
+    """Get user's active sessions."""
+    from .security import SessionManager
+
+    sessions = SessionManager.get_user_sessions(request.user)
+
+    return JsonResponse({
+        'sessions': sessions,
+        'current_session': request.session.session_key,
+        'count': len(sessions)
+    })
+
+
+@login_required
+def terminate_session(request, session_key):
+    """Terminate a specific session."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .security import SessionManager
+
+        # Don't allow terminating current session this way
+        if session_key == request.session.session_key:
+            return JsonResponse({'error': 'Cannot terminate current session'}, status=400)
+
+        # Verify session belongs to user
+        user_sessions = SessionManager.get_user_sessions(request.user)
+        session_keys = [s['session_key'] for s in user_sessions]
+
+        if session_key not in session_keys:
+            return JsonResponse({'error': 'Session not found'}, status=404)
+
+        success = SessionManager.terminate_session(session_key)
+
+        if success:
+            # Log the action
+            from .notification_utils import log_activity
+            log_activity(
+                user=request.user,
+                action='SESSION_TERMINATED',
+                description=f'User terminated session {session_key}',
+                request=request
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Session terminated successfully'
+            })
+        else:
+            return JsonResponse({'error': 'Failed to terminate session'}, status=500)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def terminate_all_sessions(request):
+    """Terminate all sessions except current."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .security import SessionManager
+
+        count = SessionManager.terminate_all_sessions(
+            request.user,
+            except_current=request.session.session_key
+        )
+
+        # Log the action
+        from .notification_utils import log_activity
+        log_activity(
+            user=request.user,
+            action='ALL_SESSIONS_TERMINATED',
+            description=f'User terminated {count} session(s)',
+            request=request
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{count} session(s) terminated',
+            'count': count
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

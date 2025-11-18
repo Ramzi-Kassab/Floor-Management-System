@@ -14,6 +14,8 @@ from .models import (
     ApprovalAuthority,
     Currency,
     ExchangeRate,
+    Notification,
+    ActivityLog,
 )
 
 
@@ -95,3 +97,45 @@ class ExchangeRateAdmin(admin.ModelAdmin):
     list_filter = ['from_currency', 'to_currency']
     date_hierarchy = 'effective_date'
     readonly_fields = ['created_at']
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['user', 'title', 'notification_type', 'priority', 'is_read', 'created_at']
+    list_filter = ['notification_type', 'priority', 'is_read', 'created_at']
+    search_fields = ['user__username', 'title', 'message']
+    readonly_fields = ['created_at', 'read_at']
+    date_hierarchy = 'created_at'
+    autocomplete_fields = ['user', 'created_by']
+    
+    actions = ['mark_as_read', 'mark_as_unread']
+    
+    def mark_as_read(self, request, queryset):
+        for notification in queryset:
+            notification.mark_as_read()
+        self.message_user(request, f'{queryset.count()} notifications marked as read.')
+    mark_as_read.short_description = 'Mark selected as read'
+    
+    def mark_as_unread(self, request, queryset):
+        for notification in queryset:
+            notification.mark_as_unread()
+        self.message_user(request, f'{queryset.count()} notifications marked as unread.')
+    mark_as_unread.short_description = 'Mark selected as unread'
+
+
+@admin.register(ActivityLog)
+class ActivityLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'action', 'description', 'content_type', 'object_id', 'ip_address', 'created_at']
+    list_filter = ['action', 'content_type', 'created_at']
+    search_fields = ['user__username', 'description', 'ip_address']
+    readonly_fields = ['created_at']
+    date_hierarchy = 'created_at'
+    autocomplete_fields = ['user']
+    
+    def has_add_permission(self, request):
+        # Activity logs should not be manually created
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Activity logs should not be modified
+        return False

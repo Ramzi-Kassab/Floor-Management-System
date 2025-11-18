@@ -847,3 +847,278 @@ class ExchangeRate(models.Model):
 
     def __str__(self):
         return f"{self.from_currency} to {self.to_currency}: {self.rate} ({self.effective_date})"
+
+
+# ============================================================================
+# NOTIFICATIONS & ACTIVITY TRACKING
+# ============================================================================
+
+class Notification(models.Model):
+    """
+    User notifications for important events and updates.
+
+    Supports:
+    - Multiple notification types
+    - Read/unread status
+    - Priority levels
+    - Generic foreign keys to any model
+    - Action URLs
+    """
+
+    TYPE_CHOICES = [
+        ('INFO', 'Information'),
+        ('SUCCESS', 'Success'),
+        ('WARNING', 'Warning'),
+        ('ERROR', 'Error'),
+        ('TASK', 'Task Assignment'),
+        ('APPROVAL', 'Approval Required'),
+        ('SYSTEM', 'System Notification'),
+    ]
+
+    PRIORITY_CHOICES = [
+        ('LOW', 'Low'),
+        ('NORMAL', 'Normal'),
+        ('HIGH', 'High'),
+        ('URGENT', 'Urgent'),
+    ]
+
+    # Recipient
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        help_text='User who will receive this notification'
+    )
+
+    # Notification details
+    notification_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default='INFO'
+    )
+
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default='NORMAL'
+    )
+
+    title = models.CharField(
+        max_length=200,
+        help_text='Notification title/subject'
+    )
+
+    message = models.TextField(
+        help_text='Notification message body'
+    )
+
+    # Optional link to related object
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Type of related object'
+    )
+
+    object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='ID of related object'
+    )
+
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    # Action URL (optional)
+    action_url = models.CharField(
+        max_length=500,
+        blank=True,
+        default='',
+        help_text='URL for the primary action'
+    )
+
+    action_text = models.CharField(
+        max_length=50,
+        blank=True,
+        default='View',
+        help_text='Text for the action button'
+    )
+
+    # Status
+    is_read = models.BooleanField(
+        default=False,
+        help_text='Whether user has read this notification'
+    )
+
+    read_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When notification was read'
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When notification expires (optional)'
+    )
+
+    # Sender (optional)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='notifications_sent',
+        help_text='User who created this notification'
+    )
+
+    class Meta:
+        db_table = 'core_notification'
+        verbose_name = 'Notification'
+        verbose_name_plural = 'Notifications'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read', '-created_at']),
+            models.Index(fields=['user', 'notification_type']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"
+
+    def mark_as_read(self):
+        """Mark notification as read."""
+        from django.utils import timezone
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at'])
+
+    def mark_as_unread(self):
+        """Mark notification as unread."""
+        if self.is_read:
+            self.is_read = False
+            self.read_at = None
+            self.save(update_fields=['is_read', 'read_at'])
+
+    def get_icon(self):
+        """Get Bootstrap icon class for notification type."""
+        icons = {
+            'INFO': 'bi-info-circle-fill',
+            'SUCCESS': 'bi-check-circle-fill',
+            'WARNING': 'bi-exclamation-triangle-fill',
+            'ERROR': 'bi-x-circle-fill',
+            'TASK': 'bi-clipboard-check',
+            'APPROVAL': 'bi-hand-thumbs-up',
+            'SYSTEM': 'bi-gear-fill',
+        }
+        return icons.get(self.notification_type, 'bi-bell-fill')
+
+
+class ActivityLog(models.Model):
+    """
+    Activity logging for audit trail across all modules.
+
+    Tracks:
+    - CRUD operations
+    - Status changes
+    - Important business events
+    - User actions
+    """
+
+    ACTION_CHOICES = [
+        ('CREATE', 'Created'),
+        ('UPDATE', 'Updated'),
+        ('DELETE', 'Deleted'),
+        ('VIEW', 'Viewed'),
+        ('EXPORT', 'Exported'),
+        ('IMPORT', 'Imported'),
+        ('APPROVE', 'Approved'),
+        ('REJECT', 'Rejected'),
+        ('SUBMIT', 'Submitted'),
+        ('CANCEL', 'Cancelled'),
+        ('COMPLETE', 'Completed'),
+        ('ASSIGN', 'Assigned'),
+        ('COMMENT', 'Commented'),
+        ('OTHER', 'Other'),
+    ]
+
+    # Actor
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='activity_logs',
+        help_text='User who performed the action'
+    )
+
+    # Action details
+    action = models.CharField(
+        max_length=20,
+        choices=ACTION_CHOICES,
+        help_text='Type of action performed'
+    )
+
+    description = models.TextField(
+        help_text='Description of the action'
+    )
+
+    # Related object
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Type of object affected'
+    )
+
+    object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='ID of object affected'
+    )
+
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    # Optional extra data
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Additional context data (changes, metadata, etc.)'
+    )
+
+    # IP address and session info
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        help_text='IP address of the user'
+    )
+
+    user_agent = models.TextField(
+        blank=True,
+        default='',
+        help_text='Browser user agent string'
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'core_activity_log'
+        verbose_name = 'Activity Log'
+        verbose_name_plural = 'Activity Logs'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['action', '-created_at']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        username = self.user.username if self.user else 'System'
+        return f"{username} {self.action} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
