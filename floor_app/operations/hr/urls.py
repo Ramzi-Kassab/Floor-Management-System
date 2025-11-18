@@ -2,7 +2,7 @@
 from django.urls import path
 from . import views_employee_wizard as views
 from . import views_department
-from .views import leave_views, document_views, attendance_views
+from .views import leave_views, document_views, attendance_views, training_views
 
 app_name = "hr"
 
@@ -135,6 +135,25 @@ urlpatterns = [
     path("delays/", attendance_views.delay_incident_list, name="delay_incident_list"),
     path("delays/report/", attendance_views.delay_incident_report, name="delay_incident_report"),
     path("delays/<int:pk>/review/", attendance_views.delay_incident_review, name="delay_incident_review"),
+
+    # ========== Training & Development Management ==========
+    # Training Programs
+    path("training/programs/", training_views.TrainingProgramListView.as_view(), name="training_program_list"),
+    path("training/programs/create/", training_views.TrainingProgramCreateView.as_view(), name="training_program_create"),
+    path("training/programs/<int:pk>/", training_views.TrainingProgramDetailView.as_view(), name="training_program_detail"),
+    path("training/programs/<int:pk>/edit/", training_views.TrainingProgramUpdateView.as_view(), name="training_program_edit"),
+
+    # Training Sessions
+    path("training/sessions/", training_views.TrainingSessionListView.as_view(), name="training_session_list"),
+    path("training/sessions/create/", training_views.TrainingSessionCreateView.as_view(), name="training_session_create"),
+    path("training/sessions/<int:pk>/", training_views.TrainingSessionDetailView.as_view(), name="training_session_detail"),
+    path("training/sessions/<int:pk>/edit/", training_views.TrainingSessionUpdateView.as_view(), name="training_session_edit"),
+    path("training/sessions/<int:session_id>/enroll/", training_views.enroll_employees, name="training_enroll"),
+
+    # Employee Training
+    path("training/my-training/", training_views.my_training_dashboard, name="my_training_dashboard"),
+    path("training/complete/<int:pk>/", training_views.complete_training, name="training_complete"),
+    path("training/feedback/<int:pk>/", training_views.submit_feedback, name="training_feedback"),
 
     # ========== Legacy/Deprecated URLs (redirect to new system) ==========
     path("employees/create/", views.employee_wizard_start, name="employee_create"),  # Redirect to wizard
