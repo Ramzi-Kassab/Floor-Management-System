@@ -61,5 +61,8 @@ urlpatterns = [
 
     # === Sales, Lifecycle & Drilling Operations ===
     path("sales/", include(("floor_app.operations.sales.urls", "sales"), namespace="sales")),
+
+    # === Analytics & Activity Monitoring ===
+    path("analytics/", include(("floor_app.operations.analytics.urls", "analytics"), namespace="analytics")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
