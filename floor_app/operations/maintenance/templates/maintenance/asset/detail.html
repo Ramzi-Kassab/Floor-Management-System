@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}{{ asset.asset_code }} - Asset Details{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'maintenance:asset_list' %}">Assets</a></li>
+        <li class="breadcrumb-item active">{{ asset.asset_code }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">{{ asset.asset_code }}</h1>
+            <p class="text-muted mb-0">{{ asset.name }}</p>
+        </div>
+        <div>
+            <a href="{% url 'maintenance:asset_edit' asset.pk %}" class="btn btn-primary me-2">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'maintenance:asset_qr' asset.pk %}" class="btn btn-outline-dark me-2">
+                <i class="bi bi-qr-code"></i> QR Code
+            </a>
+            <a href="{% url 'maintenance:asset_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Badges -->
+    <div class="mb-4">
+        <span class="badge bg-{{ asset.status_display_class }} me-2">{{ asset.get_status_display }}</span>
+        <span class="badge bg-{{ asset.criticality_display_class }} me-2">{{ asset.get_criticality_display }}</span>
+        {% if asset.is_critical_production_asset %}
+        <span class="badge bg-danger me-2">Critical Production Asset</span>
+        {% endif %}
+        {% if asset.pm_overdue %}
+        <span class="badge bg-warning">PM Overdue</span>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Asset Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl>
+                                <dt>Category</dt>
+                                <dd>{{ asset.category.name }}</dd>
+
+                                <dt>Location</dt>
+                                <dd>{{ asset.location.name }}</dd>
+
+                                <dt>Manufacturer</dt>
+                                <dd>{{ asset.manufacturer|default:"-" }}</dd>
+
+                                <dt>Model Number</dt>
+                                <dd>{{ asset.model_number|default:"-" }}</dd>
+
+                                <dt>Serial Number</dt>
+                                <dd>{{ asset.serial_number|default:"-" }}</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl>
+                                <dt>Installation Date</dt>
+                                <dd>{{ asset.installation_date|date:"M d, Y"|default:"-" }}</dd>
+
+                                <dt>Warranty Expiry</dt>
+                                <dd>
+                                    {{ asset.warranty_expiry_date|date:"M d, Y"|default:"-" }}
+                                    {% if asset.is_under_warranty %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% endif %}
+                                </dd>
+
+                                <dt>Last Maintenance</dt>
+                                <dd>
+                                    {{ asset.last_maintenance_date|date:"M d, Y"|default:"Never" }}
+                                    {% if asset.days_since_last_maintenance %}
+                                    <small class="text-muted">({{ asset.days_since_last_maintenance }} days ago)</small>
+                                    {% endif %}
+                                </dd>
+
+                                <dt>Next PM Due</dt>
+                                <dd>{{ asset.next_pm_due_date|date:"M d, Y"|default:"Not scheduled" }}</dd>
+
+                                <dt>ERP Asset Number</dt>
+                                <dd>{{ asset.erp_asset_number|default:"-" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    {% if asset.description %}
+                    <hr>
+                    <h6>Description</h6>
+                    <p>{{ asset.description }}</p>
+                    {% endif %}
+
+                    {% if asset.specifications %}
+                    <h6>Specifications</h6>
+                    <pre class="bg-light p-3">{{ asset.specifications }}</pre>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Open Work Orders -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="mb-0">Open Work Orders</h5>
+                    <span class="badge bg-primary">{{ open_work_orders.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if open_work_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>WO Number</th>
+                                    <th>Type</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wo in open_work_orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'maintenance:work_order_detail' wo.pk %}">{{ wo.wo_number }}</a>
+                                    </td>
+                                    <td>{{ wo.get_wo_type_display }}</td>
+                                    <td><span class="badge bg-{{ wo.priority_display_class }}">{{ wo.get_priority_display }}</span></td>
+                                    <td><span class="badge bg-{{ wo.status_display_class }}">{{ wo.get_status_display }}</span></td>
+                                    <td>{{ wo.created_at|date:"M d" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No open work orders.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Downtime -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Downtime Events</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_downtime %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Start Time</th>
+                                    <th>Type</th>
+                                    <th>Reason</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dt in recent_downtime %}
+                                <tr>
+                                    <td>{{ dt.start_time|date:"M d, Y H:i" }}</td>
+                                    <td><span class="badge bg-{{ dt.type_display_class }}">{{ dt.get_downtime_type_display }}</span></td>
+                                    <td>{{ dt.get_reason_category_display }}</td>
+                                    <td>{{ dt.duration_display }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No downtime recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'maintenance:request_create' %}?asset={{ asset.pk }}" class="btn btn-warning">
+                            <i class="bi bi-plus-circle"></i> Create Request
+                        </a>
+                        <a href="{% url 'maintenance:work_order_create' %}?asset={{ asset.pk }}" class="btn btn-primary">
+                            <i class="bi bi-wrench"></i> Create Work Order
+                        </a>
+                        <a href="{% url 'maintenance:downtime_create' %}?asset={{ asset.pk }}" class="btn btn-danger">
+                            <i class="bi bi-clock-history"></i> Record Downtime
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="mb-0">Documents</h5>
+                    <span class="badge bg-secondary">{{ documents.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                    <ul class="list-group list-group-flush">
+                        {% for doc in documents %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark"></i>
+                                {{ doc.title }}<br>
+                                <small class="text-muted">{{ doc.get_doc_type_display }}</small>
+                            </div>
+                            <a href="{{ doc.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">No documents attached.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- PM Schedules -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">PM Schedules</h5>
+                </div>
+                <div class="card-body">
+                    {% if pm_schedules %}
+                    <ul class="list-group list-group-flush">
+                        {% for schedule in pm_schedules %}
+                        <li class="list-group-item">
+                            <strong>{{ schedule.pm_plan.code }}</strong><br>
+                            <small class="text-{{ schedule.status_class }}">{{ schedule.status_display }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">No PM schedules.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

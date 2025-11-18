@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}QR Codes List - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1" style="color: #212529; font-weight: 700;">
+                <i class="bi bi-qr-code me-2" style="color: #6c757d;"></i>
+                QR Codes
+            </h1>
+            <p class="text-muted mb-0">Manage and track all QR codes in the system</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'qrcodes:generate' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Generate QR Code
+            </a>
+            <a href="{% url 'qrcodes:bulk_generate' %}" class="btn btn-outline-primary">
+                <i class="bi bi-collection me-2"></i>Bulk Generate
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Reference</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if object_list %}
+                            {% for qcode in object_list %}
+                            <tr>
+                                <td><code>{{ qcode.code }}</code></td>
+                                <td>{{ qcode.qr_type }}</td>
+                                <td>{{ qcode.reference_object|default:"-" }}</td>
+                                <td>
+                                    {% if qcode.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ qcode.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'qrcodes:detail' qcode.pk %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'qrcodes:image' qcode.pk %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-qr-code"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="bi bi-qr-code fs-1 text-muted mb-3 d-block"></i>
+                                    <p class="text-muted mb-0">No QR codes generated yet</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

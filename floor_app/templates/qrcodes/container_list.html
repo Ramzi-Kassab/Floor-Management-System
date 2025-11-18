@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Containers - QR Tracking - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1" style="color: #212529; font-weight: 700;">
+                <i class="bi bi-archive me-2" style="color: #6c757d;"></i>
+                Containers
+            </h1>
+            <p class="text-muted mb-0">Manage containers and storage locations</p>
+        </div>
+        <div>
+            <a href="{% url 'qrcodes:container_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Add Container
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Container ID</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>QR Code</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if object_list %}
+                            {% for container in object_list %}
+                            <tr>
+                                <td class="fw-bold">{{ container.container_id }}</td>
+                                <td>{{ container.container_type }}</td>
+                                <td>{{ container.location }}</td>
+                                <td>
+                                    {% if container.qr_code %}
+                                        <span class="badge bg-success">Assigned</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Not Assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'qrcodes:container_detail' container.pk %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'qrcodes:container_edit' container.pk %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="bi bi-archive fs-1 text-muted mb-3 d-block"></i>
+                                    <p class="text-muted mb-0">No containers found</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

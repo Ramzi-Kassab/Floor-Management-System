@@ -32,6 +32,7 @@ urlpatterns = [
     path('stock/', views.InventoryStockListView.as_view(), name='stock_list'),
     path('stock/<int:pk>/', views.InventoryStockDetailView.as_view(), name='stock_detail'),
     path('stock/adjust/', views.stock_adjustment, name='stock_adjust'),
+    path('stock/adjust/create/', views.stock_adjustment, name='stock_adjustment_create'),  # Alias
 
     # BOMs
     path('boms/', views.BOMListView.as_view(), name='bom_list'),
@@ -46,6 +47,7 @@ urlpatterns = [
 
     # Settings / Reference Data
     path('settings/', views.settings_dashboard, name='settings'),
+    path('settings/', views.settings_dashboard, name='settings_dashboard'),  # Alias
     path('settings/conditions/', views.ConditionTypeListView.as_view(), name='condition_list'),
     path('settings/ownership/', views.OwnershipTypeListView.as_view(), name='ownership_list'),
     path('settings/categories/', views.ItemCategoryListView.as_view(), name='category_list'),

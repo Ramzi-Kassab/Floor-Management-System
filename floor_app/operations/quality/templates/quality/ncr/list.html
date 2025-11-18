@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}NCR List - Quality Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Nonconformance Reports</h1>
+        <a href="{% url 'quality:ncr_create' %}" class="btn btn-danger">
+            <i class="bi bi-plus-lg me-1"></i> New NCR
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Severity</label>
+                    <select name="severity" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in severity_choices %}
+                        <option value="{{ value }}" {% if request.GET.severity == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in type_choices %}
+                        <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filter</button>
+                    <a href="{% url 'quality:ncr_list' %}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NCR Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>NCR #</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                        <th>Disposition</th>
+                        <th>Reported</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ncr in ncrs %}
+                    <tr>
+                        <td><a href="{% url 'quality:ncr_detail' ncr.pk %}">{{ ncr.ncr_number }}</a></td>
+                        <td>{{ ncr.title|truncatechars:50 }}</td>
+                        <td>{{ ncr.get_ncr_type_display }}</td>
+                        <td>
+                            <span class="badge bg-{% if ncr.severity == 'CRITICAL' %}danger{% elif ncr.severity == 'MAJOR' %}warning{% else %}info{% endif %}">
+                                {{ ncr.severity }}
+                            </span>
+                        </td>
+                        <td>{{ ncr.get_status_display }}</td>
+                        <td>{{ ncr.get_disposition_display }}</td>
+                        <td>{{ ncr.reported_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'quality:ncr_detail' ncr.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">No NCRs found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if ncrs.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if ncrs.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ ncrs.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.severity %}&severity={{ request.GET.severity }}{% endif %}">&laquo;</a>
+            </li>
+            {% endif %}
+            {% for num in ncrs.paginator.page_range %}
+            <li class="page-item {% if ncrs.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.severity %}&severity={{ request.GET.severity }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if ncrs.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ ncrs.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.severity %}&severity={{ request.GET.severity }}{% endif %}">&raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

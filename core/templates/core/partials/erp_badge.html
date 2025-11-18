@@ -1,0 +1,14 @@
+{% if has_references %}
+<div class="erp-references d-inline-flex gap-1 flex-wrap">
+    {% for ref in references %}
+    <span class="badge bg-info-subtle text-info border border-info-subtle"
+          title="{{ ref.document_type.name }}: {{ ref.erp_number }} ({{ ref.sync_status }})">
+        <i class="bi bi-link-45deg me-1"></i>
+        {{ ref.document_type.code }}: {{ ref.erp_number }}
+        {% if ref.erp_line_number %}/{{ ref.erp_line_number }}{% endif %}
+    </span>
+    {% endfor %}
+</div>
+{% else %}
+<span class="text-muted small">-</span>
+{% endif %}

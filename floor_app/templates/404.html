@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Page Not Found - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="py-5">
+                <i class="bi bi-exclamation-triangle display-1 text-warning mb-4"></i>
+                <h1 class="display-4 fw-bold text-dark mb-3">404</h1>
+                <h2 class="h3 text-muted mb-4">Page Not Found</h2>
+                <p class="lead text-muted mb-5">
+                    The page you are looking for might have been removed, had its name changed,
+                    or is temporarily unavailable.
+                </p>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'core:home' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-house me-2"></i>Go Home
+                    </a>
+                    <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-arrow-left me-2"></i>Go Back
+                    </button>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-5">
+                <div class="card-body py-4">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-lightbulb me-2"></i>Helpful Links
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="{% url 'hr:dashboard' %}" class="text-decoration-none">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="bi bi-people fs-4 text-primary d-block mb-2"></i>
+                                    <span class="fw-bold">HR Module</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'inventory:dashboard' %}" class="text-decoration-none">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="bi bi-box-seam fs-4 text-success d-block mb-2"></i>
+                                    <span class="fw-bold">Inventory</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'production:dashboard' %}" class="text-decoration-none">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="bi bi-gear-wide-connected fs-4 text-info d-block mb-2"></i>
+                                    <span class="fw-bold">Production</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

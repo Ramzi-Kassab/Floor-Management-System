@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Quality Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .dashboard-card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 600;
+    }
+    .severity-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .severity-CRITICAL { background: #dc2626; color: white; }
+    .severity-MAJOR { background: #ea580c; color: white; }
+    .severity-MINOR { background: #f59e0b; color: white; }
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .status-OVERDUE { background: #dc2626; color: white; }
+    .status-DUE_SOON { background: #f59e0b; color: white; }
+    .status-IN_SERVICE { background: #10b981; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Quality Management Dashboard</h1>
+            <p class="text-muted mb-0">Monitor NCRs, calibration status, and quality dispositions</p>
+        </div>
+        <div>
+            <a href="{% url 'quality:ncr_create' %}" class="btn btn-danger me-2">
+                <i class="bi bi-plus-lg me-1"></i> New NCR
+            </a>
+            <a href="{% url 'quality:disposition_create' %}" class="btn btn-outline-primary">
+                <i class="bi bi-check-circle me-1"></i> Create Disposition
+            </a>
+        </div>
+    </div>
+
+    <!-- NCR Statistics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ ncr_stats.total_open }}</div>
+                        <div class="stat-label">Open NCRs</div>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value text-danger">{{ ncr_stats.critical }}</div>
+                        <div class="stat-label">Critical Severity</div>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-x-octagon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value text-warning">{{ ncr_stats.overdue }}</div>
+                        <div class="stat-label">Overdue NCRs</div>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-value">{{ disposition_stats.pending_release }}</div>
+                        <div class="stat-label">Pending Release</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <!-- Recent NCRs -->
+        <div class="col-lg-8">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span>Recent NCRs</span>
+                    <a href="{% url 'quality:ncr_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>NCR #</th>
+                                <th>Title</th>
+                                <th>Severity</th>
+                                <th>Status</th>
+                                <th>Days Open</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ncr in recent_ncrs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'quality:ncr_detail' ncr.pk %}">{{ ncr.ncr_number }}</a>
+                                </td>
+                                <td>{{ ncr.title|truncatechars:40 }}</td>
+                                <td><span class="severity-badge severity-{{ ncr.severity }}">{{ ncr.severity }}</span></td>
+                                <td>{{ ncr.get_status_display }}</td>
+                                <td>
+                                    {% if ncr.is_overdue %}
+                                    <span class="text-danger fw-bold">{{ ncr.days_open }} days (OVERDUE)</span>
+                                    {% else %}
+                                    {{ ncr.days_open }} days
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">No NCRs found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calibration Status -->
+        <div class="col-lg-4">
+            <div class="dashboard-card mb-4">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <span>Calibration Status</span>
+                    <a href="{% url 'quality:equipment_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="p-3">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Total Equipment</span>
+                            <span class="fw-bold">{{ calibration_stats.total_equipment }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-success">In Service</span>
+                            <span class="fw-bold text-success">{{ calibration_stats.in_service }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-warning">Due Soon</span>
+                            <span class="fw-bold text-warning">{{ calibration_stats.due_soon }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-danger">Overdue</span>
+                            <span class="fw-bold text-danger">{{ calibration_stats.overdue }}</span>
+                        </div>
+                    </div>
+                    {% if calibration_stats.overdue > 0 %}
+                    <a href="{% url 'quality:calibration_overdue' %}" class="btn btn-danger btn-sm w-100">
+                        <i class="bi bi-exclamation-triangle me-1"></i> View Overdue
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Equipment Due Soon -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">Equipment Due for Calibration</div>
+                <div class="list-group list-group-flush">
+                    {% for eq in equipment_due %}
+                    <a href="{% url 'quality:equipment_detail' eq.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ eq.equipment_id }}</div>
+                                <small class="text-muted">{{ eq.name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-warning">{{ eq.days_until_due }} days</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted py-3">
+                        No equipment due soon
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">Quick Actions</div>
+                <div class="p-3">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{% url 'quality:ncr_list' %}" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-list-ul me-1"></i> All NCRs
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'quality:calibration_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-gear me-1"></i> Calibration Overview
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'quality:disposition_list' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-check-circle me-1"></i> Quality Dispositions
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'quality:reports_dashboard' %}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-bar-chart me-1"></i> Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

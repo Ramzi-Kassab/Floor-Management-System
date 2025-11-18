@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Maintenance Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.7;
+    }
+    .quick-action-btn {
+        transition: all 0.2s;
+    }
+    .quick-action-btn:hover {
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+        <li class="breadcrumb-item active">Maintenance</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Maintenance Dashboard</h1>
+        <div>
+            <a href="{% url 'maintenance:request_create' %}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle"></i> New Request
+            </a>
+            <a href="{% url 'maintenance:work_order_create' %}" class="btn btn-success">
+                <i class="bi bi-wrench"></i> New Work Order
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Total Assets</h6>
+                            <h2 class="card-title mb-0">{{ total_assets }}</h2>
+                            <small class="text-success">{{ assets_in_service }} In Service</small>
+                        </div>
+                        <div class="stat-icon text-primary">
+                            <i class="bi bi-gear-wide-connected"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Open Work Orders</h6>
+                            <h2 class="card-title mb-0">{{ open_work_orders }}</h2>
+                            {% if overdue_work_orders > 0 %}
+                            <small class="text-danger">{{ overdue_work_orders }} Overdue</small>
+                            {% else %}
+                            <small class="text-success">None Overdue</small>
+                            {% endif %}
+                        </div>
+                        <div class="stat-icon text-warning">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Downtime (Month)</h6>
+                            <h2 class="card-title mb-0">{{ total_downtime_hours }}h</h2>
+                            <small class="text-muted">Total Hours</small>
+                        </div>
+                        <div class="stat-icon text-danger">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card stat-card border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">PM Tasks Due</h6>
+                            <h2 class="card-title mb-0">{{ pm_due_this_week }}</h2>
+                            {% if overdue_pm_tasks > 0 %}
+                            <small class="text-danger">{{ overdue_pm_tasks }} Overdue</small>
+                            {% else %}
+                            <small class="text-success">This Week</small>
+                            {% endif %}
+                        </div>
+                        <div class="stat-icon text-info">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Pending Requests</h6>
+                            <h2 class="card-title mb-0 {% if pending_requests > 0 %}text-warning{% endif %}">{{ pending_requests }}</h2>
+                            <small class="text-muted">Awaiting Review</small>
+                        </div>
+                        <div class="stat-icon text-secondary">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Critical Assets</h6>
+                            <h2 class="card-title mb-0">{{ critical_assets }}</h2>
+                            <small class="text-muted">High Priority</small>
+                        </div>
+                        <div class="stat-icon text-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Lost Sales (Month)</h6>
+                            <h2 class="card-title mb-0">{{ lost_sales_total|floatformat:0 }} SAR</h2>
+                            <small class="text-muted">Revenue Impact</small>
+                        </div>
+                        <div class="stat-icon text-danger">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Work Orders by Status -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Work Orders by Status</h5>
+                    <a href="{% url 'maintenance:work_order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if wo_by_status %}
+                    <div class="list-group list-group-flush">
+                        {% for item in wo_by_status %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ item.status|title }}</span>
+                            <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No open work orders.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Downtime Assets -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Top 5 Assets by Downtime</h5>
+                    <a href="{% url 'maintenance:downtime_list' %}" class="btn btn-sm btn-outline-danger">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if top_downtime_assets %}
+                    <div class="list-group list-group-flush">
+                        {% for item in top_downtime_assets %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ item.asset__asset_code }}</strong><br>
+                                <small class="text-muted">{{ item.asset__name }}</small>
+                            </div>
+                            <span class="badge bg-danger rounded-pill">
+                                {% widthratio item.total_minutes 60 1 %}h
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No downtime recorded this month.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Work Orders -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Work Orders</h5>
+            <a href="{% url 'maintenance:work_order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>WO Number</th>
+                            <th>Asset</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for wo in recent_work_orders %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'maintenance:work_order_detail' wo.pk %}">{{ wo.wo_number }}</a>
+                            </td>
+                            <td>{{ wo.asset.asset_code }}</td>
+                            <td>{{ wo.title|truncatechars:40 }}</td>
+                            <td>{{ wo.get_wo_type_display }}</td>
+                            <td>
+                                <span class="badge bg-{{ wo.priority_display_class }}">
+                                    {{ wo.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ wo.status_display_class }}">
+                                    {{ wo.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ wo.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No work orders yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:asset_list' %}" class="btn btn-outline-primary w-100 quick-action-btn">
+                        <i class="bi bi-gear-wide-connected"></i><br>
+                        View Assets
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:pm_calendar' %}" class="btn btn-outline-info w-100 quick-action-btn">
+                        <i class="bi bi-calendar-check"></i><br>
+                        PM Calendar
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:request_list' %}" class="btn btn-outline-warning w-100 quick-action-btn">
+                        <i class="bi bi-inbox"></i><br>
+                        View Requests
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:lost_sales_list' %}" class="btn btn-outline-danger w-100 quick-action-btn">
+                        <i class="bi bi-currency-dollar"></i><br>
+                        Lost Sales
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

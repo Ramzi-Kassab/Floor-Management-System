@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Bit Lifecycle Timeline - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding: 0;
+        list-style: none;
+    }
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #e2e8f0;
+        left: 50%;
+        margin-left: -2px;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .timeline-item:nth-child(odd) .timeline-panel {
+        margin-right: 50%;
+        padding-right: 2rem;
+        text-align: right;
+    }
+    .timeline-item:nth-child(even) .timeline-panel {
+        margin-left: 50%;
+        padding-left: 2rem;
+    }
+    .timeline-badge {
+        position: absolute;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        margin-left: -20px;
+        border-radius: 50%;
+        text-align: center;
+        font-size: 1rem;
+        line-height: 40px;
+        color: white;
+        z-index: 10;
+    }
+    .timeline-badge.production { background: #3b82f6; }
+    .timeline-badge.inventory { background: #10b981; }
+    .timeline-badge.shipment { background: #f59e0b; }
+    .timeline-badge.drilling { background: #ef4444; }
+    .timeline-badge.quality { background: #8b5cf6; }
+    .timeline-badge.eol { background: #6b7280; }
+    .timeline-badge.admin { background: #64748b; }
+    .timeline-panel {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .timeline-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .timeline-date {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .search-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .bit-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+    }
+    .summary-stat {
+        background: rgba(255,255,255,0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+    }
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    .summary-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+    @media (max-width: 768px) {
+        .timeline:before {
+            left: 20px;
+        }
+        .timeline-item:nth-child(odd) .timeline-panel,
+        .timeline-item:nth-child(even) .timeline-panel {
+            margin-left: 60px;
+            margin-right: 0;
+            padding-left: 1rem;
+            padding-right: 0;
+            text-align: left;
+        }
+        .timeline-badge {
+            left: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Bit Lifecycle Timeline</h1>
+            <p class="text-muted mb-0">Track complete lifecycle history for serialized bits</p>
+        </div>
+        <div>
+            <a href="{% url 'sales:lifecycle_event_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Record Event
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-card">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Bit Serial Number</label>
+                        <input type="text" name="bit_serial" class="form-control"
+                               value="{{ bit_serial|default:'' }}"
+                               placeholder="Enter bit serial number...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Customer</label>
+                        {{ search_form.customer }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Event Type</label>
+                        {{ search_form.event_type }}
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search me-1"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if bit_serial and events %}
+    <!-- Bit Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="bit-summary">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h2 class="mb-1">{{ bit_serial }}</h2>
+                        <p class="mb-0 opacity-75">
+                            MAT: {{ latest_event.mat_number|default:"N/A" }}
+                        </p>
+                        <p class="mb-0 opacity-75">
+                            Current Status: <strong>{{ latest_event.new_status|default:latest_event.get_event_type_display }}</strong>
+                        </p>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="summary-stat">
+                                    <div class="summary-value">{{ total_events }}</div>
+                                    <div class="summary-label">Total Events</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-stat">
+                                    <div class="summary-value">{{ runs.count }}</div>
+                                    <div class="summary-label">Drilling Runs</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-stat">
+                                    <div class="summary-value">{{ total_footage|floatformat:0 }}</div>
+                                    <div class="summary-label">Total Footage (ft)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-stat">
+                                    <div class="summary-value">{{ total_hours|floatformat:1 }}</div>
+                                    <div class="summary-label">Total Hours</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-4">Lifecycle Events</h4>
+            <ul class="timeline">
+                {% for event in events %}
+                <li class="timeline-item">
+                    <div class="timeline-badge {{ event.event_category|lower }}">
+                        {% if event.event_category == 'Production' %}
+                        <i class="bi bi-gear"></i>
+                        {% elif event.event_category == 'Inventory' %}
+                        <i class="bi bi-box"></i>
+                        {% elif event.event_category == 'Shipment' %}
+                        <i class="bi bi-truck"></i>
+                        {% elif event.event_category == 'Drilling' %}
+                        <i class="bi bi-geo-alt"></i>
+                        {% elif event.event_category == 'Quality' %}
+                        <i class="bi bi-clipboard-check"></i>
+                        {% elif event.event_category == 'End of Life' %}
+                        <i class="bi bi-x-circle"></i>
+                        {% else %}
+                        <i class="bi bi-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-panel">
+                        <div class="timeline-title">{{ event.get_event_type_display }}</div>
+                        <div class="timeline-date">
+                            <i class="bi bi-calendar me-1"></i>
+                            {{ event.event_datetime|date:"M d, Y H:i" }}
+                        </div>
+                        {% if event.description %}
+                        <p class="mt-2 mb-1">{{ event.description }}</p>
+                        {% endif %}
+                        {% if event.location_description %}
+                        <small class="text-muted">
+                            <i class="bi bi-geo me-1"></i> {{ event.location_description }}
+                        </small>
+                        {% endif %}
+                        {% if event.customer %}
+                        <br>
+                        <small class="text-muted">
+                            <i class="bi bi-building me-1"></i> {{ event.customer.name }}
+                        </small>
+                        {% endif %}
+                        {% if event.well %}
+                        <br>
+                        <small class="text-muted">
+                            <i class="bi bi-droplet me-1"></i> {{ event.well.well_name }}
+                        </small>
+                        {% endif %}
+                        {% if event.previous_status or event.new_status %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Status: {{ event.previous_status|default:"N/A" }} →
+                                <strong>{{ event.new_status|default:"N/A" }}</strong>
+                            </small>
+                        </div>
+                        {% endif %}
+                        {% if event.cumulative_footage %}
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                Cumulative: {{ event.cumulative_footage|floatformat:0 }} ft |
+                                {{ event.cumulative_hours|floatformat:1 }} hrs |
+                                {{ event.run_count }} runs
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Drilling Runs Summary -->
+    {% if runs %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Drilling Runs</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Run #</th>
+                                <th>Well</th>
+                                <th>Hole Section</th>
+                                <th>Depth In</th>
+                                <th>Depth Out</th>
+                                <th>Footage</th>
+                                <th>Hours</th>
+                                <th>ROP</th>
+                                <th>Dull Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in runs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'sales:drilling_detail' run.pk %}">{{ run.run_sequence }}</a>
+                                </td>
+                                <td>{{ run.well.well_name }}</td>
+                                <td>{{ run.hole_section }}</td>
+                                <td>{{ run.depth_in_ft|floatformat:0 }} ft</td>
+                                <td>{{ run.depth_out_ft|floatformat:0|default:"-" }} ft</td>
+                                <td>{{ run.footage_drilled|floatformat:0|default:"-" }} ft</td>
+                                <td>{{ run.hours_on_bottom|floatformat:1|default:"-" }}</td>
+                                <td>{{ run.avg_rop|floatformat:1|default:"-" }} ft/hr</td>
+                                <td>
+                                    {% for dg in dull_grades %}
+                                        {% if dg.run_sequence == run.run_sequence %}
+                                        <a href="{% url 'sales:dullgrade_detail' dg.pk %}">
+                                            {{ dg.iadc_dull_grade }}
+                                        </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% elif bit_serial %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        No lifecycle events found for bit serial number: <strong>{{ bit_serial }}</strong>
+    </div>
+    {% else %}
+    <div class="alert alert-secondary">
+        <i class="bi bi-search me-2"></i>
+        Enter a bit serial number above to view its complete lifecycle timeline.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

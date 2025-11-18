@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Work Orders - Maintenance{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+        <li class="breadcrumb-item active">Work Orders</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Work Orders</h1>
+        <a href="{% url 'maintenance:work_order_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Work Order
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in type_choices %}
+                        <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="priority" class="form-select">
+                        <option value="">All Priorities</option>
+                        {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if request.GET.priority == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-secondary">Filter</button>
+                    <a href="{% url 'maintenance:work_order_list' %}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Work Order Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>WO Number</th>
+                            <th>Asset</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assigned To</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for wo in work_orders %}
+                        <tr class="{% if wo.is_overdue %}table-warning{% endif %}">
+                            <td>
+                                <a href="{% url 'maintenance:work_order_detail' wo.pk %}">{{ wo.wo_number }}</a>
+                                {% if wo.is_overdue %}
+                                <span class="badge bg-warning">Overdue</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ wo.asset.asset_code }}</td>
+                            <td>{{ wo.title|truncatechars:40 }}</td>
+                            <td>{{ wo.get_wo_type_display }}</td>
+                            <td>
+                                <span class="badge bg-{{ wo.priority_display_class }}">
+                                    {{ wo.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ wo.status_display_class }}">
+                                    {{ wo.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ wo.assigned_to.username|default:"-" }}</td>
+                            <td>{{ wo.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'maintenance:work_order_detail' wo.pk %}"
+                                       class="btn btn-outline-primary" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if wo.status == 'PLANNED' or wo.status == 'ASSIGNED' %}
+                                    <form method="post" action="{% url 'maintenance:work_order_start' wo.pk %}"
+                                          class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-success" title="Start">
+                                            <i class="bi bi-play"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                No work orders found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

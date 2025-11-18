@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Order - Sales - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{% url 'sales:dashboard' %}">Sales</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sales:order_list' %}">Orders</a></li>
+                    <li class="breadcrumb-item active">{% if object %}Edit{% else %}Create{% endif %}</li>
+                </ol>
+            </nav>
+            <h1 class="h2 mb-1" style="color: #212529; font-weight: 700;">
+                <i class="bi-bag me-2" style="color: #17a2b8;"></i>
+                {% if object %}Edit{% else %}Create{% endif %} Order
+            </h1>
+        </div>
+        <div>
+            <a href="{% url 'sales:order_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>Order Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ field.errors }}
+                            </div>
+                            {% endif %}
+                            {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'sales:order_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {% if object %}Update{% else %}Create{% endif %} Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Help
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-0">
+                        Fill in the required fields marked with <span class="text-danger">*</span> to {% if object %}update{% else %}create{% endif %} this order.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Add Bootstrap classes to form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        const formControls = document.querySelectorAll('input, select, textarea');
+        formControls.forEach(function(control) {
+            if (control.type === 'checkbox') {
+                control.classList.add('form-check-input');
+            } else if (control.tagName === 'SELECT') {
+                control.classList.add('form-select');
+            } else {
+                control.classList.add('form-control');
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

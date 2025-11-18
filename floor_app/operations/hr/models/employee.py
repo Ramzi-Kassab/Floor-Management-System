@@ -240,20 +240,29 @@ class HREmployee(PublicIdMixin, HRAuditMixin, HRSoftDeleteMixin):
         help_text="Current employment status"
     )
 
-    report_to = models.ForeignKey(
-        "self",
+    # ERP Integration & Hierarchy
+    grade = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text='Employee grade/level'
+    )
+
+    supervisor = models.ForeignKey(
+        'self',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="subordinates",
-        help_text="Supervisor or Manager this employee reports to"
+        related_name='subordinates',
+        help_text='Direct supervisor'
     )
 
-    cost_center = models.CharField(
-        max_length=32,
+    cost_center = models.ForeignKey(
+        'core.CostCenter',
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        default="",
-        help_text="Cost center code for allocation"
+        related_name='employees',
+        help_text='Employee cost center'
     )
 
     # Legacy field (kept for backward compatibility, will be deprecated)

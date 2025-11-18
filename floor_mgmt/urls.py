@@ -49,5 +49,17 @@ urlpatterns = [
 
     # === Knowledge & Instructions ===
     path("knowledge/", include(("floor_app.operations.knowledge.urls", "knowledge"), namespace="knowledge")),
+
+    # === Maintenance & Asset Management ===
+    path("maintenance/", include(("floor_app.operations.maintenance.urls", "maintenance"), namespace="maintenance")),
+
+    # === Quality Management ===
+    path("quality/", include(("floor_app.operations.quality.urls", "quality"), namespace="quality")),
+
+    # === Planning & KPI ===
+    path("planning/", include(("floor_app.operations.planning.urls", "planning"), namespace="planning")),
+
+    # === Sales, Lifecycle & Drilling Operations ===
+    path("sales/", include(("floor_app.operations.sales.urls", "sales"), namespace="sales")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

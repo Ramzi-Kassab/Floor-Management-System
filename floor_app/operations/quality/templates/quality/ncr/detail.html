@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}{{ ncr.ncr_number }} - NCR Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">{{ ncr.ncr_number }}</h1>
+            <p class="text-muted">{{ ncr.title }}</p>
+        </div>
+        <div>
+            {% if ncr.status != 'CLOSED' and ncr.status != 'CANCELLED' %}
+            <a href="{% url 'quality:ncr_edit' ncr.pk %}" class="btn btn-outline-primary me-2">Edit</a>
+            <a href="{% url 'quality:ncr_close' ncr.pk %}" class="btn btn-success">Close NCR</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">NCR Details</div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Type:</strong>
+                            <div>{{ ncr.get_ncr_type_display }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Severity:</strong>
+                            <div>
+                                <span class="badge bg-{% if ncr.severity == 'CRITICAL' %}danger{% elif ncr.severity == 'MAJOR' %}warning{% else %}info{% endif %} fs-6">
+                                    {{ ncr.severity }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Status:</strong>
+                            <div>{{ ncr.get_status_display }}</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p>{{ ncr.description }}</p>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Detection Point:</strong>
+                            <div>{{ ncr.detection_point }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Detection Method:</strong>
+                            <div>{{ ncr.detection_method }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Defect Category:</strong>
+                            <div>{{ ncr.defect_category }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Qty Affected:</strong>
+                            <div>{{ ncr.quantity_affected }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Qty Contained:</strong>
+                            <div>{{ ncr.quantity_contained }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Root Cause Analysis -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Root Cause Analysis</span>
+                    {% if ncr.status != 'CLOSED' %}
+                    <a href="{% url 'quality:ncr_add_analysis' ncr.pk %}" class="btn btn-sm btn-primary">Add Analysis</a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% for analysis in analyses %}
+                    <div class="border rounded p-3 mb-3">
+                        <h6>{{ analysis.category }} - {{ analysis.analyzed_by }}</h6>
+                        <div class="mb-2"><strong>Why 1:</strong> {{ analysis.why_1 }}</div>
+                        {% if analysis.why_2 %}<div class="mb-2"><strong>Why 2:</strong> {{ analysis.why_2 }}</div>{% endif %}
+                        {% if analysis.why_3 %}<div class="mb-2"><strong>Why 3:</strong> {{ analysis.why_3 }}</div>{% endif %}
+                        {% if analysis.why_4 %}<div class="mb-2"><strong>Why 4:</strong> {{ analysis.why_4 }}</div>{% endif %}
+                        {% if analysis.why_5 %}<div class="mb-2"><strong>Why 5:</strong> {{ analysis.why_5 }}</div>{% endif %}
+                        <div class="mt-3 p-2 bg-light rounded">
+                            <strong>Root Cause:</strong> {{ analysis.root_cause_statement }}
+                        </div>
+                        {% if analysis.is_systemic %}
+                        <div class="mt-2">
+                            <span class="badge bg-warning">Systemic Issue</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No root cause analysis yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Corrective Actions -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Corrective Actions</span>
+                    {% if ncr.status != 'CLOSED' %}
+                    <a href="{% url 'quality:ncr_add_action' ncr.pk %}" class="btn btn-sm btn-primary">Add Action</a>
+                    {% endif %}
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Assigned To</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in actions %}
+                            <tr>
+                                <td>{{ action.get_action_type_display }}</td>
+                                <td>{{ action.description|truncatechars:50 }}</td>
+                                <td>{{ action.assigned_to }}</td>
+                                <td>
+                                    {{ action.due_date }}
+                                    {% if action.is_overdue %}
+                                    <span class="badge bg-danger">OVERDUE</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ action.get_status_display }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">No corrective actions defined yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Disposition -->
+            <div class="card mb-4">
+                <div class="card-header">Disposition</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Decision:</strong>
+                        <div class="fs-5">{{ ncr.get_disposition_display }}</div>
+                    </div>
+                    {% if ncr.disposition_reason %}
+                    <div class="mb-2">
+                        <strong>Reason:</strong>
+                        <p>{{ ncr.disposition_reason }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Impact -->
+            <div class="card mb-4">
+                <div class="card-header">Impact Assessment</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <i class="bi bi-{% if ncr.customer_impact %}check-circle text-danger{% else %}x-circle text-muted{% endif %}"></i>
+                        Customer Impact
+                    </div>
+                    <div class="mb-2">
+                        <i class="bi bi-{% if ncr.production_impact %}check-circle text-warning{% else %}x-circle text-muted{% endif %}"></i>
+                        Production Impact
+                    </div>
+                    <div class="mb-2">
+                        <i class="bi bi-{% if ncr.safety_impact %}check-circle text-danger{% else %}x-circle text-muted{% endif %}"></i>
+                        Safety Impact
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Impact -->
+            <div class="card mb-4">
+                <div class="card-header">Cost Impact</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Estimated:</strong> {{ ncr.estimated_cost_impact }} SAR
+                    </div>
+                    <div class="mb-2">
+                        <strong>Actual:</strong> {{ ncr.actual_cost_impact }} SAR
+                    </div>
+                    <div>
+                        <strong>Lost Revenue:</strong> {{ ncr.lost_revenue }} SAR
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Info -->
+            <div class="card">
+                <div class="card-header">Workflow</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Reported By:</strong>
+                        <div>{{ ncr.reported_by }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Reported At:</strong>
+                        <div>{{ ncr.reported_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Days Open:</strong>
+                        <div>{{ ncr.days_open }} days</div>
+                    </div>
+                    {% if ncr.assigned_to %}
+                    <div class="mb-2">
+                        <strong>Assigned To:</strong>
+                        <div>{{ ncr.assigned_to }}</div>
+                    </div>
+                    {% endif %}
+                    {% if ncr.target_closure_date %}
+                    <div class="mb-2">
+                        <strong>Target Closure:</strong>
+                        <div>{{ ncr.target_closure_date }}</div>
+                    </div>
+                    {% endif %}
+                    {% if ncr.is_overdue %}
+                    <div class="alert alert-danger mt-3">
+                        <i class="bi bi-exclamation-triangle"></i> This NCR is OVERDUE
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

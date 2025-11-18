@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Settings{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+        <li class="breadcrumb-item active">Settings</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Maintenance Settings</h1>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-tags display-4 text-primary mb-3"></i>
+                    <h5>Asset Categories</h5>
+                    <p class="text-muted">{{ category_count }} categories</p>
+                    <a href="{% url 'maintenance:category_list' %}" class="btn btn-outline-primary">
+                        Manage Categories
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-geo-alt display-4 text-success mb-3"></i>
+                    <h5>Asset Locations</h5>
+                    <p class="text-muted">{{ location_count }} locations</p>
+                    <a href="{% url 'maintenance:location_list' %}" class="btn btn-outline-success">
+                        Manage Locations
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-4 text-info mb-3"></i>
+                    <h5>PM Plans</h5>
+                    <p class="text-muted">{{ pm_plan_count }} plans</p>
+                    <a href="{% url 'maintenance:pm_plan_list' %}" class="btn btn-outline-info">
+                        Manage PM Plans
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

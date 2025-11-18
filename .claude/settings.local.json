@@ -7,7 +7,10 @@
       "Bash(.venvScriptsactivate)",
       "Bash(python manage.py showmigrations:*)",
       "Bash(.venvScriptspython.exe manage.py showmigrations floor_app hr)",
-      "Bash(.venv/Scripts/python.exe manage.py showmigrations floor_app hr)"
+      "Bash(.venv/Scripts/python.exe manage.py showmigrations floor_app hr)",
+      "Bash(venv/Scripts/python.exe:*)",
+      "Bash(nul)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

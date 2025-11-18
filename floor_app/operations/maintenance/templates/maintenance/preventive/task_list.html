@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}PM Tasks - Maintenance{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+        <li class="breadcrumb-item active">PM Tasks</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Preventive Maintenance Tasks</h1>
+        <a href="{% url 'maintenance:pm_calendar' %}" class="btn btn-outline-info">
+            <i class="bi bi-calendar"></i> View Calendar
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-secondary">Filter</button>
+                    <a href="{% url 'maintenance:pm_task_list' %}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Task Number</th>
+                            <th>Asset</th>
+                            <th>PM Plan</th>
+                            <th>Scheduled Date</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assigned To</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr class="{% if task.is_overdue %}table-danger{% endif %}">
+                            <td>
+                                {{ task.task_number }}
+                                {% if task.is_overdue %}
+                                <span class="badge bg-danger">OVERDUE</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ task.asset.asset_code }}</td>
+                            <td>{{ task.pm_plan.code }}</td>
+                            <td>{{ task.scheduled_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge bg-{{ task.status_display_class }}">
+                                    {{ task.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ task.get_priority_display }}</td>
+                            <td>{{ task.assigned_to.username|default:"-" }}</td>
+                            <td>
+                                {% if task.status == 'SCHEDULED' %}
+                                <form method="post" action="{% url 'maintenance:pm_task_start' task.pk %}"
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-play"></i> Start
+                                    </button>
+                                </form>
+                                {% elif task.status == 'IN_PROGRESS' %}
+                                <a href="{% url 'maintenance:pm_task_complete' task.pk %}"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-check-circle"></i> Complete
+                                </a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No PM tasks found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

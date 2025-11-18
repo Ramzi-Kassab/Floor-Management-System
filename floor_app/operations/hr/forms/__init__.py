@@ -70,7 +70,7 @@ class HREmployeeForm(forms.ModelForm):
             # Employment Details
             "employment_category",
             "employment_status",
-            "report_to",
+            "supervisor",
             "cost_center",
         ]
 

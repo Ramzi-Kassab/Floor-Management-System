@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Planning Dashboard - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1" style="color: #212529; font-weight: 700;">
+                <i class="bi bi-graph-up-arrow me-2" style="color: #e83e8c;"></i>
+                Planning & KPI Center
+            </h1>
+            <p class="text-muted mb-0">Resource planning, capacity management, scheduling, and performance metrics</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'planning:schedule_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Schedule
+            </a>
+            <a href="{% url 'planning:kpi_value_record' %}" class="btn btn-outline-primary">
+                <i class="bi bi-speedometer2 me-2"></i>Record KPI
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(232, 62, 140, 0.1);">
+                                <i class="bi bi-calendar-range fs-4" style="color: #e83e8c;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Active Schedules</h6>
+                            <h3 class="mb-0">{{ stats.active_schedules|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(25, 135, 84, 0.1);">
+                                <i class="bi bi-percent fs-4" style="color: #198754;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">OTD Rate</h6>
+                            <h3 class="mb-0">{{ stats.otd_rate|default:"0" }}%</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(255, 193, 7, 0.1);">
+                                <i class="bi bi-hourglass-split fs-4" style="color: #ffc107;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">WIP Jobs</h6>
+                            <h3 class="mb-0">{{ stats.wip_jobs|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(220, 53, 69, 0.1);">
+                                <i class="bi bi-exclamation-diamond fs-4" style="color: #dc3545;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">At Risk Jobs</h6>
+                            <h3 class="mb-0">{{ stats.at_risk_jobs|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="row g-4">
+                <!-- Resource Planning -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(232, 62, 140, 0.1);">
+                                    <i class="bi bi-people fs-5" style="color: #e83e8c;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Resource Planning</h5>
+                            </div>
+                            <p class="card-text text-muted">Manage resources and capacity allocation</p>
+                            <a href="{% url 'planning:resource_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Resources
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capacity Planning -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(13, 110, 253, 0.1);">
+                                    <i class="bi bi-bar-chart-line fs-5" style="color: #0d6efd;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Capacity Planning</h5>
+                            </div>
+                            <p class="card-text text-muted">Analyze capacity and identify bottlenecks</p>
+                            <a href="{% url 'planning:capacity_overview' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Capacity
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Production Scheduling -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(111, 66, 193, 0.1);">
+                                    <i class="bi bi-calendar-week fs-5" style="color: #6f42c1;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Production Scheduling</h5>
+                            </div>
+                            <p class="card-text text-muted">Create and manage production schedules</p>
+                            <a href="{% url 'planning:schedule_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Schedules
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Dashboard -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(25, 135, 84, 0.1);">
+                                    <i class="bi bi-speedometer2 fs-5" style="color: #198754;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">KPI Dashboard</h5>
+                            </div>
+                            <p class="card-text text-muted">Monitor key performance indicators</p>
+                            <a href="{% url 'planning:kpi_dashboard' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View KPIs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WIP Board -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(255, 193, 7, 0.1);">
+                                    <i class="bi bi-kanban fs-5" style="color: #ffc107;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">WIP Board</h5>
+                            </div>
+                            <p class="card-text text-muted">Track work in progress and job status</p>
+                            <a href="{% url 'planning:wip_board' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View WIP Board
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forecasting -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(220, 53, 69, 0.1);">
+                                    <i class="bi bi-graph-up fs-5" style="color: #dc3545;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Forecasting</h5>
+                            </div>
+                            <p class="card-text text-muted">Demand forecasting and at-risk analysis</p>
+                            <a href="{% url 'planning:forecast_list' %}" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Forecasts
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-lg-4">
+            <!-- At Risk Jobs -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>At Risk Jobs
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if at_risk_jobs %}
+                        <div class="list-group list-group-flush">
+                            {% for job in at_risk_jobs %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">{{ job.number }}</span>
+                                    <span class="badge bg-danger">{{ job.days_late }} days</span>
+                                </div>
+                                <small class="text-muted">Due: {{ job.due_date|date:"M d, Y" }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No at-risk jobs</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- KPI Summary -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-speedometer me-2"></i>KPI Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if kpi_summary %}
+                        <div class="list-group list-group-flush">
+                            {% for kpi in kpi_summary %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="fw-bold">{{ kpi.name }}</small>
+                                    <small>{{ kpi.value }}{{ kpi.unit }}</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar {% if kpi.status == 'good' %}bg-success{% elif kpi.status == 'warning' %}bg-warning{% else %}bg-danger{% endif %}"
+                                         role="progressbar" style="width: {{ kpi.percent }}%"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No KPIs configured</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'planning:schedule_create' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle me-2"></i>New Schedule
+                        </a>
+                        <a href="{% url 'planning:kpi_value_record' %}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-speedometer2 me-2"></i>Record KPI Value
+                        </a>
+                        <a href="{% url 'planning:bottleneck_analysis' %}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-funnel me-2"></i>Bottleneck Analysis
+                        </a>
+                        <a href="{% url 'planning:reports_dashboard' %}" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i>Reports
+                        </a>
+                        <a href="{% url 'planning:settings_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-gear me-2"></i>Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

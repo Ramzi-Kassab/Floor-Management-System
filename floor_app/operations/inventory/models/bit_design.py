@@ -242,6 +242,32 @@ class BitDesignRevision(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     )
     notes = models.TextField(blank=True, default="")
 
+    # ERP Integration
+    erp_item_number = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='ERP Item/Material Code'
+    )
+    erp_bom_number = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='ERP BOM Number'
+    )
+    standard_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Standard cost per unit'
+    )
+    last_purchase_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Last purchase cost'
+    )
+
     class Meta:
         db_table = "inventory_bit_design_revision"
         verbose_name = "Bit Design Revision (MAT)"

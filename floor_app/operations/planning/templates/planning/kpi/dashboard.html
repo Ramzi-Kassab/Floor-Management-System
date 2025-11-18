@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}KPI Dashboard - Planning{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Key Performance Indicators</h1>
+        <a href="{% url 'planning:kpi_value_record' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Record KPI
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for item in kpi_data %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <strong>{{ item.definition.code }}</strong> - {{ item.definition.name }}
+                </div>
+                <div class="card-body">
+                    {% if item.latest_value %}
+                    <div class="text-center mb-3">
+                        <div class="display-4 fw-bold {% if item.latest_value.is_on_target %}text-success{% else %}text-warning{% endif %}">
+                            {{ item.latest_value.value }}
+                        </div>
+                        <div class="text-muted">{{ item.definition.unit }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Target</small>
+                            <div class="fw-bold">{{ item.definition.target_value|default:"-" }}</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Variance</small>
+                            <div class="fw-bold">{{ item.latest_value.variance_from_target|default:"0" }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        {% if item.latest_value.is_on_target %}
+                        <span class="badge bg-success">On Target</span>
+                        {% else %}
+                        <span class="badge bg-warning">Off Target</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        No data recorded yet
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'planning:kpi_definition_detail' item.definition.pk %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No KPIs configured for dashboard. <a href="{% url 'planning:kpi_definition_create' %}">Create a KPI definition</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

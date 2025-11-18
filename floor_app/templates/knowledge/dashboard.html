@@ -1,94 +1,96 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Knowledge Center - Dashboard{% endblock %}
+{% block title %}Knowledge Center - Floor Management System{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-1">Knowledge & Instructions Center</h1>
-            <p class="text-muted mb-0">Central hub for procedures, guidelines, instructions, and training</p>
+            <h1 class="h2 mb-1" style="color: #212529; font-weight: 700;">
+                <i class="bi bi-book-fill me-2" style="color: #6f42c1;"></i>
+                Knowledge Center
+            </h1>
+            <p class="text-muted mb-0">Access articles, documents, instructions, and training resources</p>
         </div>
-        <div class="btn-group">
-            <a href="{% url 'knowledge:article_list' %}" class="btn btn-outline-primary">
-                <i class="bi bi-journal-text me-1"></i> Articles
+        <div class="d-flex gap-2">
+            <a href="{% url 'knowledge:article_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Article
             </a>
-            <a href="{% url 'knowledge:instruction_list' %}" class="btn btn-outline-warning">
-                <i class="bi bi-lightning me-1"></i> Instructions
-            </a>
-            <a href="{% url 'knowledge:training_dashboard' %}" class="btn btn-outline-success">
-                <i class="bi bi-mortarboard me-1"></i> Training
+            <a href="{% url 'knowledge:search' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-search me-2"></i>Search
             </a>
         </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2">Published Articles</h6>
-                            <h2 class="mb-0">{{ article_stats.published }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(111, 66, 193, 0.1);">
+                                <i class="bi bi-journal-text fs-4" style="color: #6f42c1;"></i>
+                            </div>
                         </div>
-                        <div class="bg-primary bg-opacity-10 rounded p-3">
-                            <i class="bi bi-journal-text text-primary fs-4"></i>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Articles</h6>
+                            <h3 class="mb-0">{{ stats.articles|default:"0" }}</h3>
                         </div>
                     </div>
-                    <small class="text-muted">{{ article_stats.draft }} drafts</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-lg-3 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2">Active Instructions</h6>
-                            <h2 class="mb-0">{{ active_instructions }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(13, 110, 253, 0.1);">
+                                <i class="bi bi-file-earmark-text fs-4" style="color: #0d6efd;"></i>
+                            </div>
                         </div>
-                        <div class="bg-warning bg-opacity-10 rounded p-3">
-                            <i class="bi bi-lightning text-warning fs-4"></i>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Documents</h6>
+                            <h3 class="mb-0">{{ stats.documents|default:"0" }}</h3>
                         </div>
                     </div>
-                    <small class="text-muted">Automated business rules</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-lg-3 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2">Training Courses</h6>
-                            <h2 class="mb-0">{{ published_courses }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(255, 193, 7, 0.1);">
+                                <i class="bi bi-lightning-fill fs-4" style="color: #ffc107;"></i>
+                            </div>
                         </div>
-                        <div class="bg-success bg-opacity-10 rounded p-3">
-                            <i class="bi bi-mortarboard text-success fs-4"></i>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Instructions</h6>
+                            <h3 class="mb-0">{{ stats.instructions|default:"0" }}</h3>
                         </div>
                     </div>
-                    {% if user_training %}
-                    <small class="text-muted">{{ user_training.in_progress }} in progress</small>
-                    {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-lg-3 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2">Needs Review</h6>
-                            <h2 class="mb-0">{{ article_stats.needs_review }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(25, 135, 84, 0.1);">
+                                <i class="bi bi-mortarboard fs-4" style="color: #198754;"></i>
+                            </div>
                         </div>
-                        <div class="bg-danger bg-opacity-10 rounded p-3">
-                            <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Courses</h6>
+                            <h3 class="mb-0">{{ stats.courses|default:"0" }}</h3>
                         </div>
                     </div>
-                    <small class="text-muted">Articles due for review</small>
                 </div>
             </div>
         </div>
@@ -96,216 +98,200 @@
 
     <!-- Main Content Grid -->
     <div class="row g-4">
-        <!-- Featured Articles -->
+        <!-- Quick Access Cards -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-star-fill text-warning me-2"></i>Featured Articles</h5>
-                    <a href="{% url 'knowledge:article_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            <div class="row g-4">
+                <!-- Articles & Procedures -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(111, 66, 193, 0.1);">
+                                    <i class="bi bi-journal-text fs-5" style="color: #6f42c1;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Articles & Procedures</h5>
+                            </div>
+                            <p class="card-text text-muted">Browse SOPs, work instructions, and technical procedures</p>
+                            <a href="{% url 'knowledge:article_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>Browse Articles
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Library -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(13, 110, 253, 0.1);">
+                                    <i class="bi bi-file-earmark-text fs-5" style="color: #0d6efd;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Document Library</h5>
+                            </div>
+                            <p class="card-text text-muted">Access PDFs, drawings, specifications, and reference materials</p>
+                            <a href="{% url 'knowledge:document_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>Browse Documents
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Instructions -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(255, 193, 7, 0.1);">
+                                    <i class="bi bi-lightning-fill fs-5" style="color: #ffc107;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Business Instructions</h5>
+                            </div>
+                            <p class="card-text text-muted">Automated rules engine for business process guidance</p>
+                            <a href="{% url 'knowledge:instruction_list' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Instructions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Center -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(25, 135, 84, 0.1);">
+                                    <i class="bi bi-mortarboard fs-5" style="color: #198754;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Training Center</h5>
+                            </div>
+                            <p class="card-text text-muted">Enroll in courses, track progress, and complete certifications</p>
+                            <a href="{% url 'knowledge:training_dashboard' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-arrow-right me-2"></i>Start Learning
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(220, 53, 69, 0.1);">
+                                    <i class="bi bi-question-circle fs-5" style="color: #dc3545;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">FAQ</h5>
+                            </div>
+                            <p class="card-text text-muted">Find answers to frequently asked questions</p>
+                            <a href="{% url 'knowledge:faq_list' %}" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-arrow-right me-2"></i>Browse FAQ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(108, 117, 125, 0.1);">
+                                    <i class="bi bi-folder2 fs-5" style="color: #6c757d;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Categories</h5>
+                            </div>
+                            <p class="card-text text-muted">Browse content organized by category and topic</p>
+                            <a href="{% url 'knowledge:category_list' %}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Categories
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-lg-4">
+            <!-- Recent Articles -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent Articles
+                    </h6>
                 </div>
                 <div class="card-body">
-                    {% if featured_articles %}
-                    <div class="row g-3">
-                        {% for article in featured_articles %}
-                        <div class="col-md-4">
-                            <div class="card h-100 border">
-                                <div class="card-body">
-                                    <span class="badge bg-{{ article.article_type|lower }} mb-2">
-                                        {{ article.get_article_type_display }}
-                                    </span>
-                                    <h6 class="card-title">
-                                        <a href="{% url 'knowledge:article_detail' article.slug %}" class="text-decoration-none">
-                                            {{ article.title|truncatechars:50 }}
-                                        </a>
-                                    </h6>
-                                    <p class="card-text small text-muted">{{ article.summary|truncatechars:100 }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">{{ article.code }}</small>
-                                        <small class="text-muted">
-                                            <i class="bi bi-eye"></i> {{ article.view_count }}
-                                        </small>
-                                    </div>
+                    {% if recent_articles %}
+                        <div class="list-group list-group-flush">
+                            {% for article in recent_articles %}
+                            <a href="{% url 'knowledge:article_detail' article.slug %}" class="list-group-item list-group-item-action border-0 px-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ article.title|truncatechars:40 }}</h6>
+                                    <small class="text-muted">{{ article.created_at|timesince }} ago</small>
                                 </div>
-                            </div>
+                                <small class="text-muted">{{ article.category.name|default:"Uncategorized" }}</small>
+                            </a>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
-                    </div>
                     {% else %}
-                    <p class="text-muted text-center">No featured articles yet.</p>
+                        <p class="text-muted text-center mb-0">No articles yet</p>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Recent Articles -->
-            <div class="card border-0 shadow-sm mt-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Articles</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    {% for article in recent_articles %}
-                    <a href="{% url 'knowledge:article_detail' article.slug %}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ article.title }}</h6>
-                            <small class="text-muted">{{ article.published_at|timesince }} ago</small>
-                        </div>
-                        <p class="mb-1 small text-muted">{{ article.summary|truncatechars:150 }}</p>
-                        <div class="d-flex gap-2">
-                            <span class="badge bg-secondary">{{ article.code }}</span>
-                            <span class="badge bg-info">{{ article.get_article_type_display }}</span>
-                            {% if article.category %}
-                            <span class="badge bg-light text-dark">{{ article.category.name }}</span>
-                            {% endif %}
-                        </div>
-                    </a>
-                    {% empty %}
-                    <div class="list-group-item text-center text-muted">No recent articles.</div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- My Training (if employee) -->
-            {% if user_training %}
+            <!-- My Training Progress -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>My Training</h5>
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>My Training
+                    </h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-around text-center mb-3">
-                        <div>
-                            <h4 class="mb-0 text-warning">{{ user_training.in_progress }}</h4>
-                            <small class="text-muted">In Progress</small>
+                    {% if user_enrollments %}
+                        <div class="list-group list-group-flush">
+                            {% for enrollment in user_enrollments %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="fw-bold">{{ enrollment.course.title|truncatechars:30 }}</small>
+                                    <small>{{ enrollment.progress_percent|default:0 }}%</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ enrollment.progress_percent|default:0 }}%"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
-                        <div>
-                            <h4 class="mb-0 text-success">{{ user_training.completed }}</h4>
-                            <small class="text-muted">Completed</small>
-                        </div>
-                        <div>
-                            <h4 class="mb-0 text-danger">{{ user_training.expiring_soon }}</h4>
-                            <small class="text-muted">Expiring</small>
-                        </div>
-                    </div>
-                    <a href="{% url 'knowledge:my_training' %}" class="btn btn-outline-success w-100">
-                        View My Training
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Expiring Instructions -->
-            {% if expiring_instructions %}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Expiring Instructions</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    {% for inst in expiring_instructions %}
-                    <a href="{% url 'knowledge:instruction_detail' inst.code %}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ inst.code }}</h6>
-                            <span class="badge bg-danger">{{ inst.days_until_expiry }}d left</span>
-                        </div>
-                        <p class="mb-0 small">{{ inst.title }}</p>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Categories -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="bi bi-folder me-2"></i>Categories</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    {% for cat in categories %}
-                    <a href="{% url 'knowledge:category_detail' cat.slug %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        <span>
-                            {% if cat.icon %}<i class="{{ cat.icon }} me-2"></i>{% endif %}
-                            {{ cat.name }}
-                        </span>
-                        <span class="badge bg-primary rounded-pill">{{ cat.article_count }}</span>
-                    </a>
-                    {% empty %}
-                    <div class="list-group-item text-center text-muted">No categories yet.</div>
-                    {% endfor %}
+                        <a href="{% url 'knowledge:my_training' %}" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                            View All Training
+                        </a>
+                    {% else %}
+                        <p class="text-muted text-center mb-2">No courses enrolled</p>
+                        <a href="{% url 'knowledge:course_list' %}" class="btn btn-sm btn-outline-success w-100">
+                            Browse Courses
+                        </a>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Popular FAQs -->
-            {% if popular_faqs %}
+            <!-- Quick Search -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Popular FAQs</h5>
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-search me-2"></i>Quick Search
+                    </h6>
                 </div>
-                <div class="list-group list-group-flush">
-                    {% for faq in popular_faqs %}
-                    <div class="list-group-item">
-                        <strong class="d-block mb-1">{{ faq.question|truncatechars:80 }}</strong>
-                        <small class="text-muted">{{ faq.short_answer|default:faq.answer|truncatechars:100 }}</small>
-                    </div>
-                    {% endfor %}
-                </div>
-                <div class="card-footer bg-white">
-                    <a href="{% url 'knowledge:faq_list' %}" class="btn btn-sm btn-outline-primary w-100">
-                        View All FAQs
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    {% if perms.knowledge.add_article or perms.knowledge.add_instructionrule %}
-    <div class="card border-0 shadow-sm mt-4">
-        <div class="card-body">
-            <h5 class="mb-3">Quick Actions</h5>
-            <div class="row g-3">
-                {% if perms.knowledge.add_article %}
-                <div class="col-md-3">
-                    <a href="{% url 'knowledge:article_create' %}" class="btn btn-primary w-100">
-                        <i class="bi bi-plus-circle me-2"></i>New Article
-                    </a>
-                </div>
-                {% endif %}
-                {% if perms.knowledge.add_instructionrule %}
-                <div class="col-md-3">
-                    <a href="{% url 'knowledge:instruction_create' %}" class="btn btn-warning w-100">
-                        <i class="bi bi-lightning me-2"></i>New Instruction
-                    </a>
-                </div>
-                {% endif %}
-                {% if perms.knowledge.add_document %}
-                <div class="col-md-3">
-                    <a href="{% url 'knowledge:document_upload' %}" class="btn btn-info w-100">
-                        <i class="bi bi-upload me-2"></i>Upload Document
-                    </a>
-                </div>
-                {% endif %}
-                <div class="col-md-3">
-                    <a href="{% url 'knowledge:search' %}" class="btn btn-secondary w-100">
-                        <i class="bi bi-search me-2"></i>Global Search
-                    </a>
+                <div class="card-body">
+                    <form action="{% url 'knowledge:search' %}" method="get">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" placeholder="Search knowledge base...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.badge.bg-procedure { background-color: #3b82f6 !important; }
-.badge.bg-work_instruction { background-color: #10b981 !important; }
-.badge.bg-guideline { background-color: #6366f1 !important; }
-.badge.bg-policy { background-color: #8b5cf6 !important; }
-.badge.bg-faq { background-color: #f59e0b !important; }
-.badge.bg-checklist { background-color: #06b6d4 !important; }
-.badge.bg-safety { background-color: #ef4444 !important; }
-.badge.bg-quality { background-color: #14b8a6 !important; }
-</style>
 {% endblock %}

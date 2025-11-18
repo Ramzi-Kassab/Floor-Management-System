@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Purchasing Dashboard - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1" style="color: #212529; font-weight: 700;">
+                <i class="bi bi-cart4 me-2" style="color: #0dcaf0;"></i>
+                Purchasing Management
+            </h1>
+            <p class="text-muted mb-0">Manage suppliers, purchase orders, receiving, and invoices</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'purchasing:pr_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New PR
+            </a>
+            <a href="{% url 'purchasing:po_create' %}" class="btn btn-outline-primary">
+                <i class="bi bi-file-text me-2"></i>New PO
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(13, 202, 240, 0.1);">
+                                <i class="bi bi-file-earmark-text fs-4" style="color: #0dcaf0;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Open PRs</h6>
+                            <h3 class="mb-0">{{ stats.open_prs|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(13, 110, 253, 0.1);">
+                                <i class="bi bi-cart-check fs-4" style="color: #0d6efd;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Open POs</h6>
+                            <h3 class="mb-0">{{ stats.open_pos|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(255, 193, 7, 0.1);">
+                                <i class="bi bi-truck fs-4" style="color: #ffc107;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Pending GRNs</h6>
+                            <h3 class="mb-0">{{ stats.pending_grns|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle p-3" style="background: rgba(220, 53, 69, 0.1);">
+                                <i class="bi bi-receipt fs-4" style="color: #dc3545;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Unpaid Invoices</h6>
+                            <h3 class="mb-0">{{ stats.unpaid_invoices|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="row g-4">
+                <!-- Suppliers -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(13, 202, 240, 0.1);">
+                                    <i class="bi bi-building fs-5" style="color: #0dcaf0;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Suppliers</h5>
+                            </div>
+                            <p class="card-text text-muted">Manage vendor information and relationships</p>
+                            <a href="{% url 'purchasing:supplier_list' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Suppliers
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Requests -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(111, 66, 193, 0.1);">
+                                    <i class="bi bi-file-earmark-text fs-5" style="color: #6f42c1;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Purchase Requests</h5>
+                            </div>
+                            <p class="card-text text-muted">Create and approve purchase requests</p>
+                            <a href="{% url 'purchasing:pr_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View PRs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Orders -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(13, 110, 253, 0.1);">
+                                    <i class="bi bi-cart-check fs-5" style="color: #0d6efd;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Purchase Orders</h5>
+                            </div>
+                            <p class="card-text text-muted">Manage POs and track order status</p>
+                            <a href="{% url 'purchasing:po_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View POs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goods Receipt -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(25, 135, 84, 0.1);">
+                                    <i class="bi bi-box-seam fs-5" style="color: #198754;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Goods Receipt (GRN)</h5>
+                            </div>
+                            <p class="card-text text-muted">Record incoming goods and materials</p>
+                            <a href="{% url 'purchasing:grn_list' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View GRNs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoices -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(220, 53, 69, 0.1);">
+                                    <i class="bi bi-receipt fs-5" style="color: #dc3545;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Invoices</h5>
+                            </div>
+                            <p class="card-text text-muted">Track supplier invoices and payments</p>
+                            <a href="{% url 'purchasing:invoice_list' %}" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Invoices
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipments -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle p-2 me-3" style="background: rgba(255, 193, 7, 0.1);">
+                                    <i class="bi bi-truck fs-5" style="color: #ffc107;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">Shipments</h5>
+                            </div>
+                            <p class="card-text text-muted">Track incoming and outgoing shipments</p>
+                            <a href="{% url 'purchasing:shipment_list' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-arrow-right me-2"></i>View Shipments
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-lg-4">
+            <!-- Pending Approvals -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-hourglass-split me-2"></i>Pending Approvals
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if pending_approvals %}
+                        <div class="list-group list-group-flush">
+                            {% for item in pending_approvals %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">{{ item.number }}</span>
+                                    <span class="badge bg-warning">{{ item.type }}</span>
+                                </div>
+                                <small class="text-muted">{{ item.created_at|timesince }} ago</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No pending approvals</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent POs -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent POs
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_pos %}
+                        <div class="list-group list-group-flush">
+                            {% for po in recent_pos %}
+                            <a href="{% url 'purchasing:po_detail' po.pk %}" class="list-group-item list-group-item-action border-0 px-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ po.number }}</h6>
+                                    <small class="text-muted">{{ po.created_at|timesince }} ago</small>
+                                </div>
+                                <small class="text-muted">{{ po.supplier.name|truncatechars:30 }}</small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No recent POs</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'purchasing:pr_create' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle me-2"></i>New Purchase Request
+                        </a>
+                        <a href="{% url 'purchasing:po_create' %}" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-cart-plus me-2"></i>New Purchase Order
+                        </a>
+                        <a href="{% url 'purchasing:grn_create' %}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-box-seam me-2"></i>Record GRN
+                        </a>
+                        <a href="{% url 'purchasing:supplier_create' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-building-add me-2"></i>Add Supplier
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

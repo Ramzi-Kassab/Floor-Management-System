@@ -121,7 +121,7 @@ class HREmployeeAdmin(admin.ModelAdmin):
         "person__last_name_ar",
     )
 
-    autocomplete_fields = ("person", "user", "position", "department", "report_to")
+    autocomplete_fields = ("person", "user", "position", "department", "supervisor")
     readonly_fields = ("public_id", "created_at", "updated_at", "created_by", "updated_by")
 
     fieldsets = (
@@ -153,7 +153,7 @@ class HREmployeeAdmin(admin.ModelAdmin):
             "fields": ("annual_leave_days", "sick_leave_days", "special_leave_days"),
         }),
         ("Employment Details", {
-            "fields": ("employment_category", "report_to", "cost_center"),
+            "fields": ("employment_category", "supervisor", "cost_center"),
         }),
         ("System Information", {
             "fields": ("public_id", "created_at", "created_by", "updated_at", "updated_by"),

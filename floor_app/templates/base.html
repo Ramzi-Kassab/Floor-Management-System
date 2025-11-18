@@ -6,31 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#6366f1">
     <title>{% block title %}Floor Management System{% endblock %}</title>
-    
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18'>🏢</text></svg>">
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
           crossorigin="anonymous">
-    
+
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    
+
+    <!-- Theme System CSS -->
+    <link rel="stylesheet" href="{% static 'core/css/themes.css' %}">
+
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="theme-{{ theme|default:'light' }} ui-font-{{ font_size|default:'normal' }} table-density-{{ table_density|default:'normal' }}">
+    <!-- Skip to Content (Accessibility) -->
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
+
     <!-- Top Navbar with Glassmorphism -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
@@ -96,7 +102,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="{% url 'core:user_preferences' %}">
                                     <i class="bi bi-gear me-2"></i>Settings
                                 </a>
                             </li>
@@ -451,6 +457,330 @@
                         </ul>
                     </li>
 
+                    <!-- Knowledge & Learning Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="knowledge-section">
+                            <i class="bi bi-book-fill"></i>
+                            <span>Knowledge & Learning</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="knowledge-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Knowledge Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:article_list' %}">
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Articles & Procedures</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:instruction_list' %}">
+                                    <i class="bi bi-lightning-fill"></i>
+                                    <span>Business Instructions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:document_list' %}">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Document Library</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:training_dashboard' %}">
+                                    <i class="bi bi-mortarboard"></i>
+                                    <span>Training Center</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:faq_list' %}">
+                                    <i class="bi bi-question-circle"></i>
+                                    <span>FAQ</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'knowledge:search' %}">
+                                    <i class="bi bi-search"></i>
+                                    <span>Global Search</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Maintenance & Asset Management Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="maintenance-section">
+                            <i class="bi bi-tools"></i>
+                            <span>Maintenance & Assets</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="maintenance-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Maintenance Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:asset_list' %}">
+                                    <i class="bi bi-hdd-rack"></i>
+                                    <span>Assets</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:request_list' %}">
+                                    <i class="bi bi-envelope-exclamation"></i>
+                                    <span>Maintenance Requests</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:work_order_list' %}">
+                                    <i class="bi bi-clipboard-check"></i>
+                                    <span>Work Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:pm_plan_list' %}">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span>PM Plans</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:pm_task_list' %}">
+                                    <i class="bi bi-list-task"></i>
+                                    <span>PM Tasks</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:downtime_list' %}">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Downtime Events</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:settings' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Quality Management Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="quality-section">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Quality Management</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="quality-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'quality:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Quality Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'quality:ncr_list' %}">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>NCRs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'quality:disposition_list' %}">
+                                    <i class="bi bi-check2-square"></i>
+                                    <span>Dispositions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'quality:calibration_list' %}">
+                                    <i class="bi bi-rulers"></i>
+                                    <span>Calibration</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'quality:criteria_list' %}">
+                                    <i class="bi bi-card-checklist"></i>
+                                    <span>Acceptance Criteria</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'quality:settings_dashboard' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Planning & KPI Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="planning-section">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span>Planning & KPI</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="planning-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'planning:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Planning Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'planning:schedule_list' %}">
+                                    <i class="bi bi-calendar-week"></i>
+                                    <span>Schedules</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'planning:resource_list' %}">
+                                    <i class="bi bi-cpu"></i>
+                                    <span>Resources</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'planning:kpi_dashboard' %}">
+                                    <i class="bi bi-bar-chart-line"></i>
+                                    <span>KPI Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'planning:wip_board' %}">
+                                    <i class="bi bi-kanban"></i>
+                                    <span>WIP Board</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'planning:forecast_list' %}">
+                                    <i class="bi bi-graph-down"></i>
+                                    <span>Forecasts</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'planning:settings_dashboard' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Sales & Lifecycle Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="sales-section">
+                            <i class="bi bi-currency-dollar"></i>
+                            <span>Sales & Lifecycle</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="sales-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Sales Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:customer_list' %}">
+                                    <i class="bi bi-building"></i>
+                                    <span>Customers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:opportunity_list' %}">
+                                    <i class="bi bi-funnel"></i>
+                                    <span>Opportunities</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:order_list' %}">
+                                    <i class="bi bi-cart-check"></i>
+                                    <span>Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:rig_list' %}">
+                                    <i class="bi bi-building-gear"></i>
+                                    <span>Rigs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:well_list' %}">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span>Wells</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:drilling_list' %}">
+                                    <i class="bi bi-gear-wide-connected"></i>
+                                    <span>Drilling Runs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:dullgrade_list' %}">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    <span>Dull Grades</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:lifecycle_timeline' %}">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Bit Lifecycle</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'sales:shipment_list' %}">
+                                    <i class="bi bi-truck"></i>
+                                    <span>Shipments</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Finance & ERP Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="finance-section">
+                            <i class="bi bi-cash-stack"></i>
+                            <span>Finance & ERP</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="finance-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'core:finance_dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Finance Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'core:costcenter_list' %}">
+                                    <i class="bi bi-diagram-3"></i>
+                                    <span>Cost Centers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'core:erpreference_list' %}">
+                                    <i class="bi bi-link-45deg"></i>
+                                    <span>ERP References</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'core:lossofsale_list' %}">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>Loss of Sale</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'core:user_preferences' %}">
+                                    <i class="bi bi-gear"></i>
+                                    <span>User Preferences</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- System Administration Section -->
                     {% if user.is_staff %}
                     <li class="nav-item mt-3">
@@ -510,7 +840,7 @@
         </div>
 
         <!-- Main content -->
-        <div class="main-content">
+        <div class="main-content" id="main-content">
             {% block breadcrumbs %}
             {% endblock %}
             
@@ -560,7 +890,10 @@
     
     <!-- ApexCharts for Advanced Charts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    
+
+    <!-- Data Table Component JS -->
+    <script src="{% static 'core/js/data-table.js' %}"></script>
+
     <!-- Custom JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -594,14 +927,8 @@
                 }
             });
             
-            // Highlight active nav link
-            const currentPath = window.location.pathname;
-            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
-                }
-            });
-            
+            // Highlight active nav link (currentPath defined later for section navigation)
+
             // Dark mode toggle
             const darkModeToggle = document.getElementById('darkModeToggle');
             const darkModeIcon = darkModeToggle.querySelector('i');
@@ -649,21 +976,39 @@
             
             // Collapsible section navigation
             const sectionToggles = document.querySelectorAll('.nav-section-toggle');
+            const currentPath = window.location.pathname;
+
             sectionToggles.forEach(toggle => {
                 const sectionId = toggle.getAttribute('data-section');
                 const sectionContent = document.getElementById(sectionId);
                 const toggleIcon = toggle.querySelector('.toggle-icon');
 
-                // Load saved state from localStorage
+                // Check if current page is within this section
+                const sectionLinks = sectionContent.querySelectorAll('a.nav-sub-item');
+                let isCurrentSection = false;
+                sectionLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && currentPath.startsWith(href.split('?')[0])) {
+                        isCurrentSection = true;
+                        link.classList.add('active');
+                    }
+                });
+
+                // Load saved state from localStorage OR auto-expand if current section
                 const savedState = localStorage.getItem(`nav-section-${sectionId}`);
-                if (savedState === 'expanded') {
+                if (isCurrentSection || savedState === 'expanded') {
                     sectionContent.style.display = 'flex';
                     toggleIcon.style.transform = 'rotate(180deg)';
+                    // Save expanded state if it's the current section
+                    if (isCurrentSection) {
+                        localStorage.setItem(`nav-section-${sectionId}`, 'expanded');
+                    }
                 }
 
-                // Toggle section on click
+                // Toggle section on click - only toggle, don't auto-collapse
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation(); // Prevent event bubbling
                     const isVisible = sectionContent.style.display !== 'none';
 
                     if (isVisible) {

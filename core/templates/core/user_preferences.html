@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Floor Management System{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid py-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Settings</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-gear me-2"></i>
+                        User Preferences
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'core:user_preferences' %}">
+                        {% csrf_token %}
+
+                        <!-- Appearance Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="bi bi-palette me-2"></i>
+                            Appearance
+                        </h6>
+
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Theme</label>
+                                <select name="theme" class="form-select" id="themeSelect">
+                                    {% for value, label in theme_choices %}
+                                    <option value="{{ value }}" {% if preferences.theme == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Choose your preferred color scheme.</div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Font Size</label>
+                                <select name="font_size" class="form-select" id="fontSizeSelect">
+                                    {% for value, label in font_size_choices %}
+                                    <option value="{{ value }}" {% if preferences.font_size == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Adjust text size for readability.</div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Table Density</label>
+                                <select name="table_density" class="form-select" id="tableDensitySelect">
+                                    {% for value, label in table_density_choices %}
+                                    <option value="{{ value }}" {% if preferences.table_density == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Control row spacing in tables.</div>
+                            </div>
+                        </div>
+
+                        <!-- Theme Preview -->
+                        <div class="mb-4 p-3 border rounded" id="themePreview">
+                            <h6 class="fw-bold mb-2">Preview</h6>
+                            <p class="mb-2">This is how your selected theme will look.</p>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-primary btn-sm">Primary</button>
+                                <button type="button" class="btn btn-success btn-sm">Success</button>
+                                <button type="button" class="btn btn-warning btn-sm">Warning</button>
+                                <button type="button" class="btn btn-danger btn-sm">Danger</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Column A</th>
+                                            <th>Column B</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Sample Data</td>
+                                            <td>Sample Data</td>
+                                            <td><span class="badge bg-success">Active</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Navigation Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="bi bi-signpost me-2"></i>
+                            Navigation
+                        </h6>
+
+                        <div class="mb-4">
+                            <label class="form-label">Default Landing Page</label>
+                            <input type="text"
+                                   name="default_landing_page"
+                                   class="form-control"
+                                   value="{{ preferences.default_landing_page }}"
+                                   placeholder="e.g., core:home, hr:dashboard">
+                            <div class="form-text">URL name of the page to show after login. Leave empty for dashboard.</div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Notifications Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="bi bi-bell me-2"></i>
+                            Notifications
+                        </h6>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="emailNotifications"
+                                       name="email_notifications"
+                                       {% if preferences.email_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="emailNotifications">
+                                    Email Notifications
+                                </label>
+                            </div>
+                            <div class="form-text">Receive important notifications via email.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="desktopNotifications"
+                                       name="desktop_notifications"
+                                       {% if preferences.desktop_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="desktopNotifications">
+                                    Desktop Notifications
+                                </label>
+                            </div>
+                            <div class="form-text">Show browser notifications for real-time updates.</div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Save Button -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-2"></i>
+                                Save Preferences
+                            </button>
+
+                            <div class="text-muted small">
+                                Last updated: {{ preferences.updated_at|date:"M d, Y H:i" }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Column Preferences -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-table me-2"></i>
+                        Table Column Preferences
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Your column visibility preferences are saved per table view.
+                        You can reset them here if needed.
+                    </p>
+
+                    {% if preferences.table_columns_config %}
+                    <div class="list-group mb-3">
+                        {% for view_name, columns in preferences.table_columns_config.items %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ view_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ columns|length }} columns visible</small>
+                            </div>
+                            <form method="post" action="{% url 'core:reset_table_columns' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="view_name" value="{{ view_name }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <form method="post" action="{% url 'core:reset_table_columns' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning btn-sm w-100"
+                                onclick="return confirm('Reset all column preferences?')">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>
+                            Reset All Column Preferences
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-info-circle text-muted fs-3 d-block mb-2"></i>
+                        <p class="text-muted mb-0">No custom column configurations saved yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-lightning me-2"></i>
+                        Quick Links
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'core:home' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-house me-2"></i>
+                            Dashboard
+                        </a>
+                        <a href="{% url 'core:finance_dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-currency-dollar me-2"></i>
+                            Finance Dashboard
+                        </a>
+                        <a href="{% url 'hr:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-people me-2"></i>
+                            HR Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Live preview for theme changes
+    const themeSelect = document.getElementById('themeSelect');
+    const fontSizeSelect = document.getElementById('fontSizeSelect');
+    const tableDensitySelect = document.getElementById('tableDensitySelect');
+
+    themeSelect.addEventListener('change', function() {
+        // Remove all theme classes
+        document.body.classList.remove('theme-light', 'theme-dark', 'theme-high-contrast');
+        // Add selected theme class
+        document.body.classList.add('theme-' + this.value);
+    });
+
+    fontSizeSelect.addEventListener('change', function() {
+        document.body.classList.remove('ui-font-small', 'ui-font-normal', 'ui-font-large');
+        document.body.classList.add('ui-font-' + this.value);
+    });
+
+    tableDensitySelect.addEventListener('change', function() {
+        document.body.classList.remove('table-density-compact', 'table-density-normal', 'table-density-relaxed');
+        document.body.classList.add('table-density-' + this.value);
+    });
+});
+</script>
+{% endblock %}
