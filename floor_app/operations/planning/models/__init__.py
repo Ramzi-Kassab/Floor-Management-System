@@ -18,6 +18,12 @@ from .metrics import (
     WIPSnapshot,
     DeliveryForecast,
 )
+from .requirements import (
+    RequirementCategory,
+    RequirementTemplate,
+    JobRequirement,
+    TechnicalInstruction,
+)
 
 __all__ = [
     # Resource management
@@ -33,4 +39,9 @@ __all__ = [
     'JobMetrics',
     'WIPSnapshot',
     'DeliveryForecast',
+    # Requirements and instructions
+    'RequirementCategory',
+    'RequirementTemplate',
+    'JobRequirement',
+    'TechnicalInstruction',
 ]
