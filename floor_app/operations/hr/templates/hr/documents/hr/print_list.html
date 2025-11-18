@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document List - {{ date }}</title>
+    <style>
+        @media print {
+            .no-print { display: none; }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .subtitle {
+            margin-top: 5px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .status-verified { color: #28a745; font-weight: bold; }
+        .status-pending { color: #ffc107; font-weight: bold; }
+        .status-rejected { color: #dc3545; font-weight: bold; }
+        .status-expired { color: #dc3545; }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+        .print-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .summary {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+        }
+        .summary-item {
+            display: inline-block;
+            margin-right: 30px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn no-print" onclick="window.print()">
+        <i class="bi bi-printer"></i> Print
+    </button>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>Floor Management System</h1>
+        <div class="subtitle">Employee Document Report</div>
+        <div class="subtitle">Generated: {{ date|date:"F d, Y H:i" }}</div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+        <h3 style="margin-top: 0;">Document Summary</h3>
+        <div class="summary-item">
+            <strong>Total Documents:</strong> {{ documents.count }}
+        </div>
+        <div class="summary-item">
+            <strong>Verified:</strong> {{ stats.verified }}
+        </div>
+        <div class="summary-item">
+            <strong>Pending:</strong> {{ stats.pending }}
+        </div>
+        <div class="summary-item">
+            <strong>Expired:</strong> {{ stats.expired }}
+        </div>
+    </div>
+
+    <!-- Document List Table -->
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">#</th>
+                <th width="15%">Employee</th>
+                <th width="12%">Emp. No</th>
+                <th width="15%">Document Type</th>
+                <th width="20%">Title</th>
+                <th width="10%">Upload Date</th>
+                <th width="10%">Expiry Date</th>
+                <th width="13%">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in documents %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ doc.employee.get_full_name }}</td>
+                <td>{{ doc.employee.employee_no }}</td>
+                <td>{{ doc.get_document_type_display }}</td>
+                <td>{{ doc.title|truncatewords:5 }}</td>
+                <td>{{ doc.uploaded_at|date:"M d, Y" }}</td>
+                <td class="{% if doc.is_expired %}status-expired{% endif %}">
+                    {% if doc.expiry_date %}
+                        {{ doc.expiry_date|date:"M d, Y" }}
+                        {% if doc.is_expired %}(EXPIRED){% endif %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if doc.is_verified %}
+                        <span class="status-verified">Verified</span>
+                    {% elif doc.verification_status == 'REJECTED' %}
+                        <span class="status-rejected">Rejected</span>
+                    {% else %}
+                        <span class="status-pending">Pending</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 20px;">No documents found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>This is a computer-generated document. No signature required.</p>
+        <p>Floor Management System - HR Document Management Module</p>
+        <p>Page printed on {{ date|date:"F d, Y" }} at {{ date|date:"H:i" }}</p>
+    </div>
+
+    <script>
+        // Auto-print on load (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

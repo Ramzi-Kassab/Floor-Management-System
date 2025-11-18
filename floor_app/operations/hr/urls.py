@@ -2,7 +2,7 @@
 from django.urls import path
 from . import views_employee_wizard as views
 from . import views_department
-from .views import leave_views
+from .views import leave_views, document_views
 
 app_name = "hr"
 
@@ -99,6 +99,22 @@ urlpatterns = [
     # Leave Calendar & Dashboard
     path("leave/calendar/", leave_views.leave_calendar, name="leave_calendar"),
     path("leave/my-dashboard/", leave_views.my_leave_dashboard, name="my_leave_dashboard"),
+
+    # ========== Employee Document Management ==========
+    # Employee Self-Service Portal
+    path("documents/my-documents/", document_views.my_documents_dashboard, name="my_documents_dashboard"),
+    path("documents/upload/", document_views.employee_upload_document, name="employee_upload_document"),
+    path("documents/<int:pk>/view/", document_views.employee_view_document, name="employee_view_document"),
+    path("documents/<int:pk>/request-renewal/", document_views.employee_request_renewal, name="employee_request_renewal"),
+
+    # HR Administrative Portal
+    path("documents/hr/", document_views.hr_documents_dashboard, name="hr_documents_dashboard"),
+    path("documents/hr/upload/", document_views.hr_upload_document, name="hr_upload_document"),
+    path("documents/hr/expiry/", document_views.hr_expiry_dashboard, name="hr_expiry_dashboard"),
+    path("documents/hr/<int:pk>/", document_views.hr_document_detail, name="hr_document_detail"),
+    path("documents/hr/<int:pk>/verify/", document_views.hr_verify_document, name="hr_verify_document"),
+    path("documents/hr/bulk-actions/", document_views.hr_bulk_actions, name="hr_bulk_actions"),
+    path("documents/hr/print/", document_views.print_document_list, name="print_document_list"),
 
     # ========== Legacy/Deprecated URLs (redirect to new system) ==========
     path("employees/create/", views.employee_wizard_start, name="employee_create"),  # Redirect to wizard

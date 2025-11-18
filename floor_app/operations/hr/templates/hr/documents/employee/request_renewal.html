@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Document Renewal - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .renewal-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .renewal-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .original-doc-info {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #667eea;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="renewal-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-arrow-clockwise"></i> Request Document Renewal</h1>
+                <p class="text-muted">Upload a renewed version of your document</p>
+            </div>
+            <a href="{% url 'hr:employee_view_document' original_document.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="renewal-card">
+            <!-- Original Document Information -->
+            <div class="original-doc-info">
+                <h5><i class="bi bi-file-text"></i> Original Document</h5>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><strong>Title:</strong> {{ original_document.title }}</p>
+                        <p><strong>Type:</strong> {{ original_document.get_document_type_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Uploaded:</strong> {{ original_document.uploaded_at|date:"M d, Y" }}</p>
+                        {% if original_document.expiry_date %}
+                        <p>
+                            <strong>Expired:</strong>
+                            <span class="text-danger">{{ original_document.expiry_date|date:"M d, Y" }}</span>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Renewal Form -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Note:</strong> The renewed document will replace the expired version.
+                    The document type will remain the same, but you can update other details.
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                        Document Title <span class="text-danger">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                        Description
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.issue_date.id_for_label }}" class="form-label">
+                            New Issue Date
+                        </label>
+                        {{ form.issue_date }}
+                        {% if form.issue_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.issue_date.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.expiry_date.id_for_label }}" class="form-label">
+                            New Expiry Date
+                        </label>
+                        {{ form.expiry_date }}
+                        {% if form.expiry_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.expiry_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.issuing_authority.id_for_label }}" class="form-label">
+                        Issuing Authority
+                    </label>
+                    {{ form.issuing_authority }}
+                    {% if form.issuing_authority.errors %}
+                        <div class="invalid-feedback d-block">{{ form.issuing_authority.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.document_number.id_for_label }}" class="form-label">
+                        Document Number
+                    </label>
+                    {{ form.document_number }}
+                    {% if form.document_number.errors %}
+                        <div class="invalid-feedback d-block">{{ form.document_number.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.file.id_for_label }}" class="form-label">
+                        Upload Renewed Document <span class="text-danger">*</span>
+                    </label>
+                    {{ form.file }}
+                    {% if form.file.errors %}
+                        <div class="invalid-feedback d-block">{{ form.file.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        Accepted formats: PDF, JPG, PNG, DOC, DOCX (Max 10MB)
+                    </small>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'hr:employee_view_document' original_document.pk %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="submit-btn">
+                        <i class="bi bi-arrow-clockwise"></i> Submit Renewal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
