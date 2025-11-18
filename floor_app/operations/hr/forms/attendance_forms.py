@@ -9,9 +9,13 @@ from django.utils import timezone
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 
-from floor_app.operations.hr.models import (
-    HREmployee, Attendance, AttendanceStatus,
-    OvertimeRequest, OvertimeRequestStatus,
+from floor_app.operations.hr.models import HREmployee
+from floor_app.operations.hr.models.attendance import (
+    AttendanceRecord, AttendanceStatus,
+    OvertimeRequest, OvertimeStatus, OvertimeType
+)
+from floor_app.operations.hr.models.configuration import (
+    OvertimeConfiguration, AttendanceConfiguration,
     DelayIncident, DelayReason
 )
 
@@ -21,51 +25,54 @@ class AttendanceEntryForm(forms.ModelForm):
     Form for manual attendance entry (for employees without punch machines)
     """
     class Meta:
-        model = Attendance
+        model = AttendanceRecord
         fields = [
-            'employee', 'date', 'check_in_time', 'check_out_time',
-            'notes', 'location'
+            'employee', 'date', 'actual_start', 'actual_end',
+            'employee_notes', 'location_name', 'is_remote_work'
         ]
         widgets = {
             'employee': forms.Select(attrs={'class': 'form-select'}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'check_in_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'check_out_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'actual_start': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'actual_end': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'employee_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'location_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Office, Site, Remote, etc.'}),
+            'is_remote_work': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # Filter to employees without punch machines
+        # All employees can have manual entry based on configuration
         self.fields['employee'].queryset = HREmployee.objects.filter(
-            is_deleted=False,
-            has_punch_machine=False
+            is_deleted=False
         ).select_related('user').order_by('employee_no')
 
         # Set default date to today
         if not self.instance.pk:
             self.fields['date'].initial = timezone.now().date()
 
+        # Add help text from configuration
+        config = AttendanceConfiguration.get_active_config()
+        if config.require_supervisor_approval_manual_entry:
+            self.fields['employee_notes'].help_text = 'Note: Manual entries require supervisor approval'
+
     def clean(self):
         """Validate attendance entry"""
         cleaned_data = super().clean()
         employee = cleaned_data.get('employee')
         date = cleaned_data.get('date')
-        check_in = cleaned_data.get('check_in_time')
-        check_out = cleaned_data.get('check_out_time')
+        check_in = cleaned_data.get('actual_start')
+        check_out = cleaned_data.get('actual_end')
 
         if not all([employee, date, check_in]):
             return cleaned_data
 
-        # Check if employee has punch machine
-        if employee.has_punch_machine:
-            raise ValidationError(
-                f'{employee.get_full_name()} uses a punch machine. '
-                'Attendance is automatically recorded.'
-            )
+        # Check if manual entry is allowed
+        config = AttendanceConfiguration.get_active_config()
+        if not config.allow_manual_entry:
+            raise ValidationError('Manual attendance entry is not allowed by current policy.')
 
         # Validate date is not in future
         if date > timezone.now().date():
@@ -76,9 +83,10 @@ class AttendanceEntryForm(forms.ModelForm):
             raise ValidationError('Check-out time must be after check-in time.')
 
         # Check for duplicate entry
-        existing = Attendance.objects.filter(
+        existing = AttendanceRecord.objects.filter(
             employee=employee,
-            date=date
+            date=date,
+            is_deleted=False
         )
         if self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
@@ -132,30 +140,37 @@ class PunchMachineImportForm(forms.Form):
 class OvertimeRequestForm(forms.ModelForm):
     """
     Form for requesting overtime work approval
-    Based on Saudi labor law overtime regulations
+    Uses configurable overtime limits and rates
     """
+    start_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+        label='Start Time'
+    )
+    end_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+        label='End Time'
+    )
+
     class Meta:
         model = OvertimeRequest
         fields = [
-            'employee', 'date', 'start_time', 'end_time',
-            'reason', 'justification', 'expected_output',
-            'is_urgent', 'is_weekend_work'
+            'employee', 'date', 'overtime_type', 'reason',
+            'work_description'
         ]
         widgets = {
             'employee': forms.Select(attrs={'class': 'form-select'}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'start_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-            'end_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'overtime_type': forms.Select(attrs={'class': 'form-select'}),
             'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'justification': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'expected_output': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'is_urgent': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_weekend_work': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'work_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
+        # Get current configuration
+        config = OvertimeConfiguration.get_active_config()
 
         # If creating new request, set employee to current user
         if not self.instance.pk and self.user:
@@ -166,21 +181,39 @@ class OvertimeRequestForm(forms.ModelForm):
             except HREmployee.DoesNotExist:
                 pass
 
-        # Add help text for KSA regulations
-        self.fields['start_time'].help_text = 'KSA: Overtime max 3 hours/day, 90 hours/quarter'
-        self.fields['is_weekend_work'].help_text = 'KSA: Weekend work = 150% pay + compensatory day off'
+        # Add dynamic help text based on configuration
+        self.fields['overtime_type'].help_text = (
+            f'Regular OT: {config.regular_overtime_rate}x pay | '
+            f'Weekend: {config.weekend_overtime_rate}x pay | '
+            f'Holiday: {config.holiday_overtime_rate}x pay'
+        )
+        self.fields['date'].help_text = (
+            f'Max {config.max_days_advance_request} days in advance. '
+            f'{"Requires manager approval." if config.requires_manager_approval else ""}'
+        )
+
+        # Show overtime limits in form help
+        limits_help = (
+            f'Limits: {config.max_overtime_hours_per_day}h/day, '
+            f'{config.max_overtime_hours_per_week}h/week, '
+            f'{config.max_overtime_hours_per_quarter}h/quarter'
+        )
+        self.fields['reason'].help_text = limits_help
 
     def clean(self):
-        """Validate overtime request according to KSA labor law"""
+        """Validate overtime request according to configurable limits"""
         cleaned_data = super().clean()
         employee = cleaned_data.get('employee')
         date = cleaned_data.get('date')
         start_time = cleaned_data.get('start_time')
         end_time = cleaned_data.get('end_time')
-        is_weekend_work = cleaned_data.get('is_weekend_work')
+        overtime_type = cleaned_data.get('overtime_type')
 
         if not all([employee, date, start_time, end_time]):
             return cleaned_data
+
+        # Get configuration
+        config = OvertimeConfiguration.get_active_config()
 
         # Calculate overtime hours
         start_datetime = datetime.combine(date, start_time)
@@ -191,36 +224,70 @@ class OvertimeRequestForm(forms.ModelForm):
             end_datetime += timedelta(days=1)
 
         overtime_hours = (end_datetime - start_datetime).total_seconds() / 3600
-        cleaned_data['overtime_hours'] = Decimal(str(round(overtime_hours, 2)))
+        cleaned_data['planned_hours'] = Decimal(str(round(overtime_hours, 2)))
 
-        # KSA Labor Law Validation: Maximum 3 hours overtime per day
-        if overtime_hours > 3:
+        # Validate against daily limit
+        if overtime_hours > float(config.max_overtime_hours_per_day):
             raise ValidationError(
-                'Saudi labor law limits overtime to maximum 3 hours per day. '
+                f'Overtime policy limits overtime to maximum {config.max_overtime_hours_per_day} hours per day. '
                 f'Requested: {overtime_hours:.1f} hours.'
             )
 
-        # Check quarterly overtime limit (90 hours per quarter)
+        # Check weekly overtime limit
+        week_start = date - timedelta(days=7)
+        total_week_overtime = OvertimeRequest.objects.filter(
+            employee=employee,
+            date__gte=week_start,
+            date__lt=date,
+            status=OvertimeStatus.APPROVED,
+            is_deleted=False
+        ).aggregate(
+            total=models.Sum('planned_hours')
+        )['total'] or Decimal('0')
+
+        if total_week_overtime + Decimal(str(overtime_hours)) > config.max_overtime_hours_per_week:
+            raise ValidationError(
+                f'Overtime policy limits overtime to {config.max_overtime_hours_per_week} hours per week. '
+                f'Current week total: {total_week_overtime} hours. '
+                f'Requested: {overtime_hours} hours.'
+            )
+
+        # Check quarterly overtime limit
         quarter_start = date - timedelta(days=90)
         total_approved_overtime = OvertimeRequest.objects.filter(
             employee=employee,
             date__gte=quarter_start,
             date__lte=date,
-            status=OvertimeRequestStatus.APPROVED
+            status=OvertimeStatus.APPROVED,
+            is_deleted=False
         ).aggregate(
-            total=models.Sum('overtime_hours')
+            total=models.Sum('planned_hours')
         )['total'] or Decimal('0')
 
-        if total_approved_overtime + Decimal(str(overtime_hours)) > 90:
+        if total_approved_overtime + Decimal(str(overtime_hours)) > config.max_overtime_hours_per_quarter:
             raise ValidationError(
-                'Saudi labor law limits overtime to 90 hours per quarter. '
+                f'Overtime policy limits overtime to {config.max_overtime_hours_per_quarter} hours per quarter. '
                 f'Current quarter total: {total_approved_overtime} hours. '
                 f'Requested: {overtime_hours} hours.'
             )
 
-        # Validate future request (cannot be more than 30 days in advance)
-        if date > timezone.now().date() + timedelta(days=30):
-            raise ValidationError('Overtime requests cannot be made more than 30 days in advance.')
+        # Validate future request
+        max_advance_days = config.max_days_advance_request
+        if date > timezone.now().date() + timedelta(days=max_advance_days):
+            raise ValidationError(
+                f'Overtime requests cannot be made more than {max_advance_days} days in advance.'
+            )
+
+        # Validate retroactive requests
+        if date < timezone.now().date() and not config.allow_retroactive_requests:
+            raise ValidationError('Retroactive overtime requests are not allowed by current policy.')
+
+        # Set rate multiplier based on overtime type
+        cleaned_data['rate_multiplier'] = config.get_rate_for_overtime_type(overtime_type)
+
+        # Weekend work compensation
+        if overtime_type == OvertimeType.WEEKEND and config.weekend_work_requires_compensatory_day:
+            cleaned_data['is_compensatory_off'] = True
 
         return cleaned_data
 
@@ -234,7 +301,7 @@ class OvertimeApprovalForm(forms.Form):
         widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
         label='Decision'
     )
-    manager_notes = forms.CharField(
+    approval_notes = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         label='Manager Notes',
@@ -253,15 +320,24 @@ class OvertimeApprovalForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.overtime_request = overtime_request
 
+        # Get configuration for limits
+        config = OvertimeConfiguration.get_active_config()
+
         if overtime_request:
-            self.fields['approved_hours'].initial = overtime_request.overtime_hours
+            self.fields['approved_hours'].initial = overtime_request.planned_hours
+            self.fields['approved_hours'].help_text = (
+                f'Max {config.max_overtime_hours_per_day} hours/day per policy'
+            )
 
     def clean(self):
         """Validate approval decision"""
         cleaned_data = super().clean()
         action = cleaned_data.get('action')
-        notes = cleaned_data.get('manager_notes')
+        notes = cleaned_data.get('approval_notes')
         approved_hours = cleaned_data.get('approved_hours')
+
+        # Get configuration
+        config = OvertimeConfiguration.get_active_config()
 
         # Require notes for rejection
         if action == 'reject' and not notes:
@@ -272,9 +348,12 @@ class OvertimeApprovalForm(forms.Form):
             if not approved_hours or approved_hours <= 0:
                 raise ValidationError('Please specify approved overtime hours.')
 
-            # KSA: Max 3 hours per day
-            if approved_hours > 3:
-                raise ValidationError('Cannot approve more than 3 hours overtime per day (KSA law).')
+            # Check against policy limit
+            max_daily = float(config.max_overtime_hours_per_day)
+            if approved_hours > max_daily:
+                raise ValidationError(
+                    f'Cannot approve more than {max_daily} hours overtime per day (company policy).'
+                )
 
         return cleaned_data
 

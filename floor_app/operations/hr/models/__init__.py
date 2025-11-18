@@ -40,6 +40,12 @@ from .document import (
     DocumentType,
     DocumentStatus,
 )
+from .configuration import (
+    OvertimeConfiguration,
+    AttendanceConfiguration,
+    DelayIncident,
+    DelayReason,
+)
 
 # Import generic Address model (unified address table for entire system)
 from floor_app.operations.models import Address
