@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Positions - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .position-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #6366f1;
+        transition: all 0.2s;
+    }
+    .position-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .position-card.entry { border-left-color: #10b981; }
+    .position-card.junior { border-left-color: #0ea5e9; }
+    .position-card.senior { border-left-color: #8b5cf6; }
+    .position-card.supervisor { border-left-color: #f59e0b; }
+    .position-card.manager { border-left-color: #ef4444; }
+    .position-card.director { border-left-color: #dc2626; }
+
+    .filter-bar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-briefcase"></i> Positions</h1>
+            <p class="text-muted">Manage job positions and organizational structure</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:position_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Position
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h3 class="mb-0">{{ total_positions }}</h3>
+                <small>Total Positions</small>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <h3 class="mb-0">{{ active_positions }}</h3>
+                <small>Active Positions</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small">Search</label>
+                <input type="text" name="search" class="form-control form-control-sm"
+                       placeholder="Search positions..." value="{{ search }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Department</label>
+                <select class="form-select form-select-sm" name="department">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Level</label>
+                <select class="form-select form-select-sm" name="level">
+                    <option value="">All Levels</option>
+                    {% for value, label in position_levels %}
+                        <option value="{{ value }}" {% if request.GET.level == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Salary Grade</label>
+                <select class="form-select form-select-sm" name="grade">
+                    <option value="">All Grades</option>
+                    {% for value, label in salary_grades %}
+                        <option value="{{ value }}" {% if request.GET.grade == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Status</label>
+                <select class="form-select form-select-sm" name="active">
+                    <option value="">All</option>
+                    <option value="true" {% if request.GET.active == 'true' %}selected{% endif %}>Active</option>
+                    <option value="false" {% if request.GET.active == 'false' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small">&nbsp;</label>
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Positions List -->
+    {% if positions %}
+        {% for position in positions %}
+        <div class="position-card {{ position.position_level|lower }}">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h5 class="mb-1">
+                        <a href="{% url 'hr:position_detail' position.pk %}" class="text-decoration-none">
+                            {{ position.name }}
+                        </a>
+                    </h5>
+                    <div class="text-muted small">
+                        <i class="bi bi-building"></i> {{ position.department.name }}
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="small text-muted">Level</div>
+                    <span class="badge bg-primary">{{ position.get_position_level_display }}</span>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="small text-muted">Grade</div>
+                    <span class="badge bg-secondary">{{ position.get_salary_grade_display }}</span>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="small text-muted">Employees</div>
+                    <strong>{{ position.employee_count|default:0 }}</strong>
+                </div>
+
+                <div class="col-md-1">
+                    {% if position.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-1 text-end">
+                    <a href="{% url 'hr:position_detail' position.pk %}" class="btn btn-sm btn-outline-primary" title="View">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'hr:position_update' position.pk %}" class="btn btn-sm btn-outline-warning" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+            </div>
+
+            {% if position.description %}
+            <div class="mt-2 text-muted small">
+                {{ position.description|truncatewords:30 }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-briefcase" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">No positions found</p>
+            <a href="{% url 'hr:position_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create First Position
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

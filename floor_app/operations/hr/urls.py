@@ -2,6 +2,7 @@
 from django.urls import path
 from . import views_employee_wizard as views
 from . import views_department
+from . import views_position
 from .views import leave_views, document_views, attendance_views, training_views
 
 app_name = "hr"
@@ -65,8 +66,12 @@ urlpatterns = [
     path("departments/<int:pk>/delete/", views_department.DepartmentDeleteView.as_view(), name="department_delete"),
     
     # ========== Positions ==========
-    path("positions/", views.position_list, name="position_list"),  # You'll need to implement these
-    path("positions/api/", views.position_list_api, name="position_list_api"),
+    path("positions/", views_position.PositionListView.as_view(), name="position_list"),
+    path("positions/create/", views_position.PositionCreateView.as_view(), name="position_create"),
+    path("positions/<int:pk>/", views_position.PositionDetailView.as_view(), name="position_detail"),
+    path("positions/<int:pk>/edit/", views_position.PositionUpdateView.as_view(), name="position_update"),
+    path("positions/<int:pk>/delete/", views_position.PositionDeleteView.as_view(), name="position_delete"),
+    path("positions/api/", views_position.position_list_api, name="position_list_api"),
 
     # ========== API Endpoints for Wizard ==========
     path("api/departments/", views.department_list_api, name="department_list_api"),
