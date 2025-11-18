@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ policy.name }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+    .policy-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .policy-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    .info-item {
+        padding: 1rem;
+        background: white;
+        border-radius: 6px;
+        border-left: 3px solid #667eea;
+    }
+    .stat-box {
+        text-align: center;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="detail-container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{% url 'hr:leave_policy_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Policies
+            </a>
+        </div>
+
+        <!-- Policy Header -->
+        <div class="policy-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="bi bi-file-text"></i> {{ policy.name }}</h2>
+                    <p class="mb-0 opacity-75">{{ policy.get_leave_type_display }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if policy.is_active %}
+                        <span class="badge bg-success p-3" style="font-size: 1.1rem;">
+                            <i class="bi bi-check-circle"></i> Active
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary p-3" style="font-size: 1.1rem;">
+                            <i class="bi bi-x-circle"></i> Inactive
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Policy Body -->
+        <div class="policy-body">
+            <!-- Description -->
+            {% if policy.description %}
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle"></i> Policy Description</h6>
+                <p class="mb-0">{{ policy.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Basic Information -->
+            <div class="info-section">
+                <h5 class="mb-3"><i class="bi bi-gear"></i> Basic Configuration</h5>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <small class="text-muted d-block">Policy Code</small>
+                        <strong>{{ policy.code|default:"-" }}</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Leave Type</small>
+                        <strong>{{ policy.get_leave_type_display }}</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Payment Type</small>
+                        {% if policy.is_paid %}
+                            <strong class="text-success">Paid Leave</strong>
+                        {% else %}
+                            <strong class="text-danger">Unpaid Leave</strong>
+                        {% endif %}
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Affects Salary</small>
+                        {% if policy.affects_salary %}
+                            <strong class="text-warning">Yes</strong>
+                        {% else %}
+                            <strong class="text-success">No</strong>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entitlements & Limits -->
+            <div class="info-section">
+                <h5 class="mb-3"><i class="bi bi-calendar-check"></i> Entitlements & Limits</h5>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <small class="text-muted d-block">Annual Entitlement</small>
+                        <strong class="text-primary">{{ policy.annual_entitlement_days }} days</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Max Accumulation</small>
+                        <strong>{{ policy.max_accumulation_days|default:"-" }} days</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Carry Forward</small>
+                        <strong>{{ policy.carry_forward_days|default:"0" }} days</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Carry Forward Expiry</small>
+                        <strong>{{ policy.carry_forward_expiry_months|default:"-" }} months</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Max Consecutive Days</small>
+                        <strong>{{ policy.max_consecutive_days|default:"Unlimited" }} days</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Accrual Type</small>
+                        <strong>{{ policy.get_accrual_type_display }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirements & Rules -->
+            <div class="info-section">
+                <h5 class="mb-3"><i class="bi bi-shield-check"></i> Requirements & Rules</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" {% if policy.requires_approval %}checked{% endif %} disabled>
+                            <label class="form-check-label">
+                                Requires Approval
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" {% if policy.requires_documentation %}checked{% endif %} disabled>
+                            <label class="form-check-label">
+                                Requires Documentation
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" {% if policy.allow_half_day %}checked{% endif %} disabled>
+                            <label class="form-check-label">
+                                Allow Half Day
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" {% if policy.allow_encashment %}checked{% endif %} disabled>
+                            <label class="form-check-label">
+                                Allow Encashment
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item mb-2">
+                            <small class="text-muted d-block">Minimum Notice Days</small>
+                            <strong>{{ policy.min_notice_days|default:"0" }} days</strong>
+                        </div>
+                        <div class="info-item">
+                            <small class="text-muted d-block">Minimum Service Days</small>
+                            <strong>{{ policy.min_service_days|default:"0" }} days</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <h5 class="mb-3"><i class="bi bi-graph-up"></i> Usage Statistics (Current Year)</h5>
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="stat-box">
+                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ balances_count|default:0 }}</h3>
+                        <small class="text-muted">Employees Assigned</small>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-box">
+                        <i class="bi bi-file-earmark-text text-info" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ requests_count|default:0 }}</h3>
+                        <small class="text-muted">Total Requests</small>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-box">
+                        <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ pending_requests|default:0 }}</h3>
+                        <small class="text-muted">Pending Approval</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'hr:leave_policy_list' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+                <div>
+                    <a href="{% url 'hr:leave_policy_edit' policy.pk %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-pencil"></i> Edit Policy
+                    </a>
+                    <a href="{% url 'hr:leave_balance_dashboard' %}" class="btn btn-success btn-lg">
+                        <i class="bi bi-calendar-check"></i> View Balances
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

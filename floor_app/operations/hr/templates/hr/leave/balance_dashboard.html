@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Leave Balances - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .balance-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    .balance-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .balance-bar {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    .balance-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s;
+    }
+    .balance-bar-fill.low {
+        background: linear-gradient(90deg, #dc3545 0%, #c82333 100%);
+    }
+    .balance-bar-fill.medium {
+        background: linear-gradient(90deg, #ffc107 0%, #e0a800 100%);
+    }
+    .filter-bar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    .summary-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-calendar-check"></i> Leave Balances Dashboard</h1>
+            <p class="text-muted">Manage employee leave balances for year {{ year }}</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:leave_balance_initialize' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Initialize Balances
+            </a>
+            <a href="{% url 'hr:leave_policy_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-file-text"></i> Policies
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-box">
+        <h5 class="mb-3"><i class="bi bi-graph-up"></i> Summary Statistics</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <h2 class="mb-1">{{ total_accrued|floatformat:1 }}</h2>
+                    <small>Total Days Accrued</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <h2 class="mb-1">{{ total_used|floatformat:1 }}</h2>
+                    <small>Total Days Used</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <h2 class="mb-1">{{ total_pending|floatformat:1 }}</h2>
+                    <small>Total Days Pending</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label small">Year</label>
+                <select class="form-select form-select-sm" name="year">
+                    {% for y in years %}
+                        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small">Employee</label>
+                <select class="form-select form-select-sm" name="employee">
+                    <option value="">All Employees</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.id }}" {% if request.GET.employee == emp.id|stringformat:'s' %}selected{% endif %}>
+                            {{ emp.get_full_name }} ({{ emp.employee_no }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small">Department</label>
+                <select class="form-select form-select-sm" name="department">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:'s' %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <a href="{% url 'hr:leave_balance_dashboard' %}" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Balance List -->
+    {% if balances %}
+        {% regroup balances by employee as employee_balances %}
+
+        {% for employee_group in employee_balances %}
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="bi bi-person-badge"></i> {{ employee_group.grouper.get_full_name }}
+                    <span class="text-muted">{{ employee_group.grouper.employee_no }}</span>
+                    {% if employee_group.grouper.department %}
+                        | <small>{{ employee_group.grouper.department.name }}</small>
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for balance in employee_group.list %}
+                <div class="balance-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h6 class="mb-1">{{ balance.leave_policy.name }}</h6>
+                            <small class="text-muted">{{ balance.leave_policy.get_leave_type_display }}</small>
+                        </div>
+
+                        <div class="col-md-2 text-center">
+                            <strong class="text-primary">{{ balance.accrued|floatformat:1 }}</strong>
+                            <small class="d-block text-muted">Accrued</small>
+                        </div>
+
+                        <div class="col-md-2 text-center">
+                            <strong class="text-danger">{{ balance.used|floatformat:1 }}</strong>
+                            <small class="d-block text-muted">Used</small>
+                        </div>
+
+                        <div class="col-md-2 text-center">
+                            <strong class="text-warning">{{ balance.pending|floatformat:1 }}</strong>
+                            <small class="d-block text-muted">Pending</small>
+                        </div>
+
+                        <div class="col-md-2 text-center">
+                            <strong class="text-success">{{ balance.available|floatformat:1 }}</strong>
+                            <small class="d-block text-muted">Available</small>
+                        </div>
+
+                        <div class="col-md-1 text-end">
+                            <a href="{% url 'hr:leave_balance_adjust' balance.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Adjust
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="balance-bar">
+                        {% widthratio balance.used 1 balance.accrued as percent_used %}
+                        <div class="balance-bar-fill {% if percent_used > 80 %}low{% elif percent_used > 50 %}medium{% endif %}"
+                             style="width: {{ percent_used }}%;">
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ percent_used|default:0 }}% utilized</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i>
+            <h5 class="mt-3 text-muted">No leave balances found</h5>
+            <p class="text-muted">
+                {% if request.GET %}
+                    Try adjusting your filters or <a href="{% url 'hr:leave_balance_dashboard' %}">clear all filters</a>
+                {% else %}
+                    <a href="{% url 'hr:leave_balance_initialize' %}" class="btn btn-success mt-2">
+                        <i class="bi bi-plus-circle"></i> Initialize Leave Balances
+                    </a>
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
