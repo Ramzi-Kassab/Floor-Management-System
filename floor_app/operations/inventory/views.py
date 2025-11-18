@@ -14,7 +14,10 @@ from .models import (
     BOMHeader, BOMLine,
     InventoryTransaction,
 )
-from .forms import ItemForm, SerialUnitForm, BOMHeaderForm, TransactionForm, StockAdjustmentForm
+from .forms import (
+    ItemForm, SerialUnitForm, BOMHeaderForm, TransactionForm, StockAdjustmentForm,
+    BitDesignForm, BitDesignRevisionForm
+)
 
 
 # ============================================================================
@@ -237,6 +240,82 @@ class BitDesignRevisionDetailView(LoginRequiredMixin, DetailView):
         context['items'] = self.object.items.all()
         context['boms'] = self.object.boms.filter(is_active=True)
         context['serial_units'] = SerialUnit.objects.filter(current_mat=self.object)[:20]
+        return context
+
+
+class BitDesignCreateView(LoginRequiredMixin, CreateView):
+    model = BitDesign
+    form_class = BitDesignForm
+    template_name = 'inventory/bit_designs/form.html'
+    success_url = reverse_lazy('inventory:bitdesign_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, f'Bit Design "{form.instance.design_code}" created successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create Bit Design'
+        context['submit_text'] = 'Create Design'
+        return context
+
+
+class BitDesignUpdateView(LoginRequiredMixin, UpdateView):
+    model = BitDesign
+    form_class = BitDesignForm
+    template_name = 'inventory/bit_designs/form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:bitdesign_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+        messages.success(self.request, f'Bit Design "{form.instance.design_code}" updated successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Bit Design: {self.object.design_code}'
+        context['submit_text'] = 'Update Design'
+        return context
+
+
+class BitDesignRevisionCreateView(LoginRequiredMixin, CreateView):
+    model = BitDesignRevision
+    form_class = BitDesignRevisionForm
+    template_name = 'inventory/bit_designs/mat_form.html'
+    success_url = reverse_lazy('inventory:mat_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, f'MAT Number "{form.instance.mat_number}" created successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create MAT Number'
+        context['submit_text'] = 'Create MAT'
+        return context
+
+
+class BitDesignRevisionUpdateView(LoginRequiredMixin, UpdateView):
+    model = BitDesignRevision
+    form_class = BitDesignRevisionForm
+    template_name = 'inventory/bit_designs/mat_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:mat_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+        messages.success(self.request, f'MAT Number "{form.instance.mat_number}" updated successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit MAT Number: {self.object.mat_number}'
+        context['submit_text'] = 'Update MAT'
         return context
 
 

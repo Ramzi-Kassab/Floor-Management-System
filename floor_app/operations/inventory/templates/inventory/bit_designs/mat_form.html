@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .form-section h5 {
+        color: #6366f1;
+        margin-bottom: 1rem;
+    }
+    .checkbox-field {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-tag"></i> {{ title }}</h2>
+            <a href="{% url 'inventory:mat_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+
+        <div class="form-card">
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- MAT Identification -->
+                <div class="form-section">
+                    <h5><i class="bi bi-tag-fill me-2"></i>MAT Identification</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_mat_number" class="form-label">MAT Number *</label>
+                            {{ form.mat_number }}
+                            {% if form.mat_number.errors %}
+                                <div class="invalid-feedback d-block">{{ form.mat_number.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Full MAT identifier (e.g., HP-X123-M2)</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_revision_code" class="form-label">Revision Code *</label>
+                            {{ form.revision_code }}
+                            {% if form.revision_code.errors %}
+                                <div class="invalid-feedback d-block">{{ form.revision_code.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">e.g., M0, M1, M2</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_bit_design" class="form-label">Bit Design *</label>
+                            {{ form.bit_design }}
+                            {% if form.bit_design.errors %}
+                                <div class="invalid-feedback d-block">{{ form.bit_design.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Parent conceptual design</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_design_type" class="form-label">Design Type</label>
+                            {{ form.design_type }}
+                            {% if form.design_type.errors %}
+                                <div class="invalid-feedback d-block">{{ form.design_type.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Design family (HDBS, SMI, etc.)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status & Flags -->
+                <div class="form-section">
+                    <h5><i class="bi bi-flag me-2"></i>Status & Flags</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="checkbox-field">
+                                {{ form.is_temporary }}
+                                <label for="id_is_temporary" class="form-check-label">Is Temporary MAT</label>
+                            </div>
+                            <small class="form-text text-muted">Pending official L5 assignment</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="checkbox-field">
+                                {{ form.is_active }}
+                                <label for="id_is_active" class="form-check-label">Is Active</label>
+                            </div>
+                            <small class="form-text text-muted">Uncheck when superseded/obsolete</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_superseded_by" class="form-label">Superseded By</label>
+                        {{ form.superseded_by }}
+                        {% if form.superseded_by.errors %}
+                            <div class="invalid-feedback d-block">{{ form.superseded_by.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Newer revision that replaces this one</small>
+                    </div>
+                </div>
+
+                <!-- Dates & Change Tracking -->
+                <div class="form-section">
+                    <h5><i class="bi bi-calendar me-2"></i>Dates & Change Tracking</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_effective_date" class="form-label">Effective Date</label>
+                            {{ form.effective_date }}
+                            {% if form.effective_date.errors %}
+                                <div class="invalid-feedback d-block">{{ form.effective_date.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">When this revision becomes effective</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_obsolete_date" class="form-label">Obsolete Date</label>
+                            {{ form.obsolete_date }}
+                            {% if form.obsolete_date.errors %}
+                                <div class="invalid-feedback d-block">{{ form.obsolete_date.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">When this revision was obsoleted</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_change_reason" class="form-label">Change Reason</label>
+                        {{ form.change_reason }}
+                        {% if form.change_reason.errors %}
+                            <div class="invalid-feedback d-block">{{ form.change_reason.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Reason for this revision (ECN reference, design change, etc.)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ERP Integration -->
+                <div class="form-section">
+                    <h5><i class="bi bi-link-45deg me-2"></i>ERP Integration</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_erp_item_number" class="form-label">ERP Item Number</label>
+                            {{ form.erp_item_number }}
+                            {% if form.erp_item_number.errors %}
+                                <div class="invalid-feedback d-block">{{ form.erp_item_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_erp_bom_number" class="form-label">ERP BOM Number</label>
+                            {{ form.erp_bom_number }}
+                            {% if form.erp_bom_number.errors %}
+                                <div class="invalid-feedback d-block">{{ form.erp_bom_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_standard_cost" class="form-label">Standard Cost</label>
+                            {{ form.standard_cost }}
+                            {% if form.standard_cost.errors %}
+                                <div class="invalid-feedback d-block">{{ form.standard_cost.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_last_purchase_cost" class="form-label">Last Purchase Cost</label>
+                            {{ form.last_purchase_cost }}
+                            {% if form.last_purchase_cost.errors %}
+                                <div class="invalid-feedback d-block">{{ form.last_purchase_cost.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'inventory:mat_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> {{ submit_text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

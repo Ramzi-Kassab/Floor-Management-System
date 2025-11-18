@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .form-section h5 {
+        color: #6366f1;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-gear"></i> {{ title }}</h2>
+            <a href="{% url 'inventory:bitdesign_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+
+        <div class="form-card">
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h5><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_design_code" class="form-label">Design Code *</label>
+                            {{ form.design_code }}
+                            {% if form.design_code.errors %}
+                                <div class="invalid-feedback d-block">{{ form.design_code.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Unique design identifier (e.g., HP-X123)</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_name" class="form-label">Design Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_level" class="form-label">Design Level *</label>
+                        {{ form.level }}
+                        {% if form.level.errors %}
+                            <div class="invalid-feedback d-block">{{ form.level.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">L3 (Head Only), L4 (Body No Cutters), L5 (Complete)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Technical Specifications -->
+                <div class="form-section">
+                    <h5><i class="bi bi-tools me-2"></i>Technical Specifications</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_size_inches" class="form-label">Bit Size (inches)</label>
+                            {{ form.size_inches }}
+                            {% if form.size_inches.errors %}
+                                <div class="invalid-feedback d-block">{{ form.size_inches.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">e.g., 8.50, 12.25</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_connection_type" class="form-label">Connection Type</label>
+                            {{ form.connection_type }}
+                            {% if form.connection_type.errors %}
+                                <div class="invalid-feedback d-block">{{ form.connection_type.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">e.g., 4-1/2 API REG</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_blade_count" class="form-label">Blade Count</label>
+                            {{ form.blade_count }}
+                            {% if form.blade_count.errors %}
+                                <div class="invalid-feedback d-block">{{ form.blade_count.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_total_cutter_count" class="form-label">Total Cutter Count</label>
+                            {{ form.total_cutter_count }}
+                            {% if form.total_cutter_count.errors %}
+                                <div class="invalid-feedback d-block">{{ form.total_cutter_count.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">For L5 designs only</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_nozzle_count" class="form-label">Nozzle Count</label>
+                            {{ form.nozzle_count }}
+                            {% if form.nozzle_count.errors %}
+                                <div class="invalid-feedback d-block">{{ form.nozzle_count.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_tfa_range" class="form-label">TFA Range</label>
+                        {{ form.tfa_range }}
+                        {% if form.tfa_range.errors %}
+                            <div class="invalid-feedback d-block">{{ form.tfa_range.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Total Flow Area range (e.g., 0.50-0.75)</small>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'inventory:bitdesign_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> {{ submit_text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -15,11 +15,15 @@ urlpatterns = [
 
     # Bit Designs
     path('bit-designs/', views.BitDesignListView.as_view(), name='bitdesign_list'),
+    path('bit-designs/create/', views.BitDesignCreateView.as_view(), name='bitdesign_create'),
     path('bit-designs/<int:pk>/', views.BitDesignDetailView.as_view(), name='bitdesign_detail'),
+    path('bit-designs/<int:pk>/edit/', views.BitDesignUpdateView.as_view(), name='bitdesign_edit'),
 
     # MAT Revisions
     path('mats/', views.BitDesignRevisionListView.as_view(), name='mat_list'),
+    path('mats/create/', views.BitDesignRevisionCreateView.as_view(), name='mat_create'),
     path('mats/<int:pk>/', views.BitDesignRevisionDetailView.as_view(), name='mat_detail'),
+    path('mats/<int:pk>/edit/', views.BitDesignRevisionUpdateView.as_view(), name='mat_edit'),
 
     # Serial Units
     path('serial-units/', views.SerialUnitListView.as_view(), name='serialunit_list'),

@@ -179,9 +179,14 @@
                 </div>
             </div>
             <div class="col-auto">
-                <a href="{% url 'inventory:mat_list' %}" class="btn btn-light">
-                    <i class="bi bi-arrow-left me-2"></i>Back to List
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:mat_list' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                    <a href="{% url 'inventory:mat_edit' mat.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                </div>
             </div>
         </div>
     </div>
