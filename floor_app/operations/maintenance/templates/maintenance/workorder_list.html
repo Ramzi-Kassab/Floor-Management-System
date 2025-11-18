@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Work Orders{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Work Orders</h1>
+        <a href="{% url 'maintenance:workorder_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Work Order
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <div class="btn-group w-100">
+                        <a href="{% url 'maintenance:workorder_list' %}{% if type_filter %}?type={{ type_filter }}{% endif %}" class="btn btn-{% if not status_filter %}primary{% else %}outline-primary{% endif %} btn-sm">All</a>
+                        <a href="?status=PLANNED{% if type_filter %}&type={{ type_filter }}{% endif %}" class="btn btn-{% if status_filter == 'PLANNED' %}secondary{% else %}outline-secondary{% endif %} btn-sm">Planned</a>
+                        <a href="?status=ASSIGNED{% if type_filter %}&type={{ type_filter }}{% endif %}" class="btn btn-{% if status_filter == 'ASSIGNED' %}info{% else %}outline-info{% endif %} btn-sm">Assigned</a>
+                        <a href="?status=IN_PROGRESS{% if type_filter %}&type={{ type_filter }}{% endif %}" class="btn btn-{% if status_filter == 'IN_PROGRESS' %}warning{% else %}outline-warning{% endif %} btn-sm">In Progress</a>
+                        <a href="?status=WAITING_PARTS{% if type_filter %}&type={{ type_filter }}{% endif %}" class="btn btn-{% if status_filter == 'WAITING_PARTS' %}danger{% else %}outline-danger{% endif %} btn-sm">Waiting Parts</a>
+                        <a href="?status=COMPLETED{% if type_filter %}&type={{ type_filter }}{% endif %}" class="btn btn-{% if status_filter == 'COMPLETED' %}success{% else %}outline-success{% endif %} btn-sm">Completed</a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Type</label>
+                    <div class="btn-group w-100">
+                        <a href="{% url 'maintenance:workorder_list' %}{% if status_filter %}?status={{ status_filter }}{% endif %}" class="btn btn-{% if not type_filter %}primary{% else %}outline-primary{% endif %} btn-sm">All</a>
+                        <a href="?type=PREVENTIVE{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-{% if type_filter == 'PREVENTIVE' %}info{% else %}outline-info{% endif %} btn-sm">Preventive</a>
+                        <a href="?type=CORRECTIVE{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-{% if type_filter == 'CORRECTIVE' %}warning{% else %}outline-warning{% endif %} btn-sm">Corrective</a>
+                        <a href="?type=EMERGENCY{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-{% if type_filter == 'EMERGENCY' %}danger{% else %}outline-danger{% endif %} btn-sm">Emergency</a>
+                        <a href="?type=INSPECTION{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-{% if type_filter == 'INSPECTION' %}secondary{% else %}outline-secondary{% endif %} btn-sm">Inspection</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Orders Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>WO #</th>
+                            <th>Asset</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assigned To</th>
+                            <th>Planned End</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for wo in work_orders %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'maintenance:workorder_detail' wo.work_order_number %}" class="fw-bold">
+                                    {{ wo.work_order_number }}
+                                </a>
+                            </td>
+                            <td>{{ wo.asset.asset_code }}</td>
+                            <td>{{ wo.title|truncatechars:35 }}</td>
+                            <td>
+                                <span class="badge bg-{% if wo.work_order_type == 'EMERGENCY' %}danger{% elif wo.work_order_type == 'CORRECTIVE' %}warning{% elif wo.work_order_type == 'PREVENTIVE' %}info{% else %}secondary{% endif %}">
+                                    {{ wo.get_work_order_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if wo.priority == 'CRITICAL' %}danger{% elif wo.priority == 'HIGH' %}warning{% elif wo.priority == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                                    {{ wo.priority }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if wo.status == 'COMPLETED' %}success{% elif wo.status == 'IN_PROGRESS' %}warning{% elif wo.status == 'WAITING_PARTS' %}danger{% elif wo.status == 'ASSIGNED' %}info{% else %}secondary{% endif %}">
+                                    {{ wo.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ wo.assigned_to|default:"-" }}</td>
+                            <td>{{ wo.planned_end|date:"Y-m-d"|default:"-" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'maintenance:workorder_detail' wo.work_order_number %}" class="btn btn-outline-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if wo.status == 'PLANNED' %}
+                                    <a href="{% url 'maintenance:workorder_assign' wo.work_order_number %}" class="btn btn-outline-warning" title="Assign">
+                                        <i class="fas fa-user-plus"></i>
+                                    </a>
+                                    {% elif wo.status == 'IN_PROGRESS' or wo.status == 'ASSIGNED' %}
+                                    <a href="{% url 'maintenance:workorder_complete' wo.work_order_number %}" class="btn btn-outline-success" title="Complete">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">No work orders found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if work_orders.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if work_orders.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ work_orders.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+            {% for num in work_orders.paginator.page_range %}
+            {% if work_orders.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > work_orders.number|add:'-3' and num < work_orders.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if work_orders.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ work_orders.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

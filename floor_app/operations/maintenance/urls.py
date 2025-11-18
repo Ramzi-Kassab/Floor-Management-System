@@ -1,5 +1,5 @@
 """
-URL configuration for Maintenance & Asset Management module.
+URL routing for Maintenance module.
 """
 from django.urls import path
 from . import views
@@ -9,45 +9,51 @@ app_name = 'maintenance'
 urlpatterns = [
     # Dashboard
     path('', views.dashboard, name='dashboard'),
-    path('api/stats/', views.api_dashboard_stats, name='api_stats'),
 
     # Assets
-    path('assets/', views.AssetListView.as_view(), name='asset_list'),
-    path('assets/create/', views.AssetCreateView.as_view(), name='asset_create'),
-    path('assets/<int:pk>/', views.AssetDetailView.as_view(), name='asset_detail'),
-    path('assets/<int:pk>/edit/', views.AssetUpdateView.as_view(), name='asset_edit'),
-    path('assets/<int:pk>/qr/', views.asset_qr_generate, name='asset_qr'),
-    path('assets/scan/<str:token>/', views.asset_scan, name='asset_scan'),
+    path('assets/', views.asset_list, name='asset_list'),
+    path('assets/create/', views.asset_create, name='asset_create'),
+    path('assets/<str:asset_code>/', views.asset_detail, name='asset_detail'),
+    path('assets/<str:asset_code>/edit/', views.asset_edit, name='asset_edit'),
+
+    # QR Code Handler
+    path('qr/<str:qr_token>/', views.asset_qr, name='asset_qr'),
 
     # Maintenance Requests
-    path('requests/', views.MaintenanceRequestListView.as_view(), name='request_list'),
-    path('requests/create/', views.MaintenanceRequestCreateView.as_view(), name='request_create'),
-    path('requests/<int:pk>/approve/', views.request_approve, name='request_approve'),
-    path('requests/<int:pk>/reject/', views.request_reject, name='request_reject'),
-    path('requests/<int:pk>/convert/', views.request_convert_to_wo, name='request_convert'),
+    path('requests/', views.request_list, name='request_list'),
+    path('requests/create/', views.request_create, name='request_create'),
+    path('requests/<int:pk>/', views.request_detail, name='request_detail'),
+    path('requests/<int:pk>/review/', views.request_review, name='request_review'),
+    path('requests/<int:pk>/convert/', views.request_convert_to_wo, name='request_convert_to_wo'),
 
     # Work Orders
-    path('work-orders/', views.WorkOrderListView.as_view(), name='work_order_list'),
-    path('work-orders/create/', views.WorkOrderCreateView.as_view(), name='work_order_create'),
-    path('work-orders/<int:pk>/', views.WorkOrderDetailView.as_view(), name='work_order_detail'),
-    path('work-orders/<int:pk>/start/', views.work_order_start, name='work_order_start'),
-    path('work-orders/<int:pk>/complete/', views.work_order_complete, name='work_order_complete'),
+    path('workorders/', views.workorder_list, name='workorder_list'),
+    path('workorders/create/', views.workorder_create, name='workorder_create'),
+    path('workorders/<str:wo_number>/', views.workorder_detail, name='workorder_detail'),
+    path('workorders/<str:wo_number>/edit/', views.workorder_edit, name='workorder_edit'),
+    path('workorders/<str:wo_number>/assign/', views.workorder_assign, name='workorder_assign'),
+    path('workorders/<str:wo_number>/complete/', views.workorder_complete, name='workorder_complete'),
+    path('workorders/<str:wo_number>/add-note/', views.workorder_add_note, name='workorder_add_note'),
+    path('workorders/<str:wo_number>/add-part/', views.workorder_add_part, name='workorder_add_part'),
 
     # Preventive Maintenance
-    path('pm/plans/', views.PMPlanListView.as_view(), name='pm_plan_list'),
-    path('pm/calendar/', views.pm_calendar, name='pm_calendar'),
-    path('pm/tasks/', views.PMTaskListView.as_view(), name='pm_task_list'),
-    path('pm/tasks/<int:pk>/start/', views.pm_task_start, name='pm_task_start'),
+    path('pm/', views.pm_calendar, name='pm_calendar'),
+    path('pm/templates/', views.pm_template_list, name='pm_template_list'),
+    path('pm/tasks/', views.pm_task_list, name='pm_task_list'),
+    path('pm/tasks/<int:pk>/', views.pm_task_detail, name='pm_task_detail'),
     path('pm/tasks/<int:pk>/complete/', views.pm_task_complete, name='pm_task_complete'),
 
-    # Downtime
-    path('downtime/', views.DowntimeListView.as_view(), name='downtime_list'),
-    path('downtime/create/', views.DowntimeCreateView.as_view(), name='downtime_create'),
-    path('downtime/<int:pk>/end/', views.downtime_end, name='downtime_end'),
-    path('downtime/lost-sales/', views.lost_sales_list, name='lost_sales_list'),
+    # Downtime & Impact
+    path('downtime/', views.downtime_list, name='downtime_list'),
+    path('downtime/create/', views.downtime_create, name='downtime_create'),
+    path('downtime/<int:pk>/', views.downtime_detail, name='downtime_detail'),
+    path('downtime/<int:pk>/add-impact/', views.production_impact_create, name='production_impact_create'),
+    path('downtime/impact/', views.downtime_impact, name='downtime_impact'),
 
-    # Settings
-    path('settings/', views.settings_dashboard, name='settings'),
-    path('settings/categories/', views.CategoryListView.as_view(), name='category_list'),
-    path('settings/locations/', views.LocationListView.as_view(), name='location_list'),
+    # Reports
+    path('reports/', views.reports_dashboard, name='reports_dashboard'),
+
+    # API Endpoints
+    path('api/assets/search/', views.api_asset_search, name='api_asset_search'),
+    path('api/dashboard-stats/', views.api_dashboard_stats, name='api_dashboard_stats'),
 ]

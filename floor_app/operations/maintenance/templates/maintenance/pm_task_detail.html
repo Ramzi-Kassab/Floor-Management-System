@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}PM Task #{{ task.pk }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">PM Task #{{ task.pk }}</h1>
+            <p class="text-muted">{{ task.schedule.pm_template.name }}</p>
+        </div>
+        <div>
+            {% if task.status == 'SCHEDULED' or task.status == 'IN_PROGRESS' %}
+            <a href="{% url 'maintenance:pm_task_complete' task.pk %}" class="btn btn-success">
+                <i class="fas fa-check"></i> Complete Task
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Task Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Asset</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'maintenance:asset_detail' task.schedule.asset.asset_code %}">
+                                {{ task.schedule.asset.asset_code }} - {{ task.schedule.asset.name }}
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">PM Template</dt>
+                        <dd class="col-sm-8">{{ task.schedule.pm_template.name }}</dd>
+
+                        <dt class="col-sm-4">Scheduled Date</dt>
+                        <dd class="col-sm-8">{{ task.scheduled_date }}</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{% if task.status == 'COMPLETED' %}success{% elif task.status == 'IN_PROGRESS' %}warning{% elif task.status == 'OVERDUE' %}danger{% else %}info{% endif %} fs-6">
+                                {{ task.get_status_display }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Performed By</dt>
+                        <dd class="col-sm-8">{{ task.performed_by|default:"-" }}</dd>
+
+                        <dt class="col-sm-4">Actual Start</dt>
+                        <dd class="col-sm-8">{{ task.actual_start|date:"Y-m-d H:i"|default:"-" }}</dd>
+
+                        <dt class="col-sm-4">Actual End</dt>
+                        <dd class="col-sm-8">{{ task.actual_end|date:"Y-m-d H:i"|default:"-" }}</dd>
+
+                        <dt class="col-sm-4">Duration</dt>
+                        <dd class="col-sm-8">{% if task.duration_minutes %}{{ task.duration_minutes }} minutes{% else %}-{% endif %}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- PM Instructions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">PM Instructions</h5>
+                </div>
+                <div class="card-body">
+                    {% if task.schedule.pm_template.instructions %}
+                    <div class="mb-3">
+                        {{ task.schedule.pm_template.instructions|linebreaks }}
+                    </div>
+                    {% endif %}
+
+                    {% if task.schedule.pm_template.safety_notes %}
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Safety Notes</h6>
+                        {{ task.schedule.pm_template.safety_notes|linebreaks }}
+                    </div>
+                    {% endif %}
+
+                    {% if task.schedule.pm_template.tools_required %}
+                    <h6>Tools Required</h6>
+                    <p>{{ task.schedule.pm_template.tools_required }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if task.notes or task.findings %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Notes & Findings</h5>
+                </div>
+                <div class="card-body">
+                    {% if task.notes %}
+                    <h6>Notes</h6>
+                    <p>{{ task.notes|linebreaks }}</p>
+                    {% endif %}
+
+                    {% if task.findings %}
+                    <h6>Findings</h6>
+                    <div class="alert alert-info">
+                        {{ task.findings|linebreaks }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Template Info</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-7">Frequency</dt>
+                        <dd class="col-5">{{ task.schedule.pm_template.get_frequency_type_display }}</dd>
+
+                        <dt class="col-7">Interval</dt>
+                        <dd class="col-5">{{ task.schedule.pm_template.frequency_days }} days</dd>
+
+                        <dt class="col-7">Est. Duration</dt>
+                        <dd class="col-5">{{ task.schedule.pm_template.estimated_duration_minutes }} min</dd>
+
+                        <dt class="col-7">Skill Level</dt>
+                        <dd class="col-5">{{ task.schedule.pm_template.get_skill_level_required_display }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if task.work_order %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Follow-up Work Order</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'maintenance:workorder_detail' task.work_order.work_order_number %}" class="btn btn-outline-primary w-100">
+                        {{ task.work_order.work_order_number }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

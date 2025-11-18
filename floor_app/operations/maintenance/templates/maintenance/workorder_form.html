@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <h1 class="h3">{{ title }}</h1>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Please correct the errors below.</strong>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Core Info -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Core Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Asset *</label>
+                                {{ form.asset }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Title *</label>
+                                {{ form.title }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Type *</label>
+                                {{ form.work_order_type }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Priority *</label>
+                                {{ form.priority }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Status *</label>
+                                {{ form.status }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduling -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Scheduling</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Planned Start</label>
+                                {{ form.planned_start }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Planned End</label>
+                                {{ form.planned_end }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Assigned To</label>
+                            {{ form.assigned_to }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Problem Analysis -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Problem Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Problem Description</label>
+                            {{ form.problem_description }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Failure Mode</label>
+                            {{ form.failure_mode }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Root Cause Category</label>
+                                {{ form.root_cause_category }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Root Cause Detail</label>
+                            {{ form.root_cause_detail }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solution -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Solution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Solution Summary</label>
+                            {{ form.solution_summary }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Work Performed</label>
+                            {{ form.work_performed }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Recommendations</label>
+                            {{ form.recommendations }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Costs -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Costs</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Labor Hours</label>
+                            {{ form.labor_hours }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Labor Cost</label>
+                            {{ form.labor_cost }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Parts Cost</label>
+                            {{ form.parts_cost }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">External Cost</label>
+                            {{ form.external_cost }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flags -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Flags</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            {{ form.requires_shutdown }}
+                            <label class="form-check-label">Requires Shutdown</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            {{ form.safety_permit_required }}
+                            <label class="form-check-label">Safety Permit Required</label>
+                        </div>
+                        <div class="form-check">
+                            {{ form.contractor_involved }}
+                            <label class="form-check-label">Contractor Involved</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-save"></i> Save Work Order
+                        </button>
+                        <a href="{% url 'maintenance:workorder_list' %}" class="btn btn-outline-secondary w-100">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, .form-select {
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}

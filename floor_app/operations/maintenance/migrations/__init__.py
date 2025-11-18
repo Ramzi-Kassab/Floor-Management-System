@@ -1,1 +1,1 @@
-# Maintenance module migrations
+# Migrations package

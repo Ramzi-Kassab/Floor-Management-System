@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <h1 class="h3">Maintenance Reports & Analytics</h1>
+    </div>
+
+    <!-- Downtime Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Downtime Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h3 class="text-danger">{{ downtime_summary.total_events }}</h3>
+                                <small class="text-muted">Total Events</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h3 class="text-warning">{{ downtime_summary.total_hours }}</h3>
+                                <small class="text-muted">Total Hours</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h3 class="text-info">{{ downtime_summary.avg_hours }}</h3>
+                                <small class="text-muted">Avg Hours/Event</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h3 class="text-success">{{ downtime_summary.planned_events }}</h3>
+                                <small class="text-muted">Planned Events</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h3 class="text-danger">{{ downtime_summary.unplanned_events }}</h3>
+                                <small class="text-muted">Unplanned Events</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Impact -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Financial Impact Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-danger">{{ impact_summary.total_revenue_at_risk|floatformat:2 }}</h3>
+                                <small class="text-muted">Revenue at Risk (SAR)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-dark">{{ impact_summary.total_lost_revenue|floatformat:2 }}</h3>
+                                <small class="text-muted">Lost Revenue (SAR)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-warning">{{ impact_summary.total_delayed_revenue|floatformat:2 }}</h3>
+                                <small class="text-muted">Delayed Revenue (SAR)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-info">{{ impact_summary.total_delay_hours }}</h3>
+                                <small class="text-muted">Total Delay Hours</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warranty Expiring -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Assets with Warranty Expiring Soon (30 days)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Asset Code</th>
+                            <th>Name</th>
+                            <th>Warranty Expires</th>
+                            <th>Days Left</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in warranty_expiring %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'maintenance:asset_detail' asset.asset_code %}">
+                                    {{ asset.asset_code }}
+                                </a>
+                            </td>
+                            <td>{{ asset.name }}</td>
+                            <td>{{ asset.warranty_expires }}</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    {{ asset.warranty_expires|timeuntil }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-success py-3">
+                                <i class="fas fa-check-circle"></i> No warranties expiring soon
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Report Links</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:downtime_impact' %}" class="btn btn-outline-danger w-100 mb-2">
+                        <i class="fas fa-chart-bar"></i> Production Impact Analysis
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:pm_calendar' %}" class="btn btn-outline-info w-100 mb-2">
+                        <i class="fas fa-calendar"></i> PM Schedule
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:asset_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-cogs"></i> All Assets
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'maintenance:workorder_list' %}" class="btn btn-outline-warning w-100 mb-2">
+                        <i class="fas fa-clipboard-list"></i> All Work Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Review Request: {{ request_obj.request_number }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <h1 class="h3">Review Maintenance Request</h1>
+        <p class="text-muted">{{ request_obj.request_number }} - {{ request_obj.title }}</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <!-- Request Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Request Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Asset</dt>
+                        <dd class="col-sm-8">
+                            {% if request_obj.asset %}
+                            {{ request_obj.asset.asset_code }} - {{ request_obj.asset.name }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Priority</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{% if request_obj.priority == 'CRITICAL' %}danger{% elif request_obj.priority == 'HIGH' %}warning{% else %}info{% endif %}">
+                                {{ request_obj.priority }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Requested By</dt>
+                        <dd class="col-sm-8">{{ request_obj.requested_by|default:"-" }}</dd>
+
+                        <dt class="col-sm-4">Department</dt>
+                        <dd class="col-sm-8">{{ request_obj.department|default:"-" }}</dd>
+
+                        <dt class="col-sm-4">Created</dt>
+                        <dd class="col-sm-8">{{ request_obj.created_at|date:"Y-m-d H:i" }}</dd>
+                    </dl>
+
+                    <hr>
+
+                    <h6>Description</h6>
+                    <div class="bg-light p-3 rounded">
+                        {{ request_obj.description|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Review Decision</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Decision *</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="status" value="APPROVED" id="approve" {% if form.status.value == 'APPROVED' %}checked{% endif %}>
+                                <label class="btn btn-outline-success" for="approve">
+                                    <i class="fas fa-check"></i> Approve
+                                </label>
+
+                                <input type="radio" class="btn-check" name="status" value="REJECTED" id="reject" {% if form.status.value == 'REJECTED' %}checked{% endif %}>
+                                <label class="btn btn-outline-danger" for="reject">
+                                    <i class="fas fa-times"></i> Reject
+                                </label>
+
+                                <input type="radio" class="btn-check" name="status" value="UNDER_REVIEW" id="review" {% if form.status.value == 'UNDER_REVIEW' %}checked{% endif %}>
+                                <label class="btn btn-outline-warning" for="review">
+                                    <i class="fas fa-clock"></i> Under Review
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="rejection-reason-group" style="display:none;">
+                            <label class="form-label">Rejection Reason *</label>
+                            {{ form.rejection_reason }}
+                            <small class="text-muted">Explain why this request is being rejected</small>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'maintenance:request_detail' request_obj.pk %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            {% if request_obj.asset %}
+            <!-- Asset Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Asset Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Code</dt>
+                        <dd class="col-6">{{ request_obj.asset.asset_code }}</dd>
+
+                        <dt class="col-6">Status</dt>
+                        <dd class="col-6">
+                            <span class="badge bg-{% if request_obj.asset.status == 'IN_SERVICE' %}success{% else %}warning{% endif %}">
+                                {{ request_obj.asset.get_status_display }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-6">Criticality</dt>
+                        <dd class="col-6">{{ request_obj.asset.criticality }}</dd>
+
+                        <dt class="col-6">Location</dt>
+                        <dd class="col-6">{{ request_obj.asset.location|default:"-" }}</dd>
+
+                        <dt class="col-6">Open WOs</dt>
+                        <dd class="col-6">{{ request_obj.asset.open_work_orders_count }}</dd>
+                    </dl>
+                    <hr>
+                    <a href="{% url 'maintenance:asset_detail' request_obj.asset.asset_code %}" class="btn btn-sm btn-outline-primary w-100">
+                        View Full Asset Details
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Guidelines -->
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6>Review Guidelines</h6>
+                    <ul class="small mb-0">
+                        <li><strong>APPROVE</strong> if the request is valid and actionable</li>
+                        <li><strong>REJECT</strong> if the request is invalid, duplicate, or not needed</li>
+                        <li><strong>UNDER REVIEW</strong> if more information is needed</li>
+                        <li>Consider asset criticality and priority</li>
+                        <li>Check for duplicate requests</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusInputs = document.querySelectorAll('input[name="status"]');
+    const rejectionGroup = document.getElementById('rejection-reason-group');
+
+    function toggleRejectionReason() {
+        const selectedStatus = document.querySelector('input[name="status"]:checked');
+        if (selectedStatus && selectedStatus.value === 'REJECTED') {
+            rejectionGroup.style.display = 'block';
+        } else {
+            rejectionGroup.style.display = 'none';
+        }
+    }
+
+    statusInputs.forEach(input => {
+        input.addEventListener('change', toggleRejectionReason);
+    });
+
+    toggleRejectionReason();
+});
+</script>
+{% endblock %}

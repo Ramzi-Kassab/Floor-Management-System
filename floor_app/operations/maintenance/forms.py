@@ -1,145 +1,277 @@
 """
-Forms for Maintenance & Asset Management module.
+Forms for Maintenance module.
 """
 from django import forms
+from django.utils import timezone
 from .models import (
-    Asset, AssetDocument, AssetCategory, AssetLocation,
-    MaintenanceRequest, WorkOrder,
-    DowntimeEvent, PMTask,
+    Asset, AssetCategory, AssetLocation, AssetDocument,
+    PMTemplate, PMSchedule, PMTask,
+    MaintenanceRequest, MaintenanceWorkOrder, WorkOrderNote, WorkOrderPart,
+    DowntimeEvent, ProductionImpact, LostSalesRecord
 )
 
 
 class AssetForm(forms.ModelForm):
-    """Form for creating/updating assets."""
+    """Form for creating/editing assets."""
 
     class Meta:
         model = Asset
         fields = [
-            'asset_code', 'name', 'description',
-            'category', 'location', 'parent_asset',
-            'manufacturer', 'model_number', 'serial_number',
-            'status', 'criticality', 'is_critical_production_asset',
-            'installation_date', 'warranty_expiry_date',
-            'purchase_date', 'purchase_cost', 'replacement_cost',
-            'erp_asset_number', 'specifications', 'notes',
+            'asset_code', 'name', 'description', 'category', 'location',
+            'status', 'criticality', 'is_critical',
+            'manufacturer', 'model_number', 'serial_number', 'year_manufactured',
+            'purchase_date', 'purchase_cost', 'warranty_expires', 'vendor',
+            'erp_asset_number', 'installation_date', 'responsible_department',
+            'primary_operator', 'meter_reading', 'meter_unit',
+            'requires_certification', 'has_safety_lockout',
+            'specifications', 'notes'
         ]
         widgets = {
-            'asset_code': forms.TextInput(attrs={'class': 'form-control'}),
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'category': forms.Select(attrs={'class': 'form-select'}),
-            'location': forms.Select(attrs={'class': 'form-select'}),
-            'parent_asset': forms.Select(attrs={'class': 'form-select'}),
-            'manufacturer': forms.TextInput(attrs={'class': 'form-control'}),
-            'model_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'serial_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
-            'criticality': forms.Select(attrs={'class': 'form-select'}),
-            'is_critical_production_asset': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'installation_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'warranty_expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'purchase_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'replacement_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'erp_asset_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'specifications': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'notes': forms.Textarea(attrs={'rows': 3}),
+            'specifications': forms.Textarea(attrs={'rows': 4}),
+            'purchase_date': forms.DateInput(attrs={'type': 'date'}),
+            'warranty_expires': forms.DateInput(attrs={'type': 'date'}),
+            'installation_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Filter active categories and locations
-        self.fields['category'].queryset = AssetCategory.objects.filter(is_deleted=False)
-        self.fields['location'].queryset = AssetLocation.objects.filter(is_deleted=False, is_active=True)
-        self.fields['parent_asset'].queryset = Asset.objects.filter(is_deleted=False)
-        self.fields['parent_asset'].required = False
+    def clean_asset_code(self):
+        code = self.cleaned_data['asset_code']
+        # Validate format
+        if not code.replace('-', '').replace('_', '').isalnum():
+            raise forms.ValidationError("Asset code must be alphanumeric (hyphens and underscores allowed)")
+        return code.upper()
 
 
-class AssetDocumentForm(forms.ModelForm):
-    """Form for uploading asset documents."""
+class AssetCategoryForm(forms.ModelForm):
+    """Form for asset categories."""
 
     class Meta:
-        model = AssetDocument
-        fields = ['title', 'doc_type', 'file', 'description', 'version']
+        model = AssetCategory
+        fields = ['code', 'name', 'description', 'default_criticality', 'default_pm_interval_days', 'is_active']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'doc_type': forms.Select(attrs={'class': 'form-select'}),
-            'file': forms.FileInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'version': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class AssetLocationForm(forms.ModelForm):
+    """Form for asset locations."""
+
+    class Meta:
+        model = AssetLocation
+        fields = ['code', 'name', 'parent', 'description', 'is_active']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
         }
 
 
 class MaintenanceRequestForm(forms.ModelForm):
-    """Form for creating maintenance requests."""
+    """Form for submitting maintenance requests."""
 
     class Meta:
         model = MaintenanceRequest
-        fields = [
-            'asset', 'title', 'description', 'symptoms', 'priority',
-            'requester_phone', 'requester_location',
-            'is_production_stopped', 'estimated_downtime_minutes',
-        ]
+        fields = ['asset', 'title', 'description', 'priority', 'department']
         widgets = {
-            'asset': forms.Select(attrs={'class': 'form-select'}),
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Brief title of the issue'}),
             'description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 4,
-                'placeholder': 'Describe the problem in detail...'
+                'rows': 5,
+                'placeholder': 'Describe the problem, symptoms, or maintenance need...'
             }),
-            'symptoms': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Observable symptoms (noise, smell, vibration, etc.)'
+            'title': forms.TextInput(attrs={
+                'placeholder': 'Brief title for the request'
             }),
-            'priority': forms.Select(attrs={'class': 'form-select'}),
-            'requester_phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'requester_location': forms.TextInput(attrs={'class': 'form-control'}),
-            'is_production_stopped': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'estimated_downtime_minutes': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        self.fields['asset'].queryset = Asset.objects.filter(is_deleted=False, status='IN_SERVICE')
-        self.fields['symptoms'].required = False
-        self.fields['requester_phone'].required = False
-        self.fields['requester_location'].required = False
-        self.fields['estimated_downtime_minutes'].required = False
+
+        # Only show active assets
+        self.fields['asset'].queryset = Asset.objects.filter(
+            is_deleted=False, status__in=['IN_SERVICE', 'UNDER_MAINTENANCE']
+        )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if self.user:
+            instance.requested_by = self.user
+        if commit:
+            instance.save()
+        return instance
+
+
+class RequestReviewForm(forms.ModelForm):
+    """Form for reviewing maintenance requests."""
+
+    class Meta:
+        model = MaintenanceRequest
+        fields = ['status', 'rejection_reason']
+        widgets = {
+            'rejection_reason': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        status = cleaned_data.get('status')
+        rejection_reason = cleaned_data.get('rejection_reason')
+
+        if status == 'REJECTED' and not rejection_reason:
+            raise forms.ValidationError("Rejection reason is required when rejecting a request")
+
+        return cleaned_data
 
 
 class WorkOrderForm(forms.ModelForm):
-    """Form for creating/updating work orders."""
+    """Form for creating/editing work orders."""
 
     class Meta:
-        model = WorkOrder
+        model = MaintenanceWorkOrder
         fields = [
-            'asset', 'wo_type', 'priority', 'title', 'problem_description',
-            'planned_start', 'planned_end', 'estimated_duration_minutes',
-            'root_cause_category', 'root_cause_detail',
+            'asset', 'title', 'description', 'work_order_type', 'priority', 'status',
+            'planned_start', 'planned_end', 'assigned_to',
+            'problem_description', 'failure_mode', 'root_cause_category', 'root_cause_detail',
+            'solution_summary', 'work_performed', 'recommendations',
+            'labor_hours', 'labor_cost', 'parts_cost', 'external_cost',
+            'requires_shutdown', 'safety_permit_required', 'contractor_involved'
         ]
         widgets = {
-            'asset': forms.Select(attrs={'class': 'form-select'}),
-            'wo_type': forms.Select(attrs={'class': 'form-select'}),
-            'priority': forms.Select(attrs={'class': 'form-select'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'problem_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'planned_start': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'planned_end': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'estimated_duration_minutes': forms.NumberInput(attrs={'class': 'form-control'}),
-            'root_cause_category': forms.Select(attrs={'class': 'form-select'}),
-            'root_cause_detail': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'problem_description': forms.Textarea(attrs={'rows': 3}),
+            'solution_summary': forms.Textarea(attrs={'rows': 3}),
+            'work_performed': forms.Textarea(attrs={'rows': 4}),
+            'recommendations': forms.Textarea(attrs={'rows': 3}),
+            'root_cause_detail': forms.Textarea(attrs={'rows': 3}),
+            'planned_start': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'planned_end': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['asset'].queryset = Asset.objects.filter(is_deleted=False)
-        self.fields['planned_start'].required = False
-        self.fields['planned_end'].required = False
-        self.fields['estimated_duration_minutes'].required = False
-        self.fields['root_cause_category'].required = False
-        self.fields['root_cause_detail'].required = False
+
+class WorkOrderAssignForm(forms.ModelForm):
+    """Form for assigning work orders."""
+
+    class Meta:
+        model = MaintenanceWorkOrder
+        fields = ['assigned_to', 'planned_start', 'planned_end']
+        widgets = {
+            'planned_start': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'planned_end': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+
+
+class WorkOrderCompleteForm(forms.ModelForm):
+    """Form for completing work orders."""
+
+    class Meta:
+        model = MaintenanceWorkOrder
+        fields = [
+            'actual_start', 'actual_end', 'work_performed', 'solution_summary',
+            'root_cause_category', 'root_cause_detail', 'recommendations',
+            'labor_hours', 'labor_cost', 'parts_cost', 'external_cost'
+        ]
+        widgets = {
+            'actual_start': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'actual_end': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'work_performed': forms.Textarea(attrs={'rows': 4}),
+            'solution_summary': forms.Textarea(attrs={'rows': 3}),
+            'root_cause_detail': forms.Textarea(attrs={'rows': 3}),
+            'recommendations': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class WorkOrderNoteForm(forms.ModelForm):
+    """Form for adding notes to work orders."""
+
+    class Meta:
+        model = WorkOrderNote
+        fields = ['note_type', 'content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Add note or update...'
+            }),
+        }
+
+
+class WorkOrderPartForm(forms.ModelForm):
+    """Form for adding parts to work orders."""
+
+    class Meta:
+        model = WorkOrderPart
+        fields = ['part_number', 'part_description', 'quantity_used', 'unit_cost', 'warehouse_location', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 2}),
+        }
+
+
+class PMTemplateForm(forms.ModelForm):
+    """Form for PM templates."""
+
+    class Meta:
+        model = PMTemplate
+        fields = [
+            'code', 'name', 'description', 'instructions', 'safety_notes',
+            'tools_required', 'estimated_duration_minutes',
+            'frequency_type', 'frequency_days', 'frequency_hours',
+            'applies_to_category', 'skill_level_required', 'linked_procedure', 'is_active'
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'instructions': forms.Textarea(attrs={'rows': 6}),
+            'safety_notes': forms.Textarea(attrs={'rows': 3}),
+            'tools_required': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class PMTaskForm(forms.ModelForm):
+    """Form for PM tasks."""
+
+    class Meta:
+        model = PMTask
+        fields = ['status', 'scheduled_date', 'notes', 'findings']
+        widgets = {
+            'scheduled_date': forms.DateInput(attrs={'type': 'date'}),
+            'notes': forms.Textarea(attrs={'rows': 3}),
+            'findings': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class PMTaskCompleteForm(forms.Form):
+    """Form for completing PM tasks."""
+
+    actual_start = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        required=True
+    )
+    actual_end = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        required=True
+    )
+    notes = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3}),
+        required=False
+    )
+    findings = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3}),
+        required=False,
+        help_text="Any issues or observations found during PM"
+    )
+    meter_reading = forms.DecimalField(
+        required=False,
+        help_text="Current meter reading (if applicable)"
+    )
+    create_work_order = forms.BooleanField(
+        required=False,
+        help_text="Create follow-up work order for issues found"
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get('actual_start')
+        end = cleaned_data.get('actual_end')
+
+        if start and end and end < start:
+            raise forms.ValidationError("End time cannot be before start time")
+
+        return cleaned_data
 
 
 class DowntimeEventForm(forms.ModelForm):
@@ -148,55 +280,107 @@ class DowntimeEventForm(forms.ModelForm):
     class Meta:
         model = DowntimeEvent
         fields = [
-            'asset', 'start_time', 'end_time', 'downtime_type',
-            'reason_category', 'reason_detail', 'production_affected',
-            'severity_score', 'notes',
+            'asset', 'work_order', 'event_type', 'start_time', 'end_time',
+            'is_planned', 'reason_category', 'reason_description', 'severity',
+            'has_production_impact', 'notes'
         ]
         widgets = {
-            'asset': forms.Select(attrs={'class': 'form-select'}),
-            'start_time': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'end_time': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'downtime_type': forms.Select(attrs={'class': 'form-select'}),
-            'reason_category': forms.Select(attrs={'class': 'form-select'}),
-            'reason_detail': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'production_affected': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'severity_score': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 10}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'reason_description': forms.Textarea(attrs={'rows': 3}),
+            'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['asset'].queryset = Asset.objects.filter(is_deleted=False)
-        self.fields['end_time'].required = False
-        self.fields['reason_detail'].required = False
-        self.fields['notes'].required = False
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get('start_time')
+        end = cleaned_data.get('end_time')
+
+        if start and end and end < start:
+            raise forms.ValidationError("End time cannot be before start time")
+
+        return cleaned_data
 
 
-class PMTaskCompleteForm(forms.Form):
-    """Form for completing a PM task."""
+class ProductionImpactForm(forms.ModelForm):
+    """Form for recording production impact."""
 
-    completion_notes = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+    class Meta:
+        model = ProductionImpact
+        fields = [
+            'downtime_event', 'impact_type', 'batch_reference', 'job_card_number',
+            'customer_name', 'product_description',
+            'expected_completion_date', 'actual_completion_date', 'delay_minutes',
+            'lost_or_delayed_revenue', 'currency', 'is_revenue_confirmed',
+            'impact_description', 'notes'
+        ]
+        widgets = {
+            'expected_completion_date': forms.DateInput(attrs={'type': 'date'}),
+            'actual_completion_date': forms.DateInput(attrs={'type': 'date'}),
+            'impact_description': forms.Textarea(attrs={'rows': 3}),
+            'notes': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class LostSalesRecordForm(forms.ModelForm):
+    """Form for confirming lost sales."""
+
+    class Meta:
+        model = LostSalesRecord
+        fields = [
+            'production_impact', 'customer_name', 'order_reference',
+            'original_order_value', 'revenue_lost', 'revenue_delayed',
+            'recovery_possible', 'notes'
+        ]
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class AssetSearchForm(forms.Form):
+    """Form for searching assets."""
+
+    query = forms.CharField(required=False, widget=forms.TextInput(attrs={
+        'placeholder': 'Search by code, name, or serial number...'
+    }))
+    category = forms.ModelChoiceField(
+        queryset=AssetCategory.objects.filter(is_active=True),
         required=False,
-        label='Completion Notes'
+        empty_label="All Categories"
     )
-    issues_found = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+    location = forms.ModelChoiceField(
+        queryset=AssetLocation.objects.filter(is_active=True),
         required=False,
-        label='Issues Found'
+        empty_label="All Locations"
     )
-    follow_up_required = forms.BooleanField(
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    status = forms.ChoiceField(
+        choices=[('', 'All Statuses')] + list(Asset.Status.choices),
+        required=False
+    )
+    criticality = forms.ChoiceField(
+        choices=[('', 'All Criticalities')] + list(Asset.Criticality.choices),
+        required=False
+    )
+
+
+class DateRangeForm(forms.Form):
+    """Form for date range filtering."""
+
+    start_date = forms.DateField(
         required=False,
-        label='Follow-up Required'
+        widget=forms.DateInput(attrs={'type': 'date'})
     )
-    follow_up_notes = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+    end_date = forms.DateField(
         required=False,
-        label='Follow-up Notes'
+        widget=forms.DateInput(attrs={'type': 'date'})
     )
-    meter_reading = forms.DecimalField(
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-        required=False,
-        label='Meter Reading at Completion'
-    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get('start_date')
+        end = cleaned_data.get('end_date')
+
+        if start and end and end < start:
+            raise forms.ValidationError("End date cannot be before start date")
+
+        return cleaned_data

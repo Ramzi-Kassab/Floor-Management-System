@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Asset: {{ asset.asset_code }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">{{ asset.asset_code }} - {{ asset.name }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'maintenance:asset_list' %}">Assets</a></li>
+                    <li class="breadcrumb-item active">{{ asset.asset_code }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'maintenance:asset_edit' asset.asset_code %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'maintenance:request_create' %}?asset={{ asset.pk }}" class="btn btn-danger">
+                <i class="fas fa-exclamation-triangle"></i> Report Issue
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Asset Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Asset Code</dt>
+                                <dd class="col-sm-7">{{ asset.asset_code }}</dd>
+
+                                <dt class="col-sm-5">Name</dt>
+                                <dd class="col-sm-7">{{ asset.name }}</dd>
+
+                                <dt class="col-sm-5">Category</dt>
+                                <dd class="col-sm-7">{{ asset.category|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Location</dt>
+                                <dd class="col-sm-7">{{ asset.location|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Status</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-{% if asset.status == 'IN_SERVICE' %}success{% elif asset.status == 'UNDER_MAINTENANCE' %}warning{% elif asset.status == 'OUT_OF_SERVICE' %}danger{% else %}secondary{% endif %} fs-6">
+                                        {{ asset.get_status_display }}
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-5">Criticality</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-{% if asset.criticality == 'CRITICAL' %}danger{% elif asset.criticality == 'HIGH' %}warning{% elif asset.criticality == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                                        {{ asset.criticality }}
+                                    </span>
+                                    {% if asset.is_critical %}
+                                    <span class="badge bg-danger">CRITICAL FLAG</span>
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Manufacturer</dt>
+                                <dd class="col-sm-7">{{ asset.manufacturer|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Model</dt>
+                                <dd class="col-sm-7">{{ asset.model_number|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Serial #</dt>
+                                <dd class="col-sm-7">{{ asset.serial_number|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Year</dt>
+                                <dd class="col-sm-7">{{ asset.year_manufactured|default:"-" }}</dd>
+
+                                <dt class="col-sm-5">Age</dt>
+                                <dd class="col-sm-7">{{ asset.age_years }} years</dd>
+
+                                <dt class="col-sm-5">ERP Asset #</dt>
+                                <dd class="col-sm-7">{{ asset.erp_asset_number|default:"-" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    {% if asset.description %}
+                    <hr>
+                    <h6>Description</h6>
+                    <p>{{ asset.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Work Orders -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Work Orders</h5>
+                    <span class="badge bg-primary">{{ asset.open_work_orders_count }} Open</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>WO #</th>
+                                    <th>Type</th>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wo in work_orders %}
+                                <tr>
+                                    <td><a href="{% url 'maintenance:workorder_detail' wo.work_order_number %}">{{ wo.work_order_number }}</a></td>
+                                    <td>{{ wo.get_work_order_type_display }}</td>
+                                    <td>{{ wo.title|truncatechars:30 }}</td>
+                                    <td><span class="badge bg-{% if wo.priority == 'CRITICAL' %}danger{% elif wo.priority == 'HIGH' %}warning{% else %}info{% endif %}">{{ wo.priority }}</span></td>
+                                    <td><span class="badge bg-{% if wo.status == 'COMPLETED' %}success{% elif wo.status == 'IN_PROGRESS' %}warning{% else %}secondary{% endif %}">{{ wo.get_status_display }}</span></td>
+                                    <td>{{ wo.created_at|date:"Y-m-d" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No work orders</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Downtime Events -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Downtime Events</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Duration</th>
+                                    <th>Severity</th>
+                                    <th>Impact</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in downtime_events %}
+                                <tr>
+                                    <td>{{ event.get_event_type_display }}</td>
+                                    <td>{{ event.start_time|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ event.end_time|date:"Y-m-d H:i"|default:"Ongoing" }}</td>
+                                    <td>{{ event.duration_hours }}h</td>
+                                    <td><span class="badge bg-{% if event.severity == 'CRITICAL' %}danger{% elif event.severity == 'MAJOR' %}warning{% else %}info{% endif %}">{{ event.severity }}</span></td>
+                                    <td>{% if event.has_production_impact %}<span class="badge bg-danger">Yes</span>{% else %}-{% endif %}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No downtime events</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Health Score -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Health Score</h6>
+                    <div class="display-4 {% if health_score >= 80 %}text-success{% elif health_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ health_score }}%
+                    </div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-{% if health_score >= 80 %}success{% elif health_score >= 50 %}warning{% else %}danger{% endif %}" role="progressbar" style="width: {{ health_score }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">QR Code</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if asset.qr_token %}
+                    <div class="mb-2">
+                        <code>{{ asset.qr_token }}</code>
+                    </div>
+                    <small class="text-muted">Scan to access asset details</small>
+                    {% else %}
+                    <span class="text-muted">No QR token assigned</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Financial Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Financial Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Purchase Date</dt>
+                        <dd class="col-6">{{ asset.purchase_date|default:"-" }}</dd>
+
+                        <dt class="col-6">Purchase Cost</dt>
+                        <dd class="col-6">{% if asset.purchase_cost %}{{ asset.purchase_cost }}{% else %}-{% endif %}</dd>
+
+                        <dt class="col-6">Warranty Expires</dt>
+                        <dd class="col-6">
+                            {% if asset.warranty_expires %}
+                            {{ asset.warranty_expires }}
+                            <br><small class="{% if asset.warranty_status == 'EXPIRED' %}text-danger{% elif asset.warranty_status == 'EXPIRING_SOON' %}text-warning{% else %}text-success{% endif %}">{{ asset.warranty_status }}</small>
+                            {% else %}-{% endif %}
+                        </dd>
+
+                        <dt class="col-6">Vendor</dt>
+                        <dd class="col-6">{{ asset.vendor|default:"-" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- PM Schedule -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">PM Schedule</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Last PM</dt>
+                        <dd class="col-6">{{ asset.last_pm_date|default:"-" }}</dd>
+
+                        <dt class="col-6">Next PM</dt>
+                        <dd class="col-6">{{ asset.next_pm_date|default:"-" }}</dd>
+
+                        <dt class="col-6">Meter Reading</dt>
+                        <dd class="col-6">{% if asset.meter_reading %}{{ asset.meter_reading }} {{ asset.meter_unit }}{% else %}-{% endif %}</dd>
+                    </dl>
+
+                    {% if pm_schedules %}
+                    <hr>
+                    <h6>Active Schedules</h6>
+                    <ul class="list-unstyled mb-0">
+                        {% for pm in pm_schedules %}
+                        <li class="mb-2">
+                            <strong>{{ pm.pm_template.name }}</strong><br>
+                            <small>Next: {{ pm.next_due_date }}</small>
+                            {% if pm.is_overdue %}
+                            <span class="badge bg-danger">Overdue</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Documents</h6>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                    <ul class="list-unstyled mb-0">
+                        {% for doc in documents %}
+                        <li class="mb-2">
+                            <i class="fas fa-file-alt"></i>
+                            {{ doc.document.title }}
+                            <small class="text-muted">({{ doc.get_document_type_display }})</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">No documents attached</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

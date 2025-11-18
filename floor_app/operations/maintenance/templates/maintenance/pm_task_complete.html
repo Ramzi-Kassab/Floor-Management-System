@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Complete PM Task{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <h1 class="h3">Complete PM Task</h1>
+        <p class="text-muted">{{ task.schedule.pm_template.name }} for {{ task.schedule.asset.asset_code }}</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                <li>{{ field }}: {{ error }}</li>
+                                {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Actual Start *</label>
+                                {{ form.actual_start }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Actual End *</label>
+                                {{ form.actual_end }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                            <small class="text-muted">General notes about the PM task</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Findings</label>
+                            {{ form.findings }}
+                            <small class="text-muted">Any issues or observations found during the PM</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Meter Reading</label>
+                            {{ form.meter_reading }}
+                            <small class="text-muted">Current equipment meter reading (if applicable)</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.create_work_order }}
+                            <label class="form-check-label">Create follow-up work order for issues found</label>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'maintenance:pm_task_detail' task.pk %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Complete PM Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Task Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Task Info</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Asset</dt>
+                        <dd class="col-6">{{ task.schedule.asset.asset_code }}</dd>
+
+                        <dt class="col-6">Scheduled</dt>
+                        <dd class="col-6">{{ task.scheduled_date }}</dd>
+
+                        <dt class="col-6">Est. Duration</dt>
+                        <dd class="col-6">{{ task.schedule.pm_template.estimated_duration_minutes }} min</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Instructions Summary -->
+            {% if task.schedule.pm_template.instructions %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Instructions</h6>
+                </div>
+                <div class="card-body small">
+                    {{ task.schedule.pm_template.instructions|truncatechars:500|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}

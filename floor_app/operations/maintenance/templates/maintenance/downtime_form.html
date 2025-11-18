@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Record Downtime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <h1 class="h3">Record Downtime Event</h1>
+        <p class="text-muted">Track asset downtime and its causes</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below.</strong>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Asset *</label>
+                            {{ form.asset }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Related Work Order</label>
+                            {{ form.work_order }}
+                            <small class="text-muted">Link to work order if applicable</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Event Type *</label>
+                            {{ form.event_type }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Time *</label>
+                                {{ form.start_time }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Time</label>
+                                {{ form.end_time }}
+                                <small class="text-muted">Leave blank if ongoing</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Severity</label>
+                                {{ form.severity }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Reason Category</label>
+                                {{ form.reason_category }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Planned</label>
+                                <div class="form-check mt-2">
+                                    {{ form.is_planned }}
+                                    <label class="form-check-label">This is a planned downtime</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Reason Description</label>
+                            {{ form.reason_description }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Has Production Impact</label>
+                            <div class="form-check">
+                                {{ form.has_production_impact }}
+                                <label class="form-check-label">This downtime affects production</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'maintenance:downtime_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Record Downtime
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6>Event Types</h6>
+                    <ul class="small mb-0">
+                        <li><strong>Unplanned Breakdown:</strong> Equipment failure</li>
+                        <li><strong>Planned PM:</strong> Scheduled maintenance</li>
+                        <li><strong>Setup/Changeover:</strong> Product changeover</li>
+                        <li><strong>Waiting Parts:</strong> Parts not available</li>
+                        <li><strong>Utility Failure:</strong> Power, air, etc.</li>
+                        <li><strong>Operator Absence:</strong> No operator available</li>
+                        <li><strong>Quality Issue:</strong> Quality hold</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}

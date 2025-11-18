@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Requests{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Maintenance Requests</h1>
+        <a href="{% url 'maintenance:request_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Request
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="btn-group">
+                <a href="{% url 'maintenance:request_list' %}" class="btn btn-{% if not status_filter %}primary{% else %}outline-primary{% endif %}">All</a>
+                <a href="?status=NEW" class="btn btn-{% if status_filter == 'NEW' %}primary{% else %}outline-primary{% endif %}">New</a>
+                <a href="?status=UNDER_REVIEW" class="btn btn-{% if status_filter == 'UNDER_REVIEW' %}warning{% else %}outline-warning{% endif %}">Under Review</a>
+                <a href="?status=APPROVED" class="btn btn-{% if status_filter == 'APPROVED' %}success{% else %}outline-success{% endif %}">Approved</a>
+                <a href="?status=REJECTED" class="btn btn-{% if status_filter == 'REJECTED' %}danger{% else %}outline-danger{% endif %}">Rejected</a>
+                <a href="?status=CONVERTED_TO_WO" class="btn btn-{% if status_filter == 'CONVERTED_TO_WO' %}info{% else %}outline-info{% endif %}">Converted</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Request #</th>
+                            <th>Title</th>
+                            <th>Asset</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Requested By</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'maintenance:request_detail' req.pk %}" class="fw-bold">
+                                    {{ req.request_number }}
+                                </a>
+                            </td>
+                            <td>{{ req.title|truncatechars:40 }}</td>
+                            <td>{{ req.asset.asset_code|default:"-" }}</td>
+                            <td>
+                                <span class="badge bg-{% if req.priority == 'CRITICAL' %}danger{% elif req.priority == 'HIGH' %}warning{% elif req.priority == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                                    {{ req.priority }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if req.status == 'NEW' %}info{% elif req.status == 'UNDER_REVIEW' %}warning{% elif req.status == 'APPROVED' %}success{% elif req.status == 'REJECTED' %}danger{% else %}secondary{% endif %}">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ req.requested_by|default:"-" }}</td>
+                            <td>{{ req.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'maintenance:request_detail' req.pk %}" class="btn btn-outline-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if req.status == 'NEW' or req.status == 'UNDER_REVIEW' %}
+                                    <a href="{% url 'maintenance:request_review' req.pk %}" class="btn btn-outline-warning" title="Review">
+                                        <i class="fas fa-check-circle"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No requests found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if requests.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if requests.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ requests.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+            {% for num in requests.paginator.page_range %}
+            {% if requests.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > requests.number|add:'-3' and num < requests.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if requests.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ requests.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

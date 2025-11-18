@@ -1,753 +1,763 @@
 """
-Views for Maintenance & Asset Management module.
+Views for Maintenance module.
 """
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.utils import timezone
-from django.db.models import Count, Sum, Q, Avg
 from django.core.paginator import Paginator
-from datetime import timedelta
-import json
+from django.http import JsonResponse, Http404
+from django.db.models import Q, Count
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .models import (
-    AssetCategory, AssetLocation, Asset, AssetDocument,
-    PMPlan, PMSchedule, PMTask,
-    MaintenanceRequest, WorkOrder, WorkOrderAttachment,
-    DowntimeEvent, ProductionImpact, LostSales,
-    PartsUsage,
+    Asset, AssetCategory, AssetLocation, AssetDocument,
+    PMTemplate, PMSchedule, PMTask,
+    MaintenanceRequest, MaintenanceWorkOrder, WorkOrderNote, WorkOrderPart,
+    DowntimeEvent, ProductionImpact, LostSalesRecord
 )
 from .forms import (
-    AssetForm, AssetDocumentForm,
-    MaintenanceRequestForm, WorkOrderForm,
-    DowntimeEventForm, PMTaskCompleteForm,
+    AssetForm, AssetSearchForm, MaintenanceRequestForm, RequestReviewForm,
+    WorkOrderForm, WorkOrderAssignForm, WorkOrderCompleteForm,
+    WorkOrderNoteForm, WorkOrderPartForm,
+    PMTemplateForm, PMTaskCompleteForm,
+    DowntimeEventForm, ProductionImpactForm, LostSalesRecordForm,
+    DateRangeForm
 )
+from .services import MaintenanceService, DowntimeService, AssetService
 
 
-# =============================================================================
-# DASHBOARD
-# =============================================================================
+# ==================== DASHBOARD ====================
 
 @login_required
 def dashboard(request):
-    """Main maintenance dashboard with key metrics."""
+    """Main maintenance dashboard."""
+    stats = MaintenanceService.get_dashboard_stats()
+    recent_work_orders = MaintenanceService.get_recent_work_orders(limit=10)
+    assets_by_status = MaintenanceService.get_assets_by_status()
+
+    # Upcoming PMs (next 7 days)
     today = timezone.now().date()
-    month_start = today.replace(day=1)
+    upcoming_pms = PMSchedule.objects.filter(
+        is_active=True,
+        next_due_date__gte=today,
+        next_due_date__lte=today + timezone.timedelta(days=7)
+    ).select_related('asset', 'pm_template').order_by('next_due_date')[:10]
 
-    # Asset metrics
-    total_assets = Asset.objects.filter(is_deleted=False).count()
-    assets_in_service = Asset.objects.filter(is_deleted=False, status='IN_SERVICE').count()
-    assets_under_maintenance = Asset.objects.filter(is_deleted=False, status='UNDER_MAINTENANCE').count()
-    critical_assets = Asset.objects.filter(is_deleted=False, is_critical_production_asset=True).count()
-
-    # Work order metrics
-    open_work_orders = WorkOrder.objects.filter(
-        is_deleted=False,
-        status__in=['PLANNED', 'ASSIGNED', 'IN_PROGRESS', 'WAITING_PARTS', 'WAITING_VENDOR']
-    ).count()
-    overdue_work_orders = WorkOrder.objects.filter(
-        is_deleted=False,
-        status__in=['PLANNED', 'ASSIGNED', 'IN_PROGRESS'],
-        planned_end__lt=timezone.now()
-    ).count()
-
-    # PM metrics
-    overdue_pm_tasks = PMTask.objects.filter(
-        is_deleted=False,
-        status__in=['SCHEDULED', 'IN_PROGRESS'],
-        scheduled_date__lt=today
-    ).count()
-    pm_due_this_week = PMTask.objects.filter(
-        is_deleted=False,
-        status='SCHEDULED',
-        scheduled_date__range=[today, today + timedelta(days=7)]
-    ).count()
-
-    # Downtime metrics (this month)
-    total_downtime_minutes = DowntimeEvent.objects.filter(
-        is_deleted=False,
-        start_time__gte=month_start
-    ).aggregate(total=Sum('duration_minutes'))['total'] or 0
-    total_downtime_hours = round(total_downtime_minutes / 60, 1)
-
-    # Lost sales this month
-    lost_sales_total = LostSales.objects.filter(
-        is_deleted=False,
-        created_at__gte=month_start
-    ).aggregate(total=Sum('lost_or_delayed_revenue'))['total'] or 0
-
-    # Pending requests
-    pending_requests = MaintenanceRequest.objects.filter(
-        is_deleted=False,
-        status='NEW'
-    ).count()
-
-    # Recent work orders
-    recent_work_orders = WorkOrder.objects.filter(
-        is_deleted=False
-    ).select_related('asset').order_by('-created_at')[:10]
-
-    # Top 5 assets by downtime (this month)
-    top_downtime_assets = DowntimeEvent.objects.filter(
-        is_deleted=False,
-        start_time__gte=month_start
-    ).values(
-        'asset__asset_code', 'asset__name'
-    ).annotate(
-        total_minutes=Sum('duration_minutes')
-    ).order_by('-total_minutes')[:5]
-
-    # Work orders by status
-    wo_by_status = WorkOrder.objects.filter(
-        is_deleted=False
-    ).exclude(
-        status__in=['COMPLETED', 'CANCELLED']
-    ).values('status').annotate(count=Count('id')).order_by('status')
+    # Overdue PMs
+    overdue_pms = PMSchedule.objects.filter(
+        is_active=True,
+        next_due_date__lt=today
+    ).select_related('asset', 'pm_template').order_by('next_due_date')[:10]
 
     context = {
-        'total_assets': total_assets,
-        'assets_in_service': assets_in_service,
-        'assets_under_maintenance': assets_under_maintenance,
-        'critical_assets': critical_assets,
-        'open_work_orders': open_work_orders,
-        'overdue_work_orders': overdue_work_orders,
-        'overdue_pm_tasks': overdue_pm_tasks,
-        'pm_due_this_week': pm_due_this_week,
-        'total_downtime_hours': total_downtime_hours,
-        'lost_sales_total': lost_sales_total,
-        'pending_requests': pending_requests,
+        'stats': stats,
         'recent_work_orders': recent_work_orders,
-        'top_downtime_assets': top_downtime_assets,
-        'wo_by_status': wo_by_status,
+        'assets_by_status': assets_by_status,
+        'upcoming_pms': upcoming_pms,
+        'overdue_pms': overdue_pms,
     }
-
     return render(request, 'maintenance/dashboard.html', context)
 
 
-# =============================================================================
-# ASSET MANAGEMENT
-# =============================================================================
+# ==================== ASSET VIEWS ====================
 
-class AssetListView(LoginRequiredMixin, ListView):
+@login_required
+def asset_list(request):
     """List all assets with filtering."""
-    model = Asset
-    template_name = 'maintenance/asset/list.html'
-    context_object_name = 'assets'
-    paginate_by = 25
+    form = AssetSearchForm(request.GET)
+    assets = Asset.objects.filter(is_deleted=False).select_related('category', 'location')
 
-    def get_queryset(self):
-        queryset = Asset.objects.filter(is_deleted=False).select_related('category', 'location')
+    if form.is_valid():
+        query = form.cleaned_data.get('query')
+        category = form.cleaned_data.get('category')
+        location = form.cleaned_data.get('location')
+        status = form.cleaned_data.get('status')
+        criticality = form.cleaned_data.get('criticality')
 
-        # Filters
-        status = self.request.GET.get('status')
-        if status:
-            queryset = queryset.filter(status=status)
-
-        criticality = self.request.GET.get('criticality')
-        if criticality:
-            queryset = queryset.filter(criticality=criticality)
-
-        category = self.request.GET.get('category')
-        if category:
-            queryset = queryset.filter(category_id=category)
-
-        location = self.request.GET.get('location')
-        if location:
-            queryset = queryset.filter(location_id=location)
-
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                Q(asset_code__icontains=search) |
-                Q(name__icontains=search) |
-                Q(serial_number__icontains=search) |
-                Q(manufacturer__icontains=search)
+        if query:
+            assets = assets.filter(
+                Q(asset_code__icontains=query) |
+                Q(name__icontains=query) |
+                Q(serial_number__icontains=query)
             )
-
-        return queryset.order_by('asset_code')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['categories'] = AssetCategory.objects.filter(is_deleted=False)
-        context['locations'] = AssetLocation.objects.filter(is_deleted=False)
-        context['status_choices'] = Asset.STATUS_CHOICES
-        context['criticality_choices'] = Asset.CRITICALITY_CHOICES
-        return context
-
-
-class AssetDetailView(LoginRequiredMixin, DetailView):
-    """Asset detail view with related information."""
-    model = Asset
-    template_name = 'maintenance/asset/detail.html'
-    context_object_name = 'asset'
-
-    def get_queryset(self):
-        return Asset.objects.filter(is_deleted=False).select_related('category', 'location')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        asset = self.object
-
-        # Get related data
-        context['documents'] = asset.documents.filter(is_deleted=False)
-        context['open_work_orders'] = asset.work_orders.filter(
-            is_deleted=False,
-            status__in=['PLANNED', 'ASSIGNED', 'IN_PROGRESS', 'WAITING_PARTS', 'WAITING_VENDOR']
-        ).order_by('-created_at')[:10]
-        context['recent_downtime'] = asset.downtime_events.filter(
-            is_deleted=False
-        ).order_by('-start_time')[:10]
-        context['pm_schedules'] = asset.pm_schedules.filter(is_deleted=False, is_active=True)
-
-        return context
-
-
-class AssetCreateView(LoginRequiredMixin, CreateView):
-    """Create a new asset."""
-    model = Asset
-    form_class = AssetForm
-    template_name = 'maintenance/asset/form.html'
-    success_url = reverse_lazy('maintenance:asset_list')
-
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        messages.success(self.request, 'Asset created successfully.')
-        return super().form_valid(form)
-
-
-class AssetUpdateView(LoginRequiredMixin, UpdateView):
-    """Update an existing asset."""
-    model = Asset
-    form_class = AssetForm
-    template_name = 'maintenance/asset/form.html'
-
-    def get_queryset(self):
-        return Asset.objects.filter(is_deleted=False)
-
-    def form_valid(self, form):
-        form.instance.updated_by = self.request.user
-        messages.success(self.request, 'Asset updated successfully.')
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('maintenance:asset_detail', kwargs={'pk': self.object.pk})
-
-
-@login_required
-def asset_qr_generate(request, pk):
-    """Generate QR code for asset."""
-    asset = get_object_or_404(Asset, pk=pk, is_deleted=False)
-
-    # Generate QR code image (simplified - would use qrcode library)
-    qr_url = request.build_absolute_uri(
-        reverse('maintenance:asset_scan', kwargs={'token': asset.qr_token})
-    )
-
-    context = {
-        'asset': asset,
-        'qr_url': qr_url,
-    }
-
-    return render(request, 'maintenance/asset/qr_generate.html', context)
-
-
-@login_required
-def asset_scan(request, token):
-    """Landing page when QR code is scanned."""
-    asset = get_object_or_404(Asset, qr_token=token, is_deleted=False)
-
-    context = {
-        'asset': asset,
-    }
-
-    return render(request, 'maintenance/asset/scan_landing.html', context)
-
-
-# =============================================================================
-# MAINTENANCE REQUESTS
-# =============================================================================
-
-class MaintenanceRequestListView(LoginRequiredMixin, ListView):
-    """List all maintenance requests."""
-    model = MaintenanceRequest
-    template_name = 'maintenance/corrective/request_list.html'
-    context_object_name = 'requests'
-    paginate_by = 25
-
-    def get_queryset(self):
-        queryset = MaintenanceRequest.objects.filter(
-            is_deleted=False
-        ).select_related('asset', 'requested_by')
-
-        status = self.request.GET.get('status')
+        if category:
+            assets = assets.filter(category=category)
+        if location:
+            assets = assets.filter(location=location)
         if status:
-            queryset = queryset.filter(status=status)
+            assets = assets.filter(status=status)
+        if criticality:
+            assets = assets.filter(criticality=criticality)
 
-        priority = self.request.GET.get('priority')
-        if priority:
-            queryset = queryset.filter(priority=priority)
+    assets = assets.order_by('asset_code')
+    paginator = Paginator(assets, 25)
+    page = request.GET.get('page')
+    assets_page = paginator.get_page(page)
 
-        return queryset.order_by('-request_date')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['status_choices'] = MaintenanceRequest.STATUS_CHOICES
-        context['priority_choices'] = MaintenanceRequest.PRIORITY_CHOICES
-        return context
-
-
-class MaintenanceRequestCreateView(LoginRequiredMixin, CreateView):
-    """Create a new maintenance request."""
-    model = MaintenanceRequest
-    form_class = MaintenanceRequestForm
-    template_name = 'maintenance/corrective/request_form.html'
-    success_url = reverse_lazy('maintenance:request_list')
-
-    def form_valid(self, form):
-        form.instance.requested_by = self.request.user
-        form.instance.created_by = self.request.user
-
-        # Auto-generate request number
-        today = timezone.now()
-        year = today.year
-        last_request = MaintenanceRequest.objects.filter(
-            request_number__startswith=f'REQ-{year}-'
-        ).order_by('-request_number').first()
-
-        if last_request:
-            last_num = int(last_request.request_number.split('-')[-1])
-            new_num = last_num + 1
-        else:
-            new_num = 1
-
-        form.instance.request_number = f'REQ-{year}-{new_num:04d}'
-
-        messages.success(self.request, f'Request {form.instance.request_number} created successfully.')
-        return super().form_valid(form)
+    context = {
+        'assets': assets_page,
+        'form': form,
+    }
+    return render(request, 'maintenance/asset_list.html', context)
 
 
 @login_required
-def request_approve(request, pk):
-    """Approve a maintenance request."""
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid method')
+def asset_detail(request, asset_code):
+    """View asset details."""
+    asset = get_object_or_404(Asset, asset_code=asset_code, is_deleted=False)
 
+    # Get related data
+    work_orders = asset.work_orders.filter(is_deleted=False).order_by('-created_at')[:10]
+    pm_schedules = asset.pm_schedules.all()
+    downtime_events = asset.downtime_events.all().order_by('-start_time')[:10]
+    documents = asset.documents.all()
+
+    # Health score
+    health_score = AssetService.get_asset_health_score(asset)
+
+    context = {
+        'asset': asset,
+        'work_orders': work_orders,
+        'pm_schedules': pm_schedules,
+        'downtime_events': downtime_events,
+        'documents': documents,
+        'health_score': health_score,
+    }
+    return render(request, 'maintenance/asset_detail.html', context)
+
+
+@login_required
+@permission_required('maintenance.add_asset', raise_exception=True)
+def asset_create(request):
+    """Create new asset."""
+    if request.method == 'POST':
+        form = AssetForm(request.POST)
+        if form.is_valid():
+            asset = form.save(commit=False)
+            asset.created_by = request.user
+            asset.save()
+            # Generate QR token
+            AssetService.generate_qr_token(asset)
+            messages.success(request, f'Asset {asset.asset_code} created successfully.')
+            return redirect('maintenance:asset_detail', asset_code=asset.asset_code)
+    else:
+        form = AssetForm()
+
+    return render(request, 'maintenance/asset_form.html', {'form': form, 'title': 'Create Asset'})
+
+
+@login_required
+@permission_required('maintenance.change_asset', raise_exception=True)
+def asset_edit(request, asset_code):
+    """Edit existing asset."""
+    asset = get_object_or_404(Asset, asset_code=asset_code, is_deleted=False)
+
+    if request.method == 'POST':
+        form = AssetForm(request.POST, instance=asset)
+        if form.is_valid():
+            asset = form.save(commit=False)
+            asset.updated_by = request.user
+            asset.save()
+            messages.success(request, f'Asset {asset.asset_code} updated successfully.')
+            return redirect('maintenance:asset_detail', asset_code=asset.asset_code)
+    else:
+        form = AssetForm(instance=asset)
+
+    return render(request, 'maintenance/asset_form.html', {'form': form, 'asset': asset, 'title': 'Edit Asset'})
+
+
+@login_required
+def asset_qr(request, qr_token):
+    """QR code scan handler."""
+    asset = get_object_or_404(Asset, qr_token=qr_token, is_deleted=False)
+    return redirect('maintenance:asset_detail', asset_code=asset.asset_code)
+
+
+# ==================== MAINTENANCE REQUEST VIEWS ====================
+
+@login_required
+def request_list(request):
+    """List maintenance requests."""
+    status_filter = request.GET.get('status', '')
+    requests_qs = MaintenanceRequest.objects.filter(
+        is_deleted=False
+    ).select_related('asset', 'requested_by', 'reviewed_by').order_by('-created_at')
+
+    if status_filter:
+        requests_qs = requests_qs.filter(status=status_filter)
+
+    paginator = Paginator(requests_qs, 20)
+    page = request.GET.get('page')
+    requests_page = paginator.get_page(page)
+
+    context = {
+        'requests': requests_page,
+        'status_filter': status_filter,
+    }
+    return render(request, 'maintenance/request_list.html', context)
+
+
+@login_required
+def request_detail(request, pk):
+    """View maintenance request details."""
     req = get_object_or_404(MaintenanceRequest, pk=pk, is_deleted=False)
-    req.approve(request.user)
-    messages.success(request, f'Request {req.request_number} approved.')
-    return redirect('maintenance:request_list')
+    return render(request, 'maintenance/request_detail.html', {'request_obj': req})
 
 
 @login_required
-def request_reject(request, pk):
-    """Reject a maintenance request."""
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid method')
+def request_create(request):
+    """Create maintenance request."""
+    if request.method == 'POST':
+        form = MaintenanceRequestForm(request.POST, user=request.user)
+        if form.is_valid():
+            req = form.save()
+            messages.success(request, f'Maintenance request {req.request_number} created successfully.')
+            return redirect('maintenance:request_detail', pk=req.pk)
+    else:
+        form = MaintenanceRequestForm(user=request.user)
 
+    return render(request, 'maintenance/request_form.html', {'form': form})
+
+
+@login_required
+@permission_required('maintenance.can_approve_request', raise_exception=True)
+def request_review(request, pk):
+    """Review and approve/reject maintenance request."""
     req = get_object_or_404(MaintenanceRequest, pk=pk, is_deleted=False)
-    reason = request.POST.get('reason', '')
-    req.reject(request.user, reason)
-    messages.warning(request, f'Request {req.request_number} rejected.')
-    return redirect('maintenance:request_list')
+
+    if req.status not in ['NEW', 'UNDER_REVIEW']:
+        messages.error(request, 'This request has already been processed.')
+        return redirect('maintenance:request_detail', pk=pk)
+
+    if request.method == 'POST':
+        form = RequestReviewForm(request.POST, instance=req)
+        if form.is_valid():
+            req = form.save(commit=False)
+            req.reviewed_by = request.user
+            req.reviewed_at = timezone.now()
+            req.save()
+
+            if req.status == 'APPROVED':
+                messages.success(request, 'Request approved. You can now convert it to a work order.')
+            elif req.status == 'REJECTED':
+                messages.warning(request, 'Request rejected.')
+
+            return redirect('maintenance:request_detail', pk=pk)
+    else:
+        form = RequestReviewForm(instance=req)
+
+    return render(request, 'maintenance/request_review.html', {'form': form, 'request_obj': req})
 
 
 @login_required
+@permission_required('maintenance.add_maintenanceworkorder', raise_exception=True)
 def request_convert_to_wo(request, pk):
     """Convert approved request to work order."""
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid method')
+    req = get_object_or_404(MaintenanceRequest, pk=pk, is_deleted=False)
 
-    req = get_object_or_404(MaintenanceRequest, pk=pk, is_deleted=False, status='APPROVED')
+    if req.status != 'APPROVED':
+        messages.error(request, 'Only approved requests can be converted to work orders.')
+        return redirect('maintenance:request_detail', pk=pk)
 
-    # Generate WO number
-    today = timezone.now()
-    year = today.year
-    last_wo = WorkOrder.objects.filter(
-        wo_number__startswith=f'WO-{year}-'
-    ).order_by('-wo_number').first()
+    try:
+        work_order = MaintenanceService.convert_request_to_work_order(req, user=request.user)
+        messages.success(request, f'Work order {work_order.work_order_number} created successfully.')
+        return redirect('maintenance:workorder_detail', wo_number=work_order.work_order_number)
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect('maintenance:request_detail', pk=pk)
 
-    if last_wo:
-        last_num = int(last_wo.wo_number.split('-')[-1])
-        new_num = last_num + 1
-    else:
-        new_num = 1
 
-    wo_number = f'WO-{year}-{new_num:04d}'
+# ==================== WORK ORDER VIEWS ====================
 
-    # Create work order
-    wo = WorkOrder.objects.create(
-        wo_number=wo_number,
-        asset=req.asset,
-        wo_type='CORRECTIVE',
-        priority=req.priority,
-        title=req.title,
-        problem_description=req.description,
-        created_by=request.user,
+@login_required
+def workorder_list(request):
+    """List work orders."""
+    status_filter = request.GET.get('status', '')
+    type_filter = request.GET.get('type', '')
+
+    work_orders = MaintenanceWorkOrder.objects.filter(
+        is_deleted=False
+    ).select_related('asset', 'assigned_to').order_by('-created_at')
+
+    if status_filter:
+        work_orders = work_orders.filter(status=status_filter)
+    if type_filter:
+        work_orders = work_orders.filter(work_order_type=type_filter)
+
+    paginator = Paginator(work_orders, 20)
+    page = request.GET.get('page')
+    work_orders_page = paginator.get_page(page)
+
+    context = {
+        'work_orders': work_orders_page,
+        'status_filter': status_filter,
+        'type_filter': type_filter,
+    }
+    return render(request, 'maintenance/workorder_list.html', context)
+
+
+@login_required
+def workorder_detail(request, wo_number):
+    """View work order details."""
+    work_order = get_object_or_404(
+        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
     )
 
-    # Link request to WO
-    req.work_order = wo
-    req.status = 'CONVERTED'
-    req.save(update_fields=['work_order', 'status', 'updated_at'])
+    notes = work_order.notes.all().order_by('-created_at')
+    parts = work_order.parts_used.all()
+    downtime_events = work_order.downtime_events.all()
 
-    messages.success(request, f'Work Order {wo_number} created from request.')
-    return redirect('maintenance:work_order_detail', pk=wo.pk)
+    # Forms for adding notes and parts
+    note_form = WorkOrderNoteForm()
+    part_form = WorkOrderPartForm()
 
-
-# =============================================================================
-# WORK ORDERS
-# =============================================================================
-
-class WorkOrderListView(LoginRequiredMixin, ListView):
-    """List all work orders."""
-    model = WorkOrder
-    template_name = 'maintenance/corrective/wo_list.html'
-    context_object_name = 'work_orders'
-    paginate_by = 25
-
-    def get_queryset(self):
-        queryset = WorkOrder.objects.filter(
-            is_deleted=False
-        ).select_related('asset', 'assigned_to')
-
-        status = self.request.GET.get('status')
-        if status:
-            queryset = queryset.filter(status=status)
-
-        wo_type = self.request.GET.get('type')
-        if wo_type:
-            queryset = queryset.filter(wo_type=wo_type)
-
-        priority = self.request.GET.get('priority')
-        if priority:
-            queryset = queryset.filter(priority=priority)
-
-        return queryset.order_by('-created_at')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['status_choices'] = WorkOrder.STATUS_CHOICES
-        context['type_choices'] = WorkOrder.TYPE_CHOICES
-        context['priority_choices'] = WorkOrder.PRIORITY_CHOICES
-        return context
-
-
-class WorkOrderDetailView(LoginRequiredMixin, DetailView):
-    """Work order detail view."""
-    model = WorkOrder
-    template_name = 'maintenance/corrective/wo_detail.html'
-    context_object_name = 'work_order'
-
-    def get_queryset(self):
-        return WorkOrder.objects.filter(is_deleted=False).select_related('asset', 'assigned_to')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        wo = self.object
-        context['attachments'] = wo.attachments.filter(is_deleted=False)
-        context['parts_used'] = wo.parts_used.filter(is_deleted=False)
-        context['downtime_events'] = wo.downtime_events.filter(is_deleted=False)
-        return context
-
-
-class WorkOrderCreateView(LoginRequiredMixin, CreateView):
-    """Create a new work order."""
-    model = WorkOrder
-    form_class = WorkOrderForm
-    template_name = 'maintenance/corrective/wo_form.html'
-
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-
-        # Auto-generate WO number
-        today = timezone.now()
-        year = today.year
-        last_wo = WorkOrder.objects.filter(
-            wo_number__startswith=f'WO-{year}-'
-        ).order_by('-wo_number').first()
-
-        if last_wo:
-            last_num = int(last_wo.wo_number.split('-')[-1])
-            new_num = last_num + 1
-        else:
-            new_num = 1
-
-        form.instance.wo_number = f'WO-{year}-{new_num:04d}'
-
-        messages.success(self.request, f'Work Order {form.instance.wo_number} created.')
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('maintenance:work_order_detail', kwargs={'pk': self.object.pk})
+    context = {
+        'work_order': work_order,
+        'notes': notes,
+        'parts': parts,
+        'downtime_events': downtime_events,
+        'note_form': note_form,
+        'part_form': part_form,
+    }
+    return render(request, 'maintenance/workorder_detail.html', context)
 
 
 @login_required
-def work_order_start(request, pk):
-    """Start work on a work order."""
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid method')
+@permission_required('maintenance.add_maintenanceworkorder', raise_exception=True)
+def workorder_create(request):
+    """Create new work order."""
+    if request.method == 'POST':
+        form = WorkOrderForm(request.POST)
+        if form.is_valid():
+            wo = form.save(commit=False)
+            wo.created_by = request.user
+            wo.save()
+            messages.success(request, f'Work order {wo.work_order_number} created successfully.')
+            return redirect('maintenance:workorder_detail', wo_number=wo.work_order_number)
+    else:
+        form = WorkOrderForm()
 
-    wo = get_object_or_404(WorkOrder, pk=pk, is_deleted=False)
-    wo.start_work()
-    messages.success(request, f'Work started on {wo.wo_number}.')
-    return redirect('maintenance:work_order_detail', pk=pk)
+    return render(request, 'maintenance/workorder_form.html', {'form': form, 'title': 'Create Work Order'})
 
 
 @login_required
-def work_order_complete(request, pk):
-    """Complete a work order."""
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid method')
+@permission_required('maintenance.change_maintenanceworkorder', raise_exception=True)
+def workorder_edit(request, wo_number):
+    """Edit work order."""
+    work_order = get_object_or_404(
+        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+    )
 
-    wo = get_object_or_404(WorkOrder, pk=pk, is_deleted=False)
-    solution = request.POST.get('solution', '')
-    actions = request.POST.get('actions', '')
-    wo.complete_work(request.user, solution, actions)
-    messages.success(request, f'Work Order {wo.wo_number} completed.')
-    return redirect('maintenance:work_order_detail', pk=pk)
+    if request.method == 'POST':
+        form = WorkOrderForm(request.POST, instance=work_order)
+        if form.is_valid():
+            wo = form.save(commit=False)
+            wo.updated_by = request.user
+            wo.save()
+            messages.success(request, f'Work order {wo.work_order_number} updated successfully.')
+            return redirect('maintenance:workorder_detail', wo_number=wo.work_order_number)
+    else:
+        form = WorkOrderForm(instance=work_order)
 
-
-# =============================================================================
-# PREVENTIVE MAINTENANCE
-# =============================================================================
-
-class PMPlanListView(LoginRequiredMixin, ListView):
-    """List all PM plans."""
-    model = PMPlan
-    template_name = 'maintenance/preventive/plan_list.html'
-    context_object_name = 'plans'
-    paginate_by = 25
-
-    def get_queryset(self):
-        return PMPlan.objects.filter(is_deleted=False).order_by('code')
+    return render(request, 'maintenance/workorder_form.html', {
+        'form': form,
+        'work_order': work_order,
+        'title': 'Edit Work Order'
+    })
 
 
-class PMTaskListView(LoginRequiredMixin, ListView):
-    """List PM tasks."""
-    model = PMTask
-    template_name = 'maintenance/preventive/task_list.html'
-    context_object_name = 'tasks'
-    paginate_by = 25
+@login_required
+@permission_required('maintenance.can_assign_workorder', raise_exception=True)
+def workorder_assign(request, wo_number):
+    """Assign work order to technician."""
+    work_order = get_object_or_404(
+        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+    )
 
-    def get_queryset(self):
-        queryset = PMTask.objects.filter(
-            is_deleted=False
-        ).select_related('schedule', 'schedule__asset', 'schedule__pm_plan')
+    if request.method == 'POST':
+        form = WorkOrderAssignForm(request.POST, instance=work_order)
+        if form.is_valid():
+            wo = form.save(commit=False)
+            wo.assigned_by = request.user
+            wo.assigned_at = timezone.now()
+            wo.status = 'ASSIGNED'
+            wo.save()
+            messages.success(request, f'Work order assigned successfully.')
+            return redirect('maintenance:workorder_detail', wo_number=wo.work_order_number)
+    else:
+        form = WorkOrderAssignForm(instance=work_order)
 
-        status = self.request.GET.get('status')
-        if status:
-            queryset = queryset.filter(status=status)
+    return render(request, 'maintenance/workorder_assign.html', {
+        'form': form,
+        'work_order': work_order
+    })
 
-        return queryset.order_by('scheduled_date')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['status_choices'] = PMTask.STATUS_CHOICES
-        return context
+@login_required
+@permission_required('maintenance.can_complete_workorder', raise_exception=True)
+def workorder_complete(request, wo_number):
+    """Complete work order."""
+    work_order = get_object_or_404(
+        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+    )
 
+    if request.method == 'POST':
+        form = WorkOrderCompleteForm(request.POST, instance=work_order)
+        if form.is_valid():
+            wo = form.save(commit=False)
+            wo.status = 'COMPLETED'
+            wo.completed_by = request.user
+            wo.completed_at = timezone.now()
+            wo.save()
+            messages.success(request, f'Work order {wo.work_order_number} completed successfully.')
+            return redirect('maintenance:workorder_detail', wo_number=wo.work_order_number)
+    else:
+        form = WorkOrderCompleteForm(instance=work_order)
+
+    return render(request, 'maintenance/workorder_complete.html', {
+        'form': form,
+        'work_order': work_order
+    })
+
+
+@login_required
+@require_POST
+def workorder_add_note(request, wo_number):
+    """Add note to work order."""
+    work_order = get_object_or_404(
+        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+    )
+
+    form = WorkOrderNoteForm(request.POST)
+    if form.is_valid():
+        note = form.save(commit=False)
+        note.work_order = work_order
+        note.created_by = request.user
+        note.save()
+        messages.success(request, 'Note added successfully.')
+    else:
+        messages.error(request, 'Invalid note data.')
+
+    return redirect('maintenance:workorder_detail', wo_number=wo_number)
+
+
+@login_required
+@require_POST
+def workorder_add_part(request, wo_number):
+    """Add part to work order."""
+    work_order = get_object_or_404(
+        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+    )
+
+    form = WorkOrderPartForm(request.POST)
+    if form.is_valid():
+        part = form.save(commit=False)
+        part.work_order = work_order
+        part.save()
+        messages.success(request, 'Part added successfully.')
+    else:
+        messages.error(request, 'Invalid part data.')
+
+    return redirect('maintenance:workorder_detail', wo_number=wo_number)
+
+
+# ==================== PM VIEWS ====================
 
 @login_required
 def pm_calendar(request):
     """PM calendar view."""
     today = timezone.now().date()
 
-    # Get PM tasks for the current month
-    month_start = today.replace(day=1)
-    if today.month == 12:
-        month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
-    else:
-        month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+    # Get all active schedules
+    schedules = PMSchedule.objects.filter(
+        is_active=True
+    ).select_related('asset', 'pm_template').order_by('next_due_date')
 
-    tasks = PMTask.objects.filter(
-        is_deleted=False,
-        scheduled_date__range=[month_start, month_end]
-    ).select_related('schedule__asset', 'schedule__pm_plan').order_by('scheduled_date')
+    # Split into overdue, this week, this month
+    overdue = []
+    this_week = []
+    this_month = []
+    future = []
+
+    week_end = today + timezone.timedelta(days=7)
+    month_end = today + timezone.timedelta(days=30)
+
+    for schedule in schedules:
+        if schedule.next_due_date < today:
+            overdue.append(schedule)
+        elif schedule.next_due_date <= week_end:
+            this_week.append(schedule)
+        elif schedule.next_due_date <= month_end:
+            this_month.append(schedule)
+        else:
+            future.append(schedule)
 
     context = {
-        'tasks': tasks,
-        'today': today,
-        'month_start': month_start,
-        'month_end': month_end,
+        'overdue': overdue,
+        'this_week': this_week,
+        'this_month': this_month,
+        'future': future[:20],  # Limit future items
     }
-
-    return render(request, 'maintenance/preventive/calendar.html', context)
+    return render(request, 'maintenance/pm_calendar.html', context)
 
 
 @login_required
-def pm_task_start(request, pk):
-    """Start a PM task."""
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid method')
+def pm_template_list(request):
+    """List PM templates."""
+    templates = PMTemplate.objects.all().order_by('code')
+    return render(request, 'maintenance/pm_template_list.html', {'templates': templates})
 
+
+@login_required
+def pm_task_list(request):
+    """List PM tasks."""
+    status_filter = request.GET.get('status', '')
+
+    tasks = PMTask.objects.filter(
+        is_deleted=False
+    ).select_related('schedule__asset', 'schedule__pm_template', 'performed_by').order_by('-scheduled_date')
+
+    if status_filter:
+        tasks = tasks.filter(status=status_filter)
+
+    paginator = Paginator(tasks, 20)
+    page = request.GET.get('page')
+    tasks_page = paginator.get_page(page)
+
+    context = {
+        'tasks': tasks_page,
+        'status_filter': status_filter,
+    }
+    return render(request, 'maintenance/pm_task_list.html', context)
+
+
+@login_required
+def pm_task_detail(request, pk):
+    """View PM task details."""
     task = get_object_or_404(PMTask, pk=pk, is_deleted=False)
-    task.start_task(request.user)
-    messages.success(request, f'PM Task {task.task_number} started.')
-    return redirect('maintenance:pm_task_list')
+    return render(request, 'maintenance/pm_task_detail.html', {'task': task})
 
 
 @login_required
+@permission_required('maintenance.change_pmtask', raise_exception=True)
 def pm_task_complete(request, pk):
     """Complete a PM task."""
     task = get_object_or_404(PMTask, pk=pk, is_deleted=False)
 
+    if task.status == 'COMPLETED':
+        messages.error(request, 'This task is already completed.')
+        return redirect('maintenance:pm_task_detail', pk=pk)
+
     if request.method == 'POST':
-        notes = request.POST.get('notes', '')
-        issues = request.POST.get('issues', '')
-        follow_up = request.POST.get('follow_up') == 'on'
-        task.complete_task(notes, issues, follow_up)
-        messages.success(request, f'PM Task {task.task_number} completed.')
-        return redirect('maintenance:pm_task_list')
+        form = PMTaskCompleteForm(request.POST)
+        if form.is_valid():
+            task.actual_start = form.cleaned_data['actual_start']
+            task.actual_end = form.cleaned_data['actual_end']
+            task.notes = form.cleaned_data.get('notes', '')
+            task.findings = form.cleaned_data.get('findings', '')
+            task.performed_by = request.user
+            task.status = 'COMPLETED'
 
-    return render(request, 'maintenance/preventive/task_complete.html', {'task': task})
+            # Calculate duration
+            delta = task.actual_end - task.actual_start
+            task.duration_minutes = int(delta.total_seconds() / 60)
+
+            task.save()
+
+            # Update schedule
+            task.complete(
+                performed_by=request.user,
+                notes=task.notes,
+                findings=task.findings,
+                meter_reading=form.cleaned_data.get('meter_reading')
+            )
+
+            messages.success(request, 'PM task completed successfully.')
+
+            # Create follow-up work order if needed
+            if form.cleaned_data.get('create_work_order') and task.findings:
+                wo = MaintenanceWorkOrder.objects.create(
+                    asset=task.schedule.asset,
+                    title=f'Follow-up from PM: {task.schedule.pm_template.name}',
+                    description=f'Issues found during PM:\n{task.findings}',
+                    work_order_type='CORRECTIVE',
+                    priority='MEDIUM',
+                    status='PLANNED',
+                    source_pm_task=task,
+                    created_by=request.user,
+                )
+                messages.info(request, f'Follow-up work order {wo.work_order_number} created.')
+
+            return redirect('maintenance:pm_task_detail', pk=pk)
+    else:
+        form = PMTaskCompleteForm()
+
+    return render(request, 'maintenance/pm_task_complete.html', {'form': form, 'task': task})
 
 
-# =============================================================================
-# DOWNTIME TRACKING
-# =============================================================================
+# ==================== DOWNTIME VIEWS ====================
 
-class DowntimeListView(LoginRequiredMixin, ListView):
+@login_required
+def downtime_list(request):
     """List downtime events."""
-    model = DowntimeEvent
-    template_name = 'maintenance/downtime/list.html'
-    context_object_name = 'events'
-    paginate_by = 25
+    form = DateRangeForm(request.GET)
+    events = DowntimeEvent.objects.all().select_related('asset', 'work_order').order_by('-start_time')
 
-    def get_queryset(self):
-        queryset = DowntimeEvent.objects.filter(
-            is_deleted=False
-        ).select_related('asset', 'work_order')
+    if form.is_valid():
+        start_date = form.cleaned_data.get('start_date')
+        end_date = form.cleaned_data.get('end_date')
+        if start_date:
+            events = events.filter(start_time__date__gte=start_date)
+        if end_date:
+            events = events.filter(end_time__date__lte=end_date)
 
-        downtime_type = self.request.GET.get('type')
-        if downtime_type:
-            queryset = queryset.filter(downtime_type=downtime_type)
+    paginator = Paginator(events, 20)
+    page = request.GET.get('page')
+    events_page = paginator.get_page(page)
 
-        reason = self.request.GET.get('reason')
-        if reason:
-            queryset = queryset.filter(reason_category=reason)
-
-        return queryset.order_by('-start_time')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['type_choices'] = DowntimeEvent.DOWNTIME_TYPE_CHOICES
-        context['reason_choices'] = DowntimeEvent.REASON_CATEGORY_CHOICES
-        return context
-
-
-class DowntimeCreateView(LoginRequiredMixin, CreateView):
-    """Record a new downtime event."""
-    model = DowntimeEvent
-    form_class = DowntimeEventForm
-    template_name = 'maintenance/downtime/form.html'
-    success_url = reverse_lazy('maintenance:downtime_list')
-
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        form.instance.reported_by = self.request.user
-        messages.success(self.request, 'Downtime event recorded.')
-        return super().form_valid(form)
+    context = {
+        'events': events_page,
+        'form': form,
+    }
+    return render(request, 'maintenance/downtime_list.html', context)
 
 
 @login_required
-def downtime_end(request, pk):
-    """End a downtime event."""
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid method')
+def downtime_detail(request, pk):
+    """View downtime event details."""
+    event = get_object_or_404(DowntimeEvent, pk=pk)
+    impacts = event.production_impacts.all()
 
-    event = get_object_or_404(DowntimeEvent, pk=pk, is_deleted=False)
-    event.end_downtime()
-    messages.success(request, 'Downtime ended.')
-    return redirect('maintenance:downtime_list')
+    context = {
+        'event': event,
+        'impacts': impacts,
+    }
+    return render(request, 'maintenance/downtime_detail.html', context)
 
 
 @login_required
-def lost_sales_list(request):
-    """List lost sales records."""
-    records = LostSales.objects.filter(
+@permission_required('maintenance.can_record_downtime', raise_exception=True)
+def downtime_create(request):
+    """Record new downtime event."""
+    if request.method == 'POST':
+        form = DowntimeEventForm(request.POST)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.reported_by = request.user
+            event.created_by = request.user
+            event.save()
+            messages.success(request, 'Downtime event recorded successfully.')
+            return redirect('maintenance:downtime_detail', pk=event.pk)
+    else:
+        form = DowntimeEventForm()
+
+    return render(request, 'maintenance/downtime_form.html', {'form': form})
+
+
+@login_required
+def downtime_impact(request):
+    """Production impact report."""
+    form = DateRangeForm(request.GET)
+
+    start_date = None
+    end_date = None
+    if form.is_valid():
+        start_date = form.cleaned_data.get('start_date')
+        end_date = form.cleaned_data.get('end_date')
+
+    summary = DowntimeService.get_production_impact_summary(start_date, end_date)
+    top_assets = DowntimeService.get_top_downtime_assets(limit=10)
+    by_reason = DowntimeService.get_downtime_by_reason(start_date, end_date)
+
+    context = {
+        'form': form,
+        'summary': summary,
+        'top_assets': top_assets,
+        'by_reason': by_reason,
+    }
+    return render(request, 'maintenance/downtime_impact.html', context)
+
+
+@login_required
+def production_impact_create(request, downtime_pk):
+    """Add production impact to downtime event."""
+    downtime_event = get_object_or_404(DowntimeEvent, pk=downtime_pk)
+
+    if request.method == 'POST':
+        form = ProductionImpactForm(request.POST)
+        if form.is_valid():
+            impact = form.save(commit=False)
+            impact.downtime_event = downtime_event
+            impact.created_by = request.user
+            impact.save()
+
+            # Update downtime event flag
+            downtime_event.has_production_impact = True
+            downtime_event.save()
+
+            messages.success(request, 'Production impact recorded.')
+            return redirect('maintenance:downtime_detail', pk=downtime_pk)
+    else:
+        form = ProductionImpactForm(initial={'downtime_event': downtime_event})
+
+    return render(request, 'maintenance/production_impact_form.html', {
+        'form': form,
+        'downtime_event': downtime_event
+    })
+
+
+# ==================== REPORTS ====================
+
+@login_required
+def reports_dashboard(request):
+    """Reports and analytics dashboard."""
+    # Get summary stats
+    downtime_summary = DowntimeService.get_downtime_summary()
+    impact_summary = DowntimeService.get_production_impact_summary()
+    warranty_expiring = AssetService.get_warranty_expiring_assets(days=30)
+
+    context = {
+        'downtime_summary': downtime_summary,
+        'impact_summary': impact_summary,
+        'warranty_expiring': warranty_expiring,
+    }
+    return render(request, 'maintenance/reports_dashboard.html', context)
+
+
+# ==================== API ENDPOINTS ====================
+
+@login_required
+def api_asset_search(request):
+    """API endpoint for asset autocomplete."""
+    query = request.GET.get('q', '')
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+
+    assets = Asset.objects.filter(
         is_deleted=False
-    ).select_related('downtime_event').order_by('-created_at')
+    ).filter(
+        Q(asset_code__icontains=query) |
+        Q(name__icontains=query) |
+        Q(serial_number__icontains=query)
+    )[:10]
 
-    # Summary
-    total_lost = records.aggregate(total=Sum('lost_or_delayed_revenue'))['total'] or 0
+    results = [
+        {
+            'id': asset.pk,
+            'code': asset.asset_code,
+            'name': asset.name,
+            'text': f'{asset.asset_code} - {asset.name}'
+        }
+        for asset in assets
+    ]
 
-    paginator = Paginator(records, 25)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return JsonResponse({'results': results})
 
-    context = {
-        'page_obj': page_obj,
-        'total_lost': total_lost,
-    }
-
-    return render(request, 'maintenance/downtime/lost_sales.html', context)
-
-
-# =============================================================================
-# SETTINGS
-# =============================================================================
-
-@login_required
-def settings_dashboard(request):
-    """Maintenance settings dashboard."""
-    context = {
-        'category_count': AssetCategory.objects.filter(is_deleted=False).count(),
-        'location_count': AssetLocation.objects.filter(is_deleted=False).count(),
-        'pm_plan_count': PMPlan.objects.filter(is_deleted=False).count(),
-    }
-    return render(request, 'maintenance/settings/dashboard.html', context)
-
-
-class CategoryListView(LoginRequiredMixin, ListView):
-    """List asset categories."""
-    model = AssetCategory
-    template_name = 'maintenance/settings/category_list.html'
-    context_object_name = 'categories'
-
-    def get_queryset(self):
-        return AssetCategory.objects.filter(is_deleted=False).order_by('sort_order', 'code')
-
-
-class LocationListView(LoginRequiredMixin, ListView):
-    """List asset locations."""
-    model = AssetLocation
-    template_name = 'maintenance/settings/location_list.html'
-    context_object_name = 'locations'
-
-    def get_queryset(self):
-        return AssetLocation.objects.filter(is_deleted=False).order_by('sort_order', 'code')
-
-
-# =============================================================================
-# API / JSON ENDPOINTS
-# =============================================================================
 
 @login_required
 def api_dashboard_stats(request):
-    """Return dashboard statistics as JSON."""
-    today = timezone.now().date()
-    month_start = today.replace(day=1)
-
-    data = {
-        'total_assets': Asset.objects.filter(is_deleted=False).count(),
-        'open_work_orders': WorkOrder.objects.filter(
-            is_deleted=False,
-            status__in=['PLANNED', 'ASSIGNED', 'IN_PROGRESS']
-        ).count(),
-        'overdue_pm_tasks': PMTask.objects.filter(
-            is_deleted=False,
-            status='SCHEDULED',
-            scheduled_date__lt=today
-        ).count(),
-        'total_downtime_hours': round(
-            (DowntimeEvent.objects.filter(
-                is_deleted=False,
-                start_time__gte=month_start
-            ).aggregate(total=Sum('duration_minutes'))['total'] or 0) / 60, 1
-        ),
-    }
-
-    return JsonResponse(data)
+    """API endpoint for dashboard statistics."""
+    stats = MaintenanceService.get_dashboard_stats()
+    return JsonResponse(stats)

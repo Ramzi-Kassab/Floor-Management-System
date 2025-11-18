@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Assets{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Asset Registry</h1>
+        <a href="{% url 'maintenance:asset_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Asset
+        </a>
+    </div>
+
+    <!-- Search/Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="query" class="form-control" placeholder="Search by code, name, or serial..." value="{{ form.query.value|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    {{ form.category }}
+                </div>
+                <div class="col-md-2">
+                    {{ form.location }}
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="IN_SERVICE" {% if form.status.value == 'IN_SERVICE' %}selected{% endif %}>In Service</option>
+                        <option value="UNDER_MAINTENANCE" {% if form.status.value == 'UNDER_MAINTENANCE' %}selected{% endif %}>Under Maintenance</option>
+                        <option value="OUT_OF_SERVICE" {% if form.status.value == 'OUT_OF_SERVICE' %}selected{% endif %}>Out of Service</option>
+                        <option value="SCRAPPED" {% if form.status.value == 'SCRAPPED' %}selected{% endif %}>Scrapped</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assets Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Asset Code</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Criticality</th>
+                            <th>Last PM</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in assets %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'maintenance:asset_detail' asset.asset_code %}" class="fw-bold">
+                                    {{ asset.asset_code }}
+                                </a>
+                            </td>
+                            <td>{{ asset.name }}</td>
+                            <td>{{ asset.category|default:"-" }}</td>
+                            <td>{{ asset.location|default:"-" }}</td>
+                            <td>
+                                <span class="badge bg-{% if asset.status == 'IN_SERVICE' %}success{% elif asset.status == 'UNDER_MAINTENANCE' %}warning{% elif asset.status == 'OUT_OF_SERVICE' %}danger{% else %}secondary{% endif %}">
+                                    {{ asset.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="{% if asset.criticality == 'CRITICAL' %}text-danger fw-bold{% elif asset.criticality == 'HIGH' %}text-warning{% elif asset.criticality == 'MEDIUM' %}text-info{% else %}text-muted{% endif %}">
+                                    {{ asset.criticality }}
+                                </span>
+                            </td>
+                            <td>{{ asset.last_pm_date|default:"-" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'maintenance:asset_detail' asset.asset_code %}" class="btn btn-outline-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'maintenance:asset_edit' asset.asset_code %}" class="btn btn-outline-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No assets found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if assets.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if assets.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ assets.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+            </li>
+            {% endif %}
+            {% for num in assets.paginator.page_range %}
+            {% if assets.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > assets.number|add:'-3' and num < assets.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if assets.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ assets.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,326 +1,325 @@
-# Maintenance & Asset Management Module
+# Maintenance, Asset & Downtime Module
+
+A comprehensive CMMS (Computerized Maintenance Management System) module for the Floor Management System.
 
 ## Overview
 
-A comprehensive CMMS (Computerized Maintenance Management System) module for the Floor Management System, designed to manage factory equipment, preventive maintenance, corrective work orders, downtime tracking, and financial impact analysis.
+This module provides complete asset lifecycle management, preventive and corrective maintenance workflows, downtime tracking with production impact analysis, and financial loss quantification.
 
 ## Features
 
 ### 1. Asset Registry
-- Complete equipment/machine master database
-- Hierarchical categories and locations
-- Status and criticality tracking
-- QR code generation for quick access
-- Document attachment (manuals, drawings, SOPs)
-- Warranty and financial information
+- Complete asset lifecycle tracking (purchase to retirement)
+- Hierarchical location management (Site → Building → Area → Zone)
+- QR code generation for quick asset access
+- Criticality-based prioritization (LOW, MEDIUM, HIGH, CRITICAL)
+- Warranty tracking with expiration alerts
+- Document attachments (manuals, SOPs, drawings)
+- Meter reading tracking (hours, cycles, miles)
+- Health score calculation
 
 ### 2. Preventive Maintenance (PM)
-- PM plan templates with detailed instructions
-- Time-based and meter-based scheduling
-- Automatic task generation
-- Calendar view for planning
-- Task execution tracking
+- Template-based PM plans with detailed instructions
+- Frequency types: TIME_BASED, METER_BASED, CONDITION_BASED
+- Automatic scheduling and overdue detection
+- PM calendar with visual planning board
+- Safety notes and required tools documentation
+- Skill level requirements (BASIC, INTERMEDIATE, ADVANCED, EXPERT)
+- Automatic next-due-date calculation after completion
 
 ### 3. Corrective Maintenance
-- Maintenance request workflow (operators → planners)
-- Work order management
-- Root cause analysis
-- Priority and status tracking
-- Parts usage recording
+- Simple request submission for operators
+- Request approval workflow (NEW → UNDER_REVIEW → APPROVED → CONVERTED_TO_WO)
+- Automatic conversion to work orders
+- Work order lifecycle management:
+  - PLANNED → ASSIGNED → IN_PROGRESS → WAITING_PARTS → COMPLETED
+- Root cause analysis categories (MECHANICAL, ELECTRICAL, HYDRAULIC, etc.)
+- Problem-solution documentation
+- Progress notes and updates
+- Parts usage tracking
 
 ### 4. Downtime & Impact Tracking
-- Equipment downtime recording
-- Production impact linking (batches, job cards)
-- Lost/delayed revenue tracking
-- Severity scoring
-- Verification workflow
+- Automatic tracking from work orders
+- Manual entry for non-maintenance downtime
+- Event types: UNPLANNED_BREAKDOWN, PLANNED_PM, SETUP_CHANGEOVER, etc.
+- Severity classification based on duration
+- Production impact quantification
+- Financial loss tracking (lost vs delayed revenue)
+- Lost sales confirmation workflow
+
+### 5. Cost Management
+- Labor hours and cost tracking
+- Parts consumption with unit costs
+- External contractor costs
+- Total cost calculation (auto-computed)
+- Revenue impact analysis
 
 ## Installation
 
-The module is automatically registered in Django settings. After pulling the code:
+The module is already integrated into the Floor Management System.
 
+1. Add to INSTALLED_APPS in `settings.py`:
+```python
+INSTALLED_APPS = [
+    ...
+    'floor_app.operations.maintenance.apps.MaintenanceConfig',
+]
+```
+
+2. Add URL routing in `urls.py`:
+```python
+path("maintenance/", include(("floor_app.operations.maintenance.urls", "maintenance"), namespace="maintenance")),
+```
+
+3. Run migrations:
 ```bash
-# Apply migrations
 python manage.py makemigrations maintenance
 python manage.py migrate
-
-# Create superuser (if needed)
-python manage.py createsuperuser
-
-# Run development server
-python manage.py runserver
 ```
 
 ## URL Structure
 
-All maintenance URLs are under `/maintenance/`:
-
-- `/maintenance/` - Dashboard
-- `/maintenance/assets/` - Asset registry
-- `/maintenance/requests/` - Maintenance requests
-- `/maintenance/work-orders/` - Work orders
-- `/maintenance/pm/tasks/` - PM tasks
-- `/maintenance/pm/calendar/` - PM calendar
-- `/maintenance/downtime/` - Downtime events
-- `/maintenance/settings/` - Configuration
-
-## Usage Guide
-
-### Adding an Asset
-
-1. Navigate to **Maintenance → Assets**
-2. Click **"Add Asset"**
-3. Fill in required fields:
-   - Asset Code (unique identifier)
-   - Name
-   - Category
-   - Location
-   - Status & Criticality
-4. Add optional information (manufacturer, serial number, etc.)
-5. Click **"Create Asset"**
-
-### Creating a Maintenance Request
-
-Operators/supervisors can report issues:
-
-1. Navigate to **Maintenance → Requests → New Request**
-2. Select the affected asset
-3. Describe the problem
-4. Set priority (Critical if production stopped)
-5. Submit request
-
-Planners will review and convert to work orders.
-
-### Managing Work Orders
-
-1. **Create**: From approved requests or directly
-2. **Assign**: To maintenance technicians
-3. **Start**: When work begins
-4. **Complete**: Log solution, root cause, parts used
-5. **Follow-up**: Create additional WOs if needed
-
-### Recording Downtime
-
-1. Navigate to **Maintenance → Downtime → Create**
-2. Select asset
-3. Record start time (and end time if known)
-4. Classify as planned/unplanned
-5. Select reason category
-6. Mark if production was affected
-
-### PM Scheduling
-
-1. Create **PM Plans** with:
-   - Tasks to perform
-   - Safety instructions
-   - Tools required
-   - Frequency (daily, weekly, monthly, etc.)
-2. Assign plans to assets or categories
-3. System generates **PM Schedules** automatically
-4. **PM Tasks** are created when due
-
-## Data Models
-
-### Core Models
-
-| Model | Purpose |
-|-------|---------|
-| AssetCategory | Equipment types (Grinder, Oven, etc.) |
-| AssetLocation | Physical locations (Site → Area → Zone) |
-| Asset | Individual equipment records |
-| AssetDocument | Attached files (manuals, drawings) |
-
-### PM Models
-
-| Model | Purpose |
-|-------|---------|
-| PMPlan | Template for preventive maintenance |
-| PMSchedule | Asset-specific PM schedules |
-| PMTask | Individual PM task instances |
-
-### Corrective Models
-
-| Model | Purpose |
-|-------|---------|
-| MaintenanceRequest | User-submitted maintenance requests |
-| WorkOrder | Actual maintenance work |
-| WorkOrderAttachment | Files attached to work orders |
-| PartsUsage | Spare parts consumed |
-
-### Downtime Models
-
-| Model | Purpose |
-|-------|---------|
-| DowntimeEvent | Equipment unavailability records |
-| ProductionImpact | Link to affected production jobs |
-| LostSales | Financial impact tracking |
-
-## API Endpoints
-
-JSON endpoints for integration:
-
-- `GET /maintenance/api/stats/` - Dashboard statistics
-
-## Key Features
-
-### Auto-Generated Numbers
-- Asset Code: `AST-{UUID}`
-- Request Number: `REQ-YYYY-NNNN`
-- Work Order Number: `WO-YYYY-NNNN`
-- PM Task Number: `PMT-YYYY-NNNN`
-
-### QR Code Integration
-Each asset has a unique QR token. When scanned:
-- Opens asset detail page
-- Quick actions for requests and downtime
-- Links to open work orders
-
-### Root Cause Analysis
-Work orders support root cause tracking:
-- MECHANICAL, ELECTRICAL, HYDRAULIC
-- PNEUMATIC, CONTROL/SOFTWARE, WEAR
-- MISUSE, SAFETY_EVENT, UTILITY
-- CALIBRATION, CONTAMINATION, OTHER
-
-### Financial Tracking
-- Parts cost per work order
-- Labor cost tracking
-- Lost/delayed revenue recording
-- Cost analysis per asset
+```
+/maintenance/
+├── /                              # Main Dashboard
+├── /assets/                       # Asset list with filtering
+├── /assets/create/                # Create new asset
+├── /assets/<code>/                # Asset detail view
+├── /assets/<code>/edit/           # Edit asset
+├── /qr/<token>/                   # QR code scan handler
+├── /requests/                     # Maintenance request list
+├── /requests/create/              # Submit new request
+├── /requests/<id>/                # Request detail
+├── /requests/<id>/review/         # Review/approve request
+├── /requests/<id>/convert/        # Convert to work order
+├── /workorders/                   # Work order list
+├── /workorders/create/            # Create work order
+├── /workorders/<number>/          # Work order detail
+├── /workorders/<number>/edit/     # Edit work order
+├── /workorders/<number>/assign/   # Assign to technician
+├── /workorders/<number>/complete/ # Complete work order
+├── /pm/                           # PM calendar/planning
+├── /pm/templates/                 # PM template list
+├── /pm/tasks/                     # PM task list
+├── /pm/tasks/<id>/                # PM task detail
+├── /pm/tasks/<id>/complete/       # Complete PM task
+├── /downtime/                     # Downtime event list
+├── /downtime/create/              # Record new downtime
+├── /downtime/<id>/                # Downtime detail
+├── /downtime/<id>/add-impact/     # Add production impact
+├── /downtime/impact/              # Production impact report
+└── /reports/                      # Reports dashboard
+```
 
 ## Permissions
 
-Roles and access:
+- `maintenance.view_asset` - View assets
+- `maintenance.add_asset` - Create new assets
+- `maintenance.change_asset` - Edit assets
+- `maintenance.add_maintenancerequest` - Submit requests
+- `maintenance.change_maintenanceworkorder` - Update work orders
+- `maintenance.can_approve_request` - Approve/reject requests (custom)
+- `maintenance.can_assign_workorder` - Assign technicians (custom)
+- `maintenance.can_complete_workorder` - Close work orders (custom)
+- `maintenance.can_record_downtime` - Log downtime events (custom)
+- `maintenance.can_confirm_lost_sales` - Confirm financial impact (custom)
 
-| Action | Operator | Technician | Planner | Manager |
-|--------|----------|------------|---------|---------|
-| View Assets | Yes | Yes | Yes | Yes |
-| Create Request | Yes | Yes | Yes | Yes |
-| Approve Request | No | No | Yes | Yes |
-| Start Work Order | No | Yes | Yes | No |
-| Complete Work Order | No | Yes | Yes | No |
-| View Reports | No | No | Yes | Yes |
+## Models
+
+### Asset Registry
+- **AssetCategory** - Equipment categories with default PM intervals
+- **AssetLocation** - Hierarchical location structure
+- **Asset** - Main asset registry with full lifecycle tracking
+- **AssetDocument** - Links assets to Knowledge module documents
+- **AssetMeterReading** - Historical meter readings
+
+### Preventive Maintenance
+- **PMTemplate** - Reusable PM procedure templates
+- **PMSchedule** - Asset-specific PM schedules
+- **PMTask** - Individual PM task execution records
+
+### Work Orders
+- **MaintenanceRequest** - User-submitted maintenance requests
+- **MaintenanceWorkOrder** - Complete work order lifecycle
+- **WorkOrderNote** - Progress notes and updates
+- **WorkOrderPart** - Parts consumption tracking
+
+### Downtime & Impact
+- **DowntimeEvent** - Downtime/stoppage events
+- **ProductionImpact** - Links downtime to production batches
+- **LostSalesRecord** - Confirmed financial losses
 
 ## Integration Points
 
-### With Production Module
-- Link downtime to BatchOrder, JobCard
-- Track production delays
-- Impact on delivery schedules
+- **HR Module**: Employee assignment, department ownership
+- **Knowledge Module**: Document and procedure linking
+- **Future Inventory Module**: Parts consumption tracking (prepared with nullable FKs)
+- **Future Production Module**: Batch and job card linking (prepared with nullable FKs)
 
-### With Inventory Module
-- Record parts usage (item IDs)
-- Track maintenance costs
-- Stock deduction (future)
+## Services
 
-### With HR Module
-- Assign technicians (employee references)
-- Track who performed maintenance
-- Responsibility tracking
+### MaintenanceService
+- `get_dashboard_stats()` - Key metrics for dashboard
+- `get_assets_by_status()` - Asset distribution charts
+- `get_work_orders_by_type()` - Work order type breakdown
+- `convert_request_to_work_order()` - Request conversion logic
+- `generate_pm_tasks()` - Automatic PM task generation
 
-### With QR Codes Module
-- Asset QR token generation
-- Quick scan access to actions
-- Audit trail for scans
+### DowntimeService
+- `get_downtime_summary()` - Downtime statistics
+- `get_downtime_by_reason()` - Breakdown by cause
+- `get_production_impact_summary()` - Financial impact analysis
+- `get_top_downtime_assets()` - Worst performing assets
 
-## Dashboard Metrics
+### AssetService
+- `get_asset_health_score()` - Health scoring algorithm
+- `get_warranty_expiring_assets()` - Warranty alerts
+- `generate_qr_token()` - QR code generation
 
-The main dashboard displays:
+## Admin Interface
 
-- Total assets and status breakdown
-- Open work orders count
-- Overdue PM tasks
-- Total downtime hours (monthly)
-- Pending maintenance requests
-- Lost sales/revenue impact
-- Top 5 assets by downtime
-- Recent work orders
+Full Django admin integration with:
+- Custom badges for status and priority
+- Inline editing for related models
+- Autocomplete fields for foreign keys
+- Fieldsets for organized form layout
+- Search, filtering, and list editing
 
 ## Templates
 
-Key templates included:
+Complete Bootstrap 5 frontend with:
+- Responsive dashboard with statistics cards
+- Asset list with advanced filtering
+- Asset detail with health score visualization
+- PM calendar with overdue/upcoming views
+- Work order board with status tracking
+- Request approval workflow
+- Downtime event recording
+- Production impact analysis reports
+- Mobile-friendly responsive design
 
-- Dashboard with statistics
-- Asset list with filters
-- Asset detail with tabs
-- Work order management
-- Request workflow
-- PM task tracking
+## Signals
 
-## Future Enhancements
+Automatic actions:
+- Update asset status when work order status changes
+- Update PM schedule when task is completed
+- Calculate total cost before saving work order
+- Update parts cost when parts are added
 
-1. **Automatic PM Task Generation**: Daily job to create tasks from schedules
-2. **Email Notifications**: Alerts for overdue PMs and critical breakdowns
-3. **Mobile-Optimized Views**: Dedicated mobile interface for technicians
-4. **Advanced Reporting**: PDF reports, trend analysis
-5. **Predictive Maintenance**: ML-based failure prediction
-6. **Vendor Management**: External service provider tracking
-7. **Budget Planning**: Maintenance cost forecasting
+## Usage Examples
 
-## Database Tables
+### Creating an Asset
+```python
+from floor_app.operations.maintenance.models import Asset, AssetCategory
 
-All tables prefixed with `maintenance_`:
+category = AssetCategory.objects.create(
+    code='GRN',
+    name='Grinder',
+    default_criticality='HIGH'
+)
 
-- `maintenance_asset_category`
-- `maintenance_asset_location`
-- `maintenance_asset`
-- `maintenance_asset_document`
-- `maintenance_pm_plan`
-- `maintenance_pm_schedule`
-- `maintenance_pm_task`
-- `maintenance_request`
-- `maintenance_work_order`
-- `maintenance_wo_attachment`
-- `maintenance_downtime_event`
-- `maintenance_production_impact`
-- `maintenance_lost_sales`
-- `maintenance_parts_usage`
+asset = Asset.objects.create(
+    asset_code='GRN-001',
+    name='Surface Grinder #1',
+    category=category,
+    status='IN_SERVICE',
+    criticality='HIGH',
+    manufacturer='Okamoto',
+    model_number='ACC-12-24DX',
+    serial_number='SN123456'
+)
+```
 
-## Support
+### Recording Downtime with Impact
+```python
+from floor_app.operations.maintenance.models import DowntimeEvent, ProductionImpact
+from django.utils import timezone
 
-For issues or questions:
-1. Check Django admin at `/admin/`
-2. Review model definitions in `models/` directory
-3. Consult the design document `MAINTENANCE_DESIGN.md`
+event = DowntimeEvent.objects.create(
+    asset=asset,
+    event_type='UNPLANNED_BREAKDOWN',
+    start_time=timezone.now(),
+    is_planned=False,
+    reason_category='MECHANICAL',
+    reason_description='Spindle bearing failure',
+    has_production_impact=True
+)
 
-## Files Structure
+impact = ProductionImpact.objects.create(
+    downtime_event=event,
+    impact_type='BATCH',
+    batch_reference='BATCH-2025-001',
+    customer_name='Customer ABC',
+    delay_minutes=480,
+    lost_or_delayed_revenue=50000.00,
+    currency='SAR'
+)
+```
+
+## File Structure
 
 ```
 maintenance/
 ├── __init__.py
-├── apps.py
-├── admin/
-│   ├── __init__.py
-│   ├── asset.py
-│   ├── preventive.py
-│   ├── corrective.py
-│   └── downtime.py
+├── apps.py                    # App configuration
+├── admin.py                   # Admin interface (263 lines)
+├── forms.py                   # All forms (400+ lines)
 ├── models/
-│   ├── __init__.py
-│   ├── asset.py
-│   ├── preventive.py
-│   ├── corrective.py
-│   ├── downtime.py
-│   └── parts.py
-├── forms.py
-├── views.py
-├── urls.py
-├── signals.py
+│   ├── __init__.py           # Model imports
+│   ├── asset.py              # Asset registry models
+│   ├── preventive.py         # PM models
+│   ├── workorder.py          # Work order models
+│   └── downtime.py           # Downtime tracking models
+├── services.py               # Business logic services
+├── signals.py                # Django signals
+├── urls.py                   # URL routing
+├── views.py                  # View functions (700+ lines)
 ├── migrations/
-├── templates/maintenance/
-│   ├── dashboard.html
-│   ├── asset/
-│   ├── corrective/
-│   ├── preventive/
-│   ├── downtime/
-│   └── settings/
-├── MAINTENANCE_DESIGN.md
-└── README.md
+│   └── __init__.py
+├── templates/
+│   └── maintenance/
+│       ├── dashboard.html
+│       ├── asset_list.html
+│       ├── asset_detail.html
+│       ├── asset_form.html
+│       ├── request_list.html
+│       ├── request_form.html
+│       ├── request_detail.html
+│       ├── request_review.html
+│       ├── workorder_list.html
+│       ├── workorder_detail.html
+│       ├── workorder_form.html
+│       ├── workorder_assign.html
+│       ├── workorder_complete.html
+│       ├── pm_calendar.html
+│       ├── pm_task_list.html
+│       ├── pm_task_detail.html
+│       ├── pm_task_complete.html
+│       ├── pm_template_list.html
+│       ├── downtime_list.html
+│       ├── downtime_detail.html
+│       ├── downtime_form.html
+│       ├── production_impact_form.html
+│       ├── downtime_impact.html
+│       └── reports_dashboard.html
+├── MAINTENANCE_DESIGN.md     # Schema design document
+└── README.md                 # This file
 ```
 
----
+## Next Steps
 
-**Module Version**: 1.0.0
-**Created**: November 2025
-**Author**: Claude Code Agent
-**Compatible with**: Django 5.2, PostgreSQL
+1. Run migrations to create database tables
+2. Create sample data through admin
+3. Configure user permissions
+4. Customize PM templates for your equipment
+5. Set up asset categories and locations
+6. Train users on request submission workflow
+
+## Contributing
+
+This module follows the project's coding standards:
+- PEP 8 style guidelines
+- Django best practices
+- DRY (Don't Repeat Yourself)
+- Comprehensive documentation
+- Type hints where applicable

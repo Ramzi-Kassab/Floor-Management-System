@@ -1,41 +1,29 @@
+# floor_app/operations/maintenance/models/__init__.py
 """
-Maintenance & Asset Management Models
-
-Complete CMMS (Computerized Maintenance Management System) for factory equipment.
+Maintenance, Asset & Downtime Module - Models
 """
-
-# Asset and Equipment Registry
 from .asset import (
     AssetCategory,
     AssetLocation,
     Asset,
     AssetDocument,
+    AssetMeterReading,
 )
-
-# Preventive Maintenance
 from .preventive import (
-    PMPlan,
+    PMTemplate,
     PMSchedule,
     PMTask,
 )
-
-# Corrective Maintenance
-from .corrective import (
+from .workorder import (
     MaintenanceRequest,
-    WorkOrder,
-    WorkOrderAttachment,
+    MaintenanceWorkOrder,
+    WorkOrderNote,
+    WorkOrderPart,
 )
-
-# Downtime and Impact Tracking
 from .downtime import (
     DowntimeEvent,
     ProductionImpact,
-    LostSales,
-)
-
-# Parts and Consumables
-from .parts import (
-    PartsUsage,
+    LostSalesRecord,
 )
 
 __all__ = [
@@ -44,18 +32,18 @@ __all__ = [
     'AssetLocation',
     'Asset',
     'AssetDocument',
+    'AssetMeterReading',
     # Preventive Maintenance
-    'PMPlan',
+    'PMTemplate',
     'PMSchedule',
     'PMTask',
-    # Corrective Maintenance
+    # Work Orders
     'MaintenanceRequest',
-    'WorkOrder',
-    'WorkOrderAttachment',
-    # Downtime
+    'MaintenanceWorkOrder',
+    'WorkOrderNote',
+    'WorkOrderPart',
+    # Downtime & Impact
     'DowntimeEvent',
     'ProductionImpact',
-    'LostSales',
-    # Parts
-    'PartsUsage',
+    'LostSalesRecord',
 ]

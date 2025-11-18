@@ -1,546 +1,274 @@
 """
-Asset and Equipment Registry Models
-
-Core models for managing factory assets, equipment, and their documentation.
+Asset Registry models - Core CMMS master data.
 """
 import uuid
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
 from floor_app.mixins import AuditMixin, SoftDeleteMixin, PublicIdMixin
 
 
-class AssetCategory(PublicIdMixin, AuditMixin, SoftDeleteMixin):
-    """
-    Categories for grouping assets (e.g., Grinder, Oven, Compressor, Forklift).
-    Used for filtering, PM templates, and reporting.
-    """
+class AssetCategory(AuditMixin, SoftDeleteMixin, models.Model):
+    """Category/type of asset (Grinder, Oven, Brazing Station, etc.)"""
 
-    code = models.CharField(
-        max_length=50,
-        unique=True,
-        db_index=True,
-        help_text="Unique category code (e.g., GRND, OVEN, COMP)"
+    class DefaultCriticality(models.TextChoices):
+        LOW = 'LOW', 'Low'
+        MEDIUM = 'MEDIUM', 'Medium'
+        HIGH = 'HIGH', 'High'
+        CRITICAL = 'CRITICAL', 'Critical'
+
+    name = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=20, unique=True, help_text="Short code like GRN, OVN")
+    description = models.TextField(blank=True)
+    default_criticality = models.CharField(
+        max_length=10, choices=DefaultCriticality.choices, default=DefaultCriticality.MEDIUM
     )
-    name = models.CharField(
-        max_length=100,
-        help_text="Category name"
-    )
-    description = models.TextField(
-        blank=True,
-        default="",
-        help_text="Detailed description of this category"
-    )
-    parent = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='subcategories',
-        help_text="Parent category for hierarchy"
-    )
+    icon = models.CharField(max_length=50, blank=True, help_text="Bootstrap icon class")
+    color = models.CharField(max_length=7, default='#6366f1')
+    is_active = models.BooleanField(default=True)
 
     # PM defaults
     default_pm_interval_days = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text="Default PM interval in days for assets in this category"
-    )
-    requires_certification = models.BooleanField(
-        default=False,
-        help_text="Whether technicians need special certification to work on these assets"
-    )
-
-    # Display order
-    sort_order = models.PositiveIntegerField(
-        default=0,
-        help_text="Display order in lists"
+        null=True, blank=True, help_text="Default PM frequency in days"
     )
 
     class Meta:
-        db_table = "maintenance_asset_category"
-        verbose_name = "Asset Category"
-        verbose_name_plural = "Asset Categories"
-        ordering = ['sort_order', 'code']
-        indexes = [
-            models.Index(fields=['code'], name='ix_maint_cat_code'),
-            models.Index(fields=['parent'], name='ix_maint_cat_parent'),
-        ]
+        verbose_name = 'Asset Category'
+        verbose_name_plural = 'Asset Categories'
+        ordering = ['name']
 
     def __str__(self):
-        if self.parent:
-            return f"{self.parent.code} > {self.code} - {self.name}"
         return f"{self.code} - {self.name}"
 
     @property
-    def full_path(self):
-        """Return the full hierarchical path."""
-        if self.parent:
-            return f"{self.parent.full_path} > {self.name}"
-        return self.name
-
-    @property
     def asset_count(self):
-        """Count of assets in this category."""
         return self.assets.filter(is_deleted=False).count()
 
 
-class AssetLocation(PublicIdMixin, AuditMixin, SoftDeleteMixin):
-    """
-    Hierarchical locations for assets (Site → Area → Zone).
-    Examples: PDC Workshop, Roller Cone Area, Matrix Infiltration, NDT Room, Yard.
-    """
+class AssetLocation(AuditMixin, SoftDeleteMixin, models.Model):
+    """Physical location of assets (hierarchical: Site → Building → Area → Zone)"""
 
-    code = models.CharField(
-        max_length=50,
-        unique=True,
-        db_index=True,
-        help_text="Unique location code (e.g., PDC-WS, RC-AREA)"
-    )
-    name = models.CharField(
-        max_length=150,
-        help_text="Location name"
-    )
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=30, unique=True)
     parent = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='sublocations',
-        help_text="Parent location for hierarchy"
+        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='children'
     )
-    description = models.TextField(
-        blank=True,
-        default="",
-        help_text="Description of this location"
-    )
-
-    # Contact info for location
-    responsible_person_id = models.BigIntegerField(
-        null=True,
-        blank=True,
-        help_text="ID of HR Employee responsible for this location"
-    )
-    responsible_person_name = models.CharField(
-        max_length=200,
-        blank=True,
-        default="",
-        help_text="Name of responsible person (denormalized)"
-    )
-    contact_phone = models.CharField(
-        max_length=50,
-        blank=True,
-        default="",
-        help_text="Contact phone for this location"
-    )
-
-    # Physical details
-    building = models.CharField(
-        max_length=100,
-        blank=True,
-        default="",
-        help_text="Building name or number"
-    )
-    floor_level = models.CharField(
-        max_length=50,
-        blank=True,
-        default="",
-        help_text="Floor or level"
-    )
-
-    # Display order
-    sort_order = models.PositiveIntegerField(
-        default=0,
-        help_text="Display order in lists"
-    )
-
-    is_active = models.BooleanField(
-        default=True,
-        help_text="Whether this location is currently active"
-    )
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        db_table = "maintenance_asset_location"
-        verbose_name = "Asset Location"
-        verbose_name_plural = "Asset Locations"
-        ordering = ['sort_order', 'code']
-        indexes = [
-            models.Index(fields=['code'], name='ix_maint_loc_code'),
-            models.Index(fields=['parent'], name='ix_maint_loc_parent'),
-            models.Index(fields=['is_active'], name='ix_maint_loc_active'),
-        ]
+        verbose_name = 'Asset Location'
+        verbose_name_plural = 'Asset Locations'
+        ordering = ['order', 'name']
 
     def __str__(self):
         if self.parent:
-            return f"{self.parent.code} > {self.code} - {self.name}"
-        return f"{self.code} - {self.name}"
+            return f"{self.parent.name} > {self.name}"
+        return self.name
 
     @property
     def full_path(self):
-        """Return the full hierarchical path."""
         if self.parent:
             return f"{self.parent.full_path} > {self.name}"
         return self.name
 
     @property
-    def asset_count(self):
-        """Count of assets in this location."""
-        return self.assets.filter(is_deleted=False).count()
+    def depth(self):
+        if self.parent:
+            return self.parent.depth + 1
+        return 0
 
 
-class Asset(PublicIdMixin, AuditMixin, SoftDeleteMixin):
-    """
-    Central asset registry - the main equipment/machine master.
-    Each physical piece of equipment in the factory.
-    """
+class Asset(AuditMixin, SoftDeleteMixin, PublicIdMixin, models.Model):
+    """Main asset/equipment registry."""
 
-    STATUS_CHOICES = (
-        ('IN_SERVICE', 'In Service'),
-        ('UNDER_MAINTENANCE', 'Under Maintenance'),
-        ('OUT_OF_SERVICE', 'Out of Service'),
-        ('SCRAPPED', 'Scrapped'),
-        ('DISPOSED', 'Disposed'),
-    )
+    class Status(models.TextChoices):
+        IN_SERVICE = 'IN_SERVICE', 'In Service'
+        UNDER_MAINTENANCE = 'UNDER_MAINTENANCE', 'Under Maintenance'
+        OUT_OF_SERVICE = 'OUT_OF_SERVICE', 'Out of Service'
+        STANDBY = 'STANDBY', 'Standby'
+        SCRAPPED = 'SCRAPPED', 'Scrapped'
 
-    CRITICALITY_CHOICES = (
-        ('LOW', 'Low'),
-        ('MEDIUM', 'Medium'),
-        ('HIGH', 'High'),
-        ('CRITICAL', 'Critical'),
-    )
+    class Criticality(models.TextChoices):
+        LOW = 'LOW', 'Low'
+        MEDIUM = 'MEDIUM', 'Medium'
+        HIGH = 'HIGH', 'High'
+        CRITICAL = 'CRITICAL', 'Critical - Production Stopper'
 
-    # Primary Identification
+    # Core identification
     asset_code = models.CharField(
-        max_length=50,
-        unique=True,
-        db_index=True,
-        help_text="Internal asset tag/code (e.g., AST-2025-0001)"
+        max_length=50, unique=True, help_text="Internal asset tag (e.g., GRN-001)"
     )
-    name = models.CharField(
-        max_length=200,
-        help_text="Asset name/title"
-    )
-    description = models.TextField(
-        blank=True,
-        default="",
-        help_text="Detailed description of the asset"
-    )
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
 
     # Classification
     category = models.ForeignKey(
-        AssetCategory,
-        on_delete=models.PROTECT,
-        related_name='assets',
-        help_text="Asset category"
+        AssetCategory, on_delete=models.PROTECT, related_name='assets'
     )
     location = models.ForeignKey(
-        AssetLocation,
-        on_delete=models.PROTECT,
-        related_name='assets',
-        help_text="Physical location of the asset"
-    )
-    parent_asset = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='sub_equipment',
-        help_text="Parent asset (for sub-equipment)"
-    )
-
-    # Manufacturer Information
-    manufacturer = models.CharField(
-        max_length=150,
-        blank=True,
-        default="",
-        help_text="Manufacturer name"
-    )
-    model_number = models.CharField(
-        max_length=100,
-        blank=True,
-        default="",
-        help_text="Model number"
-    )
-    serial_number = models.CharField(
-        max_length=100,
-        blank=True,
-        default="",
-        help_text="Serial number from manufacturer"
+        AssetLocation, on_delete=models.SET_NULL, null=True, blank=True, related_name='assets'
     )
 
     # Status & Criticality
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='IN_SERVICE',
-        db_index=True,
-        help_text="Current operational status"
-    )
-    criticality = models.CharField(
-        max_length=10,
-        choices=CRITICALITY_CHOICES,
-        default='MEDIUM',
-        db_index=True,
-        help_text="How critical this asset is to production"
-    )
-    is_critical_production_asset = models.BooleanField(
-        default=False,
-        db_index=True,
-        help_text="Mark if this asset can stop major production when down"
-    )
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_SERVICE)
+    criticality = models.CharField(max_length=10, choices=Criticality.choices, default=Criticality.MEDIUM)
 
-    # Important Dates
-    installation_date = models.DateField(
-        null=True,
-        blank=True,
-        help_text="Date when asset was installed/commissioned"
-    )
-    warranty_expiry_date = models.DateField(
-        null=True,
-        blank=True,
-        help_text="Warranty expiration date"
-    )
-    last_maintenance_date = models.DateField(
-        null=True,
-        blank=True,
-        help_text="Date of last maintenance performed"
-    )
-    next_pm_due_date = models.DateField(
-        null=True,
-        blank=True,
-        help_text="Next scheduled preventive maintenance date"
-    )
+    # Equipment details
+    manufacturer = models.CharField(max_length=100, blank=True)
+    model_number = models.CharField(max_length=100, blank=True)
+    serial_number = models.CharField(max_length=100, blank=True)
+    year_manufactured = models.PositiveIntegerField(null=True, blank=True)
 
-    # ERP Integration
-    erp_asset_number = models.CharField(
-        max_length=100,
-        blank=True,
-        default="",
-        help_text="Asset number from ERP system"
-    )
+    # Ownership & Warranty
+    purchase_date = models.DateField(null=True, blank=True)
+    purchase_cost = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    warranty_expires = models.DateField(null=True, blank=True)
+    vendor = models.CharField(max_length=255, blank=True)
 
-    # QR/Barcode Token
+    # External references
+    erp_asset_number = models.CharField(max_length=50, blank=True, help_text="ERP system asset ID")
+    barcode = models.CharField(max_length=100, blank=True)
     qr_token = models.CharField(
-        max_length=100,
-        unique=True,
-        blank=True,
-        db_index=True,
+        max_length=50, unique=True, blank=True,
         help_text="Unique token for QR code scanning"
     )
 
-    # Financial Information
-    purchase_cost = models.DecimalField(
-        max_digits=15,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Original purchase cost"
+    # Technical specs
+    specifications = models.JSONField(default=dict, blank=True, help_text="Technical specifications")
+    notes = models.TextField(blank=True)
+
+    # Operational data
+    installation_date = models.DateField(null=True, blank=True)
+    last_pm_date = models.DateTimeField(null=True, blank=True)
+    next_pm_date = models.DateTimeField(null=True, blank=True)
+    meter_reading = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text="Current meter/hour reading"
     )
-    purchase_date = models.DateField(
-        null=True,
-        blank=True,
-        help_text="Date of purchase"
+    meter_unit = models.CharField(max_length=20, default='hours', help_text="e.g., hours, cycles, km")
+
+    # Responsible person
+    responsible_department = models.ForeignKey(
+        'hr.Department', on_delete=models.SET_NULL, null=True, blank=True, related_name='assets'
     )
-    replacement_cost = models.DecimalField(
-        max_digits=15,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Estimated replacement cost"
-    )
-    depreciation_rate = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Annual depreciation rate (%)"
+    primary_operator = models.ForeignKey(
+        'hr.HREmployee', on_delete=models.SET_NULL, null=True, blank=True, related_name='operated_assets'
     )
 
-    # Meter-Based PM Support
-    current_meter_reading = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0,
-        help_text="Current meter reading (hours, cycles, km, etc.)"
-    )
-    meter_unit = models.CharField(
-        max_length=50,
-        blank=True,
-        default="",
-        help_text="Unit of meter measurement (hours, cycles, km)"
-    )
-    last_meter_update = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="When meter was last updated"
-    )
+    # Financial tracking
+    replacement_cost = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    salvage_value = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    depreciation_method = models.CharField(max_length=50, blank=True)
+    expected_life_years = models.PositiveIntegerField(null=True, blank=True)
 
-    # Additional Info
-    specifications = models.TextField(
-        blank=True,
-        default="",
-        help_text="Technical specifications"
-    )
-    notes = models.TextField(
-        blank=True,
-        default="",
-        help_text="Additional notes"
-    )
+    # Flags
+    is_critical = models.BooleanField(default=False, help_text="Critical asset that can stop production")
+    requires_certification = models.BooleanField(default=False, help_text="Operators need certification")
+    has_safety_lockout = models.BooleanField(default=False, help_text="Requires LOTO procedures")
 
     class Meta:
-        db_table = "maintenance_asset"
-        verbose_name = "Asset"
-        verbose_name_plural = "Assets"
-        ordering = ['-created_at']
+        verbose_name = 'Asset'
+        verbose_name_plural = 'Assets'
+        ordering = ['asset_code']
         indexes = [
-            models.Index(fields=['asset_code'], name='ix_maint_asset_code'),
-            models.Index(fields=['status', 'criticality'], name='ix_maint_asset_stat_crit'),
-            models.Index(fields=['category', 'location'], name='ix_maint_asset_cat_loc'),
-            models.Index(fields=['qr_token'], name='ix_maint_asset_qr'),
-            models.Index(fields=['is_critical_production_asset'], name='ix_maint_asset_critical'),
-            models.Index(fields=['next_pm_due_date'], name='ix_maint_asset_next_pm'),
+            models.Index(fields=['asset_code']),
+            models.Index(fields=['status', 'criticality']),
+            models.Index(fields=['category', 'status']),
+            models.Index(fields=['location', 'status']),
+            models.Index(fields=['qr_token']),
+            models.Index(fields=['is_critical']),
         ]
 
     def __str__(self):
         return f"{self.asset_code} - {self.name}"
 
     def save(self, *args, **kwargs):
-        # Auto-generate QR token if not set
         if not self.qr_token:
-            self.qr_token = f"AST-{self.public_id.hex[:12].upper()}"
+            self.qr_token = f"AST-{uuid.uuid4().hex[:12].upper()}"
         super().save(*args, **kwargs)
 
     @property
-    def is_under_warranty(self):
-        """Check if asset is still under warranty."""
-        if self.warranty_expiry_date:
-            return self.warranty_expiry_date >= timezone.now().date()
-        return False
-
-    @property
-    def days_since_last_maintenance(self):
-        """Days since last maintenance."""
-        if self.last_maintenance_date:
-            delta = timezone.now().date() - self.last_maintenance_date
-            return delta.days
+    def age_years(self):
+        if self.purchase_date:
+            from django.utils import timezone
+            delta = timezone.now().date() - self.purchase_date
+            return round(delta.days / 365, 1)
         return None
 
     @property
-    def pm_overdue(self):
-        """Check if PM is overdue."""
-        if self.next_pm_due_date:
-            return self.next_pm_due_date < timezone.now().date()
-        return False
+    def warranty_status(self):
+        if self.warranty_expires:
+            from django.utils import timezone
+            if timezone.now().date() > self.warranty_expires:
+                return 'EXPIRED'
+            days_left = (self.warranty_expires - timezone.now().date()).days
+            if days_left <= 30:
+                return 'EXPIRING_SOON'
+            return 'ACTIVE'
+        return 'UNKNOWN'
 
     @property
-    def status_display_class(self):
-        """Bootstrap class for status badge."""
-        mapping = {
-            'IN_SERVICE': 'success',
-            'UNDER_MAINTENANCE': 'warning',
-            'OUT_OF_SERVICE': 'danger',
-            'SCRAPPED': 'secondary',
-            'DISPOSED': 'dark',
-        }
-        return mapping.get(self.status, 'secondary')
+    def open_work_orders_count(self):
+        return self.work_orders.exclude(
+            status__in=['COMPLETED', 'CANCELLED']
+        ).count()
 
     @property
-    def criticality_display_class(self):
-        """Bootstrap class for criticality badge."""
-        mapping = {
-            'LOW': 'info',
-            'MEDIUM': 'primary',
-            'HIGH': 'warning',
-            'CRITICAL': 'danger',
-        }
-        return mapping.get(self.criticality, 'secondary')
+    def total_downtime_hours(self):
+        from django.db.models import Sum
+        total = self.downtime_events.aggregate(total=Sum('duration_minutes'))['total']
+        return (total or 0) / 60
 
 
-class AssetDocument(PublicIdMixin, AuditMixin, SoftDeleteMixin):
-    """
-    Documents attached to assets (manuals, drawings, SOPs, OEM guides, photos).
-    """
+class AssetDocument(models.Model):
+    """Documents attached to assets (manuals, drawings, SOPs)."""
 
-    DOC_TYPE_CHOICES = (
-        ('MANUAL', 'User Manual'),
-        ('DRAWING', 'Technical Drawing'),
-        ('SOP', 'Standard Operating Procedure'),
-        ('WARRANTY', 'Warranty Document'),
-        ('CERTIFICATE', 'Certificate'),
-        ('PHOTO', 'Photo'),
-        ('SPEC_SHEET', 'Specification Sheet'),
-        ('MAINTENANCE_GUIDE', 'Maintenance Guide'),
-        ('SAFETY', 'Safety Document'),
-        ('OTHER', 'Other'),
-    )
+    class DocumentType(models.TextChoices):
+        MANUAL = 'MANUAL', 'User Manual'
+        OEM_GUIDE = 'OEM_GUIDE', 'OEM Guide'
+        SOP = 'SOP', 'Standard Operating Procedure'
+        DRAWING = 'DRAWING', 'Technical Drawing'
+        WARRANTY = 'WARRANTY', 'Warranty Document'
+        CERTIFICATE = 'CERTIFICATE', 'Calibration/Certificate'
+        SAFETY = 'SAFETY', 'Safety Data Sheet'
+        OTHER = 'OTHER', 'Other'
 
-    asset = models.ForeignKey(
-        Asset,
-        on_delete=models.CASCADE,
-        related_name='documents',
-        help_text="Asset this document belongs to"
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='documents')
+    document = models.ForeignKey(
+        'knowledge.Document', on_delete=models.CASCADE, related_name='asset_usages'
     )
-    title = models.CharField(
-        max_length=200,
-        help_text="Document title"
-    )
-    doc_type = models.CharField(
-        max_length=20,
-        choices=DOC_TYPE_CHOICES,
-        default='OTHER',
-        help_text="Type of document"
-    )
-    file = models.FileField(
-        upload_to='maintenance/asset_docs/%Y/%m/',
-        help_text="Uploaded file"
-    )
-    description = models.TextField(
-        blank=True,
-        default="",
-        help_text="Description of this document"
-    )
-
-    # Version control
-    version = models.CharField(
-        max_length=50,
-        blank=True,
-        default="1.0",
-        help_text="Document version"
-    )
-    is_current_version = models.BooleanField(
-        default=True,
-        help_text="Whether this is the current version"
-    )
+    document_type = models.CharField(max_length=20, choices=DocumentType.choices, default=DocumentType.OTHER)
+    description = models.CharField(max_length=255, blank=True)
+    is_primary = models.BooleanField(default=False, help_text="Primary document for this type")
 
     class Meta:
-        db_table = "maintenance_asset_document"
-        verbose_name = "Asset Document"
-        verbose_name_plural = "Asset Documents"
-        ordering = ['-created_at']
+        verbose_name = 'Asset Document'
+        verbose_name_plural = 'Asset Documents'
+        unique_together = [['asset', 'document']]
+
+    def __str__(self):
+        return f"{self.asset.asset_code} - {self.document.title}"
+
+
+class AssetMeterReading(models.Model):
+    """Track meter/counter readings for assets."""
+
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='meter_readings')
+    reading_date = models.DateTimeField()
+    reading_value = models.DecimalField(max_digits=12, decimal_places=2)
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    notes = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = 'Meter Reading'
+        verbose_name_plural = 'Meter Readings'
+        ordering = ['-reading_date']
         indexes = [
-            models.Index(fields=['asset', 'doc_type'], name='ix_maint_doc_asset_type'),
-            models.Index(fields=['is_current_version'], name='ix_maint_doc_current'),
+            models.Index(fields=['asset', 'reading_date']),
         ]
 
     def __str__(self):
-        return f"{self.asset.asset_code} - {self.title} ({self.get_doc_type_display()})"
-
-    @property
-    def file_extension(self):
-        """Get file extension."""
-        if self.file:
-            return self.file.name.split('.')[-1].upper()
-        return ""
-
-    @property
-    def file_size_display(self):
-        """Get human-readable file size."""
-        if self.file:
-            size = self.file.size
-            if size < 1024:
-                return f"{size} B"
-            elif size < 1024 * 1024:
-                return f"{size / 1024:.1f} KB"
-            else:
-                return f"{size / (1024 * 1024):.1f} MB"
-        return "0 B"
+        return f"{self.asset.asset_code}: {self.reading_value} @ {self.reading_date}"
