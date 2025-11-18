@@ -117,6 +117,25 @@
     .action-btn {
         min-width: 140px;
     }
+
+    .timeline {
+        position: relative;
+    }
+
+    .timeline-item {
+        position: relative;
+    }
+
+    .timeline-marker {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
 </style>
 {% endblock %}
 
@@ -347,55 +366,438 @@
 
         <!-- Cutter Grid Tab -->
         <div class="tab-pane fade" id="cutter" role="tabpanel">
-            <div class="text-center py-5">
-                <i class="bi bi-grid-3x3 display-4 text-muted"></i>
-                <p class="text-muted mt-2">Cutter grid evaluation interface will be displayed here.</p>
-                <p class="text-muted">Interactive grid showing blade positions and cutter evaluations.</p>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5><i class="bi bi-grid-3x3 me-2"></i>Cutter Evaluation Grid</h5>
+                <a href="{% url 'evaluation:grid_editor' session.pk %}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i> Edit Grid
+                </a>
             </div>
+
+            {% if session.cells.exists %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="60">Blade</th>
+                                <th width="100">Section</th>
+                                <th width="60">Pos</th>
+                                <th width="60">Type</th>
+                                <th>Cutter Item</th>
+                                <th width="80">Code</th>
+                                <th width="100">Features</th>
+                                <th width="100">Pocket Ø</th>
+                                <th width="100">Depth</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cell in session.cells.all|slice:":20" %}
+                            <tr>
+                                <td class="text-center">{{ cell.blade_number }}</td>
+                                <td>{{ cell.section.code }}</td>
+                                <td class="text-center">{{ cell.position_index }}</td>
+                                <td class="text-center">
+                                    <span class="badge {% if cell.is_primary %}bg-primary{% else %}bg-secondary{% endif %}">
+                                        {% if cell.is_primary %}P{% else %}S{% endif %}
+                                    </span>
+                                </td>
+                                <td><small>{{ cell.cutter_item.part_number|default:"-" }}</small></td>
+                                <td class="text-center">
+                                    {% if cell.cutter_code %}
+                                        <span class="badge" style="background-color: {{ cell.cutter_code.color_code }}; color: #000;">
+                                            {{ cell.cutter_code.code }}
+                                        </span>
+                                    {% else %}-{% endif %}
+                                </td>
+                                <td>
+                                    <small>
+                                        {% if cell.has_fin_build_up %}<span class="badge bg-info">V</span> {% endif %}
+                                        {% if cell.has_pocket_damage %}<span class="badge bg-warning">P</span> {% endif %}
+                                        {% if cell.has_impact_arrestor_issue %}<span class="badge bg-danger">I</span> {% endif %}
+                                        {% if cell.has_body_build_up %}<span class="badge bg-secondary">B</span> {% endif %}
+                                    </small>
+                                </td>
+                                <td>{{ cell.pocket_diameter|default:"-" }}</td>
+                                <td>{{ cell.pocket_depth|default:"-" }}</td>
+                                <td><small>{{ cell.notes|truncatewords:8 }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if session.cells.count > 20 %}
+                        <div class="alert alert-info">
+                            Showing first 20 of {{ session.cells.count }} cells.
+                            <a href="{% url 'evaluation:grid_editor' session.pk %}" class="alert-link">View all in Grid Editor</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-grid-3x3 display-4 text-muted"></i>
+                    <p class="text-muted mt-3 mb-3">No cutter evaluations recorded yet.</p>
+                    <a href="{% url 'evaluation:grid_editor' session.pk %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Start Grid Evaluation
+                    </a>
+                </div>
+            {% endif %}
         </div>
 
         <!-- Thread Tab -->
         <div class="tab-pane fade" id="thread" role="tabpanel">
-            <div class="text-center py-5">
-                <i class="bi bi-nut display-4 text-muted"></i>
-                <p class="text-muted mt-2">Thread inspection results will be displayed here.</p>
-                <p class="text-muted">Pin and box thread measurements and condition assessment.</p>
-            </div>
+            <h5 class="mb-3"><i class="bi bi-nut me-2"></i>Thread Inspection Results</h5>
+
+            {% if session.thread_inspections.exists %}
+                {% for inspection in session.thread_inspections.all %}
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>{{ inspection.get_thread_type_display }} - {{ inspection.get_connection_type_display }}</strong>
+                        <span class="badge {% if inspection.result == 'OK' %}bg-success{% elif inspection.result == 'SCRAP' %}bg-danger{% else %}bg-warning{% endif %}">
+                            {{ inspection.get_result_display }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Thread Size</small>
+                                    <div><strong>{{ inspection.thread_size|default:"Not specified" }}</strong></div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Crest Condition</small>
+                                    <div>{{ inspection.thread_crest_condition|default:"Not recorded" }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Root Condition</small>
+                                    <div>{{ inspection.thread_root_condition|default:"Not recorded" }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Shoulder Condition</small>
+                                    <div>{{ inspection.shoulder_condition|default:"Not recorded" }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Issues</small>
+                                    <div>
+                                        {% if inspection.galling_observed %}<span class="badge bg-warning">Galling</span> {% endif %}
+                                        {% if inspection.corrosion_observed %}<span class="badge bg-danger">Corrosion</span> {% endif %}
+                                        {% if not inspection.galling_observed and not inspection.corrosion_observed %}None{% endif %}
+                                    </div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Actions Required</small>
+                                    <div>
+                                        {% if inspection.requires_recut %}<span class="badge bg-info">Recut</span> {% endif %}
+                                        {% if inspection.requires_replacement %}<span class="badge bg-danger">Replace</span> {% endif %}
+                                        {% if not inspection.requires_recut and not inspection.requires_replacement %}None{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if inspection.description %}
+                        <hr>
+                        <div class="info-item">
+                            <small class="text-muted">Description</small>
+                            <p class="mb-0">{{ inspection.description }}</p>
+                        </div>
+                        {% endif %}
+                        {% if inspection.repair_recommendation %}
+                        <div class="info-item mt-2">
+                            <small class="text-muted">Repair Recommendation</small>
+                            <p class="mb-0">{{ inspection.repair_recommendation }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>Inspected by: {{ inspection.inspected_by.full_name }} on {{ inspection.inspected_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-nut display-4 text-muted"></i>
+                    <p class="text-muted mt-3">No thread inspections recorded.</p>
+                </div>
+            {% endif %}
         </div>
 
         <!-- NDT Tab -->
         <div class="tab-pane fade" id="ndt" role="tabpanel">
-            <div class="text-center py-5">
-                <i class="bi bi-search display-4 text-muted"></i>
-                <p class="text-muted mt-2">NDT inspection results will be displayed here.</p>
-                <p class="text-muted">Non-destructive testing findings and dimensional checks.</p>
-            </div>
+            <h5 class="mb-3"><i class="bi bi-search me-2"></i>NDT Inspection Results</h5>
+
+            {% if session.ndt_inspections.exists %}
+                {% for ndt in session.ndt_inspections.all %}
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>{{ ndt.get_method_display }}</strong>
+                        <span class="badge {% if ndt.result == 'PASS' %}bg-success{% elif ndt.result == 'FAIL' %}bg-danger{% else %}bg-warning{% endif %}">
+                            {{ ndt.get_result_display }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Areas Inspected</small>
+                                    <div>{{ ndt.areas_inspected|default:"Not specified" }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Indications Found</small>
+                                    <div>
+                                        {% if ndt.crack_indications %}<span class="badge bg-danger">Cracks</span> {% endif %}
+                                        {% if ndt.porosity_indications %}<span class="badge bg-warning">Porosity</span> {% endif %}
+                                        {% if ndt.inclusion_indications %}<span class="badge bg-info">Inclusions</span> {% endif %}
+                                        {% if not ndt.crack_indications and not ndt.porosity_indications and not ndt.inclusion_indications %}None{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Acceptance Standard</small>
+                                    <div>{{ ndt.acceptance_standard|default:"Not specified" }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <small class="text-muted">Meets Criteria</small>
+                                    <div>
+                                        {% if ndt.meets_acceptance_criteria %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">No</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if ndt.indication_count %}
+                        <div class="info-item mt-2">
+                            <small class="text-muted">Indication Details</small>
+                            <div>
+                                Count: {{ ndt.indication_count }}
+                                {% if ndt.max_indication_size %} | Max Size: {{ ndt.max_indication_size }} mm{% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if ndt.indications_description %}
+                        <hr>
+                        <div class="info-item">
+                            <small class="text-muted">Indications Description</small>
+                            <p class="mb-0">{{ ndt.indications_description }}</p>
+                        </div>
+                        {% endif %}
+                        {% if ndt.recommendations %}
+                        <div class="info-item mt-2">
+                            <small class="text-muted">Recommendations</small>
+                            <p class="mb-0">{{ ndt.recommendations }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>
+                            Inspector: {{ ndt.inspector.full_name }}{% if ndt.inspector_certification %} ({{ ndt.inspector_certification }}){% endif %}
+                            | Date: {{ ndt.inspection_date|date:"M d, Y" }}
+                            {% if ndt.report_number %}| Report #: {{ ndt.report_number }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-search display-4 text-muted"></i>
+                    <p class="text-muted mt-3">No NDT inspections recorded.</p>
+                </div>
+            {% endif %}
         </div>
 
         <!-- Instructions Tab -->
         <div class="tab-pane fade" id="instructions" role="tabpanel">
-            <div class="text-center py-5">
-                <i class="bi bi-list-task display-4 text-muted"></i>
-                <p class="text-muted mt-2">Technical instructions will be displayed here.</p>
-                <p class="text-muted">Auto-generated and manual technical instructions for this evaluation.</p>
-            </div>
+            <h5 class="mb-3"><i class="bi bi-list-task me-2"></i>Technical Instructions</h5>
+
+            {% if session.instruction_instances.exists %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="stat-box">
+                            <div class="value">{{ session.instruction_instances.count }}</div>
+                            <div class="label">Total Instructions</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% for instruction in session.instruction_instances.all %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge {% if instruction.severity == 'CRITICAL' %}bg-danger{% elif instruction.severity == 'WARNING' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ instruction.get_severity_display }}
+                                    </span>
+                                    <span class="badge bg-secondary">{{ instruction.get_stage_display }}</span>
+                                    <small class="text-muted">{{ instruction.template.code }}</small>
+                                </div>
+                                <p class="mb-0">{{ instruction.resolved_text }}</p>
+                            </div>
+                            <span class="badge {% if instruction.status == 'ACCEPTED' %}bg-success{% elif instruction.status == 'REJECTED' %}bg-danger{% elif instruction.status == 'OVERRIDDEN' %}bg-warning{% else %}bg-secondary{% endif %} ms-2">
+                                {{ instruction.get_status_display }}
+                            </span>
+                        </div>
+                        {% if instruction.override_reason %}
+                        <div class="mt-2 pt-2 border-top">
+                            <small class="text-muted">Override Reason: {{ instruction.override_reason }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-list-task display-4 text-muted"></i>
+                    <p class="text-muted mt-3">No technical instructions generated for this session.</p>
+                </div>
+            {% endif %}
         </div>
 
         <!-- Requirements Tab -->
         <div class="tab-pane fade" id="requirements" role="tabpanel">
-            <div class="text-center py-5">
-                <i class="bi bi-check2-square display-4 text-muted"></i>
-                <p class="text-muted mt-2">Requirements checklist will be displayed here.</p>
-                <p class="text-muted">Mandatory requirements and approvals for this evaluation.</p>
-            </div>
+            <h5 class="mb-3"><i class="bi bi-check2-square me-2"></i>Requirements Checklist</h5>
+
+            {% if session.requirement_instances.exists %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="stat-box">
+                            <div class="value">{{ session.requirement_instances.count }}</div>
+                            <div class="label">Total Requirements</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="list-group">
+                    {% for requirement in session.requirement_instances.all %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <h6 class="mb-0">{{ requirement.template.name }}</h6>
+                                    {% if requirement.template.is_mandatory %}
+                                        <span class="badge bg-danger">Mandatory</span>
+                                    {% endif %}
+                                    <span class="badge bg-secondary">{{ requirement.template.get_stage_display }}</span>
+                                </div>
+                                <p class="mb-1 text-muted">{{ requirement.template.description }}</p>
+                                {% if requirement.verification_result %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Verification Result:</small>
+                                    <p class="mb-0">{{ requirement.verification_result }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                {% if requirement.is_satisfied %}
+                                    <span class="badge bg-success p-2"><i class="bi bi-check-circle"></i> Satisfied</span>
+                                    <br><small class="text-muted">{{ requirement.satisfied_at|date:"M d, Y" }}</small>
+                                {% else %}
+                                    <span class="badge bg-warning p-2"><i class="bi bi-clock"></i> Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-check2-square display-4 text-muted"></i>
+                    <p class="text-muted mt-3">No requirements defined for this session.</p>
+                </div>
+            {% endif %}
         </div>
 
         <!-- History Tab -->
         <div class="tab-pane fade" id="history" role="tabpanel">
-            <div class="text-center py-5">
-                <i class="bi bi-clock-history display-4 text-muted"></i>
-                <p class="text-muted mt-2">Audit history will be displayed here.</p>
-                <p class="text-muted">Complete change log and workflow history for this session.</p>
+            <h5 class="mb-3"><i class="bi bi-clock-history me-2"></i>Audit History</h5>
+
+            <div class="timeline">
+                {% if session.locked_at %}
+                <div class="timeline-item mb-3">
+                    <div class="d-flex">
+                        <div class="timeline-marker bg-info me-3">
+                            <i class="bi bi-lock-fill"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Session Locked</h6>
+                                    <p class="card-text mb-0">
+                                        Session locked and made read-only
+                                    </p>
+                                    <small class="text-muted">{{ session.locked_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if session.approved_at %}
+                <div class="timeline-item mb-3">
+                    <div class="d-flex">
+                        <div class="timeline-marker bg-success me-3">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Session Approved</h6>
+                                    <p class="card-text mb-0">
+                                        Approved by {{ session.approved_by.get_full_name|default:"Unknown" }}
+                                    </p>
+                                    <small class="text-muted">{{ session.approved_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if session.submitted_at %}
+                <div class="timeline-item mb-3">
+                    <div class="d-flex">
+                        <div class="timeline-marker bg-warning me-3">
+                            <i class="bi bi-send-fill"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Submitted for Review</h6>
+                                    <p class="card-text mb-0">
+                                        Submitted to {{ session.reviewing_engineer.full_name|default:"reviewing engineer" }}
+                                    </p>
+                                    <small class="text-muted">{{ session.submitted_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="timeline-item mb-3">
+                    <div class="d-flex">
+                        <div class="timeline-marker bg-primary me-3">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Session Created</h6>
+                                    <p class="card-text mb-0">
+                                        Created by {{ session.created_by.get_full_name|default:"Unknown" }}
+                                        <br>Evaluator: {{ session.evaluator.full_name }}
+                                        <br>Context: {{ session.get_context_display }}
+                                    </p>
+                                    <small class="text-muted">{{ session.created_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
