@@ -904,7 +904,11 @@ def global_search(request):
         'total_count': total_count,
         'selected_modules': modules,
         'recent_searches': recent_searches,
-        'available_modules': ['hr', 'inventory', 'core'],
+        'available_modules': [
+            'hr', 'inventory', 'core', 'production', 'sales',
+            'purchasing', 'evaluation', 'quality', 'planning',
+            'qrcodes', 'knowledge', 'maintenance'
+        ],
     }
 
     return render(request, 'core/search_results.html', context)
@@ -937,3 +941,89 @@ def global_search_api(request):
             })
 
     return JsonResponse({'results': formatted_results[:20]})
+
+
+# ============================================================================
+# SAVED FILTERS & ADVANCED SEARCH
+# ============================================================================
+
+@login_required
+def saved_filters_list(request):
+    """List all saved filters for the current user."""
+    from .search_utils import SavedFilter
+
+    module = request.GET.get('module', None)
+    saved_filters = SavedFilter.get_saved_filters(request.user, module=module)
+
+    return JsonResponse({'filters': saved_filters})
+
+
+@login_required
+def save_filter(request):
+    """Save a filter preset."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .search_utils import SavedFilter
+        import json
+
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        filters = data.get('filters', {})
+        module = data.get('module', None)
+
+        if not name:
+            return JsonResponse({'error': 'Filter name is required'}, status=400)
+
+        if not filters:
+            return JsonResponse({'error': 'No filters provided'}, status=400)
+
+        SavedFilter.save_filter(request.user, name, filters, module=module)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Filter "{name}" saved successfully'
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def delete_filter(request, filter_key):
+    """Delete a saved filter."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .search_utils import SavedFilter
+
+        SavedFilter.delete_filter(request.user, filter_key)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Filter deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def clear_search_history(request):
+    """Clear user's search history."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        pref = UserPreference.get_or_create_for_user(request.user)
+        pref.preferences_json['search_history'] = []
+        pref.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Search history cleared successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

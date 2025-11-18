@@ -20,6 +20,7 @@ class GlobalSearch:
 
     # Define searchable models and their fields
     SEARCHABLE_MODELS = {
+        # ===== HR MODULE =====
         'hr.HRPeople': {
             'fields': ['first_name_en', 'last_name_en', 'first_name_ar', 'last_name_ar',
                       'national_id', 'iqama_number'],
@@ -49,6 +50,8 @@ class GlobalSearch:
             'icon': 'bi-building',
             'url_pattern': 'hr:department_detail',
         },
+
+        # ===== INVENTORY MODULE =====
         'inventory.Item': {
             'fields': ['sku', 'name', 'short_name', 'description'],
             'display_fields': ['sku', 'name'],
@@ -84,6 +87,166 @@ class GlobalSearch:
             'icon': 'bi-geo-alt',
             'url_pattern': 'inventory:location_detail',
         },
+
+        # ===== PRODUCTION MODULE =====
+        'production.JobCard': {
+            'fields': ['job_number', 'description', 'customer_name'],
+            'display_fields': ['job_number', 'description'],
+            'label': 'Job Cards',
+            'icon': 'bi-clipboard-check',
+            'url_pattern': 'production:jobcard_detail',
+        },
+        'production.ProductionBatch': {
+            'fields': ['batch_number', 'job_card__job_number'],
+            'display_fields': ['batch_number', 'job_card'],
+            'label': 'Production Batches',
+            'icon': 'bi-boxes',
+            'url_pattern': 'production:batch_detail',
+        },
+
+        # ===== SALES MODULE =====
+        'sales.Customer': {
+            'fields': ['customer_code', 'name', 'contact_person', 'email'],
+            'display_fields': ['customer_code', 'name'],
+            'label': 'Customers',
+            'icon': 'bi-building',
+            'url_pattern': 'sales:customer_detail',
+        },
+        'sales.SalesOrder': {
+            'fields': ['order_number', 'customer__name', 'description'],
+            'display_fields': ['order_number', 'customer'],
+            'label': 'Sales Orders',
+            'icon': 'bi-receipt',
+            'url_pattern': 'sales:salesorder_detail',
+        },
+        'sales.SalesOpportunity': {
+            'fields': ['opportunity_code', 'title', 'customer__name'],
+            'display_fields': ['opportunity_code', 'title'],
+            'label': 'Sales Opportunities',
+            'icon': 'bi-graph-up-arrow',
+            'url_pattern': 'sales:opportunity_detail',
+        },
+        'sales.DrillingRun': {
+            'fields': ['run_number', 'well_name', 'rig_name'],
+            'display_fields': ['run_number', 'well_name'],
+            'label': 'Drilling Runs',
+            'icon': 'bi-speedometer2',
+            'url_pattern': 'sales:drillingrun_detail',
+        },
+
+        # ===== PURCHASING MODULE =====
+        'purchasing.Supplier': {
+            'fields': ['supplier_code', 'name', 'contact_person', 'email'],
+            'display_fields': ['supplier_code', 'name'],
+            'label': 'Suppliers',
+            'icon': 'bi-truck',
+            'url_pattern': 'purchasing:supplier_detail',
+        },
+        'purchasing.PurchaseOrder': {
+            'fields': ['po_number', 'supplier__name', 'description'],
+            'display_fields': ['po_number', 'supplier'],
+            'label': 'Purchase Orders',
+            'icon': 'bi-cart-check',
+            'url_pattern': 'purchasing:po_detail',
+        },
+        'purchasing.PurchaseRequisition': {
+            'fields': ['pr_number', 'title', 'requestor__person__first_name_en'],
+            'display_fields': ['pr_number', 'title'],
+            'label': 'Purchase Requisitions',
+            'icon': 'bi-file-earmark-text',
+            'url_pattern': 'purchasing:pr_detail',
+        },
+
+        # ===== EVALUATION MODULE =====
+        'evaluation.EvaluationSession': {
+            'fields': ['session_number', 'bit_type__name', 'inspector__person__first_name_en'],
+            'display_fields': ['session_number', 'bit_type'],
+            'label': 'Evaluation Sessions',
+            'icon': 'bi-clipboard-data',
+            'url_pattern': 'evaluation:session_detail',
+        },
+        'evaluation.BitType': {
+            'fields': ['code', 'name', 'description'],
+            'display_fields': ['code', 'name'],
+            'label': 'Bit Types',
+            'icon': 'bi-gear-wide-connected',
+            'url_pattern': 'evaluation:bittype_detail',
+        },
+
+        # ===== QUALITY MODULE =====
+        'quality.NonconformanceReport': {
+            'fields': ['ncr_number', 'title', 'description'],
+            'display_fields': ['ncr_number', 'title'],
+            'label': 'NCRs',
+            'icon': 'bi-exclamation-triangle',
+            'url_pattern': 'quality:ncr_detail',
+        },
+
+        # ===== PLANNING MODULE =====
+        'planning.ProductionSchedule': {
+            'fields': ['schedule_code', 'description'],
+            'display_fields': ['schedule_code', 'description'],
+            'label': 'Production Schedules',
+            'icon': 'bi-calendar-event',
+            'url_pattern': 'planning:schedule_detail',
+        },
+        'planning.KPIDefinition': {
+            'fields': ['code', 'name', 'description'],
+            'display_fields': ['code', 'name'],
+            'label': 'KPI Definitions',
+            'icon': 'bi-speedometer',
+            'url_pattern': 'planning:kpi_detail',
+        },
+
+        # ===== QRCODES MODULE =====
+        'qrcodes.QRCode': {
+            'fields': ['code', 'title'],
+            'display_fields': ['code', 'title'],
+            'label': 'QR Codes',
+            'icon': 'bi-qr-code',
+            'url_pattern': 'qrcodes:qrcode_detail',
+        },
+        'qrcodes.Equipment': {
+            'fields': ['equipment_code', 'name', 'description'],
+            'display_fields': ['equipment_code', 'name'],
+            'label': 'Equipment',
+            'icon': 'bi-tools',
+            'url_pattern': 'qrcodes:equipment_detail',
+        },
+
+        # ===== KNOWLEDGE MODULE =====
+        'knowledge.Article': {
+            'fields': ['title', 'content', 'tags'],
+            'display_fields': ['title', 'category'],
+            'label': 'Knowledge Articles',
+            'icon': 'bi-journal-text',
+            'url_pattern': 'knowledge:article_detail',
+        },
+        'knowledge.TrainingCourse': {
+            'fields': ['course_code', 'title', 'description'],
+            'display_fields': ['course_code', 'title'],
+            'label': 'Training Courses',
+            'icon': 'bi-book',
+            'url_pattern': 'knowledge:course_detail',
+        },
+
+        # ===== MAINTENANCE MODULE =====
+        'maintenance.Asset': {
+            'fields': ['asset_tag', 'name', 'description'],
+            'display_fields': ['asset_tag', 'name'],
+            'label': 'Assets',
+            'icon': 'bi-cpu',
+            'url_pattern': 'maintenance:asset_detail',
+        },
+        'maintenance.WorkOrder': {
+            'fields': ['wo_number', 'title', 'description'],
+            'display_fields': ['wo_number', 'title'],
+            'label': 'Work Orders',
+            'icon': 'bi-wrench',
+            'url_pattern': 'maintenance:workorder_detail',
+        },
+
+        # ===== CORE MODULE =====
         'core.CostCenter': {
             'fields': ['code', 'name', 'description'],
             'display_fields': ['code', 'name'],

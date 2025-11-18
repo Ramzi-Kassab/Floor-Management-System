@@ -27,6 +27,10 @@ urlpatterns = [
     # API Endpoints
     path("api/user-preferences/table-columns/", views.TableColumnsAPIView.as_view(), name="api_table_columns"),
     path("api/search/", views.global_search_api, name="global_search_api"),
+    path("api/filters/", views.saved_filters_list, name="api_filters_list"),
+    path("api/filters/save/", views.save_filter, name="api_filter_save"),
+    path("api/filters/<str:filter_key>/delete/", views.delete_filter, name="api_filter_delete"),
+    path("api/search/clear-history/", views.clear_search_history, name="api_clear_search_history"),
 
     # Global Search
     path("search/", views.global_search, name="global_search"),
@@ -50,10 +54,19 @@ urlpatterns = [
 
     # Django Core Tables Front-End Views
     path("system/users/", views.UserListView.as_view(), name="user_list"),
+    path("system/users/create/", views.UserCreateView.as_view(), name="user_create"),
     path("system/users/<int:pk>/", views.UserDetailView.as_view(), name="user_detail"),
+    path("system/users/<int:pk>/edit/", views.UserUpdateView.as_view(), name="user_edit"),
+    path("system/users/<int:pk>/password/", views.user_password_change, name="user_password_change"),
+    path("system/users/<int:pk>/delete/", views.user_delete, name="user_delete"),
+    path("system/users/<int:pk>/toggle-active/", views.user_toggle_active, name="user_toggle_active"),
+    path("system/users/<int:pk>/permissions/", views.user_permissions, name="user_permissions"),
 
     path("system/groups/", views.GroupListView.as_view(), name="group_list"),
+    path("system/groups/create/", views.GroupCreateView.as_view(), name="group_create"),
     path("system/groups/<int:pk>/", views.GroupDetailView.as_view(), name="group_detail"),
+    path("system/groups/<int:pk>/edit/", views.GroupUpdateView.as_view(), name="group_edit"),
+    path("system/groups/<int:pk>/delete/", views.group_delete, name="group_delete"),
 
     path("system/permissions/", views.PermissionListView.as_view(), name="permission_list"),
 
