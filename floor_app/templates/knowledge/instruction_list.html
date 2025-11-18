@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Instruction Rules{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-lightning-fill text-warning me-2"></i>Instruction Rules
+            </h1>
+            <p class="text-muted mb-0">Automated business rules that control system behavior</p>
+        </div>
+        {% if perms.knowledge.add_instructionrule %}
+        <a href="{% url 'knowledge:instruction_create' %}" class="btn btn-warning">
+            <i class="bi bi-plus-circle me-2"></i>Create Instruction
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="q" class="form-control" placeholder="Search instructions..."
+                           value="{{ current_filters.q }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for value, label in statuses %}
+                        <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for value, label in instruction_types %}
+                        <option value="{{ value }}" {% if current_filters.type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="priority" class="form-select">
+                        <option value="">All Priorities</option>
+                        {% for value, label in priorities %}
+                        <option value="{{ value }}" {% if current_filters.priority == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="scope" class="form-select">
+                        <option value="">Default & Temporary</option>
+                        <option value="default" {% if current_filters.scope == 'default' %}selected{% endif %}>
+                            Default Only
+                        </option>
+                        <option value="temporary" {% if current_filters.scope == 'temporary' %}selected{% endif %}>
+                            Temporary Only
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Instructions List -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Code</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Scope</th>
+                        <th>Validity</th>
+                        <th>Triggers</th>
+                        <th>Order</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for instruction in instructions %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'knowledge:instruction_detail' instruction.code %}" class="fw-bold text-decoration-none">
+                                {{ instruction.code }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ instruction.title|truncatechars:40 }}
+                            <br>
+                            <small class="text-muted">
+                                {{ instruction.conditions.count }} conditions, {{ instruction.actions.count }} actions
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ instruction.get_instruction_type_display }}</span>
+                        </td>
+                        <td>
+                            {% if instruction.priority == 'CRITICAL' %}
+                            <span class="badge bg-danger">{{ instruction.get_priority_display }}</span>
+                            {% elif instruction.priority == 'MANDATORY' %}
+                            <span class="badge bg-purple">{{ instruction.get_priority_display }}</span>
+                            {% elif instruction.priority == 'HIGH' %}
+                            <span class="badge bg-warning">{{ instruction.get_priority_display }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ instruction.get_priority_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if instruction.status == 'ACTIVE' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif instruction.status == 'DRAFT' %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% elif instruction.status == 'APPROVED' %}
+                            <span class="badge bg-primary">Approved</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">{{ instruction.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if instruction.is_default %}
+                            <span class="badge bg-dark">Default</span>
+                            {% endif %}
+                            {% if instruction.is_temporary %}
+                            <span class="badge bg-warning text-dark">Temporary</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if instruction.is_temporary and instruction.valid_until %}
+                                {% if instruction.days_until_expiry == 0 %}
+                                <span class="text-danger fw-bold">EXPIRED</span>
+                                {% elif instruction.days_until_expiry <= 7 %}
+                                <span class="text-warning fw-bold">{{ instruction.days_until_expiry }}d left</span>
+                                {% else %}
+                                {{ instruction.days_until_expiry }}d left
+                                {% endif %}
+                            {% else %}
+                            <span class="text-muted">Permanent</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span title="Times triggered">
+                                <i class="bi bi-lightning"></i> {{ instruction.trigger_count }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ instruction.execution_order }}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'knowledge:instruction_detail' instruction.code %}"
+                                   class="btn btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if perms.knowledge.change_instructionrule %}
+                                <a href="{% url 'knowledge:instruction_edit' instruction.pk %}"
+                                   class="btn btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                {% if perms.knowledge.can_activate_instruction %}
+                                <form method="POST" action="{% url 'knowledge:instruction_activate' instruction.pk %}"
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    {% if instruction.status == 'ACTIVE' %}
+                                    <button type="submit" class="btn btn-outline-warning" title="Deactivate">
+                                        <i class="bi bi-pause"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-outline-success" title="Activate">
+                                        <i class="bi bi-play"></i>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center py-4 text-muted">
+                            <i class="bi bi-lightning fs-1 d-block mb-2"></i>
+                            No instruction rules found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Help Section -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+            <h5><i class="bi bi-info-circle me-2"></i>About Instruction Rules</h5>
+            <p class="text-muted mb-0">
+                Instruction rules are automated business logic that evaluate conditions and trigger actions.
+                When conditions match (e.g., "bit SMI type is X AND size is Y"), the system automatically
+                performs actions like showing warnings, preventing operations, sending notifications, or
+                calculating values. Rules can be default (always active) or temporary (time-limited).
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.badge.bg-purple { background-color: #7c3aed !important; }
+</style>
+{% endblock %}
