@@ -49,12 +49,12 @@
             
             <!-- Center Search Bar (Desktop) -->
             <div class="mx-auto d-none d-lg-block">
-                <div class="search-box">
-                    <input type="search" class="search-input" placeholder="Search employees, teams, departments...">
-                    <button class="search-btn">
+                <form action="{% url 'core:global_search' %}" method="get" class="search-box">
+                    <input type="search" name="q" class="search-input" placeholder="Search employees, items, locations..." id="globalSearchInput" autocomplete="off">
+                    <button type="submit" class="search-btn">
                         <i class="bi bi-search"></i>
                     </button>
-                </div>
+                </form>
             </div>
             
             <!-- Right Side Actions -->
@@ -137,12 +137,12 @@
             <div class="sidebar-sticky">
                 <!-- Mobile Search -->
                 <div class="d-lg-none px-3 mb-3">
-                    <div class="search-box">
-                        <input type="search" class="search-input" placeholder="Search...">
-                        <button class="search-btn">
+                    <form action="{% url 'core:global_search' %}" method="get" class="search-box">
+                        <input type="search" name="q" class="search-input" placeholder="Search..." autocomplete="off">
+                        <button type="submit" class="search-btn">
                             <i class="bi bi-search"></i>
                         </button>
-                    </div>
+                    </form>
                 </div>
                 
                 <div class="sidebar-header">
@@ -1031,6 +1031,18 @@
                     bsAlert.close();
                 });
             }, 5000);
+
+            // Global Search keyboard shortcut (Ctrl+K or Cmd+K)
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('globalSearchInput') || document.querySelector('.search-input');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+            });
         });
     </script>
     

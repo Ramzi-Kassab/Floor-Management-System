@@ -26,6 +26,10 @@ urlpatterns = [
 
     # API Endpoints
     path("api/user-preferences/table-columns/", views.TableColumnsAPIView.as_view(), name="api_table_columns"),
+    path("api/search/", views.global_search_api, name="global_search_api"),
+
+    # Global Search
+    path("search/", views.global_search, name="global_search"),
 
     # Finance Dashboard
     path("finance/", views.finance_dashboard, name="finance_dashboard"),
