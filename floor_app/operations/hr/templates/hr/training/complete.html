@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mark Training Complete - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .complete-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    .complete-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .training-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="complete-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-check-circle"></i> Mark Training Complete</h1>
+                <p class="text-muted">Record training completion details</p>
+            </div>
+            <a href="{% url 'hr:training_session_detail' training.training_session.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Session
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Training Info -->
+        <div class="training-info">
+            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Training Details</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Employee:</strong><br>
+                    {{ training.employee.get_full_name }}<br>
+                    <small>{{ training.employee.employee_no }}</small>
+                </div>
+                <div class="col-md-6">
+                    <strong>Program:</strong><br>
+                    {{ training.training_session.program.name }}<br>
+                    <small>{{ training.training_session.session_code }}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion Form -->
+        <div class="complete-card">
+            <form method="post" id="completeForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-clipboard-check"></i> Completion Details</h5>
+
+                <!-- Attendance -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.attended }}
+                        <label class="form-check-label" for="{{ form.attended.id_for_label }}">
+                            <strong>Employee Attended Training</strong>
+                        </label>
+                    </div>
+                    {% if form.attended.errors %}
+                        <div class="invalid-feedback d-block">{{ form.attended.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.attendance_percentage.id_for_label }}" class="form-label">
+                        Attendance Percentage
+                    </label>
+                    {{ form.attendance_percentage }}
+                    {% if form.attendance_percentage.errors %}
+                        <div class="invalid-feedback d-block">{{ form.attendance_percentage.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Percentage of sessions attended (0-100)</small>
+                </div>
+
+                <!-- Assessment -->
+                {% if training.training_session.program.has_assessment %}
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-award"></i> Assessment Required</h6>
+                    <p class="mb-0">Passing score: {{ training.training_session.program.passing_score }}%</p>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.assessment_score.id_for_label }}" class="form-label">
+                        Assessment Score (%)
+                    </label>
+                    {{ form.assessment_score }}
+                    {% if form.assessment_score.errors %}
+                        <div class="invalid-feedback d-block">{{ form.assessment_score.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Score achieved on assessment (0-100)</small>
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.passed }}
+                        <label class="form-check-label" for="{{ form.passed.id_for_label }}">
+                            <strong>Employee Passed Training</strong>
+                        </label>
+                    </div>
+                    {% if form.passed.errors %}
+                        <div class="invalid-feedback d-block">{{ form.passed.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Certificate -->
+                {% if training.training_session.program.grants_certificate %}
+                <div class="alert alert-success">
+                    <h6><i class="bi bi-patch-check"></i> Certificate Will Be Issued</h6>
+                    <p class="mb-0">
+                        A certificate will be automatically generated if the employee passed.
+                        {% if training.training_session.program.certificate_validity_months > 0 %}
+                            <br>Validity: {{ training.training_session.program.certificate_validity_months }} months
+                        {% else %}
+                            <br>No expiry date
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Notes -->
+                <div class="mb-4">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                        Notes
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Additional notes about completion</small>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'hr:training_session_detail' training.training_session.pk %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle"></i> Mark Complete
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Completion Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Verify attendance records before marking as completed</li>
+                    <li>Assessment scores must meet the passing threshold</li>
+                    <li>Certificates are issued automatically for passing participants</li>
+                    <li>Completion data affects employee training records and statistics</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-check passed if score meets threshold
+    const scoreInput = document.querySelector('input[name="assessment_score"]');
+    const passedCheckbox = document.querySelector('input[name="passed"]');
+
+    if (scoreInput) {
+        scoreInput.addEventListener('change', function() {
+            const score = parseFloat(this.value);
+            const passingScore = {{ training.training_session.program.passing_score }};
+
+            if (!isNaN(score) && score >= passingScore) {
+                passedCheckbox.checked = true;
+            } else if (!isNaN(score)) {
+                passedCheckbox.checked = false;
+            }
+        });
+    }
+
+    // Form validation
+    document.getElementById('completeForm').addEventListener('submit', function(e) {
+        const passed = passedCheckbox.checked;
+        const attended = document.querySelector('input[name="attended"]').checked;
+
+        if (passed && !attended) {
+            e.preventDefault();
+            alert('Cannot mark as passed if employee did not attend');
+            return false;
+        }
+
+        {% if training.training_session.program.has_assessment %}
+        const score = parseFloat(scoreInput.value);
+        const passingScore = {{ training.training_session.program.passing_score }};
+
+        if (passed && (isNaN(score) || score < passingScore)) {
+            e.preventDefault();
+            alert(`Score must be at least ${passingScore}% to pass`);
+            return false;
+        }
+        {% endif %}
+    });
+</script>
+{% endblock %}
