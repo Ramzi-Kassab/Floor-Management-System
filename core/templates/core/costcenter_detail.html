@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ costcenter.code }} - Cost Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .detail-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    .info-item {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border-left: 3px solid #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'core:costcenter_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2><i class="bi bi-building"></i> {{ costcenter.code }}</h2>
+                <p class="mb-0 opacity-75">{{ costcenter.name }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if costcenter.status == 'active' %}
+                    <span class="badge bg-success p-3" style="font-size: 1.1rem;">Active</span>
+                {% elif costcenter.status == 'inactive' %}
+                    <span class="badge bg-warning p-3" style="font-size: 1.1rem;">Inactive</span>
+                {% else %}
+                    <span class="badge bg-secondary p-3" style="font-size: 1.1rem;">Archived</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="detail-body">
+        <!-- Basic Information -->
+        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Basic Information</h5>
+        <div class="info-grid mb-4">
+            <div class="info-item">
+                <small class="text-muted d-block">Code</small>
+                <strong>{{ costcenter.code }}</strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Name</small>
+                <strong>{{ costcenter.name }}</strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">ERP Cost Center Code</small>
+                <strong>{{ costcenter.erp_cost_center_code|default:"Not set" }}</strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Status</small>
+                <strong>{{ costcenter.get_status_display }}</strong>
+            </div>
+        </div>
+
+        {% if costcenter.description %}
+        <div class="alert alert-info">
+            <h6><i class="bi bi-file-text"></i> Description</h6>
+            <p class="mb-0">{{ costcenter.description }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Hierarchy & Management -->
+        <h5 class="mb-3 mt-4"><i class="bi bi-diagram-3"></i> Hierarchy & Management</h5>
+        <div class="info-grid mb-4">
+            <div class="info-item">
+                <small class="text-muted d-block">Parent Cost Center</small>
+                <strong>
+                    {% if costcenter.parent %}
+                        <a href="{% url 'core:costcenter_detail' costcenter.parent.pk %}">{{ costcenter.parent.code }}</a>
+                    {% else %}
+                        Root Level
+                    {% endif %}
+                </strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Full Path</small>
+                <strong>{{ costcenter.full_path }}</strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Manager</small>
+                <strong>{{ costcenter.manager.get_full_name|default:"Not assigned" }}</strong>
+                {% if costcenter.manager %}
+                    <br><small class="text-muted">{{ costcenter.manager.email }}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Budget Information -->
+        <h5 class="mb-3 mt-4"><i class="bi bi-cash-stack"></i> Budget Information</h5>
+        <div class="info-grid mb-4">
+            <div class="info-item">
+                <small class="text-muted d-block">Annual Budget</small>
+                <strong>{{ costcenter.annual_budget|default:"Not set" }}</strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Currency</small>
+                <strong>{{ costcenter.currency }}</strong>
+            </div>
+        </div>
+
+        <!-- Child Cost Centers -->
+        {% if costcenter.children.exists %}
+        <h5 class="mb-3 mt-4"><i class="bi bi-diagram-2"></i> Child Cost Centers</h5>
+        <div class="list-group mb-4">
+            {% for child in costcenter.children.all %}
+            <a href="{% url 'core:costcenter_detail' child.pk %}" class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ child.code }}</strong> - {{ child.name }}
+                    </div>
+                    <span class="badge {% if child.status == 'active' %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ child.get_status_display }}
+                    </span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Related Departments -->
+        {% if costcenter.departments.exists %}
+        <h5 class="mb-3 mt-4"><i class="bi bi-people"></i> Associated Departments</h5>
+        <div class="list-group mb-4">
+            {% for dept in costcenter.departments.all %}
+            <div class="list-group-item">
+                <strong>{{ dept.name }}</strong>
+                <br><small class="text-muted">{{ dept.get_department_type_display }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Audit Information -->
+        <h5 class="mb-3 mt-4"><i class="bi bi-clock-history"></i> Audit Information</h5>
+        <div class="info-grid mb-4">
+            <div class="info-item">
+                <small class="text-muted d-block">Created At</small>
+                <strong>{{ costcenter.created_at|date:"M d, Y H:i" }}</strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Last Updated</small>
+                <strong>{{ costcenter.updated_at|date:"M d, Y H:i" }}</strong>
+            </div>
+            {% if costcenter.created_by %}
+            <div class="info-item">
+                <small class="text-muted d-block">Created By</small>
+                <strong>{{ costcenter.created_by.get_full_name }}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'core:costcenter_list' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+            <a href="{% url 'core:costcenter_edit' costcenter.pk %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-pencil"></i> Edit Cost Center
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
