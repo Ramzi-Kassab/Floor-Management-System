@@ -16,29 +16,48 @@ def get_current_year():
 
 
 class LeaveType:
-    """Types of leave"""
+    """Types of leave - Saudi Arabia Labor Law Compliant"""
+    # Standard leave types
     ANNUAL = 'ANNUAL'
     SICK = 'SICK'
     MATERNITY = 'MATERNITY'
     PATERNITY = 'PATERNITY'
-    BEREAVEMENT = 'BEREAVEMENT'
-    HAJJ = 'HAJJ'
+    NEWBORN = 'NEWBORN'  # KSA: 3 days for newborn
+    BEREAVEMENT = 'BEREAVEMENT'  # KSA: Variable by relative degree
+    BEREAVEMENT_SPOUSE = 'BEREAVEMENT_SPOUSE'  # KSA: 5 days
+    BEREAVEMENT_PARENT = 'BEREAVEMENT_PARENT'  # KSA: 5 days
+    BEREAVEMENT_CHILD = 'BEREAVEMENT_CHILD'  # KSA: 5 days
+    BEREAVEMENT_SIBLING = 'BEREAVEMENT_SIBLING'  # KSA: 3 days
+    BEREAVEMENT_GRANDPARENT = 'BEREAVEMENT_GRANDPARENT'  # KSA: 3 days
+    HAJJ = 'HAJJ'  # KSA: Once during employment, unpaid unless using annual leave
+    OMRA = 'OMRA'  # KSA: Umrah pilgrimage, unpaid, subject to approval
+    EXIT_REENTRY = 'EXIT_REENTRY'  # KSA: Exit/re-entry visa leave, tied to visa regulations
     MARRIAGE = 'MARRIAGE'
-    UNPAID = 'UNPAID'
+    UNPAID = 'UNPAID'  # KSA: Employer discretion, max 20-30 days/year
     EMERGENCY = 'EMERGENCY'
-    COMPENSATORY = 'COMPENSATORY'
+    COMPENSATORY = 'COMPENSATORY'  # From overtime weekend work
+    STUDY = 'STUDY'  # For education/training
 
     CHOICES = [
         (ANNUAL, 'Annual Leave'),
         (SICK, 'Sick Leave'),
-        (MATERNITY, 'Maternity Leave'),
+        (MATERNITY, 'Maternity Leave (10 weeks)'),
         (PATERNITY, 'Paternity Leave'),
-        (BEREAVEMENT, 'Bereavement Leave'),
-        (HAJJ, 'Hajj/Pilgrimage Leave'),
+        (NEWBORN, 'Newborn Care Leave (3 days - KSA)'),
+        (BEREAVEMENT, 'Bereavement Leave (General)'),
+        (BEREAVEMENT_SPOUSE, 'Bereavement - Spouse (5 days - KSA)'),
+        (BEREAVEMENT_PARENT, 'Bereavement - Parent (5 days - KSA)'),
+        (BEREAVEMENT_CHILD, 'Bereavement - Child (5 days - KSA)'),
+        (BEREAVEMENT_SIBLING, 'Bereavement - Sibling (3 days - KSA)'),
+        (BEREAVEMENT_GRANDPARENT, 'Bereavement - Grandparent (3 days - KSA)'),
+        (HAJJ, 'Hajj Pilgrimage (Once during employment - KSA)'),
+        (OMRA, 'Omra/Umrah Pilgrimage (Unpaid - KSA)'),
+        (EXIT_REENTRY, 'Exit/Re-entry Visa Leave (KSA)'),
         (MARRIAGE, 'Marriage Leave'),
         (UNPAID, 'Unpaid Leave'),
         (EMERGENCY, 'Emergency Leave'),
-        (COMPENSATORY, 'Compensatory Off'),
+        (COMPENSATORY, 'Compensatory Time Off'),
+        (STUDY, 'Study/Education Leave'),
     ]
 
 
