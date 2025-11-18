@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    .form-section h5 {
+        color: #6366f1;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <h2 class="mb-4"><i class="bi bi-briefcase me-2"></i>{{ title }}</h2>
+
+        <div class="form-card">
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h5><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
+
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">Position Name *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Main responsibilities and duties</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_department" class="form-label">Department *</label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                                <div class="invalid-feedback d-block">{{ form.department.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                {{ form.is_active }}
+                                <label for="id_is_active" class="form-check-label">Active</label>
+                                {% if form.is_active.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.is_active.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Level & Grade -->
+                <div class="form-section">
+                    <h5><i class="bi bi-bar-chart-steps me-2"></i>Level & Grade</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_position_level" class="form-label">Position Level *</label>
+                            {{ form.position_level }}
+                            {% if form.position_level.errors %}
+                                <div class="invalid-feedback d-block">{{ form.position_level.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_salary_grade" class="form-label">Salary Grade *</label>
+                            {{ form.salary_grade }}
+                            {% if form.salary_grade.errors %}
+                                <div class="invalid-feedback d-block">{{ form.salary_grade.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RBAC & Permissions -->
+                <div class="form-section">
+                    <h5><i class="bi bi-shield-check me-2"></i>Permissions (Optional)</h5>
+
+                    <div class="mb-3">
+                        <label for="id_auth_group" class="form-label">Auth Group</label>
+                        {{ form.auth_group }}
+                        {% if form.auth_group.errors %}
+                            <div class="invalid-feedback d-block">{{ form.auth_group.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Django auth group for RBAC</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_permission_codenames" class="form-label">Additional Permissions</label>
+                        {{ form.permission_codenames }}
+                        {% if form.permission_codenames.errors %}
+                            <div class="invalid-feedback d-block">{{ form.permission_codenames.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Comma-separated permission codenames</small>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'hr:position_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save me-2"></i>{{ submit_text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

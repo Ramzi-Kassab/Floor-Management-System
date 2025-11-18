@@ -26,6 +26,10 @@ urlpatterns = [
 
     # API Endpoints
     path("api/user-preferences/table-columns/", views.TableColumnsAPIView.as_view(), name="api_table_columns"),
+    path("api/search/", views.global_search_api, name="global_search_api"),
+
+    # Global Search
+    path("search/", views.global_search, name="global_search"),
 
     # Finance Dashboard
     path("finance/", views.finance_dashboard, name="finance_dashboard"),
@@ -45,17 +49,29 @@ urlpatterns = [
     path("loss-of-sale/<int:pk>/", views.LossOfSaleEventDetailView.as_view(), name="lossofsale_detail"),
 
     # Django Core Tables Front-End Views
+
+    # User Management
     path("system/users/", views.UserListView.as_view(), name="user_list"),
+    path("system/users/create/", views.UserCreateView.as_view(), name="user_create"),
     path("system/users/<int:pk>/", views.UserDetailView.as_view(), name="user_detail"),
+    path("system/users/<int:pk>/edit/", views.UserUpdateView.as_view(), name="user_edit"),
+    path("system/users/<int:pk>/password/", views.user_password_change, name="user_password_change"),
+    path("system/users/<int:pk>/delete/", views.user_delete, name="user_delete"),
+    path("system/users/<int:pk>/toggle-active/", views.user_toggle_active, name="user_toggle_active"),
+    path("system/users/<int:pk>/permissions/", views.user_permissions, name="user_permissions"),
 
+    # Group Management
     path("system/groups/", views.GroupListView.as_view(), name="group_list"),
+    path("system/groups/create/", views.GroupCreateView.as_view(), name="group_create"),
     path("system/groups/<int:pk>/", views.GroupDetailView.as_view(), name="group_detail"),
+    path("system/groups/<int:pk>/edit/", views.GroupUpdateView.as_view(), name="group_edit"),
+    path("system/groups/<int:pk>/delete/", views.group_delete, name="group_delete"),
 
+    # Permissions (read-only)
     path("system/permissions/", views.PermissionListView.as_view(), name="permission_list"),
 
+    # Other system views
     path("system/content-types/", views.ContentTypeListView.as_view(), name="contenttype_list"),
-
     path("system/admin-log/", views.AdminLogListView.as_view(), name="adminlog_list"),
-
     path("system/sessions/", views.SessionListView.as_view(), name="session_list"),
 ]

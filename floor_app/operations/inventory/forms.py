@@ -2,7 +2,7 @@ from django import forms
 from .models import (
     Item, SerialUnit, BOMHeader, BOMLine, InventoryTransaction,
     ItemCategory, ConditionType, OwnershipType, Location, UnitOfMeasure,
-    BitDesignRevision
+    BitDesign, BitDesignRevision, BitDesignLevel, BitDesignType
 )
 
 
@@ -160,3 +160,104 @@ class StockAdjustmentForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
     )
+
+
+class LocationForm(forms.ModelForm):
+    """Form for creating/editing Inventory Locations."""
+
+    class Meta:
+        model = Location
+        fields = [
+            'code', 'name', 'location_type', 'parent_location',
+            'address', 'gps_coordinates', 'max_capacity', 'capacity_uom',
+            'is_active', 'notes'
+        ]
+        widgets = {
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., WH-01, BIN-A1-01'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'location_type': forms.Select(attrs={'class': 'form-select'}),
+            'parent_location': forms.Select(attrs={'class': 'form-select'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'gps_coordinates': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 24.7136,46.6753'}),
+            'max_capacity': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'capacity_uom': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['parent_location'].queryset = Location.objects.filter(is_active=True, is_deleted=False)
+        self.fields['parent_location'].required = False
+        self.fields['capacity_uom'].queryset = UnitOfMeasure.objects.filter(is_active=True)
+        self.fields['capacity_uom'].required = False
+        self.fields['max_capacity'].required = False
+        self.fields['address'].required = False
+        self.fields['gps_coordinates'].required = False
+
+
+class BitDesignForm(forms.ModelForm):
+    """Form for creating/editing Bit Designs."""
+
+    class Meta:
+        model = BitDesign
+        fields = [
+            'design_code', 'name', 'level', 'size_inches', 'connection_type',
+            'blade_count', 'total_cutter_count', 'nozzle_count', 'tfa_range',
+            'description'
+        ]
+        widgets = {
+            'design_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., HP-X123'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'level': forms.Select(attrs={'class': 'form-select'}),
+            'size_inches': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g., 8.50'}),
+            'connection_type': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 4-1/2 API REG'}),
+            'blade_count': forms.NumberInput(attrs={'class': 'form-control'}),
+            'total_cutter_count': forms.NumberInput(attrs={'class': 'form-control'}),
+            'nozzle_count': forms.NumberInput(attrs={'class': 'form-control'}),
+            'tfa_range': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 0.50-0.75'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['level'].queryset = BitDesignLevel.objects.filter(is_active=True)
+
+
+class BitDesignRevisionForm(forms.ModelForm):
+    """Form for creating/editing MAT Numbers (Bit Design Revisions)."""
+
+    class Meta:
+        model = BitDesignRevision
+        fields = [
+            'mat_number', 'bit_design', 'revision_code', 'design_type',
+            'is_temporary', 'is_active', 'effective_date', 'obsolete_date',
+            'superseded_by', 'change_reason', 'notes', 'erp_item_number',
+            'erp_bom_number', 'standard_cost', 'last_purchase_cost'
+        ]
+        widgets = {
+            'mat_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., HP-X123-M2'}),
+            'bit_design': forms.Select(attrs={'class': 'form-select'}),
+            'revision_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., M0, M1, M2'}),
+            'design_type': forms.Select(attrs={'class': 'form-select'}),
+            'is_temporary': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'effective_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'obsolete_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'superseded_by': forms.Select(attrs={'class': 'form-select'}),
+            'change_reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'erp_item_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'erp_bom_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'standard_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'last_purchase_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['bit_design'].queryset = BitDesign.objects.filter(is_deleted=False)
+        self.fields['design_type'].queryset = BitDesignType.objects.filter(is_active=True)
+        self.fields['design_type'].required = False
+        self.fields['superseded_by'].queryset = BitDesignRevision.objects.filter(is_deleted=False)
+        self.fields['superseded_by'].required = False
+        self.fields['obsolete_date'].required = False

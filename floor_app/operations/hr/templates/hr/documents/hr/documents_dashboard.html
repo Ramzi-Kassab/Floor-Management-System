@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}HR Document Management - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        border-left: 4px solid #667eea;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .stat-card.warning {
+        border-left-color: #ffc107;
+    }
+    .stat-card.danger {
+        border-left-color: #dc3545;
+    }
+    .stat-card.success {
+        border-left-color: #198754;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .stat-card.warning .stat-number {
+        color: #ffc107;
+    }
+    .stat-card.danger .stat-number {
+        color: #dc3545;
+    }
+    .stat-card.success .stat-number {
+        color: #198754;
+    }
+    .filter-panel {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .doc-table-row {
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .doc-table-row:hover {
+        background: #f8f9fa;
+    }
+    .action-toolbar {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    .bulk-actions-bar {
+        background: #e7f1ff;
+        border: 2px solid #0d6efd;
+        padding: 1rem;
+        border-radius: 8px;
+        display: none;
+        margin-bottom: 1rem;
+    }
+    .bulk-actions-bar.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-folder2-open"></i> HR Document Management</h1>
+            <p class="text-muted">Comprehensive document verification and management</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:hr_expiry_dashboard' %}" class="btn btn-outline-warning me-2">
+                <i class="bi bi-calendar-x"></i> Expiry Dashboard
+            </a>
+            <a href="{% url 'hr:hr_upload_document' %}" class="btn btn-primary">
+                <i class="bi bi-cloud-upload"></i> Upload Document
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Total Documents</p>
+                        <div class="stat-number">{{ stats.total }}</div>
+                    </div>
+                    <i class="bi bi-files" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Pending Verification</p>
+                        <div class="stat-number">{{ stats.unverified }}</div>
+                    </div>
+                    <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Expiring Soon</p>
+                        <div class="stat-number">{{ stats.expiring }}</div>
+                    </div>
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Verified</p>
+                        <div class="stat-number">{{ stats.verified }}</div>
+                    </div>
+                    <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filter Panel -->
+    <div class="filter-panel">
+        <h5 class="mb-3"><i class="bi bi-funnel"></i> Advanced Filters</h5>
+        <form method="get" id="filterForm">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Employee</label>
+                    {{ form.employee }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Document Type</label>
+                    {{ form.document_type }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Verification Status</label>
+                    {{ form.verification_status }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Department</label>
+                    {{ form.department }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Expiry From</label>
+                    {{ form.expiry_from }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Expiry To</label>
+                    {{ form.expiry_to }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Expiring Within (Days)</label>
+                    {{ form.expiring_within_days }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Search Text</label>
+                    {{ form.search_text }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-check form-check-inline">
+                        {{ form.is_expired }}
+                        <label class="form-check-label" for="{{ form.is_expired.id_for_label }}">
+                            Show Expired Only
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        {{ form.is_mandatory }}
+                        <label class="form-check-label" for="{{ form.is_mandatory.id_for_label }}">
+                            Mandatory Documents Only
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        {{ form.is_confidential }}
+                        <label class="form-check-label" for="{{ form.is_confidential.id_for_label }}">
+                            Confidential Documents Only
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Apply Filters
+                </button>
+                <a href="{% url 'hr:hr_documents_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+                <span class="ms-3 text-muted">
+                    <i class="bi bi-info-circle"></i> Found {{ documents.count }} document(s)
+                </span>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions-bar" id="bulkActionsBar">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong><span id="selectedCount">0</span> document(s) selected</strong>
+            </div>
+            <div>
+                <form method="post" action="{% url 'hr:hr_bulk_actions' %}" id="bulkActionForm" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="document_ids" id="documentIds">
+                    <input type="hidden" name="action" id="bulkAction">
+                    <button type="button" class="btn btn-sm btn-success" onclick="submitBulkAction('verify')">
+                        <i class="bi bi-check-circle"></i> Verify Selected
+                    </button>
+                    <button type="button" class="btn btn-sm btn-warning" onclick="submitBulkAction('archive')">
+                        <i class="bi bi-archive"></i> Archive Selected
+                    </button>
+                    <button type="button" class="btn btn-sm btn-info" onclick="submitBulkAction('export')">
+                        <i class="bi bi-download"></i> Export to CSV
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="submitBulkAction('delete')">
+                        <i class="bi bi-trash"></i> Delete Selected
+                    </button>
+                </form>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                    <i class="bi bi-x"></i> Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="action-toolbar">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                    <i class="bi bi-check-square"></i> Select All
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                    <i class="bi bi-square"></i> Clear Selection
+                </button>
+            </div>
+            <div>
+                <a href="{% url 'hr:print_document_list' %}?{{ request.GET.urlencode }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-printer"></i> Print List
+                </a>
+                <button class="btn btn-sm btn-outline-success" onclick="exportToCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-table"></i> Documents ({{ documents.count }})</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if documents %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" class="form-check-input" id="selectAllCheckbox" onchange="toggleSelectAll(this)">
+                                </th>
+                                <th>Employee</th>
+                                <th>Document Type</th>
+                                <th>Title</th>
+                                <th>Upload Date</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr class="doc-table-row" data-doc-id="{{ doc.id }}">
+                                <td onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="form-check-input doc-checkbox" value="{{ doc.id }}" onchange="updateBulkActions()">
+                                </td>
+                                <td>
+                                    <strong>{{ doc.employee.employee_no }}</strong><br>
+                                    <small class="text-muted">{{ doc.employee.get_full_name }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ doc.get_document_type_display }}</span>
+                                    {% if doc.is_mandatory %}
+                                        <i class="bi bi-exclamation-circle text-danger" title="Mandatory"></i>
+                                    {% endif %}
+                                    {% if doc.is_confidential %}
+                                        <i class="bi bi-lock text-warning" title="Confidential"></i>
+                                    {% endif %}
+                                </td>
+                                <td>{{ doc.title|truncatewords:5 }}</td>
+                                <td><small>{{ doc.uploaded_at|date:"M d, Y" }}</small></td>
+                                <td>
+                                    {% if doc.expiry_date %}
+                                        <small class="{% if doc.is_expired %}text-danger{% elif doc.is_expiring_soon %}text-warning{% endif %}">
+                                            {{ doc.expiry_date|date:"M d, Y" }}
+                                            {% if doc.is_expired %}
+                                                <i class="bi bi-x-circle-fill"></i>
+                                            {% elif doc.is_expiring_soon %}
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                            {% endif %}
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">N/A</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if doc.is_verified %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Verified
+                                        </span>
+                                    {% elif doc.verification_status == 'REJECTED' %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle"></i> Rejected
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-clock"></i> Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td onclick="event.stopPropagation()">
+                                    <a href="{% url 'hr:hr_document_detail' doc.pk %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if not doc.is_verified %}
+                                    <a href="{% url 'hr:hr_verify_document' doc.pk %}" class="btn btn-sm btn-outline-success" title="Verify">
+                                        <i class="bi bi-check-circle"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if doc.file %}
+                                    <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Download">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i>
+                    <h4 class="mt-3 text-muted">No documents found</h4>
+                    <p class="text-muted">Try adjusting your filters or upload new documents</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedDocs = new Set();
+
+    function toggleSelectAll(checkbox) {
+        const checkboxes = document.querySelectorAll('.doc-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+            if (checkbox.checked) {
+                selectedDocs.add(cb.value);
+            } else {
+                selectedDocs.delete(cb.value);
+            }
+        });
+        updateBulkActions();
+    }
+
+    function selectAll() {
+        document.getElementById('selectAllCheckbox').checked = true;
+        toggleSelectAll(document.getElementById('selectAllCheckbox'));
+    }
+
+    function clearSelection() {
+        document.getElementById('selectAllCheckbox').checked = false;
+        toggleSelectAll(document.getElementById('selectAllCheckbox'));
+    }
+
+    function updateBulkActions() {
+        const checkboxes = document.querySelectorAll('.doc-checkbox:checked');
+        selectedDocs.clear();
+        checkboxes.forEach(cb => selectedDocs.add(cb.value));
+
+        const count = selectedDocs.size;
+        document.getElementById('selectedCount').textContent = count;
+
+        const bulkBar = document.getElementById('bulkActionsBar');
+        if (count > 0) {
+            bulkBar.classList.add('active');
+        } else {
+            bulkBar.classList.remove('active');
+        }
+    }
+
+    function submitBulkAction(action) {
+        if (selectedDocs.size === 0) {
+            alert('Please select at least one document');
+            return;
+        }
+
+        const confirmMessages = {
+            verify: 'Verify selected documents?',
+            archive: 'Archive selected documents?',
+            delete: 'Delete selected documents? This action cannot be undone!',
+            export: 'Export selected documents to CSV?'
+        };
+
+        if (confirm(confirmMessages[action])) {
+            document.getElementById('documentIds').value = Array.from(selectedDocs).join(',');
+            document.getElementById('bulkAction').value = action;
+            document.getElementById('bulkActionForm').submit();
+        }
+    }
+
+    function exportToCSV() {
+        window.location.href = '{% url "hr:hr_bulk_actions" %}?action=export_all&{{ request.GET.urlencode }}';
+    }
+
+    // Row click to view details
+    document.querySelectorAll('.doc-table-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('input, button, a')) {
+                const docId = this.dataset.docId;
+                window.location.href = `/hr/documents/hr/${docId}/`;
+            }
+        });
+    });
+</script>
+{% endblock %}

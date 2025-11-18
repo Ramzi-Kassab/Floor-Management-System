@@ -1,0 +1,486 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .change-badge {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .change-positive {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .change-negative {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    .module-bar {
+        height: 30px;
+        background-color: #007bff;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 10px;
+        color: white;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    .error-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    .severity-critical { background-color: #dc3545; color: white; }
+    .severity-error { background-color: #fd7e14; color: white; }
+    .severity-warning { background-color: #ffc107; color: #000; }
+    .severity-info { background-color: #17a2b8; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-graph-up"></i> Analytics Dashboard</h1>
+        <div>
+            <button class="btn btn-outline-primary" id="refreshBtn">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+            <a href="{% url 'analytics:export_report' %}?type=activities" class="btn btn-success">
+                <i class="bi bi-download"></i> Export Data
+            </a>
+        </div>
+    </div>
+
+    <!-- Real-time Statistics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card bg-primary text-white">
+                <div class="stat-label">Active Users (24h)</div>
+                <div class="stat-value">{{ active_users_24h }}</div>
+                <small><i class="bi bi-clock"></i> Right now: {{ active_users_1h }}</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-success text-white">
+                <div class="stat-label">Total Logins (Today)</div>
+                <div class="stat-value">{{ today_stats.total_logins|default:0 }}</div>
+                {% if logins_change %}
+                <small>
+                    {% if logins_change > 0 %}
+                    <i class="bi bi-arrow-up"></i> +{{ logins_change }}%
+                    {% else %}
+                    <i class="bi bi-arrow-down"></i> {{ logins_change }}%
+                    {% endif %}
+                    vs yesterday
+                </small>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-info text-white">
+                <div class="stat-label">Page Views (Today)</div>
+                <div class="stat-value">{{ today_stats.total_page_views|default:0 }}</div>
+                {% if page_views_change %}
+                <small>
+                    {% if page_views_change > 0 %}
+                    <i class="bi bi-arrow-up"></i> +{{ page_views_change }}%
+                    {% else %}
+                    <i class="bi bi-arrow-down"></i> {{ page_views_change }}%
+                    {% endif %}
+                    vs yesterday
+                </small>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-warning text-dark">
+                <div class="stat-label">Actions (Today)</div>
+                <div class="stat-value">{{ today_stats.total_actions|default:0 }}</div>
+                <small><i class="bi bi-activity"></i> User activities tracked</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7-Day Statistics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card border">
+                <div class="stat-label">Sessions (7 days)</div>
+                <div class="stat-value text-primary">{{ total_sessions_7d }}</div>
+                <small>Avg duration: {% widthratio avg_session_duration_7d 60 1 %} min</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card border">
+                <div class="stat-label">Page Views (7 days)</div>
+                <div class="stat-value text-success">{{ total_page_views_7d }}</div>
+                <small>Across all modules</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card border">
+                <div class="stat-label">Activities (7 days)</div>
+                <div class="stat-value text-info">{{ total_activities_7d }}</div>
+                <small>CRUD operations</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card border">
+                <div class="stat-label">Errors (7 days)</div>
+                <div class="stat-value text-danger">{{ error_summary.total }}</div>
+                <small>{{ error_summary.critical }} critical</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-bar-chart-line"></i> Activity Trends (Last 7 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Module Usage -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-grid-3x3-gap"></i> Module Usage (30 days)</h5>
+                </div>
+                <div class="card-body">
+                    {% if module_usage %}
+                        {% for module, stats in module_usage.items %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ module|title }}</strong>
+                                <span class="text-muted">{{ stats.page_views }} views</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar"
+                                     style="width: {% widthratio stats.page_views 1000 100 %}%"
+                                     aria-valuenow="{{ stats.page_views }}" aria-valuemin="0" aria-valuemax="1000">
+                                    {{ stats.activities }} actions
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No module usage data available.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'analytics:module_usage' %}" class="btn btn-sm btn-primary">
+                        View Detailed Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Active Users -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-people"></i> Top Active Users (30 days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>User</th>
+                                    <th>Activities</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in top_users %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ user.user__username }}</strong><br>
+                                        <small class="text-muted">{{ user.user__first_name }} {{ user.user__last_name }}</small>
+                                    </td>
+                                    <td><span class="badge bg-primary">{{ user.activity_count }}</span></td>
+                                    <td>
+                                        <a href="{% url 'analytics:user_report' user.user__username %}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-file-earmark-text"></i> Report
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Popular Pages -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-star"></i> Popular Pages (30 days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Page</th>
+                                    <th>Views</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for page in popular_pages %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ page.url_name|default:"Unknown" }}</strong><br>
+                                        <small class="text-muted">{{ page.url|truncatechars:50 }}</small>
+                                    </td>
+                                    <td><span class="badge bg-info">{{ page.view_count }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Errors -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Recent Errors (Unresolved)</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_errors %}
+                        <div class="list-group">
+                            {% for error in recent_errors %}
+                            <a href="{% url 'analytics:error_detail' error.pk %}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        <span class="error-badge severity-{{ error.severity }}">
+                                            {{ error.get_severity_display|upper }}
+                                        </span>
+                                        {{ error.error_type }}
+                                    </h6>
+                                    <small>{{ error.timestamp|timesince }} ago</small>
+                                </div>
+                                <p class="mb-1">{{ error.error_message|truncatechars:100 }}</p>
+                                <small class="text-muted">
+                                    Module: {{ error.module|default:"Unknown" }} |
+                                    User: {{ error.user.username|default:"Anonymous" }}
+                                </small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-success"><i class="bi bi-check-circle"></i> No unresolved errors!</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'analytics:error_list' %}" class="btn btn-sm btn-danger">
+                        View All Errors
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device & Browser Stats -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-phone"></i> Device Breakdown (30 days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="deviceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-browser-chrome"></i> Browser Breakdown (30 days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="browserChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Activity Trend Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.labels|safe }},
+            datasets: [
+                {
+                    label: 'Logins',
+                    data: {{ chart_data.logins|safe }},
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Page Views',
+                    data: {{ chart_data.page_views|safe }},
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Activities',
+                    data: {{ chart_data.activities|safe }},
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Device Chart
+    const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+    const deviceChart = new Chart(deviceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for stat in device_stats %}'{{ stat.device_type }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for stat in device_stats %}{{ stat.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+
+    // Browser Chart
+    const browserCtx = document.getElementById('browserChart').getContext('2d');
+    const browserChart = new Chart(browserCtx, {
+        type: 'pie',
+        data: {
+            labels: [{% for stat in browser_stats %}'{{ stat.browser }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for stat in browser_stats %}{{ stat.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+
+    // Refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        location.reload();
+    });
+
+    // Auto-refresh every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 300000);
+</script>
+{% endblock %}

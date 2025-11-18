@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Approve Overtime Request - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .approval-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .request-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .request-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .info-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    .action-radio {
+        padding: 1.5rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .action-radio:hover {
+        border-color: #0d6efd;
+        background: #f8f9fa;
+    }
+    .action-radio.approve {
+        border-color: #198754;
+    }
+    .action-radio.approve:hover {
+        background: #d1e7dd;
+    }
+    .action-radio.reject {
+        border-color: #dc3545;
+    }
+    .action-radio.reject:hover {
+        background: #f8d7da;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="approval-container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{% url 'hr:overtime_request_detail' overtime.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Request
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Request Header -->
+        <div class="request-header">
+            <h2><i class="bi bi-clipboard-check"></i> Overtime Request Approval</h2>
+            <p class="mb-0 opacity-75">Request #{{ overtime.request_number }}</p>
+        </div>
+
+        <!-- Request Body -->
+        <div class="request-body">
+            <!-- Request Details -->
+            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Request Information</h5>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label class="text-muted small">Employee</label>
+                    <div><strong>{{ overtime.employee.get_full_name }}</strong></div>
+                    <small class="text-muted">{{ overtime.employee.employee_no }}</small>
+                </div>
+                <div class="info-item">
+                    <label class="text-muted small">Date</label>
+                    <div><strong>{{ overtime.date|date:"F d, Y" }}</strong></div>
+                </div>
+                <div class="info-item">
+                    <label class="text-muted small">Overtime Type</label>
+                    <div><strong>{{ overtime.get_overtime_type_display }}</strong></div>
+                </div>
+                <div class="info-item">
+                    <label class="text-muted small">Requested Hours</label>
+                    <div><strong>{{ overtime.planned_hours }} hours</strong></div>
+                    <small class="text-muted">Rate: {{ overtime.rate_multiplier }}x pay</small>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <strong><i class="bi bi-file-text"></i> Reason:</strong>
+                <p class="mb-2 mt-2">{{ overtime.reason }}</p>
+                {% if overtime.work_description %}
+                <strong><i class="bi bi-list-task"></i> Work Description:</strong>
+                <p class="mb-0 mt-2">{{ overtime.work_description }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Approval Form -->
+            <form method="post" id="approvalForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-check2-square"></i> Manager Decision</h5>
+
+                <!-- Approve Option -->
+                <label class="action-radio approve">
+                    <input type="radio" name="{{ form.action.name }}" value="approve" class="form-check-input me-3" required>
+                    <div class="d-inline-block">
+                        <h6 class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Approve Overtime Request</h6>
+                        <small class="text-muted">Employee will be compensated at {{ overtime.rate_multiplier }}x rate</small>
+                    </div>
+                </label>
+
+                <!-- Reject Option -->
+                <label class="action-radio reject">
+                    <input type="radio" name="{{ form.action.name }}" value="reject" class="form-check-input me-3" required>
+                    <div class="d-inline-block">
+                        <h6 class="mb-1"><i class="bi bi-x-circle-fill text-danger"></i> Reject Overtime Request</h6>
+                        <small class="text-muted">Request will be declined with explanation</small>
+                    </div>
+                </label>
+
+                {% if form.action.errors %}
+                    <div class="alert alert-danger">{{ form.action.errors }}</div>
+                {% endif %}
+
+                <!-- Approved Hours (shown if approving) -->
+                <div class="mb-3" id="approvedHoursDiv" style="display: none;">
+                    <label for="{{ form.approved_hours.id_for_label }}" class="form-label">
+                        <strong>Approved Hours</strong>
+                    </label>
+                    {{ form.approved_hours }}
+                    {% if form.approved_hours.errors %}
+                        <div class="invalid-feedback d-block">{{ form.approved_hours.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">{{ form.approved_hours.help_text }}</small>
+                </div>
+
+                <!-- Manager Notes -->
+                <div class="mb-4">
+                    <label for="{{ form.approval_notes.id_for_label }}" class="form-label">
+                        <strong>Manager Notes</strong>
+                        <span class="text-danger" id="notesRequired" style="display: none;">*</span>
+                    </label>
+                    {{ form.approval_notes }}
+                    {% if form.approval_notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.approval_notes.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted" id="notesHelp">
+                        {{ form.approval_notes.help_text }}
+                    </small>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'hr:overtime_request_detail' overtime.pk %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle"></i> Submit Decision
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide fields based on action
+    const actionRadios = document.querySelectorAll('input[name="{{ form.action.name }}"]');
+    const notesField = document.querySelector('textarea[name="{{ form.approval_notes.name }}"]');
+    const notesRequired = document.getElementById('notesRequired');
+    const notesHelp = document.getElementById('notesHelp');
+    const approvedHoursDiv = document.getElementById('approvedHoursDiv');
+
+    actionRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'reject') {
+                notesRequired.style.display = 'inline';
+                notesHelp.textContent = 'Required: Please provide a reason for rejection';
+                notesHelp.classList.add('text-danger');
+                notesField.required = true;
+                approvedHoursDiv.style.display = 'none';
+            } else {
+                notesRequired.style.display = 'none';
+                notesHelp.textContent = '{{ form.approval_notes.help_text }}';
+                notesHelp.classList.remove('text-danger');
+                notesField.required = false;
+                approvedHoursDiv.style.display = 'block';
+            }
+        });
+    });
+
+    // Form validation
+    document.getElementById('approvalForm').addEventListener('submit', function(e) {
+        const selectedAction = document.querySelector('input[name="{{ form.action.name }}"]:checked');
+
+        if (!selectedAction) {
+            e.preventDefault();
+            alert('Please select an action (Approve or Reject)');
+            return false;
+        }
+
+        if (selectedAction.value === 'reject' && !notesField.value.trim()) {
+            e.preventDefault();
+            alert('Please provide a reason for rejection');
+            notesField.focus();
+            return false;
+        }
+
+        // Confirmation
+        const action = selectedAction.value;
+        const message = action === 'approve'
+            ? 'Approve this overtime request?'
+            : 'Reject this overtime request? The employee will be notified.';
+
+        if (!confirm(message)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

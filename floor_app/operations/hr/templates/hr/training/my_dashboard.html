@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Training Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    .stat-card h3 {
+        color: #667eea;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .training-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    .training-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .training-card.upcoming { border-left-color: #0d6efd; }
+    .training-card.completed { border-left-color: #198754; }
+    .training-card.available { border-left-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2><i class="bi bi-mortarboard"></i> My Training Dashboard</h2>
+                <p class="mb-0 opacity-75">{{ employee.get_full_name }} ({{ employee.employee_no }})</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'hr:training_session_list' %}" class="btn btn-light">
+                    <i class="bi bi-calendar-event"></i> Browse Sessions
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="bi bi-calendar-check text-primary" style="font-size: 2rem;"></i>
+                <h3>{{ upcoming_trainings.count }}</h3>
+                <p class="text-muted mb-0">Upcoming Trainings</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                <h3>{{ completed_trainings.count }}</h3>
+                <p class="text-muted mb-0">Completed Trainings</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="bi bi-clock text-info" style="font-size: 2rem;"></i>
+                <h3>{{ total_hours|floatformat:1 }}</h3>
+                <p class="text-muted mb-0">Training Hours</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Trainings -->
+    <div class="row">
+        <div class="col-lg-8">
+            <h5 class="mb-3"><i class="bi bi-calendar-event"></i> Upcoming Trainings</h5>
+            {% if upcoming_trainings %}
+                {% for training in upcoming_trainings %}
+                <div class="training-card upcoming">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-1">{{ training.training_session.program.name }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-hash"></i> {{ training.training_session.session_code }}
+                            </small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Dates</small>
+                            <strong>{{ training.training_session.start_date|date:"M d" }} - {{ training.training_session.end_date|date:"M d, Y" }}</strong>
+                            <br><small class="text-muted">{{ training.training_session.location }}</small>
+                        </div>
+
+                        <div class="col-md-2 text-end">
+                            <a href="{% url 'hr:training_session_detail' training.training_session.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                    <p class="mb-0 mt-2">No upcoming trainings</p>
+                </div>
+            {% endif %}
+
+            <h5 class="mb-3 mt-4"><i class="bi bi-check-circle"></i> Recent Completed Trainings</h5>
+            {% if completed_trainings %}
+                {% for training in completed_trainings|slice:":5" %}
+                <div class="training-card completed">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <h6 class="mb-1">{{ training.training_session.program.name }}</h6>
+                            <small class="text-muted">{{ training.training_session.session_code }}</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Completed</small>
+                            <strong>{{ training.completed_at|date:"M d, Y" }}</strong>
+                        </div>
+
+                        <div class="col-md-2">
+                            {% if training.passed %}
+                                <span class="badge bg-success">Passed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Completed</span>
+                            {% endif %}
+                            {% if training.certificate_number %}
+                                <br><span class="badge bg-info mt-1"><i class="bi bi-award"></i> Certified</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-2 text-end">
+                            {% if not training.feedback_rating %}
+                                <a href="{% url 'hr:training_feedback' training.pk %}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-star"></i> Feedback
+                                </a>
+                            {% else %}
+                                <span class="text-success"><i class="bi bi-check-circle"></i> Rated</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if training.assessment_score %}
+                    <div class="mt-2 pt-2 border-top">
+                        <small class="text-muted">
+                            <strong>Assessment Score:</strong> {{ training.assessment_score }}%
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                {% if completed_trainings.count > 5 %}
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing 5 of {{ completed_trainings.count }} completed trainings</small>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p class="mb-0 mt-2">No completed trainings yet</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Available Sessions -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-calendar-plus"></i> Available Sessions</h6>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if available_sessions %}
+                        {% for session in available_sessions %}
+                        <div class="training-card available mb-2">
+                            <h6 class="mb-1">{{ session.program.name }}</h6>
+                            <small class="text-muted d-block mb-2">
+                                {{ session.start_date|date:"M d, Y" }}
+                                <br>{{ session.location }}
+                            </small>
+                            <a href="{% url 'hr:training_session_detail' session.pk %}" class="btn btn-sm btn-primary w-100">
+                                <i class="bi bi-info-circle"></i> View Details
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3 text-muted">
+                            <i class="bi bi-calendar-x"></i>
+                            <p class="mb-0 small mt-2">No available sessions</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Training History -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Training History</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span class="small">Total Trainings</span>
+                        <strong>{{ training_records.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span class="small">Completed</span>
+                        <strong class="text-success">{{ completed_trainings.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span class="small">Upcoming</span>
+                        <strong class="text-primary">{{ upcoming_trainings.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span class="small">Total Hours</span>
+                        <strong class="text-info">{{ total_hours|floatformat:1 }}</strong>
+                    </div>
+
+                    <div class="mt-3">
+                        <a href="{% url 'hr:training_session_list' %}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-calendar-event"></i> Browse All Sessions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="card mt-4">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Training Tips</h6>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li>Review available training sessions and enroll early - seats are limited</li>
+                <li>Complete feedback forms after training to help improve future sessions</li>
+                <li>Keep track of certificate expiry dates and schedule renewals</li>
+                <li>Training hours contribute to your professional development record</li>
+                <li>Contact HR if you have questions about mandatory training requirements</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

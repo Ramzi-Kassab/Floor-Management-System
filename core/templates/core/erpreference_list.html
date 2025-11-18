@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ERP References - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-row {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .reference-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    .reference-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-link-45deg"></i> ERP References</h2>
+            <p class="text-muted mb-0">View ERP document references and sync status</p>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-row">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <h2>{{ references|length }}</h2>
+                    <small>Total References</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search by ERP number..." value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="document_type" class="form-select">
+                        <option value="">All Document Types</option>
+                        {% for dt in document_types %}
+                            <option value="{{ dt.code }}" {% if request.GET.document_type == dt.code %}selected{% endif %}>{{ dt.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- References List -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if references %}
+                {% for ref in references %}
+                <div class="reference-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <strong>{{ ref.document_type.code }}: {{ ref.erp_number }}</strong>
+                            {% if ref.erp_line_number %}
+                                <small class="text-muted">/{{ ref.erp_line_number }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Linked To</small>
+                            <strong>{{ ref.content_type.model|title }}</strong>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">ERP Date</small>
+                            <strong>{{ ref.erp_date|date:"M d, Y"|default:"N/A" }}</strong>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">Sync Status</small>
+                            {% if ref.sync_status == 'synced' %}
+                                <span class="badge bg-success">Synced</span>
+                            {% elif ref.sync_status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif ref.sync_status == 'error' %}
+                                <span class="badge bg-danger">Error</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Manual</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <small class="text-muted">{{ ref.created_at|date:"M d, Y" }}</small>
+                        </div>
+                    </div>
+                    {% if ref.notes %}
+                    <div class="mt-2 pt-2 border-top">
+                        <small class="text-muted">{{ ref.notes }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-link-45deg" style="font-size: 3rem;"></i>
+                    <p class="mt-3 mb-0">No ERP references found</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

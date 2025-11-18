@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Adjust Leave Balance - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .adjust-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    .adjust-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .balance-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .current-balance {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .balance-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .balance-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="adjust-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-sliders"></i> Adjust Leave Balance</h1>
+                <p class="text-muted">Manual balance adjustment</p>
+            </div>
+            <a href="{% url 'hr:leave_balance_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Balances
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Balance Info -->
+        <div class="balance-info">
+            <h5 class="mb-3"><i class="bi bi-person-badge"></i> Employee & Policy Information</h5>
+            <div class="row">
+                <div class="col-6">
+                    <strong>Employee:</strong><br>
+                    {{ balance.employee.get_full_name }}<br>
+                    <small>{{ balance.employee.employee_no }}</small>
+                </div>
+                <div class="col-6">
+                    <strong>Leave Policy:</strong><br>
+                    {{ balance.leave_policy.name }}<br>
+                    <small>{{ balance.leave_policy.get_leave_type_display }}</small>
+                </div>
+            </div>
+            <div class="mt-3">
+                <strong>Year:</strong> {{ balance.year }}
+            </div>
+        </div>
+
+        <!-- Current Balance -->
+        <div class="current-balance">
+            <h6 class="mb-3"><i class="bi bi-info-circle"></i> Current Balance</h6>
+            <div class="balance-item">
+                <span class="text-muted">Opening Balance</span>
+                <strong>{{ balance.opening_balance|floatformat:1 }} days</strong>
+            </div>
+            <div class="balance-item">
+                <span class="text-muted">Accrued</span>
+                <strong class="text-primary">{{ balance.accrued|floatformat:1 }} days</strong>
+            </div>
+            <div class="balance-item">
+                <span class="text-muted">Used</span>
+                <strong class="text-danger">{{ balance.used|floatformat:1 }} days</strong>
+            </div>
+            <div class="balance-item">
+                <span class="text-muted">Pending Approval</span>
+                <strong class="text-warning">{{ balance.pending|floatformat:1 }} days</strong>
+            </div>
+            <div class="balance-item">
+                <span class="text-muted">Carried Forward</span>
+                <strong>{{ balance.carried_forward|floatformat:1 }} days</strong>
+            </div>
+            <div class="balance-item">
+                <span class="text-muted"><strong>Available</strong></span>
+                <strong class="text-success" style="font-size: 1.2rem;">{{ balance.available|floatformat:1 }} days</strong>
+            </div>
+        </div>
+
+        <!-- Adjustment Form -->
+        <div class="adjust-card">
+            <form method="post">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-pencil"></i> Adjustment Details</h5>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Manual adjustments directly modify the balance. Use with caution and provide clear notes.
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.opening_balance.id_for_label }}" class="form-label">
+                        Opening Balance
+                    </label>
+                    {{ form.opening_balance }}
+                    {% if form.opening_balance.errors %}
+                        <div class="invalid-feedback d-block">{{ form.opening_balance.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Initial balance at start of year</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.accrued.id_for_label }}" class="form-label">
+                        Accrued Days
+                    </label>
+                    {{ form.accrued }}
+                    {% if form.accrued.errors %}
+                        <div class="invalid-feedback d-block">{{ form.accrued.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Total days accrued/earned</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.used.id_for_label }}" class="form-label">
+                        Used Days
+                    </label>
+                    {{ form.used }}
+                    {% if form.used.errors %}
+                        <div class="invalid-feedback d-block">{{ form.used.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Total days already taken</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.pending.id_for_label }}" class="form-label">
+                        Pending Days
+                    </label>
+                    {{ form.pending }}
+                    {% if form.pending.errors %}
+                        <div class="invalid-feedback d-block">{{ form.pending.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Days in pending leave requests</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.carried_forward.id_for_label }}" class="form-label">
+                        Carried Forward
+                    </label>
+                    {{ form.carried_forward }}
+                    {% if form.carried_forward.errors %}
+                        <div class="invalid-feedback d-block">{{ form.carried_forward.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Days carried from previous year</small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.adjustment_notes.id_for_label }}" class="form-label">
+                        Adjustment Notes <span class="text-danger">*</span>
+                    </label>
+                    {{ form.adjustment_notes }}
+                    {% if form.adjustment_notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.adjustment_notes.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Explain why this adjustment is being made</small>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'hr:leave_balance_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="bi bi-save"></i> Save Adjustment
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Adjustment Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Always provide detailed notes explaining the adjustment</li>
+                    <li>Verify the employee and policy before making changes</li>
+                    <li>Used days should not exceed accrued days</li>
+                    <li>Available balance is automatically calculated: Accrued - Used - Pending</li>
+                    <li>Contact HR manager if unsure about adjustment values</li>
+                    <li>All adjustments are logged and auditable</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ program.name }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+    .program-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .program-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    .info-item {
+        padding: 1rem;
+        background: white;
+        border-radius: 6px;
+        border-left: 3px solid #667eea;
+    }
+    .stat-box {
+        text-align: center;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .session-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    .session-card:hover {
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="detail-container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{% url 'hr:training_program_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Programs
+            </a>
+        </div>
+
+        <!-- Program Header -->
+        <div class="program-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="bi bi-mortarboard"></i> {{ program.name }}</h2>
+                    <p class="mb-0 opacity-75">{{ program.code }} | {{ program.get_training_type_display }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if program.is_active %}
+                        <span class="badge bg-success p-3" style="font-size: 1.1rem;">
+                            <i class="bi bi-check-circle"></i> Active
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary p-3" style="font-size: 1.1rem;">
+                            <i class="bi bi-x-circle"></i> Inactive
+                        </span>
+                    {% endif %}
+                    {% if program.is_mandatory %}
+                        <span class="badge bg-warning text-dark p-3 ms-2" style="font-size: 1.1rem;">
+                            <i class="bi bi-exclamation-circle"></i> Mandatory
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Program Body -->
+        <div class="program-body">
+            <!-- Description -->
+            {% if program.description %}
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle"></i> Program Description</h6>
+                <p class="mb-0">{{ program.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Statistics -->
+            <h5 class="mb-3"><i class="bi bi-graph-up"></i> Program Statistics</h5>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="stat-box">
+                        <i class="bi bi-calendar-event text-primary" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ total_sessions|default:0 }}</h3>
+                        <small class="text-muted">Total Sessions</small>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stat-box">
+                        <i class="bi bi-play-circle text-success" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ active_sessions|default:0 }}</h3>
+                        <small class="text-muted">Active Sessions</small>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stat-box">
+                        <i class="bi bi-people text-info" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ total_participants|default:0 }}</h3>
+                        <small class="text-muted">Total Participants</small>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stat-box">
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2">{{ completion_rate|default:0 }}</h3>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Program Details -->
+            <div class="info-section">
+                <h5 class="mb-3"><i class="bi bi-gear"></i> Program Configuration</h5>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <small class="text-muted d-block">Duration</small>
+                        <strong>{{ program.duration_hours }} hours ({{ program.duration_days }} days)</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Provider</small>
+                        <strong>{{ program.provider|default:"Not specified" }}</strong>
+                        <small class="d-block">{% if program.is_internal %}Internal{% else %}External{% endif %}</small>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Max Participants</small>
+                        <strong>{{ program.max_participants }} per session</strong>
+                    </div>
+                    <div class="info-item">
+                        <small class="text-muted d-block">Cost</small>
+                        <strong>{{ program.cost_per_person }} {{ program.currency }} per person</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assessment & Certification -->
+            <div class="info-section">
+                <h5 class="mb-3"><i class="bi bi-award"></i> Assessment & Certification</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" {% if program.has_assessment %}checked{% endif %} disabled>
+                            <label class="form-check-label">
+                                Has Assessment
+                            </label>
+                        </div>
+                        {% if program.has_assessment %}
+                        <div class="info-item mb-3">
+                            <small class="text-muted d-block">Passing Score</small>
+                            <strong>{{ program.passing_score }}%</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" {% if program.grants_certificate %}checked{% endif %} disabled>
+                            <label class="form-check-label">
+                                Grants Certificate
+                            </label>
+                        </div>
+                        {% if program.grants_certificate %}
+                        <div class="info-item mb-3">
+                            <small class="text-muted d-block">Certificate Validity</small>
+                            <strong>
+                                {% if program.certificate_validity_months > 0 %}
+                                    {{ program.certificate_validity_months }} months
+                                {% else %}
+                                    No expiry
+                                {% endif %}
+                            </strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prerequisites & Target Audience -->
+            {% if program.prerequisites or program.target_audience %}
+            <div class="info-section">
+                <h5 class="mb-3"><i class="bi bi-list-check"></i> Prerequisites & Target Audience</h5>
+                {% if program.prerequisites %}
+                <div class="mb-3">
+                    <strong>Prerequisites:</strong>
+                    <p class="mb-0 mt-2">{{ program.prerequisites }}</p>
+                </div>
+                {% endif %}
+                {% if program.target_audience %}
+                <div>
+                    <strong>Target Audience:</strong>
+                    <p class="mb-0 mt-2">{{ program.target_audience }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Recent Sessions -->
+            <h5 class="mb-3 mt-4"><i class="bi bi-calendar3"></i> Recent Sessions</h5>
+            {% if recent_sessions %}
+                {% for session in recent_sessions %}
+                <div class="session-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <strong>{{ session.session_code }}</strong>
+                            <br><small class="text-muted">{{ session.start_date|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Location</small>
+                            <strong>{{ session.location }}</strong>
+                            {% if session.is_virtual %}
+                                <span class="badge bg-info">Virtual</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Instructor</small>
+                            <strong>{{ session.instructor_name }}</strong>
+                        </div>
+                        <div class="col-md-2">
+                            {% if session.status == 'SCHEDULED' %}
+                                <span class="badge bg-primary">Scheduled</span>
+                            {% elif session.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-success">In Progress</span>
+                            {% elif session.status == 'COMPLETED' %}
+                                <span class="badge bg-secondary">Completed</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <a href="{% url 'hr:training_session_detail' session.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-3 text-muted">
+                    <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                    <p class="mb-0 mt-2">No sessions scheduled yet</p>
+                </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'hr:training_program_list' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+                {% if user.is_staff %}
+                <div>
+                    <a href="{% url 'hr:training_program_edit' program.pk %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-pencil"></i> Edit Program
+                    </a>
+                    <a href="{% url 'hr:training_session_create' %}" class="btn btn-success btn-lg">
+                        <i class="bi bi-plus-circle"></i> Schedule Session
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

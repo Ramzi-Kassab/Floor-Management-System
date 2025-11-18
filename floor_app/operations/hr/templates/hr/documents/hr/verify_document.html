@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify Document - {{ document.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .verify-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .verify-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .verify-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+    }
+    .verify-body {
+        padding: 2rem;
+    }
+    .doc-preview {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .info-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    .info-item label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    .info-item .value {
+        font-weight: 600;
+        color: #212529;
+    }
+    .action-radio {
+        padding: 1.5rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .action-radio:hover {
+        border-color: #0d6efd;
+        background: #f8f9fa;
+    }
+    .action-radio input[type="radio"]:checked ~ * {
+        color: #0d6efd;
+    }
+    .action-radio.approve {
+        border-color: #198754;
+    }
+    .action-radio.approve:hover,
+    .action-radio.approve input[type="radio"]:checked ~ * {
+        background: #d1e7dd;
+        border-color: #198754;
+    }
+    .action-radio.reject {
+        border-color: #dc3545;
+    }
+    .action-radio.reject:hover,
+    .action-radio.reject input[type="radio"]:checked ~ * {
+        background: #f8d7da;
+        border-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="verify-container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{% url 'hr:hr_document_detail' document.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Document
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="verify-card">
+            <!-- Header -->
+            <div class="verify-header">
+                <h2><i class="bi bi-shield-check"></i> Verify Document</h2>
+                <p class="mb-0 opacity-75">Review and verify employee document</p>
+            </div>
+
+            <!-- Body -->
+            <div class="verify-body">
+                <!-- Document Preview -->
+                <div class="doc-preview">
+                    <h5 class="mb-3">{{ document.title }}</h5>
+                    {% if document.file %}
+                        {% if document.file.name|slice:"-4:" == '.pdf' %}
+                            <i class="bi bi-file-pdf-fill" style="font-size: 4rem; color: #dc3545;"></i>
+                        {% elif document.file.name|slice:"-4:" == '.doc' or document.file.name|slice:"-5:" == '.docx' %}
+                            <i class="bi bi-file-word-fill" style="font-size: 4rem; color: #2b579a;"></i>
+                        {% elif document.file.name|slice:"-4:" == '.jpg' or document.file.name|slice:"-5:" == '.jpeg' or document.file.name|slice:"-4:" == '.png' %}
+                            <i class="bi bi-file-image-fill" style="font-size: 4rem; color: #198754;"></i>
+                        {% else %}
+                            <i class="bi bi-file-earmark-fill" style="font-size: 4rem; color: #6c757d;"></i>
+                        {% endif %}
+                        <p class="mt-3 mb-2">{{ document.file.name|slice:"13:" }}</p>
+                        <small class="text-muted">{{ document.file.size|filesizeformat }}</small>
+                        <div class="mt-3">
+                            <a href="{{ document.file.url }}" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-eye"></i> View Document
+                            </a>
+                            <a href="{{ document.file.url }}" download class="btn btn-outline-primary">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </div>
+                    {% else %}
+                        <i class="bi bi-file-x" style="font-size: 4rem; color: #dc3545;"></i>
+                        <p class="text-danger mt-3">No file attached</p>
+                    {% endif %}
+                </div>
+
+                <!-- Document Information -->
+                <h5 class="mb-3"><i class="bi bi-info-circle"></i> Document Information</h5>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Employee</label>
+                        <div class="value">{{ document.employee.get_full_name }}</div>
+                        <small class="text-muted">{{ document.employee.employee_no }}</small>
+                    </div>
+                    <div class="info-item">
+                        <label>Document Type</label>
+                        <div class="value">{{ document.get_document_type_display }}</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Issue Date</label>
+                        <div class="value">{{ document.issue_date|date:"M d, Y"|default:"Not provided" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Expiry Date</label>
+                        <div class="value {% if document.is_expired %}text-danger{% elif document.is_expiring_soon %}text-warning{% endif %}">
+                            {{ document.expiry_date|date:"M d, Y"|default:"Not applicable" }}
+                        </div>
+                    </div>
+                    {% if document.issuing_authority %}
+                    <div class="info-item">
+                        <label>Issuing Authority</label>
+                        <div class="value">{{ document.issuing_authority }}</div>
+                    </div>
+                    {% endif %}
+                    {% if document.document_number %}
+                    <div class="info-item">
+                        <label>Document Number</label>
+                        <div class="value">{{ document.document_number }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <label>Uploaded Date</label>
+                        <div class="value">{{ document.uploaded_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Current Status</label>
+                        <div class="value">
+                            <span class="badge bg-warning">{{ document.get_verification_status_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if document.description %}
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-file-text"></i> Description:</strong>
+                    <p class="mb-0 mt-2">{{ document.description }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Verification Form -->
+                <form method="post" id="verifyForm">
+                    {% csrf_token %}
+
+                    <h5 class="mb-3 mt-4"><i class="bi bi-check2-square"></i> Verification Decision</h5>
+
+                    <!-- Approve Option -->
+                    <label class="action-radio approve">
+                        <input type="radio" name="{{ form.action.name }}" value="approve" class="form-check-input me-3" required>
+                        <div class="d-inline-block">
+                            <h6 class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Approve Document</h6>
+                            <small class="text-muted">Document is authentic and meets requirements</small>
+                        </div>
+                    </label>
+
+                    <!-- Reject Option -->
+                    <label class="action-radio reject">
+                        <input type="radio" name="{{ form.action.name }}" value="reject" class="form-check-input me-3" required>
+                        <div class="d-inline-block">
+                            <h6 class="mb-1"><i class="bi bi-x-circle-fill text-danger"></i> Reject Document</h6>
+                            <small class="text-muted">Document has issues or does not meet requirements</small>
+                        </div>
+                    </label>
+
+                    {% if form.action.errors %}
+                        <div class="alert alert-danger">{{ form.action.errors }}</div>
+                    {% endif %}
+
+                    <!-- Verification Notes -->
+                    <div class="mb-4">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            <strong>Verification Notes</strong>
+                            <span class="text-danger" id="notesRequired" style="display: none;">*</span>
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted" id="notesHelp">
+                            Optional notes for approval. Required for rejection.
+                        </small>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'hr:hr_document_detail' document.pk %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> Submit Verification
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Verification Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Verify that the document is clear and readable</li>
+                    <li>Check that dates (issue and expiry) are valid and not expired</li>
+                    <li>Confirm issuing authority is legitimate</li>
+                    <li>Ensure document number matches official records if applicable</li>
+                    <li>For medical certificates: verify clinic/hospital stamp and signature</li>
+                    <li>Provide detailed notes when rejecting documents</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide required indicator for notes based on action
+    const actionRadios = document.querySelectorAll('input[name="{{ form.action.name }}"]');
+    const notesField = document.querySelector('textarea[name="{{ form.notes.name }}"]');
+    const notesRequired = document.getElementById('notesRequired');
+    const notesHelp = document.getElementById('notesHelp');
+
+    actionRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'reject') {
+                notesRequired.style.display = 'inline';
+                notesHelp.textContent = 'Required: Please provide a reason for rejection';
+                notesHelp.classList.add('text-danger');
+                notesField.required = true;
+            } else {
+                notesRequired.style.display = 'none';
+                notesHelp.textContent = 'Optional notes for approval';
+                notesHelp.classList.remove('text-danger');
+                notesField.required = false;
+            }
+        });
+    });
+
+    // Form validation
+    document.getElementById('verifyForm').addEventListener('submit', function(e) {
+        const selectedAction = document.querySelector('input[name="{{ form.action.name }}"]:checked');
+
+        if (!selectedAction) {
+            e.preventDefault();
+            alert('Please select an action (Approve or Reject)');
+            return false;
+        }
+
+        if (selectedAction.value === 'reject' && !notesField.value.trim()) {
+            e.preventDefault();
+            alert('Please provide a reason for rejection');
+            notesField.focus();
+            return false;
+        }
+
+        // Confirmation
+        const action = selectedAction.value;
+        const message = action === 'approve'
+            ? 'Approve this document?'
+            : 'Reject this document? The employee will be notified.';
+
+        if (!confirm(message)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

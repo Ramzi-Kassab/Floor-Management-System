@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <h2 class="mb-4">
+            <i class="bi bi-exclamation-triangle"></i> {{ title }}
+        </h2>
+
+        <div class="form-card">
+            <form method="post">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-info-circle"></i> Event Details</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_title" class="form-label">Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_cause" class="form-label">Cause *</label>
+                        {{ form.cause }}
+                        {% if form.cause.errors %}
+                            <div class="invalid-feedback d-block">{{ form.cause.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_description" class="form-label">Description *</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-calendar"></i> Timing</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="id_event_date" class="form-label">Event Date *</label>
+                        {{ form.event_date }}
+                        {% if form.event_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.event_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="id_event_time" class="form-label">Event Time</label>
+                        {{ form.event_time }}
+                        {% if form.event_time.errors %}
+                            <div class="invalid-feedback d-block">{{ form.event_time.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="id_duration_hours" class="form-label">Duration (hours)</label>
+                        {{ form.duration_hours }}
+                        {% if form.duration_hours.errors %}
+                            <div class="invalid-feedback d-block">{{ form.duration_hours.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-cash-stack"></i> Financial Impact</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_estimated_loss_amount" class="form-label">Estimated Loss Amount *</label>
+                        {{ form.estimated_loss_amount }}
+                        {% if form.estimated_loss_amount.errors %}
+                            <div class="invalid-feedback d-block">{{ form.estimated_loss_amount.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_cost_center" class="form-label">Cost Center</label>
+                        {{ form.cost_center }}
+                        {% if form.cost_center.errors %}
+                            <div class="invalid-feedback d-block">{{ form.cost_center.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_calculation_method" class="form-label">Calculation Method</label>
+                    {{ form.calculation_method }}
+                    {% if form.calculation_method.errors %}
+                        <div class="invalid-feedback d-block">{{ form.calculation_method.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Describe how the loss was calculated</small>
+                </div>
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-person"></i> Affected Party</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_affected_customer_name" class="form-label">Customer Name</label>
+                        {{ form.affected_customer_name }}
+                        {% if form.affected_customer_name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.affected_customer_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_affected_order_number" class="form-label">Order Number</label>
+                        {{ form.affected_order_number }}
+                        {% if form.affected_order_number.errors %}
+                            <div class="invalid-feedback d-block">{{ form.affected_order_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-clipboard-check"></i> Analysis & Actions</h5>
+                <div class="mb-3">
+                    <label for="id_root_cause_analysis" class="form-label">Root Cause Analysis</label>
+                    {{ form.root_cause_analysis }}
+                    {% if form.root_cause_analysis.errors %}
+                        <div class="invalid-feedback d-block">{{ form.root_cause_analysis.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_corrective_actions" class="form-label">Corrective Actions</label>
+                    {{ form.corrective_actions }}
+                    {% if form.corrective_actions.errors %}
+                        <div class="invalid-feedback d-block">{{ form.corrective_actions.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_preventive_measures" class="form-label">Preventive Measures</label>
+                    {{ form.preventive_measures }}
+                    {% if form.preventive_measures.errors %}
+                        <div class="invalid-feedback d-block">{{ form.preventive_measures.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'core:lossofsale_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="bi bi-save"></i> Save Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

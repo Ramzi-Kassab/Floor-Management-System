@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ position.name }} - Position Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .position-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .info-card .card-title {
+        color: #6366f1;
+        border-bottom: 2px solid #6366f1;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    .detail-label {
+        flex: 0 0 180px;
+        font-weight: 600;
+        color: #6c757d;
+    }
+    .detail-value {
+        flex: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Position Header -->
+    <div class="position-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="mb-2">{{ position.name }}</h1>
+                <div class="opacity-90">
+                    <i class="bi bi-building me-2"></i>{{ position.department.name }}
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'hr:position_list' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                    <a href="{% url 'hr:position_update' position.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <a href="{% url 'hr:position_delete' position.pk %}" class="btn btn-danger">
+                        <i class="bi bi-trash me-2"></i>Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6">
+            <!-- Basic Information -->
+            <div class="info-card">
+                <h5 class="card-title"><i class="bi bi-info-circle me-2"></i>Position Information</h5>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ position.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Department:</span>
+                    <span class="detail-value">{{ position.department.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Position Level:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-primary">{{ position.get_position_level_display }}</span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Salary Grade:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-secondary">{{ position.get_salary_grade_display }}</span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">
+                        {% if position.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Employee Count:</span>
+                    <span class="detail-value"><strong>{{ employee_count }}</strong></span>
+                </div>
+            </div>
+
+            {% if position.description %}
+            <div class="info-card">
+                <h5 class="card-title"><i class="bi bi-card-text me-2"></i>Description</h5>
+                <p class="mb-0">{{ position.description|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            <!-- RBAC Information -->
+            {% if position.auth_group or position.permission_codenames %}
+            <div class="info-card">
+                <h5 class="card-title"><i class="bi bi-shield-check me-2"></i>Permissions</h5>
+                {% if position.auth_group %}
+                <div class="detail-row">
+                    <span class="detail-label">Auth Group:</span>
+                    <span class="detail-value">{{ position.auth_group.name }}</span>
+                </div>
+                {% endif %}
+                {% if position.permission_codenames %}
+                <div class="detail-row">
+                    <span class="detail-label">Additional Permissions:</span>
+                    <span class="detail-value"><code>{{ position.permission_codenames }}</code></span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Employees -->
+        <div class="col-lg-6">
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-people me-2"></i>Employees ({{ employee_count }})
+                </h5>
+                {% if employees %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Email</th>
+                                <th>Start Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'hr:people_detail' employee.person.pk %}">
+                                        {{ employee.person.full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ employee.person.primary_email|default:"-" }}</td>
+                                <td>{{ employee.hire_date|date:"Y-m-d"|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if employee_count > 20 %}
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing first 20 employees</small>
+                </div>
+                {% endif %}
+                {% else %}
+                <p class="text-muted mb-0">No employees assigned to this position</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

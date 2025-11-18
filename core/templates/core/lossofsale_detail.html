@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lossofsaleevent.reference_number }} - Loss of Sale{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .detail-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    .info-item {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border-left: 3px solid #dc3545;
+    }
+    .loss-highlight {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'core:lossofsale_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2><i class="bi bi-exclamation-triangle"></i> {{ lossofsaleevent.reference_number }}</h2>
+                <p class="mb-0 opacity-75">{{ lossofsaleevent.title }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if lossofsaleevent.status == 'approved' %}
+                    <span class="badge bg-success p-3" style="font-size: 1.1rem;">Approved</span>
+                {% elif lossofsaleevent.status == 'reviewed' %}
+                    <span class="badge bg-warning p-3" style="font-size: 1.1rem;">Reviewed</span>
+                {% elif lossofsaleevent.status == 'submitted' %}
+                    <span class="badge bg-info p-3" style="font-size: 1.1rem;">Submitted</span>
+                {% else %}
+                    <span class="badge bg-secondary p-3" style="font-size: 1.1rem;">Draft</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="detail-body">
+        <!-- Financial Impact -->
+        <div class="text-center mb-4 p-4 bg-light rounded">
+            <small class="text-muted d-block">Estimated Financial Loss</small>
+            <div class="loss-highlight">{{ lossofsaleevent.estimated_loss_amount|floatformat:2 }} {{ lossofsaleevent.currency }}</div>
+        </div>
+
+        <!-- Event Details -->
+        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Event Details</h5>
+        <div class="info-grid mb-4">
+            <div class="info-item">
+                <small class="text-muted d-block">Event Date</small>
+                <strong>{{ lossofsaleevent.event_date|date:"l, F d, Y" }}</strong>
+                {% if lossofsaleevent.event_time %}
+                    <br><small>{{ lossofsaleevent.event_time|time:"H:i" }}</small>
+                {% endif %}
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Cause</small>
+                <strong>{{ lossofsaleevent.cause.name }}</strong>
+                <br><small class="text-muted">{{ lossofsaleevent.cause.get_category_display }}</small>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Duration</small>
+                <strong>{{ lossofsaleevent.duration_hours|default:"N/A" }} hours</strong>
+            </div>
+            <div class="info-item">
+                <small class="text-muted d-block">Cost Center</small>
+                <strong>{{ lossofsaleevent.cost_center|default:"Not assigned" }}</strong>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <h5 class="mb-3"><i class="bi bi-file-text"></i> Description</h5>
+        <div class="alert alert-light mb-4">
+            <p class="mb-0">{{ lossofsaleevent.description }}</p>
+        </div>
+
+        <!-- Affected Party -->
+        {% if lossofsaleevent.affected_customer_name or lossofsaleevent.affected_order_number %}
+        <h5 class="mb-3"><i class="bi bi-person"></i> Affected Party</h5>
+        <div class="info-grid mb-4">
+            {% if lossofsaleevent.affected_customer_name %}
+            <div class="info-item">
+                <small class="text-muted d-block">Customer</small>
+                <strong>{{ lossofsaleevent.affected_customer_name }}</strong>
+            </div>
+            {% endif %}
+            {% if lossofsaleevent.affected_order_number %}
+            <div class="info-item">
+                <small class="text-muted d-block">Order Number</small>
+                <strong>{{ lossofsaleevent.affected_order_number }}</strong>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Calculation Method -->
+        {% if lossofsaleevent.calculation_method %}
+        <h5 class="mb-3"><i class="bi bi-calculator"></i> Calculation Method</h5>
+        <div class="alert alert-info mb-4">
+            <p class="mb-0">{{ lossofsaleevent.calculation_method }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Root Cause Analysis -->
+        {% if lossofsaleevent.root_cause_analysis %}
+        <h5 class="mb-3"><i class="bi bi-search"></i> Root Cause Analysis</h5>
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="mb-0">{{ lossofsaleevent.root_cause_analysis }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="row">
+            {% if lossofsaleevent.corrective_actions %}
+            <div class="col-md-6 mb-3">
+                <h5><i class="bi bi-tools"></i> Corrective Actions</h5>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="mb-0">{{ lossofsaleevent.corrective_actions }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if lossofsaleevent.preventive_measures %}
+            <div class="col-md-6 mb-3">
+                <h5><i class="bi bi-shield-check"></i> Preventive Measures</h5>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="mb-0">{{ lossofsaleevent.preventive_measures }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Workflow -->
+        <h5 class="mb-3 mt-4"><i class="bi bi-diagram-3"></i> Workflow</h5>
+        <div class="info-grid mb-4">
+            <div class="info-item">
+                <small class="text-muted d-block">Reported By</small>
+                <strong>{{ lossofsaleevent.reported_by.get_full_name|default:"N/A" }}</strong>
+                <br><small class="text-muted">{{ lossofsaleevent.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+            {% if lossofsaleevent.reviewed_by %}
+            <div class="info-item">
+                <small class="text-muted d-block">Reviewed By</small>
+                <strong>{{ lossofsaleevent.reviewed_by.get_full_name }}</strong>
+                <br><small class="text-muted">{{ lossofsaleevent.reviewed_at|date:"M d, Y H:i" }}</small>
+            </div>
+            {% endif %}
+            {% if lossofsaleevent.approved_by %}
+            <div class="info-item">
+                <small class="text-muted d-block">Approved By</small>
+                <strong>{{ lossofsaleevent.approved_by.get_full_name }}</strong>
+                <br><small class="text-muted">{{ lossofsaleevent.approved_at|date:"M d, Y H:i" }}</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'core:lossofsale_list' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

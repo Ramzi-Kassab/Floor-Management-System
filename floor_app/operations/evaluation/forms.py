@@ -81,7 +81,8 @@ class EvaluationCellForm(forms.ModelForm):
             'cutter_item', 'cutter_code', 'notes',
             'has_fin_build_up', 'fin_number', 'has_pocket_damage',
             'has_impact_arrestor_issue', 'has_body_build_up',
-            'pocket_diameter', 'pocket_depth'
+            'pocket_diameter', 'pocket_depth', 'cutter_exposure',
+            'wear_flat_length', 'back_rake_angle', 'side_rake_angle'
         ]
         widgets = {
             'blade_number': forms.NumberInput(attrs={
@@ -117,6 +118,22 @@ class EvaluationCellForm(forms.ModelForm):
                 'class': 'form-control',
                 'step': '0.001'
             }),
+            'cutter_exposure': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.001'
+            }),
+            'wear_flat_length': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.001'
+            }),
+            'back_rake_angle': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01'
+            }),
+            'side_rake_angle': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -126,6 +143,10 @@ class EvaluationCellForm(forms.ModelForm):
         self.fields['fin_number'].required = False
         self.fields['pocket_diameter'].required = False
         self.fields['pocket_depth'].required = False
+        self.fields['cutter_exposure'].required = False
+        self.fields['wear_flat_length'].required = False
+        self.fields['back_rake_angle'].required = False
+        self.fields['side_rake_angle'].required = False
 
 
 class ThreadInspectionForm(forms.ModelForm):

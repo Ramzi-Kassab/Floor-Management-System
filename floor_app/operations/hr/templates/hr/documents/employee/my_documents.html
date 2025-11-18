@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Documents - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .doc-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    .doc-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .stat-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .stat-box.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .stat-box.danger {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .upload-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .upload-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    .doc-type-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .status-verified {
+        color: #198754;
+        background: #d1e7dd;
+    }
+    .status-pending {
+        color: #856404;
+        background: #fff3cd;
+    }
+    .status-expired {
+        color: #721c24;
+        background: #f8d7da;
+    }
+    .expiry-alert {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-file-earmark-text"></i> My Documents</h1>
+            <p class="text-muted">Employee: {{ employee.employee_no }} - {{ employee.get_full_name }}</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:employee_upload_document' %}" class="upload-btn">
+                <i class="bi bi-cloud-upload"></i> Upload Document
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-label">Total Documents</div>
+                <div class="stat-value">{{ stats.total }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box warning">
+                <div class="stat-label">Expiring Soon</div>
+                <div class="stat-value">{{ stats.expiring_soon }}</div>
+                <small>Within 30 days</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box danger">
+                <div class="stat-label">Expired</div>
+                <div class="stat-value">{{ stats.expired }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-label">Recent Uploads</div>
+                <div class="stat-value">{{ stats.recent }}</div>
+                <small>Last 30 days</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expiry Alerts -->
+    {% if expiring_soon %}
+    <div class="expiry-alert">
+        <h5><i class="bi bi-exclamation-triangle"></i> Documents Expiring Soon</h5>
+        <p class="mb-0">You have {{ expiring_soon|length }} document(s) expiring within 30 days. Please upload renewed versions.</p>
+        <ul class="mt-2 mb-0">
+            {% for doc in expiring_soon %}
+            <li>
+                <strong>{{ doc.title }}</strong> - Expires {{ doc.expiry_date|date:"M d, Y" }}
+                <a href="{% url 'hr:employee_request_renewal' doc.pk %}" class="btn btn-sm btn-warning ms-2">
+                    Request Renewal
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-4" id="docTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button">
+                All Documents <span class="badge bg-primary ms-2">{{ documents.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="verified-tab" data-bs-toggle="tab" data-bs-target="#verified" type="button">
+                Verified <span class="badge bg-success ms-2">{{ verified_docs.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+                Pending Verification <span class="badge bg-warning ms-2">{{ pending_docs.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="expired-tab" data-bs-toggle="tab" data-bs-target="#expired" type="button">
+                Expired <span class="badge bg-danger ms-2">{{ expired_docs.count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="docTabsContent">
+        <!-- All Documents -->
+        <div class="tab-pane fade show active" id="all" role="tabpanel">
+            {% if documents %}
+                <div class="row">
+                    {% for doc in documents %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="doc-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="doc-type-badge status-{{ doc.verification_status|lower }}">
+                                    {{ doc.get_document_type_display }}
+                                </span>
+                                {% if doc.is_verified %}
+                                    <i class="bi bi-check-circle-fill text-success" title="Verified"></i>
+                                {% elif doc.is_expired %}
+                                    <i class="bi bi-x-circle-fill text-danger" title="Expired"></i>
+                                {% else %}
+                                    <i class="bi bi-clock text-warning" title="Pending Verification"></i>
+                                {% endif %}
+                            </div>
+
+                            <h5 class="mb-2">{{ doc.title }}</h5>
+
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar-event"></i>
+                                    Uploaded: {{ doc.uploaded_at|date:"M d, Y" }}
+                                </small>
+                                {% if doc.expiry_date %}
+                                <br>
+                                <small class="{% if doc.is_expired %}text-danger{% elif doc.is_expiring_soon %}text-warning{% else %}text-muted{% endif %}">
+                                    <i class="bi bi-calendar-x"></i>
+                                    Expires: {{ doc.expiry_date|date:"M d, Y" }}
+                                </small>
+                                {% endif %}
+                            </div>
+
+                            {% if doc.description %}
+                            <p class="text-muted small">{{ doc.description|truncatewords:15 }}</p>
+                            {% endif %}
+
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'hr:employee_view_document' doc.pk %}" class="btn btn-sm btn-primary flex-fill">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                {% if doc.file %}
+                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary" download>
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+
+                            {% if doc.is_expired or doc.is_expiring_soon %}
+                            <a href="{% url 'hr:employee_request_renewal' doc.pk %}" class="btn btn-sm btn-warning w-100 mt-2">
+                                <i class="bi bi-arrow-clockwise"></i> Request Renewal
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i>
+                    <h4 class="mt-3 text-muted">No documents uploaded yet</h4>
+                    <p class="text-muted">Upload your first document to get started</p>
+                    <a href="{% url 'hr:employee_upload_document' %}" class="btn btn-primary mt-3">
+                        <i class="bi bi-cloud-upload"></i> Upload Document
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Verified Documents -->
+        <div class="tab-pane fade" id="verified" role="tabpanel">
+            {% if verified_docs %}
+                <div class="row">
+                    {% for doc in verified_docs %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="doc-card">
+                            <span class="doc-type-badge status-verified">
+                                {{ doc.get_document_type_display }}
+                            </span>
+                            <h5 class="mt-3 mb-2">{{ doc.title }}</h5>
+                            <small class="text-muted">
+                                <i class="bi bi-check-circle text-success"></i>
+                                Verified by {{ doc.verified_by.get_full_name }} on {{ doc.verified_at|date:"M d, Y" }}
+                            </small>
+                            <div class="mt-3">
+                                <a href="{% url 'hr:employee_view_document' doc.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center text-muted py-5">No verified documents</p>
+            {% endif %}
+        </div>
+
+        <!-- Pending Documents -->
+        <div class="tab-pane fade" id="pending" role="tabpanel">
+            {% if pending_docs %}
+                <div class="row">
+                    {% for doc in pending_docs %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="doc-card">
+                            <span class="doc-type-badge status-pending">
+                                {{ doc.get_document_type_display }}
+                            </span>
+                            <h5 class="mt-3 mb-2">{{ doc.title }}</h5>
+                            <small class="text-muted">
+                                <i class="bi bi-clock text-warning"></i>
+                                Waiting for HR verification
+                            </small>
+                            <div class="mt-3">
+                                <a href="{% url 'hr:employee_view_document' doc.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center text-muted py-5">No pending documents</p>
+            {% endif %}
+        </div>
+
+        <!-- Expired Documents -->
+        <div class="tab-pane fade" id="expired" role="tabpanel">
+            {% if expired_docs %}
+                <div class="row">
+                    {% for doc in expired_docs %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="doc-card border-danger">
+                            <span class="doc-type-badge status-expired">
+                                {{ doc.get_document_type_display }}
+                            </span>
+                            <h5 class="mt-3 mb-2">{{ doc.title }}</h5>
+                            <small class="text-danger">
+                                <i class="bi bi-x-circle"></i>
+                                Expired on {{ doc.expiry_date|date:"M d, Y" }}
+                            </small>
+                            <div class="mt-3 d-flex gap-2">
+                                <a href="{% url 'hr:employee_view_document' doc.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{% url 'hr:employee_request_renewal' doc.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-arrow-clockwise"></i> Renew
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center text-muted py-5">No expired documents</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-question-circle"></i> Document Guidelines</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="bi bi-file-earmark-text"></i> How to Upload Documents</h6>
+                    <ol>
+                        <li>Click "Upload Document" button</li>
+                        <li>Select document type and fill in details</li>
+                        <li>Attach your file (PDF, JPG, PNG, DOC, DOCX)</li>
+                        <li>Submit for HR verification</li>
+                    </ol>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="bi bi-info-circle"></i> Important Notes</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success"></i> Maximum file size: 10MB</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Renew documents before expiry</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Keep scanned copies clear and readable</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Contact HR for verification inquiries</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh every 2 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 120000);
+</script>
+{% endblock %}

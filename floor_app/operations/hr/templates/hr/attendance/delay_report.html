@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report Late Arrival - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    .report-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-box {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="report-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-exclamation-circle"></i> Report Late Arrival</h1>
+                <p class="text-muted">Submit explanation for late arrival</p>
+            </div>
+            <a href="{% url 'hr:delay_incident_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h6><i class="bi bi-info-circle"></i> Late Arrival Policy</h6>
+            <ul class="mb-0 mt-2">
+                <li><strong>Grace Period:</strong> {{ config.late_grace_minutes }} minutes</li>
+                <li><strong>Minor Delay:</strong> Up to {{ config.minor_delay_threshold_minutes }} minutes</li>
+                <li><strong>Major Delay:</strong> {{ config.minor_delay_threshold_minutes }}-{{ config.major_delay_threshold_minutes }} minutes</li>
+                <li><strong>Critical Delay:</strong> Over {{ config.major_delay_threshold_minutes }} minutes</li>
+                <li>Repeated delays may affect performance evaluation and leave entitlements</li>
+            </ul>
+        </div>
+
+        <!-- Report Form -->
+        <div class="report-card">
+            <form method="post" id="delayForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-calendar-event"></i> Delay Information</h5>
+
+                <div class="mb-3">
+                    <label for="{{ form.employee.id_for_label }}" class="form-label">
+                        Employee <span class="text-danger">*</span>
+                    </label>
+                    {{ form.employee }}
+                    {% if form.employee.errors %}
+                        <div class="invalid-feedback d-block">{{ form.employee.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.date.id_for_label }}" class="form-label">
+                        Date <span class="text-danger">*</span>
+                    </label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <div class="invalid-feedback d-block">{{ form.date.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Date of late arrival</small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.scheduled_time.id_for_label }}" class="form-label">
+                            Scheduled Check-in <span class="text-danger">*</span>
+                        </label>
+                        {{ form.scheduled_time }}
+                        {% if form.scheduled_time.errors %}
+                            <div class="invalid-feedback d-block">{{ form.scheduled_time.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Your scheduled start time</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.actual_time.id_for_label }}" class="form-label">
+                            Actual Check-in <span class="text-danger">*</span>
+                        </label>
+                        {{ form.actual_time }}
+                        {% if form.actual_time.errors %}
+                            <div class="invalid-feedback d-block">{{ form.actual_time.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">When you actually arrived</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="alert alert-info" id="delayCalculation" style="display: none;">
+                        <strong>Delay Time:</strong> <span id="calculatedDelay">0</span> minutes
+                        <span id="severityBadge"></span>
+                    </div>
+                </div>
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-file-text"></i> Explanation</h5>
+
+                <div class="mb-3">
+                    <label for="{{ form.delay_reason.id_for_label }}" class="form-label">
+                        Reason Category <span class="text-danger">*</span>
+                    </label>
+                    {{ form.delay_reason }}
+                    {% if form.delay_reason.errors %}
+                        <div class="invalid-feedback d-block">{{ form.delay_reason.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.employee_notes.id_for_label }}" class="form-label">
+                        Detailed Explanation <span class="text-danger">*</span>
+                    </label>
+                    {{ form.employee_notes }}
+                    {% if form.employee_notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.employee_notes.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        Please provide a detailed explanation for your late arrival. This will be reviewed by your supervisor.
+                    </small>
+                </div>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i> <strong>Note:</strong> Your supervisor will review this report. Provide honest and detailed information to help with the review process.
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:delay_incident_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="submit-btn">
+                        <i class="bi bi-send"></i> Submit Report
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Reporting Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Submit delay reports as soon as possible after arriving late</li>
+                    <li>Be honest and accurate about arrival times</li>
+                    <li>Provide specific, detailed explanations (e.g., "Heavy traffic on Highway 15 due to accident" vs just "Traffic")</li>
+                    <li>Include supporting documentation if available (photos, receipts, etc.) - attach to email or submit separately</li>
+                    <li>Repeated delays without valid reasons may result in disciplinary action</li>
+                    <li>Valid emergencies are always considered (medical, family, vehicle breakdown, etc.)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Calculate delay time
+    const scheduledInput = document.querySelector('input[name="scheduled_time"]');
+    const actualInput = document.querySelector('input[name="actual_time"]');
+    const delayCalculation = document.getElementById('delayCalculation');
+    const calculatedDelay = document.getElementById('calculatedDelay');
+    const severityBadge = document.getElementById('severityBadge');
+
+    function calculateDelay() {
+        const scheduled = scheduledInput.value;
+        const actual = actualInput.value;
+
+        if (scheduled && actual) {
+            const scheduledTime = new Date('1970-01-01T' + scheduled);
+            const actualTime = new Date('1970-01-01T' + actual);
+
+            const delayMinutes = (actualTime - scheduledTime) / (1000 * 60);
+
+            if (delayMinutes > 0) {
+                calculatedDelay.textContent = Math.round(delayMinutes);
+                delayCalculation.style.display = 'block';
+
+                // Determine severity
+                const minorThreshold = parseInt('{{ config.minor_delay_threshold_minutes }}');
+                const majorThreshold = parseInt('{{ config.major_delay_threshold_minutes }}');
+
+                let severity = '';
+                let badgeClass = '';
+
+                if (delayMinutes < minorThreshold) {
+                    severity = 'Minor';
+                    badgeClass = 'bg-warning';
+                } else if (delayMinutes < majorThreshold) {
+                    severity = 'Major';
+                    badgeClass = 'bg-danger';
+                } else {
+                    severity = 'Critical';
+                    badgeClass = 'bg-danger';
+                }
+
+                severityBadge.innerHTML = '<span class="badge ' + badgeClass + ' ms-2">' + severity + '</span>';
+            } else {
+                delayCalculation.style.display = 'none';
+            }
+        }
+    }
+
+    scheduledInput.addEventListener('change', calculateDelay);
+    actualInput.addEventListener('change', calculateDelay);
+
+    // Form validation
+    document.getElementById('delayForm').addEventListener('submit', function(e) {
+        const notes = document.querySelector('textarea[name="employee_notes"]');
+
+        if (!notes.value.trim()) {
+            e.preventDefault();
+            alert('Please provide a detailed explanation for your late arrival');
+            notes.focus();
+            return false;
+        }
+
+        if (notes.value.trim().length < 20) {
+            e.preventDefault();
+            alert('Please provide a more detailed explanation (at least 20 characters)');
+            notes.focus();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

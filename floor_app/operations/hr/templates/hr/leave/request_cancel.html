@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cancel Leave Request - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cancel-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    .cancel-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .warning-box {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .request-info {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="cancel-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-x-circle"></i> Cancel Leave Request</h1>
+                <p class="text-muted">Request #{{ leave_request.request_number }}</p>
+            </div>
+            <a href="{% url 'hr:leave_request_detail' leave_request.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Request
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Warning Box -->
+        <div class="warning-box">
+            <h5><i class="bi bi-exclamation-triangle"></i> Cancellation Warning</h5>
+            <p class="mb-0">
+                You are about to cancel this leave request. This action cannot be undone.
+                If the request was already approved, you will need to submit a new request if you still need leave.
+            </p>
+        </div>
+
+        <!-- Request Info -->
+        <div class="request-info">
+            <h6 class="mb-3"><i class="bi bi-info-circle"></i> Request Details</h6>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Employee:</strong></div>
+                <div class="col-6">{{ leave_request.employee.get_full_name }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Leave Type:</strong></div>
+                <div class="col-6">{{ leave_request.leave_policy.name }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Dates:</strong></div>
+                <div class="col-6">
+                    {{ leave_request.start_date|date:"M d" }} - {{ leave_request.end_date|date:"M d, Y" }}
+                    ({{ leave_request.total_days }} days)
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Status:</strong></div>
+                <div class="col-6">
+                    {% if leave_request.status == 'DRAFT' %}
+                        <span class="badge bg-secondary">Draft</span>
+                    {% elif leave_request.status == 'PENDING_APPROVAL' %}
+                        <span class="badge bg-warning text-dark">Pending Approval</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6"><strong>Reason:</strong></div>
+                <div class="col-6">{{ leave_request.reason|truncatewords:10 }}</div>
+            </div>
+        </div>
+
+        <!-- Cancellation Form -->
+        <div class="cancel-card">
+            <form method="post" id="cancelForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-file-text"></i> Cancellation Details</h5>
+
+                <div class="mb-4">
+                    <label for="cancellation_reason" class="form-label">
+                        Reason for Cancellation <span class="text-danger">*</span>
+                    </label>
+                    <textarea class="form-control" name="cancellation_reason" id="cancellation_reason"
+                              rows="4" required placeholder="Please explain why you're cancelling this leave request..."></textarea>
+                    <small class="form-text text-muted">
+                        Provide a clear explanation for cancelling this request
+                    </small>
+                </div>
+
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-lightbulb"></i> What happens after cancellation?</h6>
+                    <ul class="mb-0 small">
+                        <li>The leave request will be marked as cancelled</li>
+                        <li>If approved, the leave days will be returned to your balance</li>
+                        <li>If pending, it will be removed from your manager's approval queue</li>
+                        <li>You can submit a new leave request if needed</li>
+                        <li>Your manager will be notified of the cancellation</li>
+                    </ul>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:leave_request_detail' leave_request.pk %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-arrow-left"></i> Go Back
+                    </a>
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel Request
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Important Notes -->
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Important Notes</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Cancelled requests cannot be reactivated</li>
+                    <li>If you need leave for the same dates, submit a new request</li>
+                    <li>Excessive cancellations may affect future leave approvals</li>
+                    <li>Contact your manager if you have questions about the cancellation process</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and confirmation
+    document.getElementById('cancelForm').addEventListener('submit', function(e) {
+        const reason = document.getElementById('cancellation_reason').value.trim();
+
+        if (reason.length < 10) {
+            e.preventDefault();
+            alert('Please provide a more detailed reason for cancellation (at least 10 characters)');
+            return false;
+        }
+
+        // Confirmation
+        const message = 'Are you sure you want to cancel this leave request?\n\n' +
+                       'This action cannot be undone. You will need to submit a new request if you still need leave.';
+
+        if (!confirm(message)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

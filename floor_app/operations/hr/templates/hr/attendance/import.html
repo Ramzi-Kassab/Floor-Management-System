@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Import Attendance Data - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .import-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+    .import-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .upload-area {
+        border: 3px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+    .upload-area:hover {
+        border-color: #667eea;
+        background: #e9ecef;
+    }
+    .upload-area.dragover {
+        border-color: #667eea;
+        background: #e7f3ff;
+    }
+    .file-icon {
+        font-size: 4rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    .format-box {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border-left: 4px solid #0d6efd;
+    }
+    .sample-table {
+        font-size: 0.85rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="import-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-upload"></i> Import Attendance Data</h1>
+                <p class="text-muted">Upload attendance records from punch machine or other systems</p>
+            </div>
+            <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Upload Card -->
+        <div class="import-card mb-4">
+            <h5 class="mb-3"><i class="bi bi-cloud-upload"></i> Upload File</h5>
+
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="file-icon">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                    </div>
+                    <h5>Drag & Drop File Here</h5>
+                    <p class="text-muted">or click to browse</p>
+                    <input type="file" name="file" id="fileInput" class="d-none" accept=".csv,.xlsx,.xls" required>
+                    <button type="button" class="btn btn-primary mt-2" onclick="document.getElementById('fileInput').click()">
+                        <i class="bi bi-folder2-open"></i> Browse Files
+                    </button>
+                    <p class="mt-3 mb-0 text-muted small">
+                        Supported formats: CSV, Excel (.xlsx, .xls) | Max size: 10MB
+                    </p>
+                </div>
+
+                <div id="fileInfo" class="alert alert-info mt-3" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-file-check"></i>
+                            <strong>Selected file:</strong> <span id="fileName"></span>
+                            <span class="ms-2 text-muted">(<span id="fileSize"></span>)</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                            <i class="bi bi-x"></i> Remove
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6 class="mb-3">Import Options</h6>
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="skip_duplicates" id="skipDuplicates" checked>
+                        <label class="form-check-label" for="skipDuplicates">
+                            Skip duplicate records (same employee + date)
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="validate_only" id="validateOnly">
+                        <label class="form-check-label" for="validateOnly">
+                            Validate only (don't import, just check for errors)
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="auto_calculate_hours" id="autoCalculate" checked>
+                        <label class="form-check-label" for="autoCalculate">
+                            Automatically calculate hours worked from check-in/check-out times
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-upload"></i> Import Data
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Format Guidelines -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Required File Format</h6>
+            </div>
+            <div class="card-body">
+                <div class="format-box">
+                    <h6>CSV/Excel Column Headers (Required)</h6>
+                    <p class="mb-2">Your file must contain the following columns in this order:</p>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered sample-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Description</th>
+                                    <th>Format</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>employee_no</code></td>
+                                    <td>Employee number/ID</td>
+                                    <td>Text (e.g., EMP001)</td>
+                                    <td><span class="badge bg-danger">Yes</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>date</code></td>
+                                    <td>Attendance date</td>
+                                    <td>YYYY-MM-DD (e.g., 2025-11-18)</td>
+                                    <td><span class="badge bg-danger">Yes</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>check_in</code></td>
+                                    <td>Check-in time</td>
+                                    <td>HH:MM:SS (e.g., 08:30:00)</td>
+                                    <td><span class="badge bg-danger">Yes</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>check_out</code></td>
+                                    <td>Check-out time</td>
+                                    <td>HH:MM:SS (e.g., 17:00:00)</td>
+                                    <td><span class="badge bg-warning">Optional</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>status</code></td>
+                                    <td>Attendance status</td>
+                                    <td>PRESENT, ABSENT, ON_LEAVE, HALF_DAY</td>
+                                    <td><span class="badge bg-warning">Optional</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>notes</code></td>
+                                    <td>Additional notes</td>
+                                    <td>Text</td>
+                                    <td><span class="badge bg-warning">Optional</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Sample CSV Content:</h6>
+                    <pre class="bg-light p-3 rounded"><code>employee_no,date,check_in,check_out,status,notes
+EMP001,2025-11-18,08:30:00,17:00:00,PRESENT,Regular shift
+EMP002,2025-11-18,08:45:00,17:15:00,PRESENT,15 min late
+EMP003,2025-11-18,,,ABSENT,Sick leave
+EMP004,2025-11-18,08:00:00,13:00:00,HALF_DAY,Half day approved</code></pre>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Important Notes:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>All dates must be in YYYY-MM-DD format</li>
+                        <li>All times must be in 24-hour HH:MM:SS format</li>
+                        <li>Employee numbers must match existing employees in the system</li>
+                        <li>Duplicate records (same employee + date) will be skipped by default</li>
+                        <li>Invalid rows will be reported but won't stop the import</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Template -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-download"></i> Download Template</h6>
+            </div>
+            <div class="card-body">
+                <p>Don't have a file ready? Download our template to get started:</p>
+                <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-outline-success" onclick="alert('CSV template download coming soon')">
+                        <i class="bi bi-filetype-csv"></i> Download CSV Template
+                    </a>
+                    <a href="#" class="btn btn-outline-success" onclick="alert('Excel template download coming soon')">
+                        <i class="bi bi-filetype-xlsx"></i> Download Excel Template
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+
+    // Drag and drop functionality
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.remove('dragover');
+        });
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'block';
+
+            // Validate file type
+            const allowedTypes = ['.csv', '.xlsx', '.xls'];
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+
+            if (!allowedTypes.includes(fileExt)) {
+                alert('Invalid file type. Please upload a CSV or Excel file.');
+                clearFile();
+            }
+
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File too large. Maximum size is 10MB.');
+                clearFile();
+            }
+        }
+    }
+
+    function clearFile() {
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Form validation
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        if (!fileInput.files || fileInput.files.length === 0) {
+            e.preventDefault();
+            alert('Please select a file to upload');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

@@ -2,6 +2,8 @@
 from django.urls import path
 from . import views_employee_wizard as views
 from . import views_department
+from . import views_position
+from .views import leave_views, document_views, attendance_views, training_views
 
 app_name = "hr"
 
@@ -64,8 +66,12 @@ urlpatterns = [
     path("departments/<int:pk>/delete/", views_department.DepartmentDeleteView.as_view(), name="department_delete"),
     
     # ========== Positions ==========
-    path("positions/", views.position_list, name="position_list"),  # You'll need to implement these
-    path("positions/api/", views.position_list_api, name="position_list_api"),
+    path("positions/", views_position.PositionListView.as_view(), name="position_list"),
+    path("positions/create/", views_position.PositionCreateView.as_view(), name="position_create"),
+    path("positions/<int:pk>/", views_position.PositionDetailView.as_view(), name="position_detail"),
+    path("positions/<int:pk>/edit/", views_position.PositionUpdateView.as_view(), name="position_update"),
+    path("positions/<int:pk>/delete/", views_position.PositionDeleteView.as_view(), name="position_delete"),
+    path("positions/api/", views_position.position_list_api, name="position_list_api"),
 
     # ========== API Endpoints for Wizard ==========
     path("api/departments/", views.department_list_api, name="department_list_api"),
@@ -74,7 +80,86 @@ urlpatterns = [
     # ========== Reports & Settings ==========
     path("reports/", views.reports, name="reports"),
     path("settings/", views.settings, name="settings"),
-    
+
+    # ========== Leave Management ==========
+    # Leave Policies
+    path("leave/policies/", leave_views.LeavePolicyListView.as_view(), name="leave_policy_list"),
+    path("leave/policies/create/", leave_views.LeavePolicyCreateView.as_view(), name="leave_policy_create"),
+    path("leave/policies/<int:pk>/", leave_views.LeavePolicyDetailView.as_view(), name="leave_policy_detail"),
+    path("leave/policies/<int:pk>/edit/", leave_views.LeavePolicyUpdateView.as_view(), name="leave_policy_edit"),
+
+    # Leave Balances
+    path("leave/balances/", leave_views.leave_balance_dashboard, name="leave_balance_dashboard"),
+    path("leave/balances/<int:pk>/adjust/", leave_views.leave_balance_adjust, name="leave_balance_adjust"),
+    path("leave/balances/initialize/", leave_views.leave_balance_initialize, name="leave_balance_initialize"),
+
+    # Leave Requests
+    path("leave/requests/", leave_views.LeaveRequestListView.as_view(), name="leave_request_list"),
+    path("leave/requests/create/", leave_views.LeaveRequestCreateView.as_view(), name="leave_request_create"),
+    path("leave/requests/<int:pk>/", leave_views.LeaveRequestDetailView.as_view(), name="leave_request_detail"),
+    path("leave/requests/<int:pk>/submit/", leave_views.leave_request_submit, name="leave_request_submit"),
+    path("leave/requests/<int:pk>/approve/", leave_views.leave_request_approve, name="leave_request_approve"),
+    path("leave/requests/<int:pk>/cancel/", leave_views.leave_request_cancel, name="leave_request_cancel"),
+
+    # Leave Calendar & Dashboard
+    path("leave/calendar/", leave_views.leave_calendar, name="leave_calendar"),
+    path("leave/my-dashboard/", leave_views.my_leave_dashboard, name="my_leave_dashboard"),
+
+    # ========== Employee Document Management ==========
+    # Employee Self-Service Portal
+    path("documents/my-documents/", document_views.my_documents_dashboard, name="my_documents_dashboard"),
+    path("documents/upload/", document_views.employee_upload_document, name="employee_upload_document"),
+    path("documents/<int:pk>/view/", document_views.employee_view_document, name="employee_view_document"),
+    path("documents/<int:pk>/request-renewal/", document_views.employee_request_renewal, name="employee_request_renewal"),
+
+    # HR Administrative Portal
+    path("documents/hr/", document_views.hr_documents_dashboard, name="hr_documents_dashboard"),
+    path("documents/hr/upload/", document_views.hr_upload_document, name="hr_upload_document"),
+    path("documents/hr/expiry/", document_views.hr_expiry_dashboard, name="hr_expiry_dashboard"),
+    path("documents/hr/<int:pk>/", document_views.hr_document_detail, name="hr_document_detail"),
+    path("documents/hr/<int:pk>/verify/", document_views.hr_verify_document, name="hr_verify_document"),
+    path("documents/hr/bulk-actions/", document_views.hr_bulk_actions, name="hr_bulk_actions"),
+    path("documents/hr/print/", document_views.print_document_list, name="print_document_list"),
+
+    # ========== Attendance & Overtime Management ==========
+    # Attendance Dashboard & Records
+    path("attendance/", attendance_views.attendance_dashboard, name="attendance_dashboard"),
+    path("attendance/list/", attendance_views.attendance_list, name="attendance_list"),
+    path("attendance/entry/", attendance_views.attendance_entry, name="attendance_entry"),
+    path("attendance/import/", attendance_views.punch_machine_import, name="punch_machine_import"),
+    path("attendance/export/", attendance_views.export_attendance_csv, name="export_attendance_csv"),
+    path("attendance/reports/", attendance_views.attendance_report, name="attendance_report"),
+
+    # Overtime Requests
+    path("overtime/", attendance_views.overtime_request_list, name="overtime_request_list"),
+    path("overtime/request/", attendance_views.overtime_request_create, name="overtime_request_create"),
+    path("overtime/<int:pk>/", attendance_views.overtime_request_detail, name="overtime_request_detail"),
+    path("overtime/<int:pk>/approve/", attendance_views.overtime_request_approve, name="overtime_request_approve"),
+
+    # Delay/Late Arrival Management
+    path("delays/", attendance_views.delay_incident_list, name="delay_incident_list"),
+    path("delays/report/", attendance_views.delay_incident_report, name="delay_incident_report"),
+    path("delays/<int:pk>/review/", attendance_views.delay_incident_review, name="delay_incident_review"),
+
+    # ========== Training & Development Management ==========
+    # Training Programs
+    path("training/programs/", training_views.TrainingProgramListView.as_view(), name="training_program_list"),
+    path("training/programs/create/", training_views.TrainingProgramCreateView.as_view(), name="training_program_create"),
+    path("training/programs/<int:pk>/", training_views.TrainingProgramDetailView.as_view(), name="training_program_detail"),
+    path("training/programs/<int:pk>/edit/", training_views.TrainingProgramUpdateView.as_view(), name="training_program_edit"),
+
+    # Training Sessions
+    path("training/sessions/", training_views.TrainingSessionListView.as_view(), name="training_session_list"),
+    path("training/sessions/create/", training_views.TrainingSessionCreateView.as_view(), name="training_session_create"),
+    path("training/sessions/<int:pk>/", training_views.TrainingSessionDetailView.as_view(), name="training_session_detail"),
+    path("training/sessions/<int:pk>/edit/", training_views.TrainingSessionUpdateView.as_view(), name="training_session_edit"),
+    path("training/sessions/<int:session_id>/enroll/", training_views.enroll_employees, name="training_enroll"),
+
+    # Employee Training
+    path("training/my-training/", training_views.my_training_dashboard, name="my_training_dashboard"),
+    path("training/complete/<int:pk>/", training_views.complete_training, name="training_complete"),
+    path("training/feedback/<int:pk>/", training_views.submit_feedback, name="training_feedback"),
+
     # ========== Legacy/Deprecated URLs (redirect to new system) ==========
     path("employees/create/", views.employee_wizard_start, name="employee_create"),  # Redirect to wizard
     path("employees/setup/new/", views.employee_wizard_start, name="employee_setup_new"),

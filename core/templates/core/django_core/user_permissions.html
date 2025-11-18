@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{{ title }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .permissions-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .app-section {
+        margin-bottom: 2rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .app-header {
+        background: linear-gradient(to right, #0d6efd, #0dcaf0);
+        color: white;
+        padding: 1rem 1.5rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .app-header:hover {
+        background: linear-gradient(to right, #0b5ed7, #0ab6d1);
+    }
+    .app-header h5 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    .app-content {
+        padding: 1.5rem;
+        background: #f8f9fa;
+    }
+    .model-section {
+        background: white;
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .model-title {
+        font-weight: bold;
+        color: #0d6efd;
+        margin-bottom: 0.75rem;
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 0.5rem;
+    }
+    .permission-checkbox {
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+    .permission-checkbox:hover {
+        background-color: #e7f1ff;
+        border-color: #0d6efd;
+    }
+    .permission-checkbox input:checked + label {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .stats-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+    .collapse-icon {
+        transition: transform 0.3s;
+    }
+    .collapsed .collapse-icon {
+        transform: rotate(-90deg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-shield-lock-fill"></i> {{ title }}
+        </h1>
+        <a href="{% url 'core:user_detail' user_obj.pk %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to User
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- User Info Card -->
+    <div class="user-info-card">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <i class="bi bi-person-circle" style="font-size: 3rem;"></i>
+            </div>
+            <div class="col">
+                <h4 class="mb-1">{{ user_obj.get_full_name|default:user_obj.username }}</h4>
+                <p class="mb-0">
+                    <small>
+                        <i class="bi bi-envelope"></i> {{ user_obj.email|default:"No email" }}
+                        {% if user_obj.is_staff %}
+                        <span class="badge bg-light text-dark ms-2">Staff</span>
+                        {% endif %}
+                        {% if user_obj.is_superuser %}
+                        <span class="badge bg-warning text-dark">Superuser</span>
+                        {% endif %}
+                    </small>
+                </p>
+            </div>
+            <div class="col-auto text-end">
+                <div class="stats-badge">
+                    <strong>{{ user_obj.user_permissions.count }}</strong> Direct Permissions
+                </div>
+                <div class="stats-badge mt-1">
+                    <strong>{{ user_obj.groups.count }}</strong> Groups
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user_obj.is_superuser %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Superuser Status:</strong> This user has all permissions automatically. Direct permission assignments are not necessary but can be managed here for documentation purposes.
+    </div>
+    {% endif %}
+
+    <!-- Group Permissions Info -->
+    {% if user_obj.groups.exists %}
+    <div class="alert alert-info">
+        <h6><i class="bi bi-info-circle"></i> Inherited Group Permissions</h6>
+        <p class="mb-2">This user inherits permissions from the following groups:</p>
+        <div>
+            {% for group in user_obj.groups.all %}
+                <a href="{% url 'core:group_detail' group.pk %}" class="badge bg-primary me-1" style="text-decoration: none;">
+                    {{ group.name }} ({{ group.permissions.count }} permissions)
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" id="permissionsForm">
+        {% csrf_token %}
+
+        <div class="permissions-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5><i class="bi bi-key-fill"></i> Direct User Permissions</h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="expandAll()">
+                        <i class="bi bi-arrows-expand"></i> Expand All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="collapseAll()">
+                        <i class="bi bi-arrows-collapse"></i> Collapse All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearAll()">
+                        <i class="bi bi-x-circle"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            {% if permissions_by_app %}
+                {% for app_label, models in permissions_by_app.items %}
+                <div class="app-section">
+                    <div class="app-header collapsed" data-bs-toggle="collapse" data-bs-target="#app_{{ app_label }}">
+                        <h5>
+                            <i class="bi bi-folder-fill me-2"></i>
+                            {{ app_label|title }}
+                        </h5>
+                        <div>
+                            <span class="stats-badge me-3">
+                                {{ models|length }} model(s)
+                            </span>
+                            <i class="bi bi-chevron-down collapse-icon"></i>
+                        </div>
+                    </div>
+                    <div id="app_{{ app_label }}" class="collapse">
+                        <div class="app-content">
+                            {% for model, permissions in models.items %}
+                            <div class="model-section">
+                                <div class="model-title">
+                                    <i class="bi bi-table me-2"></i>{{ model|title }}
+                                    <small class="text-muted">({{ permissions|length }} permissions)</small>
+                                </div>
+                                <div class="row">
+                                    {% for perm in permissions %}
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="permission-checkbox">
+                                            <div class="form-check">
+                                                <input type="checkbox"
+                                                       class="form-check-input"
+                                                       name="user_permissions"
+                                                       value="{{ perm.id }}"
+                                                       id="perm_{{ perm.id }}"
+                                                       {% if perm in user_obj.user_permissions.all %}checked{% endif %}>
+                                                <label class="form-check-label" for="perm_{{ perm.id }}">
+                                                    <strong>{{ perm.codename }}</strong>
+                                                    <br><small class="text-muted">{{ perm.name }}</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No permissions available in the system.
+                </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'core:user_detail' user_obj.pk %}" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle"></i> Save Permissions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function expandAll() {
+        document.querySelectorAll('.app-section .collapse').forEach(el => {
+            const collapse = new bootstrap.Collapse(el, {toggle: false});
+            collapse.show();
+        });
+        document.querySelectorAll('.app-header').forEach(el => {
+            el.classList.remove('collapsed');
+        });
+    }
+
+    function collapseAll() {
+        document.querySelectorAll('.app-section .collapse').forEach(el => {
+            const collapse = new bootstrap.Collapse(el, {toggle: false});
+            collapse.hide();
+        });
+        document.querySelectorAll('.app-header').forEach(el => {
+            el.classList.add('collapsed');
+        });
+    }
+
+    function clearAll() {
+        if (confirm('Are you sure you want to clear all direct permissions for this user?')) {
+            document.querySelectorAll('input[name="user_permissions"]:checked').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+    }
+
+    // Track changes
+    let initialState = new Set();
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input[name="user_permissions"]:checked').forEach(checkbox => {
+            initialState.add(checkbox.value);
+        });
+
+        const form = document.getElementById('permissionsForm');
+        form.addEventListener('submit', function(e) {
+            const currentState = new Set();
+            document.querySelectorAll('input[name="user_permissions"]:checked').forEach(checkbox => {
+                currentState.add(checkbox.value);
+            });
+
+            const added = [...currentState].filter(x => !initialState.has(x)).length;
+            const removed = [...initialState].filter(x => !currentState.has(x)).length;
+
+            if (added > 0 || removed > 0) {
+                if (!confirm(`You are about to save changes:\n\n+ ${added} permission(s) added\n- ${removed} permission(s) removed\n\nContinue?`)) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+
+    // Search functionality (optional enhancement)
+    function searchPermissions(query) {
+        const normalizedQuery = query.toLowerCase();
+        document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+            const text = checkbox.textContent.toLowerCase();
+            checkbox.style.display = text.includes(normalizedQuery) ? 'block' : 'none';
+        });
+    }
+</script>
+{% endblock %}

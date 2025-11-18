@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enroll Employees - {{ session.session_code }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .enroll-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .enroll-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .session-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .employee-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border-left: 3px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    .employee-item:hover {
+        border-left-color: #667eea;
+        background: white;
+    }
+    .employee-item input:checked + label {
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="enroll-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-person-plus"></i> Enroll Employees</h1>
+                <p class="text-muted">Add employees to this training session</p>
+            </div>
+            <a href="{% url 'hr:training_session_detail' session.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Session
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Session Info -->
+        <div class="session-info">
+            <h5 class="mb-3"><i class="bi bi-calendar-event"></i> Session Information</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Program:</strong> {{ session.program.name }}<br>
+                    <strong>Session Code:</strong> {{ session.session_code }}<br>
+                    <strong>Dates:</strong> {{ session.start_date|date:"M d" }} - {{ session.end_date|date:"M d, Y" }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Location:</strong> {{ session.location }}
+                    {% if session.is_virtual %}<span class="badge bg-info">Virtual</span>{% endif %}<br>
+                    <strong>Instructor:</strong> {{ session.instructor_name }}<br>
+                    <strong>Available Seats:</strong> {{ session.program.max_participants|add:"-"|add:session.registered_count }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrollment Form -->
+        <div class="enroll-card">
+            <form method="post" id="enrollForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-people"></i> Select Employees</h5>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                        <i class="bi bi-check-square"></i> Select All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                        <i class="bi bi-square"></i> Deselect All
+                    </button>
+                    <span class="ms-3 text-muted" id="selectedCount">0 selected</span>
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 1rem;">
+                    {% for employee in form.employees.field.queryset %}
+                    <div class="employee-item">
+                        <div class="form-check">
+                            <input class="form-check-input employee-checkbox" type="checkbox"
+                                   name="employees" value="{{ employee.id }}" id="emp{{ employee.id }}">
+                            <label class="form-check-label w-100" for="emp{{ employee.id }}">
+                                <strong>{{ employee.get_full_name }}</strong>
+                                <span class="text-muted">({{ employee.employee_no }})</span>
+                                {% if employee.department %}
+                                    <br><small class="text-muted">{{ employee.department.name }}</small>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
+                        <p class="mb-0 mt-2">All eligible employees are already enrolled</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if form.employees.errors %}
+                    <div class="alert alert-danger mt-3">{{ form.employees.errors }}</div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                        Enrollment Notes
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Optional notes about this enrollment</small>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <h6><i class="bi bi-info-circle"></i> Enrollment Details</h6>
+                    <ul class="mb-0">
+                        <li>Employees will be registered for this training session</li>
+                        <li>They will receive notification about the session details</li>
+                        <li>Cost per person: {{ session.program.cost_per_person }} {{ session.program.currency }}</li>
+                        <li>Maximum participants: {{ session.program.max_participants }}</li>
+                    </ul>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:training_session_detail' session.pk %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle"></i> Enroll Selected Employees
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Selection helpers
+    const checkboxes = document.querySelectorAll('.employee-checkbox');
+    const selectedCount = document.getElementById('selectedCount');
+
+    function updateCount() {
+        const count = document.querySelectorAll('.employee-checkbox:checked').length;
+        selectedCount.textContent = `${count} selected`;
+    }
+
+    function selectAll() {
+        checkboxes.forEach(cb => cb.checked = true);
+        updateCount();
+    }
+
+    function deselectAll() {
+        checkboxes.forEach(cb => cb.checked = false);
+        updateCount();
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateCount);
+    });
+
+    // Form validation
+    document.getElementById('enrollForm').addEventListener('submit', function(e) {
+        const checked = document.querySelectorAll('.employee-checkbox:checked').length;
+
+        if (checked === 0) {
+            e.preventDefault();
+            alert('Please select at least one employee to enroll');
+            return false;
+        }
+
+        // Confirm enrollment
+        const message = `Enroll ${checked} employee(s) in this training session?`;
+        if (!confirm(message)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

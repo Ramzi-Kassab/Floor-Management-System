@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Document Expiry Management - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .expiry-stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        text-align: center;
+    }
+    .expiry-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .expiry-stat-card.danger {
+        border-left: 4px solid #dc3545;
+    }
+    .expiry-stat-card.warning {
+        border-left: 4px solid #ffc107;
+    }
+    .expiry-stat-card.info {
+        border-left: 4px solid #0dcaf0;
+    }
+    .expiry-number {
+        font-size: 3rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .expiry-number.danger {
+        color: #dc3545;
+    }
+    .expiry-number.warning {
+        color: #ffc107;
+    }
+    .expiry-number.info {
+        color: #0dcaf0;
+    }
+    .timeline-item {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid #0d6efd;
+        transition: all 0.2s;
+    }
+    .timeline-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .timeline-item.expired {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    .timeline-item.expiring-soon {
+        border-left-color: #ffc107;
+        background: #fffdf0;
+    }
+    .action-needed-badge {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-calendar-x"></i> Document Expiry Management</h1>
+            <p class="text-muted">Monitor and manage document expirations</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:hr_documents_dashboard' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Back to Documents
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Expiry Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="expiry-stat-card danger">
+                <i class="bi bi-x-circle-fill" style="font-size: 2rem; color: #dc3545;"></i>
+                <div class="expiry-number danger">{{ stats.expired }}</div>
+                <div class="text-muted">Expired Documents</div>
+                <small class="text-danger">Immediate Action Required</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="expiry-stat-card warning">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem; color: #ffc107;"></i>
+                <div class="expiry-number warning">{{ stats.expiring_30 }}</div>
+                <div class="text-muted">Expiring in 30 Days</div>
+                <small class="text-warning">Action Needed Soon</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="expiry-stat-card info">
+                <i class="bi bi-calendar-event" style="font-size: 2rem; color: #0dcaf0;"></i>
+                <div class="expiry-number info">{{ stats.expiring_60 }}</div>
+                <div class="text-muted">Expiring in 60 Days</div>
+                <small class="text-info">Monitor Closely</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="expiry-stat-card info">
+                <i class="bi bi-calendar-range" style="font-size: 2rem; color: #0dcaf0;"></i>
+                <div class="expiry-number info">{{ stats.expiring_90 }}</div>
+                <div class="text-muted">Expiring in 90 Days</div>
+                <small class="text-info">Plan Ahead</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Alerts -->
+    {% if expired_docs %}
+    <div class="alert alert-danger">
+        <h5><i class="bi bi-exclamation-octagon-fill"></i> Critical: {{ expired_docs|length }} Expired Document(s)</h5>
+        <p class="mb-2">The following documents have expired and require immediate renewal:</p>
+        <ul class="mb-0">
+            {% for doc in expired_docs|slice:":5" %}
+            <li>
+                <strong>{{ doc.employee.get_full_name }}</strong> - {{ doc.title }}
+                (Expired: {{ doc.expiry_date|date:"M d, Y" }})
+                <a href="{% url 'hr:hr_document_detail' doc.pk %}" class="btn btn-sm btn-outline-danger ms-2">
+                    View
+                </a>
+            </li>
+            {% endfor %}
+            {% if expired_docs|length > 5 %}
+            <li class="text-muted">... and {{ expired_docs|length|add:"-5" }} more</li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Expired Documents -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-x-circle"></i> Expired Documents ({{ expired_docs|length }})
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    {% if expired_docs %}
+                        {% for doc in expired_docs %}
+                        <div class="timeline-item expired">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        {{ doc.employee.get_full_name }}
+                                        {% if doc.is_mandatory %}
+                                        <span class="action-needed-badge">MANDATORY</span>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="mb-1 text-muted small">{{ doc.title }}</p>
+                                    <div class="d-flex gap-2">
+                                        <small class="text-danger">
+                                            <i class="bi bi-x-circle-fill"></i>
+                                            Expired: {{ doc.expiry_date|date:"M d, Y" }}
+                                        </small>
+                                        <small class="text-muted">
+                                            ({{ doc.days_until_expiry }} days ago)
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'hr:hr_document_detail' doc.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" onclick="sendRenewalReminder({{ doc.pk }})">
+                                        <i class="bi bi-envelope"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-4">
+                            <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.3;"></i><br>
+                            No expired documents
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiring Soon (30 Days) -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Expiring in 30 Days ({{ expiring_30|length }})
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    {% if expiring_30 %}
+                        {% for doc in expiring_30 %}
+                        <div class="timeline-item expiring-soon">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        {{ doc.employee.get_full_name }}
+                                        {% if doc.is_mandatory %}
+                                        <span class="action-needed-badge">MANDATORY</span>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="mb-1 text-muted small">{{ doc.title }}</p>
+                                    <div class="d-flex gap-2">
+                                        <small class="text-warning">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                            Expires: {{ doc.expiry_date|date:"M d, Y" }}
+                                        </small>
+                                        <small class="text-muted">
+                                            (in {{ doc.days_until_expiry|abs }} days)
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'hr:hr_document_detail' doc.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-warning" onclick="sendRenewalReminder({{ doc.pk }})">
+                                        <i class="bi bi-envelope"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-4">
+                            <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.3;"></i><br>
+                            No documents expiring in 30 days
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expiring Later -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event"></i> Expiring in 31-60 Days ({{ expiring_60|length }})
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if expiring_60 %}
+                        {% for doc in expiring_60 %}
+                        <div class="timeline-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ doc.employee.get_full_name }}</h6>
+                                    <small class="text-muted">{{ doc.title }} - Expires: {{ doc.expiry_date|date:"M d, Y" }}</small>
+                                </div>
+                                <a href="{% url 'hr:hr_document_detail' doc.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-4">No documents in this period</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-range"></i> Expiring in 61-90 Days ({{ expiring_90|length }})
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if expiring_90 %}
+                        {% for doc in expiring_90 %}
+                        <div class="timeline-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ doc.employee.get_full_name }}</h6>
+                                    <small class="text-muted">{{ doc.title }} - Expires: {{ doc.expiry_date|date:"M d, Y" }}</small>
+                                </div>
+                                <a href="{% url 'hr:hr_document_detail' doc.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-4">No documents in this period</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-lightning"></i> Bulk Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Send Renewal Reminders</h6>
+                    <p class="text-muted">Notify employees about expiring documents</p>
+                    <button class="btn btn-primary" onclick="sendBulkReminders('expired')">
+                        <i class="bi bi-envelope"></i> Remind for Expired ({{ stats.expired }})
+                    </button>
+                    <button class="btn btn-warning mt-2" onclick="sendBulkReminders('expiring_30')">
+                        <i class="bi bi-envelope"></i> Remind for Expiring Soon ({{ stats.expiring_30 }})
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <h6>Export Reports</h6>
+                    <p class="text-muted">Download expiry reports for analysis</p>
+                    <a href="{% url 'hr:hr_bulk_actions' %}?action=export&filter=expired" class="btn btn-success">
+                        <i class="bi bi-download"></i> Export Expired Docs
+                    </a>
+                    <a href="{% url 'hr:hr_bulk_actions' %}?action=export&filter=expiring" class="btn btn-success mt-2">
+                        <i class="bi bi-download"></i> Export Expiring Docs
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <h6>Document Renewal Status</h6>
+                    <p class="text-muted">Track pending renewals</p>
+                    <div class="alert alert-info mb-0">
+                        <strong>{{ pending_renewals|length }}</strong> renewal requests pending
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function sendRenewalReminder(docId) {
+        if (confirm('Send renewal reminder to the employee?')) {
+            fetch(`/hr/documents/hr/${docId}/send-reminder/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Reminder sent successfully');
+                } else {
+                    alert('Error sending reminder: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending reminder');
+            });
+        }
+    }
+
+    function sendBulkReminders(category) {
+        if (confirm(`Send renewal reminders to all employees with ${category} documents?`)) {
+            fetch(`/hr/documents/hr/bulk-reminders/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ category: category })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Sent ${data.count} reminders successfully`);
+                } else {
+                    alert('Error sending reminders: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending reminders');
+            });
+        }
+    }
+
+    // Auto-refresh every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+</script>
+{% endblock %}

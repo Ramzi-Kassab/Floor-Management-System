@@ -1,0 +1,487 @@
+C:\Users\HP-i7\AppData\Local\Programs\Python\Python310\lib\site-packages\openpyxl\worksheet\_reader.py:329: UserWarning: Conditional Formatting extension is not supported and will be removed
+  warn(msg)
+C:\Users\HP-i7\AppData\Local\Programs\Python\Python310\lib\site-packages\openpyxl\worksheet\_reader.py:329: UserWarning: Data Validation extension is not supported and will be removed
+  warn(msg)
+
+################################################################################
+# EXCEL WORKBOOK ANALYSIS REPORT
+# Directory: D:\PycharmProjects\Work Files
+# Files found: 6
+################################################################################
+
+
+================================================================================
+## Workbook: 2025-ARDT-LV4-015-14204328.xlsx
+Path: D:\PycharmProjects\Work Files\2025-ARDT-LV4-015-14204328.xlsx
+================================================================================
+
+**Number of sheets:** 27
+
+**Sheet names:** Data, TRANSPOSE, ARDT Cutter Entry, Eng. Cutter Entry, Evaluation, E checklist, Router Sheet, LPT Report, Evaluation (2), Instructions, Eval-LSTK, Eval-LSTK (2), Quotation, Qut. HALL., Rework Cutter Entry, Rework, Rework (2), Die Check Entry, Delivery Tkt, Eval & Quot-AR, API Thread Inspection, Brazing, Hardfacing & Build up, Cutters LPT Report-not complete, L3 bit material consume, Sheet1, ARAMCO-CONTRACT-6600048646
+
+
+### Sheet: `Data`
+------------------------------------------------------------
+
+**Dimensions:** 1999 rows × 196 columns
+
+**Header Row (Row 1):**
+  - Col A: `ARDT Work Order No`
+  - Col B: `2025-ARDT-LV4-015`
+  - Col D: `Data Entry for Bits`
+  - Col L: `Qty`
+  - Col N: `PRICES`
+
+**Sample Data (Rows 2-12, first 10 columns):**
+
+  Row 2: Serial Number | 14204328 | =IF(COUNTIF(Instructions!$L$1,"*WFD*"... | Modified cutters |  |  |  |  | Rerun by ARDT | 
+  Row 3: Size | 8.5 |  | # | Qty | Cutter part # | To Replace Cutter # |  | Rerun by  Engineer | 
+  Row 4: Type | GT65RHs |  | =IF(F4="","",IF(MAX(BR36:CP46)<>0,MAX... |  |  |  |  | Initial Bit Inspection | 
+  Row 5: LV5 Mat # | 1267829M | =IF(F4<>"",IF(COUNTIF(B5,"*M*"),"","A... | =IF(F5="","",IFERROR(D4+1,"")) |  |  |  |  | Scrap | 
+  Row 6: Bit Date Received (MM/DD/YYYY) | 2025-01-16 00:00:00 |  | =IF(F6="","",IFERROR(D5+1,"")) |  |  |  |  | Approved for Quot: 1 OK, 2 NOT OK | 
+  Row 7: From  | ARDT-LV4 |  | =IF(F7="","",IFERROR(D6+1,"")) |  |  |  |  | =IF(COUNTIF(Data!B4,"S*"),"ARDT Hardf... | 
+  Row 8: LV3 or LV4 Mat # | 1158011 |  | =IF(F8="","",IFERROR(D7+1,"")) |  |  |  |  | =IF(COUNTIF(Data!B4,"S*"),"Engineer H... | 
+  Row 9: LV3 or LV4 Remark | BOM, Might be changed, waiting Saad. |  |  |  |  |  |  | Add charge for rework | 
+  Row 10: New Type |  |  | Cutter quantities changed after Engin... |  |  |  |  |  | 
+  Row 11: Evaluated by |  |  | # | Quantity | Cutter Size | Cutters Part # | Description |  | 
+
+**Formula Analysis (sampling rows 1-20):**
+
+  - Col A (Row 14): `=IF(Data!B7="SAUDI ARAMCO","DTD/TSSD:","Reviewed by Eng.:")`
+  - Col A (Row 18): `=IF('Eval-LSTK'!D57<>"","Repair Date",IF('Eval-LSTK'!D59<>"","Scrap Date","Rerun Date"))`
+  - Col B (Row 16): `=IF(B7<>"",B7,"")`
+  - Col C (Row 2): `=IF(COUNTIF(Instructions!$L$1,"*WFD*"),"WFD","")`
+  - Col C (Row 5): `=IF(F4<>"",IF(COUNTIF(B5,"*M*"),"","Add M"),"")`
+  - Col D (Row 4): `=IF(F4="","",IF(MAX(BR36:CP46)<>0,MAX(BR36:CP46)+1,""))`
+  - Col D (Row 5): `=IF(F5="","",IFERROR(D4+1,""))`
+  - Col E (Row 12): `=IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AQ$58+'ARDT Cutter Entry'!AQ$59+'ARDT Cutter Entry'!AQ$60+'ARDT Cutter Entry'!AQ$61),'ARDT Cutter Entry'!AQ$58+'ARDT Cutter Entry'!AQ$59+'ARDT Cutter Entry'!AQ$60+'ARDT Cutter Entry'!AQ$61+Rework!C73),'ARDT Cutter Entry'!AQ2+'ARDT Cutter Entry'!AQ3+'ARDT Cutter Entry'!AQ4+'ARDT Cutter Entry'!AQ5)`
+  - Col E (Row 13): `=IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AR$58+'ARDT Cutter Entry'!AR$59+'ARDT Cutter Entry'!AR$60+'ARDT Cutter Entry'!AR$61),'ARDT Cutter Entry'!AR$58+'ARDT Cutter Entry'!AR$59+'ARDT Cutter Entry'!AR$60+'ARDT Cutter Entry'!AR$61+Rework!D73),'ARDT Cutter Entry'!AR2+'ARDT Cutter Entry'!AR3+'ARDT Cutter Entry'!AR4+'ARDT Cutter Entry'!AR5)`
+  - Col F (Row 12): `=IF(FP2>0,IF(FP2<>"",FP2," ")," ")`
+  - Col F (Row 13): `=IF(FP3>0,IF(FP3<>"",FP3," ")," ")`
+  - Col G (Row 12): `=IF(B5<>"",IF(FL2>0,IF(FL2<>"",IF(FL2<>"Add the cutter in list",FL2,"Add the cutter"),""),""),"")`
+  - Col G (Row 13): `=IF(B5<>"",IF(FL3>0,IF(FL3<>"",IF(FL3<>"Add the cutter in list",FL3,"Add the cutter"),""),""),"")`
+  - Col H (Row 12): `=IF(AND(FR2<>"",FR2<>0),FR2,"")&IF(AND(FQ2<>"",FQ2<>0)," "&FQ2,"")&IF(AND(FS2<>"",FS2<>0)," "&FS2,"")`
+  - Col H (Row 13): `=IF(AND(FR3<>"",FR3<>0),FR3,"")&IF(AND(FQ3<>"",FQ3<>0)," "&FQ3,"")&IF(AND(FS3<>"",FS3<>0)," "&FS3,"")`
+  - Col I (Row 7): `=IF(COUNTIF(Data!B4,"S*"),"ARDT Hardfacing","ARDT Matrix Build up")`
+  - Col I (Row 8): `=IF(COUNTIF(Data!B4,"S*"),"Engineer Hardfacing","Engineer Matrix Build up")`
+  - Col J (Row 12): `=IF(AND(FW2<>"",FW2<>0),FW2,"")`
+  - Col J (Row 13): `=IF(AND(FW3<>"",FW3<>0),FW3,"")`
+  - Col K (Row 12): `=IF(IFERROR(E12-L12,E12)=0,"",IFERROR(E12-L12,E12))`
+  ... and 5 more formula examples
+
+**Named Ranges in Workbook:**
+
+  - `BLADE1`: TRANSPOSE!$C$4:$AJ$4
+  - `BLADE10`: TRANSPOSE!$C$13:$AJ$13
+  - `BLADE11`: TRANSPOSE!$C$14:$AJ$14
+  - `BLADE12`: TRANSPOSE!$C$15:$AJ$15
+  - `BLADE2`: TRANSPOSE!$C$5:$AJ$5
+  - `BLADE3`: TRANSPOSE!$C$6:$AJ$6
+  - `BLADE4`: TRANSPOSE!$C$7:$AJ$7
+  - `BLADE5`: TRANSPOSE!$C$8:$AJ$8
+  - `BLADE6`: TRANSPOSE!$C$9:$AJ$9
+  - `BLADE7`: TRANSPOSE!$C$10:$AJ$10
+  - `BLADE8`: TRANSPOSE!$C$11:$AJ$11
+  - `BLADE9`: TRANSPOSE!$C$12:$AJ$12
+  - `TRANS2B1`: TRANSPOSE!$AO$64:$AO$97
+  - `TRANS2B10`: TRANSPOSE!$AX$64:$AX$97
+  - `TRANS2B11`: TRANSPOSE!$AY$64:$AY$97
+  - `TRANS2B12`: TRANSPOSE!$AZ$64:$AZ$97
+  - `TRANS2B2`: TRANSPOSE!$AP$64:$AP$97
+  - `TRANS2B3`: TRANSPOSE!$AQ$64:$AQ$97
+  - `TRANS2B4`: TRANSPOSE!$AR$64:$AR$97
+  - `TRANS2B5`: TRANSPOSE!$AS$64:$AS$97
+  ... and 16 more
+
+**Data Validation (sampling first 100 cells):**
+
+ERROR: **Error analyzing workbook:** 'Cell' object has no attribute 'data_validation'
+
+
+================================================================================
+## Workbook: Consumables and Spare Parts-PDC 11-4-2025.xlsx
+Path: D:\PycharmProjects\Work Files\Consumables and Spare Parts-PDC 11-4-2025.xlsx
+================================================================================
+
+**Number of sheets:** 6
+
+**Sheet names:** Master Data 11-4-2025, PDC PPE, PDC Equipment, Lists, Spec, Purchase requisitions
+
+
+### Sheet: `Master Data 11-4-2025`
+------------------------------------------------------------
+
+**Dimensions:** 286 rows × 16382 columns
+
+**Header Row (Row 1):**
+  - Col A: `Item Number`
+  - Col B: `Product Name`
+  - Col C: `Search Name`
+  - Col D: `Product Type`
+  - Col E: `Product Subtype`
+  - Col F: `Item Group`
+  - Col G: `Inventory Unit`
+  - Col H: `Item Model Group`
+  - Col I: `Storage dimension group`
+  - Col J: `Tracking dimension group`
+  - Col K: `Configurations`
+  - Col L: `Sizes`
+  - Col M: `Colors`
+  - Col N: `Styles`
+  - Col O: `Equipment`
+  - Col P: `Quarterly Consumption`
+  - Col Q: `Minimum Buffer Stock Required 6 months`
+  - Col R: `Image (Link or File Ref)`
+  - Col S: `Expanded Configurations`
+  - Col T: `Source`
+  - Col U: `Links`
+
+**Sample Data (Rows 2-12, first 10 columns):**
+
+C:\Users\HP-i7\AppData\Local\Programs\Python\Python310\lib\site-packages\openpyxl\worksheet\header_footer.py:48: UserWarning: Cannot parse header or footer so it will be ignored
+  warn("""Cannot parse header or footer so it will be ignored""")
+  Row 2: Auto assigned by ERP
+CN-0001 for Cons... | ERP-recognized item name i.e. Complet... | Name in in layman's terms or common name | Item / Service | Product / Product Master | Con-Non Finance = 
+Con-Phy Finance = | Stocking unit in ERP | Inventory behavior 
+PhyInv by default | Warehouse/location control 
+SWL by de... | None by default
+  Row 3: FS-0678 | Sand Blasting gloves- Right | SandBlastingGlovesRi | Item | Product Master |  | EA | Phyinv | SWL | None
+  Row 4: FS-0679 | Sand Blasting gloves- Left | SandBlastingGlovesLe | Item | Product Master |  | EA | Phyinv | SWL | None
+  Row 5: FS-0473 | Cast Acrylic Sheet | CastAcrylicSheet | Item | Product Master |  | EA | Phyinv | SWL | None
+  Row 6: FS-0279 | Blasting Media (Aluminum Oxide 100 grit) | BlastingMediaAluminu | Item | Product Master |  | Kilogram | Phyinv | SWL | None
+  Row 7: FS-0879 | Glass Shield  | GlassShield | Item | Product Master |  | EA | Phyinv | SWL | None
+  Row 8: FS-0814 | Abrasive Blasting Gun # 5 | AbrasiveBlastingGun | Item | Product Master |  | EA | Phyinv | SWL | None
+  Row 9: FS-0815 | Abrasive Blasting Gun Nozzle | AbrasiveBlastingGunN | Item | Product Master |  | EA | Phyinv | SWL | None
+  Row 10:  | Cabinet, Pressure Blast | CabinetPressureBlast | Item | Product Master |  | EA | Phyinv | SWL | None
+  Row 11: CN-000208 | Flux Handy B-1 paste Black 1 LB | FluxHandyB1PasteBlac | Item | Product Master |  | EA | Phyinv | SWL | None
+
+**Formula Analysis (sampling rows 1-20):**
+
+  - Col Q (Row 15): `=8*365`
+
+**Named Ranges in Workbook:**
+
+  (No named ranges found)
+
+**Data Validation (sampling first 100 cells):**
+
+ERROR: **Error analyzing workbook:** 'Cell' object has no attribute 'data_validation'
+
+
+================================================================================
+## Workbook: Copy of BITS TRACKING 7-6-2025.xlsx
+Path: D:\PycharmProjects\Work Files\Copy of BITS TRACKING 7-6-2025.xlsx
+================================================================================
+
+**Number of sheets:** 26
+
+**Sheet names:** LSTK, Sheet1, UR, L3, L4, ARDT, WFD, CheckGaps, Sheet4, ARAMCO, Batch 3 required cutters, RC-LSTK, HALLIBURTON, Hal_Regional, General bits Tracking, REAMERS, Collect Data, ARAMCO REPAIR UPDATE, DATA, CF2 & SENSORS, ARDTAR, LITHIUM BATTERY LOG, SUB, ARDT-CR, ARDTS, Buffer
+
+
+### Sheet: `LSTK`
+------------------------------------------------------------
+
+**Dimensions:** 1046734 rows × 36 columns
+
+**Header Row (Row 1):**
+  - Col A: `ORDER NO.
+`
+  - Col B: `SERIAL NO`
+  - Col C: `SIZE`
+  - Col D: `TYPE`
+  - Col E: `MAT NO.`
+  - Col F: `RECIVED`
+  - Col G: `FROM`
+  - Col H: `Origional MAT Level`
+  - Col I: `NEW TYPE`
+  - Col J: `STATUS`
+  - Col K: `FINAL`
+  - Col L: `Upper Section Replacement`
+  - Col M: `Build up`
+  - Col N: `Brazer`
+  - Col O: `Spinner`
+  - Col P: `Tip Grinding by`
+  - Col Q: `QC`
+  - Col R: `Thread Cleaning / Machining`
+  - Col S: `Body Cleaning / Machining`
+  - Col T: `Erosion sleeve`
+  - Col U: `Rework`
+  - Col V: `ACCOMPLISHED DATE`
+  - Col W: `REMARKS`
+  - Col X: `Job Name`
+  - Col Y: `Issues report`
+  - Col Z: `PDC Production Days`
+  - Col AA: `Lost Cutter`
+  - Col AB: `ITEM NUMBER`
+  - Col AC: `MJ #`
+  - Col AD: `Production Order Number`
+  ... and 3 more columns
+
+**Sample Data (Rows 2-12, first 10 columns):**
+
+  Row 2: 20161255 | 11890943 | 6 1/8" | FMD44 | 702617 |  |  |  |  | HOLD
+  Row 3: 20171007 | 12721812R2 | 6 1/8" | MMD63 | 952071 | 2017-01-02 00:00:00 |  |  |  | Repair
+  Row 4: 20171057 | 12652742R | 6 1/8" | MMG64H | 953042 | 2017-01-22 00:00:00 |  |  |  | HOLD
+  Row 5: 20171089 | 12679502R | 6 1/8" | MMG64H | 953042 |  |  |  |  | HOLD
+  Row 6: 20171162 | 12693583R1 | 6 1/8" | MME63 | 965530 | 2017-03-13 00:00:00 |  |  |  | HOLD
+  Row 7: 20171168 | 12733371R2 | 6 1/8" | MMG64H | 953042 |  |  |  |  | HOLD
+  Row 8: 20171170 | 12694312R2 | 6 1/8" | MMG64H | 953042 |  |  |  |  | HOLD
+  Row 9: 20171182 | 12733370R1 | 6 1/8" | MMG64H | 953042 |  |  |  |  | HOLD
+  Row 10: 20171462 | 12877927 | 12 1/4" | MMD76H | 952533 | 2017-12-28 00:00:00 |  |  |  | Repair
+  Row 11: 20171464 | 12847522 | 6 1/8" | MMD54H | 986403 | 2017-12-31 00:00:00 |  |  |  | Repair
+
+**Formula Analysis (sampling rows 1-20):**
+
+  - Col T (Row 7): `=IFERROR(SMALL($AF$2:$AF$549,ROWS(L$2:$AF7)),"")`
+  - Col T (Row 8): `=IFERROR(SMALL($AF$2:$AF$549,ROWS(L$2:$AF8)),"")`
+  - Col AF (Row 2): `=IFERROR(IF($AA$1<>0,IF($AA$1=VALUE(#REF!),AG2,""),""),"")`
+  - Col AF (Row 3): `=IFERROR(IF($AA$1<>0,IF($AA$1=VALUE(#REF!),AG3,""),""),"")`
+
+**Named Ranges in Workbook:**
+
+  (No named ranges found)
+
+**Data Validation (sampling first 100 cells):**
+
+ERROR: **Error analyzing workbook:** 'Cell' object has no attribute 'data_validation'
+
+
+================================================================================
+## Workbook: Copy of Cutter Inventory 11-18-2025.xlsx
+Path: D:\PycharmProjects\Work Files\Copy of Cutter Inventory 11-18-2025.xlsx
+================================================================================
+
+**Number of sheets:** 20
+
+**Sheet names:** Cutters Inventory 11-9-2025, Sheet3, Sheet5, Sheet1, ARAMCO 3D BATCH 7.7.2022, Special Consumables_C&S_.. (2), Categories Data, L3&L4 BOMs & Cutters 11-9-2025, Obsolete Cutters-10-27-2025, Cutters Orders Updates, Cutters Consumption Updates, BOMS, FILTER, Check, Special Consumables_C&S_CF2.0, Azim's update  9.27.2023, ENO Cracked Cutters, Azim's 9.1.2022 update, Sheet2, BITS WITH MODIFIED CUTTERS
+
+
+### Sheet: `Cutters Inventory 11-9-2025`
+------------------------------------------------------------
+
+**Dimensions:** 304 rows × 46 columns
+
+**Header Row (Row 1):**
+  - Col A: `#`
+  - Col B: `SAPNo`
+  - Col C: `Type `
+  - Col D: `Cutter size`
+  - Col E: `Type`
+  - Col F: `Chamfer`
+  - Col G: ` More Description`
+  - Col H: `Category`
+  - Col I: `ENO As New Cutter`
+  - Col J: `ENO Ground Cutter `
+  - Col K: `ARDT Reclaim  Cutter`
+  - Col L: `LSTK Reclaim Cutter`
+  - Col M: `New Stock`
+  - Col N: `Total New`
+  - Col O: `6 months consumption`
+  - Col P: `3 months consumption`
+  - Col Q: `2 months consumption`
+  - Col R: `Safety Stock`
+  - Col S: `Category`
+  - Col T: `BOM requirement (11/9/2025)`
+  - Col U: `On Order (11/9/2025)`
+  - Col V: `Total Stock - Forcast`
+  - Col W: `Remarks`
+  - Col X: `Replacement`
+  - Col Z: `L3 & 4`
+  - Col AC: `=IF(SUM(AC2:AC91)<>0,"THERE IS ERROR","ITS OKAY")`
+  - Col AE: `Total Without LSTK Reclaim`
+  - Col AJ: `Replacement Required Qty`
+  - Col AK: `Replacement By Qty`
+  - Col AL: `Replacement By Qty (SUM)`
+
+**Sample Data (Rows 2-12, first 10 columns):**
+
+  Row 2: 1 | 802065 | Round | 1313 | CT97 | 0.010" |  | P - Premium | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 3: 2 | 179692 | Round | 1313 | ELITE RC | 0.018" |  | O - Other | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 4: 3 | 179694 | Round | 1308 | ELITE RC | 0.018" |  | O - Other | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 5: 4 | 179734 | IA-STL | 13MM Long | M1 |  |  | D - Depth of Cut Control Elements | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 6: 5 | 179790 | Round | 1613 | ELITE RC | 0.018" |  | O - Other | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 7: 6 | 375538 | Shyfter - R1 | 13MM | LG BVL | 0.012R | R1 PEP .012R LG BEVEL | D - Depth of Cut Control Elements | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 8: 7 | 399930 | Short Bullet | 19MM | CT27 | 0.018" | BL | P - Premium | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 9: 8 | 584832 | Round | 1913 | CT62 | 0.010" |  | B - Standard ( Base ) | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 10: 9 | 467367 | Round | 1613 | CT36 | 0.018" |  | S - Super Premium | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+  Row 11: 10 | 535656 | Round | 1608 | CT36 | 0.010" |  | B - Standard ( Base ) | =SUMIFS('Cutters Consumption Updates'... | =SUMIFS('Cutters Consumption Updates'...
+
+**Formula Analysis (sampling rows 1-20):**
+
+  - Col I (Row 2): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,I$1,'Cutters Consumption Updates'!$B:$B,$B2)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,I$1,'Cutters Consumption Updates'!$B:$B,$B2)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B2,'Cutters Consumption Updates'!AT:AT)`
+  - Col I (Row 3): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,I$1,'Cutters Consumption Updates'!$B:$B,$B3)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,I$1,'Cutters Consumption Updates'!$B:$B,$B3)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B3,'Cutters Consumption Updates'!AT:AT)`
+  - Col J (Row 2): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,J$1,'Cutters Consumption Updates'!$B:$B,$B2)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,J$1,'Cutters Consumption Updates'!$B:$B,$B2)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B2,'Cutters Consumption Updates'!AU:AU)`
+  - Col J (Row 3): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,J$1,'Cutters Consumption Updates'!$B:$B,$B3)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,J$1,'Cutters Consumption Updates'!$B:$B,$B3)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B3,'Cutters Consumption Updates'!AU:AU)`
+  - Col K (Row 2): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,K$1,'Cutters Consumption Updates'!$B:$B,$B2)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,K$1,'Cutters Consumption Updates'!$B:$B,$B2)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B2,'Cutters Consumption Updates'!AV:AV)`
+  - Col K (Row 3): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,K$1,'Cutters Consumption Updates'!$B:$B,$B3)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,K$1,'Cutters Consumption Updates'!$B:$B,$B3)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B3,'Cutters Consumption Updates'!AV:AV)`
+  - Col L (Row 2): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,L$1,'Cutters Consumption Updates'!$B:$B,$B2)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,L$1,'Cutters Consumption Updates'!$B:$B,$B2)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B2,'Cutters Consumption Updates'!AW:AW)`
+  - Col L (Row 3): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,L$1,'Cutters Consumption Updates'!$B:$B,$B3)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,L$1,'Cutters Consumption Updates'!$B:$B,$B3)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B3,'Cutters Consumption Updates'!AW:AW)`
+  - Col M (Row 2): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,M$1,'Cutters Consumption Updates'!$B:$B,$B2)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,$M$1,'Cutters Consumption Updates'!$B:$B,$B2)+SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,"Retrofit",'Cutters Consumption Updates'!$B:$B,$B2)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,"Retrofit",'Cutters Consumption Updates'!$B:$B,$B2)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B2,'Cutters Consumption Updates'!AX:AX)`
+  - Col M (Row 3): `=SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,M$1,'Cutters Consumption Updates'!$B:$B,$B3)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,$M$1,'Cutters Consumption Updates'!$B:$B,$B3)+SUMIFS('Cutters Consumption Updates'!$F:$F,'Cutters Consumption Updates'!$D:$D,"Retrofit",'Cutters Consumption Updates'!$B:$B,$B3)-SUMIFS('Cutters Consumption Updates'!$E:$E,'Cutters Consumption Updates'!$D:$D,"Retrofit",'Cutters Consumption Updates'!$B:$B,$B3)+ SUMIF('Cutters Consumption Updates'!$AS:$AS,$B3,'Cutters Consumption Updates'!AX:AX)`
+  - Col N (Row 2): `=M2+I2`
+  - Col N (Row 3): `=M3+I3`
+  - Col O (Row 2): `=SUMIFS('Cutters Consumption Updates'!E:E,
+        'Cutters Consumption Updates'!B:B, B2,
+        'Cutters Consumption Updates'!A:A, ">" & TODAY()-182)`
+  - Col O (Row 3): `=SUMIFS('Cutters Consumption Updates'!E:E,
+        'Cutters Consumption Updates'!B:B, B3,
+        'Cutters Consumption Updates'!A:A, ">" & TODAY()-182)`
+  - Col P (Row 2): `=SUMIFS('Cutters Consumption Updates'!E:E,
+        'Cutters Consumption Updates'!B:B, B2,
+        'Cutters Consumption Updates'!A:A, ">" & TODAY()-91)`
+  - Col P (Row 3): `=SUMIFS('Cutters Consumption Updates'!E:E,
+        'Cutters Consumption Updates'!B:B, B3,
+        'Cutters Consumption Updates'!A:A, ">" & TODAY()-91)`
+  - Col Q (Row 2): `=IF(O2<>0,_xlfn.CEILING.MATH(O2/3),0)`
+  - Col Q (Row 3): `=IF(O3<>0,_xlfn.CEILING.MATH(O3/3),0)`
+  - Col R (Row 2): `=IF(Q2<=1, 0,
+ CEILING(
+  IF(Q2>=300, Q2+10,
+  IF(Q2>=200, Q2+5,
+  IF(Q2>=100, Q2+5,
+  IF(Q2>=50, Q2+2,
+  IF(Q2>=20, Q2+2,
+  IF(Q2>=10, Q2+2,
+  IF(Q2>=5,  Q2+2,
+  Q2+1))))))), 5))`
+  - Col R (Row 3): `=IF(Q3<=1, 0,
+CEILING(
+IF(Q3>=300, Q3+10,
+IF(Q3>=200, Q3+5,
+IF(Q3>=100, Q3+5,
+IF(Q3>=50, Q3+2,
+IF(Q3>=20, Q3+2,
+IF(Q3>=10, Q3+2,
+IF(Q3>=5, Q3+2,
+Q3+1))))))), 5))`
+  ... and 27 more formula examples
+
+**Named Ranges in Workbook:**
+
+  (No named ranges found)
+
+**Data Validation (sampling first 100 cells):**
+
+ERROR: **Error analyzing workbook:** 'Cell' object has no attribute 'data_validation'
+
+
+================================================================================
+## Workbook: Cutter inventory by inventory dimension-Oct-2025.xlsx
+Path: D:\PycharmProjects\Work Files\Cutter inventory by inventory dimension-Oct-2025.xlsx
+================================================================================
+
+**Number of sheets:** 6
+
+**Sheet names:** Summary, Sheet4, InventDimPhys.Report_cutter inv, InventDimPhys.Report, Physical Data Inv, Cutters
+
+
+### Sheet: `Summary`
+------------------------------------------------------------
+
+**Dimensions:** 223 rows × 14 columns
+
+**Header Row (Row 1):**
+  (No headers found in row 1)
+
+**Sample Data (Rows 2-12, first 10 columns):**
+
+  Row 2:  |  |  |  |  |  |  |  |  | 
+  Row 3:  |  |  |  |  |  |  |  |  | 
+  Row 4:  | Cutter Inventory Reconciliation as on... |  |  |  |  |  |  |  | 
+  Row 5:  |  |  |  |  |  |  |  |  | 
+  Row 6:  |  | ERP |  |  |  |  | Physical |  | 
+  Row 7:  | MAT | ENO | NEW | RCLM | RCLM-ARDT | Total | ENO | NEW | RCLM
+  Row 8:  | 177778 |  | 3 |  |  | 3 |  | 3 | 
+  Row 9:  | 179692 | 12 |  |  |  | 12 | 12 |  | 
+  Row 10:  | 179694 | 8 |  |  |  | 8 | 8 |  | 
+  Row 11:  | 179733 |  | 173 | 24 |  | 197 |  | 173 | 24
+
+**Formula Analysis (sampling rows 1-20):**
+
+  - Col M (Row 8): `=L8-G8`
+  - Col M (Row 9): `=L9-G9`
+
+**Named Ranges in Workbook:**
+
+  (No named ranges found)
+
+**Data Validation (sampling first 100 cells):**
+
+ERROR: **Error analyzing workbook:** 'Cell' object has no attribute 'data_validation'
+
+
+================================================================================
+## Workbook: new version of PO  Customs- updated.xlsx
+Path: D:\PycharmProjects\Work Files\new version of PO  Customs- updated.xlsx
+================================================================================
+
+**Number of sheets:** 2
+
+**Sheet names:** Small Parts, Bits 
+
+
+### Sheet: `Small Parts`
+------------------------------------------------------------
+
+**Dimensions:** 2468 rows × 23 columns
+
+**Header Row (Row 1):**
+  - Col A: `PO`
+  - Col B: `Date`
+  - Col C: `Item`
+  - Col D: `Ordered Qty`
+  - Col E: `Rec in our facility `
+  - Col F: `Remaining in Production`
+  - Col G: `STATUS`
+  - Col H: `Description`
+  - Col I: `MN`
+  - Col J: `Required Date`
+  - Col K: `S/O`
+  - Col L: `Rec in ARDT`
+  - Col M: `In Trans`
+  - Col N: `Ready to ship `
+  - Col O: `In Halliburton production `
+  - Col P: `AWB No#`
+  - Col Q: `Shipping Date`
+  - Col R: `ETA Date`
+  - Col S: `Clearance ETA`
+  - Col T: `Recd Date`
+  - Col U: `GRN NO`
+  - Col V: `ERP GRN`
+  - Col W: `PML Update`
+
+**Sample Data (Rows 2-12, first 10 columns):**
+
+  Row 2: 2022-003 | 2022-01-04 00:00:00 | 1 | 115 | =IF(D2<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D2<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 1608 .018,18C, CT200, | 647435 | =B2+30
+  Row 3: 2022-003 | 2022-01-04 00:00:00 | 2 | 64 | =IF(D3<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D3<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 1613 .018,18C, CT200, | 647436 | =B3+30
+  Row 4: 2022-003 | 2022-01-04 00:00:00 | 3 | 6 | =IF(D4<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D4<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 1313 0.01,10C, CT200, | 703670 | =B4+30
+  Row 5: 2022-003 | 2022-01-04 00:00:00 | 4 | 68 | =IF(D5<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D5<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 1913 .018,18C, CT200, | 708306 | =B5+30
+  Row 6: 2022-003 | 2022-01-04 00:00:00 | 5 | 18 | =IF(D6<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D6<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 1613 .018,18C, CT418, | 1100741 | =B6+30
+  Row 7: 2022-003 | 2022-01-04 00:00:00 | 6 | 8 | =IF(D7<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D7<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 1313 .018,18C, CT200, | 871781 | =B7+30
+  Row 8: 2022-003 | 2022-01-04 00:00:00 | 7 | 38 | =IF(D8<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D8<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 10.5 MEDIUM BLT , 18C, CT217, | 971055 | =B8+30
+  Row 9: 2022-003 | 2022-01-04 00:00:00 | 8 | 223 | =IF(D9<>"",SUMIFS($A$2:$W$4257  $L$2:... | =IF(D9<>"",SUMIFS($A$2:$W$4255  $O$2:... | CLOSED | 1608 .018,18C, CT182, | 1130197 | =B9+30
+  Row 10: 2022-003 | 2022-01-04 00:00:00 | 8 |  | =IF(D10<>"",SUMIFS($A$2:$W$4257  $L$2... | =IF(D10<>"",SUMIFS($A$2:$W$4255  $O$2... | CLOSED | 1608 .018,18C, CT182, | 1130197 | =B10+30
+  Row 11: 2022-003 | 2022-01-04 00:00:00 | 8 |  | =IF(D11<>"",SUMIFS($A$2:$W$4257  $L$2... | =IF(D11<>"",SUMIFS($A$2:$W$4255  $O$2... | CLOSED | 1608 .018,18C, CT182, | 1130197 | =B11+30
+
+**Formula Analysis (sampling rows 1-20):**
+
+  - Col E (Row 2): `=IF(D2<>"",SUMIFS($A$2:$W$4257  $L$2:$L$4257,$A$2:$A$4257,A2,$C$2:$C$4257,C2),"")`
+  - Col E (Row 3): `=IF(D3<>"",SUMIFS($A$2:$W$4257  $L$2:$L$4257,$A$2:$A$4257,A3,$C$2:$C$4257,C3),"")`
+  - Col F (Row 2): `=IF(D2<>"",SUMIFS($A$2:$W$4255  $O$2:$O$4255,$A$2:$A$4255,A2,$C$2:$C$4255,C2),"")`
+  - Col F (Row 3): `=IF(D3<>"",SUMIFS($A$2:$W$4255  $O$2:$O$4255,$A$2:$A$4255,A3,$C$2:$C$4255,C3),"")`
+  - Col J (Row 2): `=B2+30`
+  - Col J (Row 3): `=B3+30`
+
+**Named Ranges in Workbook:**
+
+  (No named ranges found)
+
+**Data Validation (sampling first 100 cells):**
+
+ERROR: **Error analyzing workbook:** 'Cell' object has no attribute 'data_validation'
+
+
+################################################################################
+# ANALYSIS COMPLETE
+################################################################################
+

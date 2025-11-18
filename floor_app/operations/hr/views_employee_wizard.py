@@ -166,9 +166,9 @@ def person_create(request):
 
 @login_required
 def person_detail(request, pk):
-    """View person details"""
+    """View person details with enhanced tabs"""
     person = get_object_or_404(HRPeople, pk=pk, is_deleted=False)
-    
+
     context = {
         'person': person,
         'phones': person.phones.filter(is_deleted=False),
@@ -180,6 +180,34 @@ def person_detail(request, pk):
         ),
         'has_employee': hasattr(person, 'employee'),
     }
+
+    # If person is an employee, add employee-specific data
+    if hasattr(person, 'employee') and person.employee:
+        employee = person.employee
+
+        # Qualifications
+        context['qualifications'] = employee.qualifications.filter(
+            is_deleted=False
+        ).select_related('qualification').order_by('-issued_at')[:20]
+
+        # Leave Balances (current year and next year)
+        from datetime import datetime
+        current_year = datetime.now().year
+        context['leave_balances'] = employee.leave_balances.filter(
+            year__in=[current_year, current_year + 1]
+        ).select_related('leave_policy').order_by('-year', 'leave_policy__name')
+
+        # Training Records
+        context['training_records'] = employee.training_records.filter(
+        ).select_related('training_session', 'training_session__program').order_by('-registered_at')[:20]
+
+        # Documents
+        context['documents'] = employee.documents.filter(
+            is_deleted=False
+        ).select_related('document_type').order_by('-uploaded_at')[:20]
+
+        context['employee'] = employee
+
     return render(request, 'hr/person_detail.html', context)
 
 

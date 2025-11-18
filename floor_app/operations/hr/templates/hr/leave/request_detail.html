@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Leave Request #{{ request.request_number }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+    .request-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .request-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -1.45rem;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="detail-container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{% url 'hr:leave_request_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Requests
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Request Header -->
+        <div class="request-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="bi bi-calendar-event"></i> Leave Request</h2>
+                    <p class="mb-0 opacity-75">Request #{{ request.request_number }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if request.status == 'DRAFT' %}
+                        <span class="badge bg-secondary p-3" style="font-size: 1.1rem;">Draft</span>
+                    {% elif request.status == 'PENDING_APPROVAL' %}
+                        <span class="badge bg-warning text-dark p-3" style="font-size: 1.1rem;">Pending</span>
+                    {% elif request.status == 'APPROVED' %}
+                        <span class="badge bg-success p-3" style="font-size: 1.1rem;">Approved</span>
+                    {% elif request.status == 'REJECTED' %}
+                        <span class="badge bg-danger p-3" style="font-size: 1.1rem;">Rejected</span>
+                    {% elif request.status == 'CANCELLED' %}
+                        <span class="badge bg-secondary p-3" style="font-size: 1.1rem;">Cancelled</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Body -->
+        <div class="request-body">
+            <div class="row">
+                <!-- Main Details -->
+                <div class="col-lg-8">
+                    <!-- Employee & Leave Information -->
+                    <div class="info-section">
+                        <h5 class="mb-3"><i class="bi bi-person-badge"></i> Request Details</h5>
+                        <div class="info-row">
+                            <span class="text-muted">Employee</span>
+                            <strong>{{ request.employee.get_full_name }} ({{ request.employee.employee_no }})</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Leave Type</span>
+                            <strong>{{ request.leave_policy.name }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Start Date</span>
+                            <strong>{{ request.start_date|date:"l, F d, Y" }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">End Date</span>
+                            <strong>{{ request.end_date|date:"l, F d, Y" }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Total Days</span>
+                            <strong class="text-primary">{{ request.total_days }} day(s)</strong>
+                        </div>
+                        {% if request.is_half_day %}
+                        <div class="info-row">
+                            <span class="text-muted">Half Day</span>
+                            <strong class="text-info"><i class="bi bi-check-circle"></i> Yes</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reason -->
+                    {% if request.reason %}
+                    <div class="info-section">
+                        <h5 class="mb-3"><i class="bi bi-file-text"></i> Reason for Leave</h5>
+                        <p class="mb-0">{{ request.reason }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Balance Info -->
+                    {% if balance %}
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-wallet2"></i> Leave Balance</h6>
+                        <div class="row text-center mt-2">
+                            <div class="col-3">
+                                <strong>{{ balance.accrued|floatformat:1 }}</strong>
+                                <small class="d-block text-muted">Accrued</small>
+                            </div>
+                            <div class="col-3">
+                                <strong>{{ balance.used|floatformat:1 }}</strong>
+                                <small class="d-block text-muted">Used</small>
+                            </div>
+                            <div class="col-3">
+                                <strong>{{ balance.pending|floatformat:1 }}</strong>
+                                <small class="d-block text-muted">Pending</small>
+                            </div>
+                            <div class="col-3">
+                                <strong class="text-success">{{ balance.available|floatformat:1 }}</strong>
+                                <small class="d-block text-muted">Available</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Approval/Rejection Details -->
+                    {% if request.status == 'APPROVED' %}
+                    <div class="alert alert-success">
+                        <h6><i class="bi bi-check-circle"></i> Approval Details</h6>
+                        <p class="mb-1">
+                            <strong>Approved at:</strong> {{ request.approved_at|date:"F d, Y H:i" }}
+                        </p>
+                        {% if request.approval_notes %}
+                        <p class="mb-0">
+                            <strong>Notes:</strong> {{ request.approval_notes }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% elif request.status == 'REJECTED' %}
+                    <div class="alert alert-danger">
+                        <h6><i class="bi bi-x-circle"></i> Rejection Details</h6>
+                        <p class="mb-1">
+                            <strong>Rejected at:</strong> {{ request.rejected_at|date:"F d, Y H:i" }}
+                        </p>
+                        {% if request.rejection_reason %}
+                        <p class="mb-0">
+                            <strong>Reason:</strong> {{ request.rejection_reason }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% elif request.status == 'CANCELLED' %}
+                    <div class="alert alert-secondary">
+                        <h6><i class="bi bi-x-circle"></i> Cancellation Details</h6>
+                        <p class="mb-1">
+                            <strong>Cancelled at:</strong> {{ request.cancelled_at|date:"F d, Y H:i" }}
+                        </p>
+                        {% if request.cancellation_reason %}
+                        <p class="mb-0">
+                            <strong>Reason:</strong> {{ request.cancellation_reason }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="mt-4">
+                        {% if request.status == 'DRAFT' %}
+                            <a href="{% url 'hr:leave_request_submit' request.pk %}" class="btn btn-success btn-lg">
+                                <i class="bi bi-send"></i> Submit for Approval
+                            </a>
+                        {% elif request.status == 'PENDING_APPROVAL' and can_approve %}
+                            <a href="{% url 'hr:leave_request_approve' request.pk %}" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Review & Approve/Reject
+                            </a>
+                        {% endif %}
+
+                        {% if request.status in 'DRAFT,PENDING_APPROVAL' and is_owner %}
+                            <a href="{% url 'hr:leave_request_cancel' request.pk %}" class="btn btn-outline-danger btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel Request
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Timeline -->
+                    <div class="info-section">
+                        <h6 class="mb-3"><i class="bi bi-clock-history"></i> Request Timeline</h6>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ request.created_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0"><strong>Request Created</strong></p>
+                                <small>By {{ request.employee.get_full_name }}</small>
+                            </div>
+
+                            {% if request.submitted_at %}
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ request.submitted_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0"><strong>Submitted for Approval</strong></p>
+                            </div>
+                            {% endif %}
+
+                            {% if request.status == 'APPROVED' %}
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ request.approved_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0 text-success"><strong>Approved</strong></p>
+                            </div>
+                            {% elif request.status == 'REJECTED' %}
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ request.rejected_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0 text-danger"><strong>Rejected</strong></p>
+                            </div>
+                            {% elif request.status == 'CANCELLED' %}
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ request.cancelled_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0 text-secondary"><strong>Cancelled</strong></p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Quick Info -->
+                    <div class="info-section">
+                        <h6 class="mb-3"><i class="bi bi-info-circle"></i> Additional Info</h6>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="small">Request Number</span>
+                            <strong>{{ request.request_number }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="small">Status</span>
+                            <strong>{{ request.get_status_display }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="small">Leave Type</span>
+                            <strong>{{ request.leave_policy.get_leave_type_display }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <span class="small">Created</span>
+                            <strong>{{ request.created_at|date:"M d, Y" }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Attachment -->
+                    {% if request.attachment_path %}
+                    <div class="info-section">
+                        <h6 class="mb-3"><i class="bi bi-paperclip"></i> Attachment</h6>
+                        <a href="#" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-download"></i> Download Document
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

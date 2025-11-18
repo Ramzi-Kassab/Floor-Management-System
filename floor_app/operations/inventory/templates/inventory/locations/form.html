@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .form-section h5 {
+        color: #17a2b8;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:location_list' %}">Locations</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <h2 class="mb-4">
+            <i class="bi bi-geo-alt-fill me-2"></i>{{ title }}
+        </h2>
+
+        <div class="form-card">
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h5><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_code" class="form-label required-field">Location Code</label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">{{ form.code.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Unique identifier (e.g., WH-01, BIN-A1-01)</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_name" class="form-label required-field">Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Descriptive name for the location</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_location_type" class="form-label required-field">Location Type</label>
+                            {{ form.location_type }}
+                            {% if form.location_type.errors %}
+                                <div class="invalid-feedback d-block">{{ form.location_type.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Type of location (warehouse, bin, rig, etc.)</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_parent_location" class="form-label">Parent Location</label>
+                            {{ form.parent_location }}
+                            {% if form.parent_location.errors %}
+                                <div class="invalid-feedback d-block">{{ form.parent_location.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Leave blank for root-level locations</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label for="id_is_active" class="form-check-label">
+                                Active
+                            </label>
+                            {% if form.is_active.errors %}
+                                <div class="invalid-feedback d-block">{{ form.is_active.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <small class="form-text text-muted">Inactive locations won't appear in most lists</small>
+                    </div>
+                </div>
+
+                <!-- Physical Information -->
+                <div class="form-section">
+                    <h5><i class="bi bi-geo-alt me-2"></i>Physical Information</h5>
+
+                    <div class="mb-3">
+                        <label for="id_address" class="form-label">Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">{{ form.address.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Full physical address of the location</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_gps_coordinates" class="form-label">GPS Coordinates</label>
+                        {{ form.gps_coordinates }}
+                        {% if form.gps_coordinates.errors %}
+                            <div class="invalid-feedback d-block">{{ form.gps_coordinates.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Format: latitude,longitude (e.g., 24.7136,46.6753)</small>
+                    </div>
+                </div>
+
+                <!-- Capacity Information -->
+                <div class="form-section">
+                    <h5><i class="bi bi-archive me-2"></i>Capacity</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_max_capacity" class="form-label">Maximum Capacity</label>
+                            {{ form.max_capacity }}
+                            {% if form.max_capacity.errors %}
+                                <div class="invalid-feedback d-block">{{ form.max_capacity.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Maximum storage capacity</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_capacity_uom" class="form-label">Capacity Unit</label>
+                            {{ form.capacity_uom }}
+                            {% if form.capacity_uom.errors %}
+                                <div class="invalid-feedback d-block">{{ form.capacity_uom.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Unit of measure for capacity</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-section">
+                    <h5><i class="bi bi-sticky me-2"></i>Additional Notes</h5>
+
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Any additional information or special instructions</small>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'inventory:location_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-info btn-lg">
+                        <i class="bi bi-save me-2"></i>{{ submit_text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any form-specific JavaScript here
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-format GPS coordinates on blur
+    const gpsInput = document.getElementById('id_gps_coordinates');
+    if (gpsInput) {
+        gpsInput.addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value && !value.includes(',')) {
+                // Try to format if user entered space-separated coordinates
+                const parts = value.split(/\s+/);
+                if (parts.length === 2) {
+                    this.value = parts.join(',');
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

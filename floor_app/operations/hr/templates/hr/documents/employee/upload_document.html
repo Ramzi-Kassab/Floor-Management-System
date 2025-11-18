@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Document - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .upload-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .form-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .form-section h5 {
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    .file-upload-area {
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .file-upload-area:hover {
+        background: #e9ecef;
+        border-color: #764ba2;
+    }
+    .file-upload-area.drag-over {
+        background: #e7f1ff;
+        border-color: #0d6efd;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    .info-box {
+        background: #e7f1ff;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+    }
+    .required-label::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="upload-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-cloud-upload"></i> Upload Document</h1>
+                <p class="text-muted">Employee: {{ employee.get_full_name }}</p>
+            </div>
+            <a href="{% url 'hr:my_documents_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to My Documents
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Information Box -->
+        <div class="info-box">
+            <h6><i class="bi bi-info-circle"></i> Before You Upload</h6>
+            <ul class="mb-0">
+                <li>Ensure your document is clear and readable</li>
+                <li>Accepted formats: PDF, JPG, PNG, DOC, DOCX</li>
+                <li>Maximum file size: 10MB</li>
+                <li>For medical certificates: sick leave > 2 days requires medical documentation</li>
+                <li>Documents will be verified by HR within 2-3 business days</li>
+            </ul>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="upload-card">
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+
+                <!-- Document Type Section -->
+                <div class="form-section">
+                    <h5><i class="bi bi-tag"></i> Document Type</h5>
+                    <div class="mb-3">
+                        <label for="{{ form.document_type.id_for_label }}" class="form-label required-label">
+                            Document Type
+                        </label>
+                        {{ form.document_type }}
+                        {% if form.document_type.errors %}
+                            <div class="invalid-feedback d-block">{{ form.document_type.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Select the type of document you're uploading</small>
+                    </div>
+                </div>
+
+                <!-- Document Details Section -->
+                <div class="form-section">
+                    <h5><i class="bi bi-file-text"></i> Document Details</h5>
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label required-label">
+                            Document Title
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">E.g., "Medical Certificate - Dr. Smith - Jan 2025"</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Optional: Add any additional details</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.issue_date.id_for_label }}" class="form-label">
+                                Issue Date
+                            </label>
+                            {{ form.issue_date }}
+                            {% if form.issue_date.errors %}
+                                <div class="invalid-feedback d-block">{{ form.issue_date.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.expiry_date.id_for_label }}" class="form-label">
+                                Expiry Date
+                            </label>
+                            {{ form.expiry_date }}
+                            {% if form.expiry_date.errors %}
+                                <div class="invalid-feedback d-block">{{ form.expiry_date.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">If applicable (e.g., visa, license)</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.issuing_authority.id_for_label }}" class="form-label">
+                            Issuing Authority
+                        </label>
+                        {{ form.issuing_authority }}
+                        {% if form.issuing_authority.errors %}
+                            <div class="invalid-feedback d-block">{{ form.issuing_authority.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">E.g., "Ministry of Health", "Al Noor Hospital"</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.document_number.id_for_label }}" class="form-label">
+                            Document Number
+                        </label>
+                        {{ form.document_number }}
+                        {% if form.document_number.errors %}
+                            <div class="invalid-feedback d-block">{{ form.document_number.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Reference number or ID on the document</small>
+                    </div>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="form-section">
+                    <h5><i class="bi bi-paperclip"></i> Attach File</h5>
+
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <i class="bi bi-cloud-upload" style="font-size: 3rem; color: #667eea;"></i>
+                        <h5 class="mt-3">Drag & Drop File Here</h5>
+                        <p class="text-muted">or click to browse</p>
+                        {{ form.file }}
+                        <div id="fileInfo" class="mt-3 text-success" style="display: none;">
+                            <i class="bi bi-check-circle"></i>
+                            <span id="fileName"></span>
+                            <span id="fileSize" class="text-muted"></span>
+                        </div>
+                    </div>
+                    {% if form.file.errors %}
+                        <div class="invalid-feedback d-block">{{ form.file.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:my_documents_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="submit-btn">
+                        <i class="bi bi-cloud-upload"></i> Upload Document
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Help Text -->
+        <div class="mt-4 text-center text-muted">
+            <small>
+                <i class="bi bi-shield-check"></i> Your documents are securely stored and only accessible to authorized HR personnel
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // File upload drag & drop functionality
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.querySelector('input[type="file"]');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+
+    // Style the file input
+    fileInput.style.display = 'none';
+
+    // Click to upload
+    fileUploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    // File selection change
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            displayFileInfo(e.target.files[0]);
+        }
+    });
+
+    // Drag & drop events
+    fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.add('drag-over');
+    });
+
+    fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.classList.remove('drag-over');
+    });
+
+    fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.remove('drag-over');
+
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            displayFileInfo(e.dataTransfer.files[0]);
+        }
+    });
+
+    // Display file information
+    function displayFileInfo(file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = ` (${formatFileSize(file.size)})`;
+        fileInfo.style.display = 'block';
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Form validation
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        if (!fileInput.files || fileInput.files.length === 0) {
+            e.preventDefault();
+            alert('Please select a file to upload');
+            return false;
+        }
+
+        // Check file size (10MB limit)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (fileInput.files[0].size > maxSize) {
+            e.preventDefault();
+            alert('File size exceeds 10MB limit. Please choose a smaller file.');
+            return false;
+        }
+
+        // Show loading indicator
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
+    });
+
+    // Document type specific help
+    const docTypeSelect = document.querySelector('select[name="document_type"]');
+    if (docTypeSelect) {
+        docTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            // You can add specific help text based on document type
+            if (selectedType === 'MEDICAL_CERTIFICATE') {
+                console.log('Medical certificate selected - ensure clarity');
+            }
+        });
+    }
+</script>
+{% endblock %}

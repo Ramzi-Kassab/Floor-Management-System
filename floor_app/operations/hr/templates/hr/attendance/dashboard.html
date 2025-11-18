@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        border-left: 4px solid #667eea;
+        height: 100%;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .stat-card.success { border-left-color: #198754; }
+    .stat-card.danger { border-left-color: #dc3545; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.info { border-left-color: #0dcaf0; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin: 0.5rem 0;
+    }
+    .stat-card.success .stat-number { color: #198754; }
+    .stat-card.danger .stat-number { color: #dc3545; }
+    .stat-card.warning .stat-number { color: #ffc107; }
+    .stat-card.info .stat-number { color: #0dcaf0; }
+
+    .quick-action-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .list-item {
+        background: white;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 6px;
+        border-left: 3px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    .list-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .config-box {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+        border-left: 3px solid #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-calendar-check"></i> Attendance Dashboard</h1>
+            <p class="text-muted">Overview for {{ today|date:"l, F d, Y" }}</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:attendance_entry' %}" class="btn btn-primary quick-action-btn">
+                <i class="bi bi-plus-circle"></i> Manual Entry
+            </a>
+            <a href="{% url 'hr:punch_machine_import' %}" class="btn btn-outline-primary quick-action-btn">
+                <i class="bi bi-upload"></i> Import Data
+            </a>
+            <a href="{% url 'hr:attendance_list' %}" class="btn btn-outline-secondary quick-action-btn">
+                <i class="bi bi-list-ul"></i> View All
+            </a>
+        </div>
+    </div>
+
+    <!-- Today's Statistics -->
+    <h5 class="mb-3"><i class="bi bi-calendar-day"></i> Today's Attendance</h5>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Present</p>
+                        <div class="stat-number">{{ stats.present_today }}</div>
+                        <small>of {{ stats.total_employees }} employees</small>
+                    </div>
+                    <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Absent</p>
+                        <div class="stat-number">{{ stats.absent_today }}</div>
+                        {% if stats.total_employees > 0 %}
+                        <small>{{ stats.absent_today|floatformat:0|default:0 }}% of workforce</small>
+                        {% endif %}
+                    </div>
+                    <i class="bi bi-x-circle" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Late Arrivals</p>
+                        <div class="stat-number">{{ stats.late_today }}</div>
+                        <small>Needs review</small>
+                    </div>
+                    <i class="bi bi-clock" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">On Leave</p>
+                        <div class="stat-number">{{ stats.on_leave_today }}</div>
+                        <small>Approved absences</small>
+                    </div>
+                    <i class="bi bi-calendar-x" style="font-size: 3rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Statistics -->
+    <h5 class="mb-3"><i class="bi bi-calendar-month"></i> This Month's Summary</h5>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Late</h6>
+                    <h2 class="text-warning">{{ month_stats.total_late|default:0 }}</h2>
+                    <small class="text-muted">incidents</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Absent</h6>
+                    <h2 class="text-danger">{{ month_stats.total_absent|default:0 }}</h2>
+                    <small class="text-muted">days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Avg Late Time</h6>
+                    <h2 class="text-info">{{ month_stats.avg_late_minutes|floatformat:0|default:0 }}</h2>
+                    <small class="text-muted">minutes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Overtime</h6>
+                    <h2 class="text-success">{{ month_stats.total_overtime|floatformat:1|default:0 }}</h2>
+                    <small class="text-muted">hours</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Delays -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Recent Delays (Last 7 Days)</h6>
+                    <a href="{% url 'hr:delay_incident_list' %}" class="btn btn-sm btn-outline-dark">View All</a>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if recent_delays %}
+                        {% for delay in recent_delays %}
+                        <div class="list-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {{ delay.employee.get_full_name }}
+                                        <span class="badge bg-{{ delay.severity|lower }}">{{ delay.get_severity_display }}</span>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i> {{ delay.date|date:"M d, Y" }} -
+                                        <strong>{{ delay.delay_minutes }} min late</strong>
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-tag"></i> {{ delay.get_delay_reason_display }}
+                                    </small>
+                                </div>
+                                <div>
+                                    {% if not delay.reviewed_at %}
+                                    <a href="{% url 'hr:delay_incident_review' delay.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Review
+                                    </a>
+                                    {% else %}
+                                    <span class="badge bg-success">Reviewed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-4">
+                            <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.3;"></i><br>
+                            No delays in the last 7 days
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Overtime Requests -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-clock"></i> Pending Overtime Requests</h6>
+                    <a href="{% url 'hr:overtime_request_list' %}" class="btn btn-sm btn-outline-light">View All</a>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if pending_overtime %}
+                        {% for ot in pending_overtime %}
+                        <div class="list-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {{ ot.employee.get_full_name }}
+                                        <span class="badge bg-info">{{ ot.get_overtime_type_display }}</span>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i> {{ ot.date|date:"M d, Y" }} -
+                                        <strong>{{ ot.planned_hours }} hours</strong>
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-file-text"></i> {{ ot.reason|truncatewords:10 }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'hr:overtime_request_approve' ot.pk %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-circle"></i> Review
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i><br>
+                            No pending overtime requests
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Configuration -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h6 class="mb-0"><i class="bi bi-gear"></i> Attendance Configuration (KSA Standards)</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="config-box mb-3">
+                        <h6><i class="bi bi-clock"></i> Working Hours</h6>
+                        <p class="mb-1"><strong>Per Day:</strong> {{ config.working_hours_per_day }} hours</p>
+                        <p class="mb-0"><strong>Per Week:</strong> {{ config.working_hours_per_week }} hours</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="config-box mb-3">
+                        <h6><i class="bi bi-hourglass-split"></i> Grace Period</h6>
+                        <p class="mb-0"><strong>Late Arrival:</strong> {{ config.late_grace_minutes }} minutes</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="config-box mb-3">
+                        <h6><i class="bi bi-pencil"></i> Manual Entry</h6>
+                        <p class="mb-0">
+                            {% if config.manual_entry_allowed %}
+                                <span class="badge bg-success">Enabled</span>
+                            {% else %}
+                                <span class="badge bg-danger">Disabled</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="config-box mb-3">
+                        <h6><i class="bi bi-info-circle"></i> Quick Actions</h6>
+                        <a href="{% url 'hr:attendance_list' %}" class="btn btn-sm btn-outline-primary w-100 mb-1">
+                            View All Records
+                        </a>
+                        <a href="{% url 'hr:attendance_report' %}" class="btn btn-sm btn-outline-secondary w-100">
+                            Generate Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard every 2 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 120000);
+</script>
+{% endblock %}
