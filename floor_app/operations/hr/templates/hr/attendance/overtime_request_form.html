@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Overtime - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .request-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .request-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .policy-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .limits-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .limit-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="request-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-clock"></i> Request Overtime</h1>
+                <p class="text-muted">Submit overtime work request for manager approval</p>
+            </div>
+            <a href="{% url 'hr:overtime_request_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Requests
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Policy Information -->
+        <div class="policy-info">
+            <h5><i class="bi bi-info-circle"></i> Overtime Policy (KSA Labor Law)</h5>
+            <div class="limits-grid">
+                <div class="limit-item">
+                    <strong>Daily Limit:</strong><br>
+                    {{ config.max_overtime_hours_per_day }} hours/day
+                </div>
+                <div class="limit-item">
+                    <strong>Weekly Limit:</strong><br>
+                    {{ config.max_overtime_hours_per_week }} hours/week
+                </div>
+                <div class="limit-item">
+                    <strong>Quarterly Limit:</strong><br>
+                    {{ config.max_overtime_hours_per_quarter }} hours/quarter
+                </div>
+                <div class="limit-item">
+                    <strong>Advance Request:</strong><br>
+                    Up to {{ config.max_days_advance_request }} days ahead
+                </div>
+            </div>
+            <div class="mt-3">
+                <strong>Pay Rates:</strong>
+                Regular: {{ config.regular_overtime_rate }}x |
+                Weekend: {{ config.weekend_overtime_rate }}x |
+                Holiday: {{ config.holiday_overtime_rate }}x |
+                Night: {{ config.night_shift_overtime_rate }}x
+            </div>
+        </div>
+
+        <!-- Request Form -->
+        <div class="request-card">
+            <form method="post" id="overtimeForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-calendar-event"></i> Overtime Details</h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.date.id_for_label }}" class="form-label">
+                            Date <span class="text-danger">*</span>
+                        </label>
+                        {{ form.date }}
+                        {% if form.date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.date.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">{{ form.date.help_text }}</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.overtime_type.id_for_label }}" class="form-label">
+                            Overtime Type <span class="text-danger">*</span>
+                        </label>
+                        {{ form.overtime_type }}
+                        {% if form.overtime_type.errors %}
+                            <div class="invalid-feedback d-block">{{ form.overtime_type.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">{{ form.overtime_type.help_text }}</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.start_time.id_for_label }}" class="form-label">
+                            Start Time <span class="text-danger">*</span>
+                        </label>
+                        {{ form.start_time }}
+                        {% if form.start_time.errors %}
+                            <div class="invalid-feedback d-block">{{ form.start_time.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.end_time.id_for_label }}" class="form-label">
+                            End Time <span class="text-danger">*</span>
+                        </label>
+                        {{ form.end_time }}
+                        {% if form.end_time.errors %}
+                            <div class="invalid-feedback d-block">{{ form.end_time.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="alert alert-info" id="hoursCalculation" style="display: none;">
+                        <strong>Estimated Hours:</strong> <span id="calculatedHours">0</span> hours
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.reason.id_for_label }}" class="form-label">
+                        Reason for Overtime <span class="text-danger">*</span>
+                    </label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                        <div class="invalid-feedback d-block">{{ form.reason.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">{{ form.reason.help_text }}</small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.work_description.id_for_label }}" class="form-label">
+                        Work Description <span class="text-danger">*</span>
+                    </label>
+                    {{ form.work_description }}
+                    {% if form.work_description.errors %}
+                        <div class="invalid-feedback d-block">{{ form.work_description.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Describe the work to be performed during overtime</small>
+                </div>
+
+                {{ form.employee }}
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:overtime_request_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="submit-btn">
+                        <i class="bi bi-send"></i> Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Overtime Request Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Overtime must be pre-approved by your manager (as per company policy)</li>
+                    <li>Requests should be submitted at least 24 hours in advance when possible</li>
+                    <li>Provide clear justification for the overtime work needed</li>
+                    <li>Weekend overtime (Friday) requires compensatory day off in addition to pay (KSA law)</li>
+                    <li>Ensure you have not exceeded quarterly overtime limits ({{ config.max_overtime_hours_per_quarter }} hours)</li>
+                    <li>Night shift overtime ({{ config.night_shift_start_time }} - {{ config.night_shift_end_time }}) has {{ config.night_shift_overtime_rate }}x pay rate</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Calculate hours when start/end time change
+    const startTimeInput = document.querySelector('input[name="start_time"]');
+    const endTimeInput = document.querySelector('input[name="end_time"]');
+    const hoursCalculation = document.getElementById('hoursCalculation');
+    const calculatedHours = document.getElementById('calculatedHours');
+
+    function calculateHours() {
+        const start = startTimeInput.value;
+        const end = endTimeInput.value;
+
+        if (start && end) {
+            const startTime = new Date('1970-01-01T' + start);
+            let endTime = new Date('1970-01-01T' + end);
+
+            // Handle overnight overtime
+            if (endTime < startTime) {
+                endTime = new Date(endTime.getTime() + 24 * 60 * 60 * 1000);
+            }
+
+            const hours = (endTime - startTime) / (1000 * 60 * 60);
+            calculatedHours.textContent = hours.toFixed(2);
+            hoursCalculation.style.display = 'block';
+
+            // Validate against daily limit
+            const maxDaily = parseFloat('{{ config.max_overtime_hours_per_day }}');
+            if (hours > maxDaily) {
+                hoursCalculation.classList.remove('alert-info');
+                hoursCalculation.classList.add('alert-danger');
+                calculatedHours.innerHTML = hours.toFixed(2) + ' hours <strong>(Exceeds daily limit of ' + maxDaily + ' hours!)</strong>';
+            } else {
+                hoursCalculation.classList.remove('alert-danger');
+                hoursCalculation.classList.add('alert-info');
+            }
+        }
+    }
+
+    startTimeInput.addEventListener('change', calculateHours);
+    endTimeInput.addEventListener('change', calculateHours);
+
+    // Form validation
+    document.getElementById('overtimeForm').addEventListener('submit', function(e) {
+        if (!startTimeInput.value || !endTimeInput.value) {
+            e.preventDefault();
+            alert('Please select both start and end times');
+            return false;
+        }
+    });
+</script>
+{% endblock %}
