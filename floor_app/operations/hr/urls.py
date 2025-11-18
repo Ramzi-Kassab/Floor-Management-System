@@ -2,7 +2,7 @@
 from django.urls import path
 from . import views_employee_wizard as views
 from . import views_department
-from .views import leave_views, document_views
+from .views import leave_views, document_views, attendance_views
 
 app_name = "hr"
 
@@ -115,6 +115,26 @@ urlpatterns = [
     path("documents/hr/<int:pk>/verify/", document_views.hr_verify_document, name="hr_verify_document"),
     path("documents/hr/bulk-actions/", document_views.hr_bulk_actions, name="hr_bulk_actions"),
     path("documents/hr/print/", document_views.print_document_list, name="print_document_list"),
+
+    # ========== Attendance & Overtime Management ==========
+    # Attendance Dashboard & Records
+    path("attendance/", attendance_views.attendance_dashboard, name="attendance_dashboard"),
+    path("attendance/list/", attendance_views.attendance_list, name="attendance_list"),
+    path("attendance/entry/", attendance_views.attendance_entry, name="attendance_entry"),
+    path("attendance/import/", attendance_views.punch_machine_import, name="punch_machine_import"),
+    path("attendance/export/", attendance_views.export_attendance_csv, name="export_attendance_csv"),
+    path("attendance/reports/", attendance_views.attendance_report, name="attendance_report"),
+
+    # Overtime Requests
+    path("overtime/", attendance_views.overtime_request_list, name="overtime_request_list"),
+    path("overtime/request/", attendance_views.overtime_request_create, name="overtime_request_create"),
+    path("overtime/<int:pk>/", attendance_views.overtime_request_detail, name="overtime_request_detail"),
+    path("overtime/<int:pk>/approve/", attendance_views.overtime_request_approve, name="overtime_request_approve"),
+
+    # Delay/Late Arrival Management
+    path("delays/", attendance_views.delay_incident_list, name="delay_incident_list"),
+    path("delays/report/", attendance_views.delay_incident_report, name="delay_incident_report"),
+    path("delays/<int:pk>/review/", attendance_views.delay_incident_review, name="delay_incident_review"),
 
     # ========== Legacy/Deprecated URLs (redirect to new system) ==========
     path("employees/create/", views.employee_wizard_start, name="employee_create"),  # Redirect to wizard
