@@ -42,6 +42,12 @@ urlpatterns = [
     # Export API Endpoint
     path("api/export/", views.export_data, name="api_export_data"),
 
+    # Security API Endpoints
+    path("api/security/password-strength/", views.validate_password_strength, name="api_password_strength"),
+    path("api/security/sessions/", views.get_active_sessions, name="api_active_sessions"),
+    path("api/security/sessions/<str:session_key>/terminate/", views.terminate_session, name="api_terminate_session"),
+    path("api/security/sessions/terminate-all/", views.terminate_all_sessions, name="api_terminate_all_sessions"),
+
     # Global Search
     path("search/", views.global_search, name="global_search"),
 

@@ -1234,3 +1234,123 @@ def export_data(request):
 
     except Exception as e:
         return JsonResponse({'error': f'Export failed: {str(e)}'}, status=500)
+
+
+# ============================================================================
+# SECURITY ENDPOINTS
+# ============================================================================
+
+@login_required
+def validate_password_strength(request):
+    """Validate password strength via API."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .security import PasswordValidator
+        import json as json_lib
+
+        data = json_lib.loads(request.body)
+        password = data.get('password', '')
+
+        if not password:
+            return JsonResponse({'error': 'Password is required'}, status=400)
+
+        result = PasswordValidator.validate_strength(password, user=request.user)
+
+        return JsonResponse(result)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def get_active_sessions(request):
+    """Get user's active sessions."""
+    from .security import SessionManager
+
+    sessions = SessionManager.get_user_sessions(request.user)
+
+    return JsonResponse({
+        'sessions': sessions,
+        'current_session': request.session.session_key,
+        'count': len(sessions)
+    })
+
+
+@login_required
+def terminate_session(request, session_key):
+    """Terminate a specific session."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .security import SessionManager
+
+        # Don't allow terminating current session this way
+        if session_key == request.session.session_key:
+            return JsonResponse({'error': 'Cannot terminate current session'}, status=400)
+
+        # Verify session belongs to user
+        user_sessions = SessionManager.get_user_sessions(request.user)
+        session_keys = [s['session_key'] for s in user_sessions]
+
+        if session_key not in session_keys:
+            return JsonResponse({'error': 'Session not found'}, status=404)
+
+        success = SessionManager.terminate_session(session_key)
+
+        if success:
+            # Log the action
+            from .notification_utils import log_activity
+            log_activity(
+                user=request.user,
+                action='SESSION_TERMINATED',
+                description=f'User terminated session {session_key}',
+                request=request
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Session terminated successfully'
+            })
+        else:
+            return JsonResponse({'error': 'Failed to terminate session'}, status=500)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def terminate_all_sessions(request):
+    """Terminate all sessions except current."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .security import SessionManager
+
+        count = SessionManager.terminate_all_sessions(
+            request.user,
+            except_current=request.session.session_key
+        )
+
+        # Log the action
+        from .notification_utils import log_activity
+        log_activity(
+            user=request.user,
+            action='ALL_SESSIONS_TERMINATED',
+            description=f'User terminated {count} session(s)',
+            request=request
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{count} session(s) terminated',
+            'count': count
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
