@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Reports - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    .filter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .stat-box {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .stat-box h3 {
+        color: #667eea;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-bar-chart"></i> Attendance Reports</h1>
+            <p class="text-muted">Comprehensive attendance analytics and insights</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:export_attendance_csv' %}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Export to Excel
+            </a>
+            <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <h5 class="mb-3"><i class="bi bi-funnel"></i> Report Filters</h5>
+        <form method="get" id="filterForm">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Date Range</label>
+                    <select class="form-select" name="date_range" id="dateRange">
+                        <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+                        <option value="yesterday" {% if date_range == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                        <option value="this_week" {% if date_range == 'this_week' %}selected{% endif %}>This Week</option>
+                        <option value="last_week" {% if date_range == 'last_week' %}selected{% endif %}>Last Week</option>
+                        <option value="this_month" {% if date_range == 'this_month' %}selected{% endif %}>This Month</option>
+                        <option value="last_month" {% if date_range == 'last_month' %}selected{% endif %}>Last Month</option>
+                        <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3" id="customDateFields" style="display: none;">
+                    <label class="form-label">From - To</label>
+                    <div class="input-group">
+                        <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+                        <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Department</label>
+                    <select class="form-select" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if department == dept.id|stringformat:'s' %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Report Type</label>
+                    <select class="form-select" name="report_type">
+                        <option value="summary" {% if report_type == 'summary' %}selected{% endif %}>Summary</option>
+                        <option value="detailed" {% if report_type == 'detailed' %}selected{% endif %}>Detailed</option>
+                        <option value="late_arrivals" {% if report_type == 'late_arrivals' %}selected{% endif %}>Late Arrivals</option>
+                        <option value="absences" {% if report_type == 'absences' %}selected{% endif %}>Absences</option>
+                        <option value="overtime" {% if report_type == 'overtime' %}selected{% endif %}>Overtime</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-light">
+                    <i class="bi bi-search"></i> Generate Report
+                </button>
+                <a href="{% url 'hr:attendance_report' %}" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Statistics -->
+    <h5 class="mb-3"><i class="bi bi-graph-up"></i> Key Metrics</h5>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-box">
+                <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                <h3>{{ stats.total_employees|default:0 }}</h3>
+                <p class="text-muted mb-0">Total Employees</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-box">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                <h3>{{ stats.attendance_rate|floatformat:1|default:0 }}%</h3>
+                <p class="text-muted mb-0">Attendance Rate</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-box">
+                <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                <h3>{{ stats.late_incidents|default:0 }}</h3>
+                <p class="text-muted mb-0">Late Arrivals</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-box">
+                <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                <h3>{{ stats.total_absences|default:0 }}</h3>
+                <p class="text-muted mb-0">Total Absences</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Attendance Trends Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="report-card">
+                <h5 class="mb-3"><i class="bi bi-graph-up"></i> Attendance Trends</h5>
+                <div class="chart-container">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Distribution -->
+        <div class="col-lg-4 mb-4">
+            <div class="report-card">
+                <h5 class="mb-3"><i class="bi bi-pie-chart"></i> Status Distribution</h5>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Comparison -->
+    <div class="report-card">
+        <h5 class="mb-3"><i class="bi bi-building"></i> Department Comparison</h5>
+        <div class="chart-container">
+            <canvas id="departmentChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Detailed Report Table -->
+    {% if report_data %}
+    <div class="report-card mt-4">
+        <h5 class="mb-3"><i class="bi bi-table"></i> Detailed Report</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Department</th>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Hours</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in report_data %}
+                    <tr>
+                        <td>
+                            <strong>{{ record.employee.get_full_name }}</strong><br>
+                            <small class="text-muted">{{ record.employee.employee_no }}</small>
+                        </td>
+                        <td>{{ record.employee.department|default:"-" }}</td>
+                        <td>{{ record.date|date:"M d, Y" }}</td>
+                        <td>{{ record.check_in|time:"H:i"|default:"-" }}</td>
+                        <td>{{ record.check_out|time:"H:i"|default:"-" }}</td>
+                        <td>{{ record.hours_worked|floatformat:2|default:"-" }}</td>
+                        <td>
+                            {% if record.status == 'PRESENT' %}
+                                <span class="badge bg-success">Present</span>
+                            {% elif record.status == 'ABSENT' %}
+                                <span class="badge bg-danger">Absent</span>
+                            {% elif record.status == 'ON_LEAVE' %}
+                                <span class="badge bg-info">On Leave</span>
+                            {% elif record.status == 'HALF_DAY' %}
+                                <span class="badge bg-warning">Half Day</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ record.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ record.notes|truncatewords:5|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Show/hide custom date fields
+    const dateRange = document.getElementById('dateRange');
+    const customDateFields = document.getElementById('customDateFields');
+
+    dateRange.addEventListener('change', function() {
+        customDateFields.style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+
+    // Initialize on page load
+    if (dateRange.value === 'custom') {
+        customDateFields.style.display = 'block';
+    }
+
+    // Attendance Trends Chart
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attendanceCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Present',
+                data: {{ chart_present|safe }},
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Absent',
+                data: {{ chart_absent|safe }},
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Late',
+                data: {{ chart_late|safe }},
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+
+    // Status Distribution Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent', 'On Leave', 'Half Day'],
+            datasets: [{
+                data: {{ status_distribution|safe }},
+                backgroundColor: ['#198754', '#dc3545', '#0dcaf0', '#ffc107']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // Department Comparison Chart
+    const deptCtx = document.getElementById('departmentChart').getContext('2d');
+    new Chart(deptCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ dept_labels|safe }},
+            datasets: [{
+                label: 'Attendance Rate (%)',
+                data: {{ dept_rates|safe }},
+                backgroundColor: '#667eea'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

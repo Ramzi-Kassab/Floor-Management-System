@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Overtime Request #{{ overtime.request_number }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+    .request-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .request-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -1.45rem;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="detail-container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{% url 'hr:overtime_request_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Requests
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Request Header -->
+        <div class="request-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="bi bi-clock"></i> Overtime Request</h2>
+                    <p class="mb-0 opacity-75">Request #{{ overtime.request_number }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if overtime.status == 'PENDING' %}
+                        <span class="badge bg-warning text-dark p-3" style="font-size: 1.1rem;">
+                            <i class="bi bi-clock"></i> Pending Approval
+                        </span>
+                    {% elif overtime.status == 'APPROVED' %}
+                        <span class="badge bg-success p-3" style="font-size: 1.1rem;">
+                            <i class="bi bi-check-circle"></i> Approved
+                        </span>
+                    {% elif overtime.status == 'REJECTED' %}
+                        <span class="badge bg-danger p-3" style="font-size: 1.1rem;">
+                            <i class="bi bi-x-circle"></i> Rejected
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Body -->
+        <div class="request-body">
+            <div class="row">
+                <!-- Main Details -->
+                <div class="col-lg-8">
+                    <!-- Employee & Date Information -->
+                    <div class="info-section">
+                        <h5 class="mb-3"><i class="bi bi-person-badge"></i> Request Details</h5>
+                        <div class="info-row">
+                            <span class="text-muted">Employee</span>
+                            <strong>{{ overtime.employee.get_full_name }} ({{ overtime.employee.employee_no }})</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Date</span>
+                            <strong>{{ overtime.date|date:"l, F d, Y" }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Overtime Type</span>
+                            <strong>{{ overtime.get_overtime_type_display }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="text-muted">Requested Hours</span>
+                            <strong>{{ overtime.planned_hours }} hours</strong>
+                        </div>
+                        {% if overtime.status == 'APPROVED' and overtime.actual_hours %}
+                        <div class="info-row">
+                            <span class="text-muted">Actual Hours Worked</span>
+                            <strong class="text-success">{{ overtime.actual_hours }} hours</strong>
+                        </div>
+                        {% endif %}
+                        <div class="info-row">
+                            <span class="text-muted">Pay Rate</span>
+                            <strong>{{ overtime.rate_multiplier }}x ({{ overtime.rate_multiplier|floatformat:0|add:"00" }}%)</strong>
+                        </div>
+                        {% if overtime.is_compensatory_off %}
+                        <div class="info-row">
+                            <span class="text-muted">Compensation</span>
+                            <strong class="text-info">
+                                <i class="bi bi-calendar-check"></i> Includes Compensatory Day Off
+                            </strong>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reason & Description -->
+                    <div class="info-section">
+                        <h5 class="mb-3"><i class="bi bi-file-text"></i> Justification</h5>
+                        <div class="mb-3">
+                            <strong>Reason for Overtime:</strong>
+                            <p class="mt-2">{{ overtime.reason }}</p>
+                        </div>
+                        {% if overtime.work_description %}
+                        <div>
+                            <strong>Work Description:</strong>
+                            <p class="mt-2">{{ overtime.work_description }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Approval/Rejection Details -->
+                    {% if overtime.status == 'APPROVED' %}
+                    <div class="alert alert-success">
+                        <h6><i class="bi bi-check-circle"></i> Approval Details</h6>
+                        <p class="mb-1">
+                            <strong>Approved by:</strong> {{ overtime.approver_id }}
+                            on {{ overtime.approved_at|date:"F d, Y H:i" }}
+                        </p>
+                        {% if overtime.approval_notes %}
+                        <p class="mb-0">
+                            <strong>Notes:</strong> {{ overtime.approval_notes }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% elif overtime.status == 'REJECTED' %}
+                    <div class="alert alert-danger">
+                        <h6><i class="bi bi-x-circle"></i> Rejection Details</h6>
+                        <p class="mb-1">
+                            <strong>Rejected by:</strong> {{ overtime.rejected_by_id }}
+                            on {{ overtime.rejected_at|date:"F d, Y H:i" }}
+                        </p>
+                        {% if overtime.rejection_reason %}
+                        <p class="mb-0">
+                            <strong>Reason:</strong> {{ overtime.rejection_reason }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    {% if can_approve %}
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'hr:overtime_request_approve' overtime.pk %}" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Review & Approve/Reject
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Status Timeline -->
+                    <div class="info-section">
+                        <h6 class="mb-3"><i class="bi bi-clock-history"></i> Request Timeline</h6>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ overtime.created_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0"><strong>Request Submitted</strong></p>
+                                <small>By {{ overtime.employee.get_full_name }}</small>
+                            </div>
+
+                            {% if overtime.status == 'APPROVED' %}
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ overtime.approved_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0 text-success"><strong>Approved</strong></p>
+                                <small>By Manager</small>
+                            </div>
+                            {% elif overtime.status == 'REJECTED' %}
+                            <div class="timeline-item">
+                                <small class="text-muted">{{ overtime.rejected_at|date:"M d, Y H:i" }}</small>
+                                <p class="mb-0 text-danger"><strong>Rejected</strong></p>
+                                <small>By Manager</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Quick Info -->
+                    <div class="info-section">
+                        <h6 class="mb-3"><i class="bi bi-info-circle"></i> Additional Info</h6>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="small">Request Number</span>
+                            <strong>{{ overtime.request_number }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="small">Status</span>
+                            <strong>{{ overtime.get_status_display }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="small">Type</span>
+                            <strong>{{ overtime.get_overtime_type_display }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <span class="small">Created</span>
+                            <strong>{{ overtime.created_at|date:"M d, Y" }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    {% if is_owner and overtime.status == 'PENDING' %}
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-danger" onclick="alert('Cancel functionality coming soon')">
+                            <i class="bi bi-x-circle"></i> Cancel Request
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

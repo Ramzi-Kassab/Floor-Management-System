@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Review Delay Incident - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    .review-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .review-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .info-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .decision-radio {
+        padding: 1.5rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .decision-radio:hover {
+        border-color: #0d6efd;
+        background: #f8f9fa;
+    }
+    .decision-radio.excuse {
+        border-color: #198754;
+    }
+    .decision-radio.excuse:hover {
+        background: #d1e7dd;
+    }
+    .decision-radio.not-excuse {
+        border-color: #dc3545;
+    }
+    .decision-radio.not-excuse:hover {
+        background: #f8d7da;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="review-container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{% url 'hr:delay_incident_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Delay List
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Review Header -->
+        <div class="review-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="bi bi-clipboard-check"></i> Delay Incident Review</h2>
+                    <p class="mb-0 opacity-75">{{ delay.employee.get_full_name }} - {{ delay.date|date:"F d, Y" }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-{{ delay.severity|lower }} p-3" style="font-size: 1.1rem;">
+                        {{ delay.get_severity_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Body -->
+        <div class="review-body">
+            <!-- Delay Details -->
+            <div class="info-section">
+                <h5 class="mb-3"><i class="bi bi-info-circle"></i> Delay Details</h5>
+                <div class="info-row">
+                    <span class="text-muted">Employee</span>
+                    <strong>{{ delay.employee.get_full_name }} ({{ delay.employee.employee_no }})</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Department</span>
+                    <strong>{{ delay.employee.department.name|default:"-" }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Date</span>
+                    <strong>{{ delay.date|date:"l, F d, Y" }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Scheduled Check-in</span>
+                    <strong>{{ delay.scheduled_time|time:"H:i" }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Actual Check-in</span>
+                    <strong class="text-danger">{{ delay.actual_time|time:"H:i" }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Delay Duration</span>
+                    <strong class="text-danger">{{ delay.delay_minutes }} minutes</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Severity Level</span>
+                    <span class="badge bg-{{ delay.severity|lower }}">{{ delay.get_severity_display }}</span>
+                </div>
+            </div>
+
+            <!-- Employee's Explanation -->
+            <div class="alert alert-info">
+                <h6><i class="bi bi-file-text"></i> Employee's Explanation</h6>
+                <div class="mb-2">
+                    <strong>Reason Category:</strong> {{ delay.get_delay_reason_display|default:"Not specified" }}
+                </div>
+                <div>
+                    <strong>Detailed Explanation:</strong>
+                    <p class="mb-0 mt-2">{{ delay.employee_notes|default:"No explanation provided" }}</p>
+                </div>
+            </div>
+
+            <!-- Previous Delays History -->
+            {% if previous_delays %}
+            <div class="alert alert-warning">
+                <h6><i class="bi bi-clock-history"></i> Previous Delays (Last 30 Days)</h6>
+                <p class="mb-2">This employee has <strong>{{ previous_delays.count }}</strong> previous delay incident(s) in the last 30 days:</p>
+                <ul class="mb-0">
+                    {% for prev in previous_delays %}
+                    <li>
+                        {{ prev.date|date:"M d" }}: {{ prev.delay_minutes }} min
+                        ({{ prev.get_severity_display }})
+                        {% if prev.is_excused %}<span class="badge bg-success">Excused</span>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Review Form (if not yet reviewed) -->
+            {% if not delay.reviewed_at %}
+            <form method="post" id="reviewForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-check2-square"></i> Supervisor Decision</h5>
+
+                <!-- Excuse Option -->
+                <label class="decision-radio excuse">
+                    <input type="radio" name="decision" value="excuse" class="form-check-input me-3" required>
+                    <div class="d-inline-block">
+                        <h6 class="mb-1"><i class="bi bi-check-circle-fill text-success"></i> Excuse the Delay</h6>
+                        <small class="text-muted">The employee's reason is valid and acceptable</small>
+                    </div>
+                </label>
+
+                <!-- Not Excuse Option -->
+                <label class="decision-radio not-excuse">
+                    <input type="radio" name="decision" value="not-excuse" class="form-check-input me-3" required>
+                    <div class="d-inline-block">
+                        <h6 class="mb-1"><i class="bi bi-x-circle-fill text-danger"></i> Do Not Excuse</h6>
+                        <small class="text-muted">The delay is not excused and may be subject to disciplinary action</small>
+                    </div>
+                </label>
+
+                <!-- Reviewer Notes -->
+                <div class="mb-4">
+                    <label for="{{ form.reviewer_notes.id_for_label }}" class="form-label">
+                        <strong>Reviewer Notes</strong>
+                        <span class="text-muted">(Optional)</span>
+                    </label>
+                    {{ form.reviewer_notes }}
+                    {% if form.reviewer_notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.reviewer_notes.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        Add any notes about your decision or actions to be taken
+                    </small>
+                </div>
+
+                <!-- Action Suggestions -->
+                <div class="mb-4">
+                    <label class="form-label"><strong>Suggested Actions</strong> (Optional)</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="verbal_warning" id="verbalWarning">
+                        <label class="form-check-label" for="verbalWarning">
+                            Issue verbal warning
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="written_warning" id="writtenWarning">
+                        <label class="form-check-label" for="writtenWarning">
+                            Issue written warning
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="deduct_leave" id="deductLeave">
+                        <label class="form-check-label" for="deductLeave">
+                            Deduct from annual leave balance
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="no_action" id="noAction">
+                        <label class="form-check-label" for="noAction">
+                            No further action required
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:delay_incident_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle"></i> Submit Review
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <!-- Already Reviewed -->
+            <div class="alert {% if delay.is_excused %}alert-success{% else %}alert-danger{% endif %}">
+                <h6><i class="bi bi-check-circle"></i> Review Completed</h6>
+                <p class="mb-1">
+                    <strong>Reviewed by:</strong> {{ delay.reviewed_by.get_full_name }}
+                    on {{ delay.reviewed_at|date:"F d, Y H:i" }}
+                </p>
+                <p class="mb-1">
+                    <strong>Decision:</strong>
+                    {% if delay.is_excused %}
+                        <span class="badge bg-success">Excused</span>
+                    {% else %}
+                        <span class="badge bg-danger">Not Excused</span>
+                    {% endif %}
+                </p>
+                {% if delay.reviewer_notes %}
+                <p class="mb-0">
+                    <strong>Reviewer Notes:</strong> {{ delay.reviewer_notes }}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and confirmation
+    {% if not delay.reviewed_at %}
+    document.getElementById('reviewForm').addEventListener('submit', function(e) {
+        const selectedDecision = document.querySelector('input[name="decision"]:checked');
+
+        if (!selectedDecision) {
+            e.preventDefault();
+            alert('Please select a decision (Excuse or Do Not Excuse)');
+            return false;
+        }
+
+        // Confirmation
+        const decision = selectedDecision.value;
+        const message = decision === 'excuse'
+            ? 'Excuse this delay incident? The employee will be notified.'
+            : 'Mark this delay as not excused? This may result in disciplinary action.';
+
+        if (!confirm(message)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

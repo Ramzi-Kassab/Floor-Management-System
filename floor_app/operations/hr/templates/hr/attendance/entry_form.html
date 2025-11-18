@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manual Attendance Entry - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .entry-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .entry-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .warning-box {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .time-input-group {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="entry-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-pencil-square"></i> Manual Attendance Entry</h1>
+                <p class="text-muted">Record attendance manually for employees</p>
+            </div>
+            <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Warning Box -->
+        <div class="warning-box">
+            <h6><i class="bi bi-exclamation-triangle"></i> Manual Entry Guidelines</h6>
+            <ul class="mb-0 mt-2">
+                <li>Manual entries should only be used for exceptional cases (system failure, missed punch, etc.)</li>
+                {% if config.require_supervisor_approval_manual_entry %}
+                <li><strong>Supervisor approval is required</strong> for all manual entries</li>
+                {% endif %}
+                <li>Provide detailed notes explaining why manual entry is needed</li>
+                <li>Ensure times are accurate - this affects payroll and overtime calculations</li>
+            </ul>
+        </div>
+
+        <!-- Entry Form -->
+        <div class="entry-card">
+            <form method="post" id="attendanceForm">
+                {% csrf_token %}
+
+                <h5 class="mb-3"><i class="bi bi-person-badge"></i> Employee Information</h5>
+
+                <div class="mb-3">
+                    <label for="{{ form.employee.id_for_label }}" class="form-label">
+                        Employee <span class="text-danger">*</span>
+                    </label>
+                    {{ form.employee }}
+                    {% if form.employee.errors %}
+                        <div class="invalid-feedback d-block">{{ form.employee.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Select the employee for this attendance record</small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.date.id_for_label }}" class="form-label">
+                        Date <span class="text-danger">*</span>
+                    </label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <div class="invalid-feedback d-block">{{ form.date.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Date of attendance</small>
+                </div>
+
+                <h5 class="mb-3 mt-4"><i class="bi bi-clock"></i> Time Information</h5>
+
+                <div class="time-input-group mb-4">
+                    <div>
+                        <label for="{{ form.check_in.id_for_label }}" class="form-label">
+                            Check-in Time <span class="text-danger">*</span>
+                        </label>
+                        {{ form.check_in }}
+                        {% if form.check_in.errors %}
+                            <div class="invalid-feedback d-block">{{ form.check_in.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.check_out.id_for_label }}" class="form-label">
+                            Check-out Time
+                        </label>
+                        {{ form.check_out }}
+                        {% if form.check_out.errors %}
+                            <div class="invalid-feedback d-block">{{ form.check_out.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Leave empty if employee hasn't left yet</small>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="alert alert-info" id="hoursWorked" style="display: none;">
+                        <strong>Calculated Hours:</strong> <span id="calculatedHours">0.00</span> hours
+                    </div>
+                </div>
+
+                <h5 class="mb-3"><i class="bi bi-file-text"></i> Entry Details</h5>
+
+                <div class="mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">
+                        Attendance Status <span class="text-danger">*</span>
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">{{ form.status.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.entry_type.id_for_label }}" class="form-label">
+                        Entry Type <span class="text-danger">*</span>
+                    </label>
+                    {{ form.entry_type }}
+                    {% if form.entry_type.errors %}
+                        <div class="invalid-feedback d-block">{{ form.entry_type.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                        Notes / Justification <span class="text-danger">*</span>
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        <strong>Required:</strong> Explain why manual entry is needed (e.g., "Punch machine was offline", "Employee forgot to punch")
+                    </small>
+                </div>
+
+                {% if config.require_supervisor_approval_manual_entry %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i> <strong>Note:</strong> This entry will be marked as "Pending Approval" and requires supervisor review before being finalized.
+                </div>
+                {% endif %}
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="submit-btn">
+                        <i class="bi bi-save"></i> Submit Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Information Box -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Best Practices</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Always verify employee information before submitting</li>
+                    <li>Double-check times for accuracy - incorrect times affect payroll</li>
+                    <li>Use the correct attendance status (Present, Absent, On Leave, etc.)</li>
+                    <li>Provide detailed notes - this helps with audits and inquiries</li>
+                    <li>For retroactive entries, ensure proper authorization</li>
+                    <li>Standard working hours: {{ config.standard_working_hours_per_day }} hours/day</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Calculate hours worked
+    const checkInInput = document.querySelector('input[name="check_in"]');
+    const checkOutInput = document.querySelector('input[name="check_out"]');
+    const hoursWorkedDiv = document.getElementById('hoursWorked');
+    const calculatedHoursSpan = document.getElementById('calculatedHours');
+
+    function calculateHours() {
+        const checkIn = checkInInput.value;
+        const checkOut = checkOutInput.value;
+
+        if (checkIn && checkOut) {
+            const checkInTime = new Date('1970-01-01T' + checkIn);
+            let checkOutTime = new Date('1970-01-01T' + checkOut);
+
+            // Handle overnight shifts
+            if (checkOutTime < checkInTime) {
+                checkOutTime = new Date(checkOutTime.getTime() + 24 * 60 * 60 * 1000);
+            }
+
+            const hours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+            calculatedHoursSpan.textContent = hours.toFixed(2);
+            hoursWorkedDiv.style.display = 'block';
+
+            // Highlight if unusual hours
+            const standardHours = parseFloat('{{ config.standard_working_hours_per_day }}');
+            if (hours > standardHours + 2) {
+                hoursWorkedDiv.classList.remove('alert-info');
+                hoursWorkedDiv.classList.add('alert-warning');
+                calculatedHoursSpan.innerHTML = hours.toFixed(2) + ' hours <small>(Exceeds standard hours)</small>';
+            } else {
+                hoursWorkedDiv.classList.remove('alert-warning');
+                hoursWorkedDiv.classList.add('alert-info');
+            }
+        } else {
+            hoursWorkedDiv.style.display = 'none';
+        }
+    }
+
+    checkInInput.addEventListener('change', calculateHours);
+    checkOutInput.addEventListener('change', calculateHours);
+
+    // Form validation
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+        const notes = document.querySelector('textarea[name="notes"]');
+
+        if (!notes.value.trim()) {
+            e.preventDefault();
+            alert('Please provide notes explaining why manual entry is needed');
+            notes.focus();
+            return false;
+        }
+
+        if (notes.value.trim().length < 10) {
+            e.preventDefault();
+            alert('Please provide more detailed notes (at least 10 characters)');
+            notes.focus();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delay Incidents - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delay-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    .delay-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .delay-card.minor { border-left-color: #ffc107; }
+    .delay-card.major { border-left-color: #fd7e14; }
+    .delay-card.critical { border-left-color: #dc3545; }
+
+    .filter-bar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    .stat-badge {
+        background: #f8f9fa;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        border-left: 3px solid #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-clock-history"></i> Delay Incidents</h1>
+            <p class="text-muted">Manage and review employee late arrivals</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:delay_incident_report' %}" class="btn btn-warning">
+                <i class="bi bi-exclamation-circle"></i> Report Late Arrival
+            </a>
+            <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-badge">
+                <h3 class="mb-1">{{ stats.total|default:0 }}</h3>
+                <small class="text-muted">Total Delays</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-badge" style="border-left-color: #ffc107;">
+                <h3 class="mb-1 text-warning">{{ stats.pending|default:0 }}</h3>
+                <small class="text-muted">Pending Review</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-badge" style="border-left-color: #198754;">
+                <h3 class="mb-1 text-success">{{ stats.reviewed|default:0 }}</h3>
+                <small class="text-muted">Reviewed</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-badge" style="border-left-color: #dc3545;">
+                <h3 class="mb-1 text-danger">{{ stats.avg_delay|floatformat:0|default:0 }} min</h3>
+                <small class="text-muted">Avg Delay Time</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small">Employee</label>
+                <select class="form-select form-select-sm" name="employee">
+                    <option value="">All Employees</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.id }}" {% if employee == emp.id|stringformat:'s' %}selected{% endif %}>
+                            {{ emp.get_full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Severity</label>
+                <select class="form-select form-select-sm" name="severity">
+                    <option value="">All Severities</option>
+                    <option value="MINOR" {% if severity == 'MINOR' %}selected{% endif %}>Minor (< 15 min)</option>
+                    <option value="MAJOR" {% if severity == 'MAJOR' %}selected{% endif %}>Major (15-30 min)</option>
+                    <option value="CRITICAL" {% if severity == 'CRITICAL' %}selected{% endif %}>Critical (> 30 min)</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Status</label>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending Review</option>
+                    <option value="reviewed" {% if status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                    <option value="excused" {% if status == 'excused' %}selected{% endif %}>Excused</option>
+                    <option value="not_excused" {% if status == 'not_excused' %}selected{% endif %}>Not Excused</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Date From</label>
+                <input type="date" class="form-control form-control-sm" name="date_from" value="{{ date_from }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Date To</label>
+                <input type="date" class="form-control form-control-sm" name="date_to" value="{{ date_to }}">
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Status Tabs -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link {% if not status %}active{% endif %}" href="?">
+                All ({{ stats.total|default:0 }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status == 'pending' %}active{% endif %}" href="?status=pending">
+                <i class="bi bi-clock"></i> Pending ({{ stats.pending|default:0 }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status == 'reviewed' %}active{% endif %}" href="?status=reviewed">
+                <i class="bi bi-check-circle"></i> Reviewed ({{ stats.reviewed|default:0 }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status == 'excused' %}active{% endif %}" href="?status=excused">
+                <i class="bi bi-shield-check"></i> Excused
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status == 'not_excused' %}active{% endif %}" href="?status=not_excused">
+                <i class="bi bi-shield-x"></i> Not Excused
+            </a>
+        </li>
+    </ul>
+
+    <!-- Delay List -->
+    {% if delays %}
+        {% for delay in delays %}
+        <div class="delay-card {{ delay.severity|lower }}">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <h6 class="mb-1">{{ delay.employee.get_full_name }}</h6>
+                    <small class="text-muted">
+                        <i class="bi bi-hash"></i> {{ delay.employee.employee_no }}
+                        {% if delay.employee.department %}
+                        | {{ delay.employee.department.name }}
+                        {% endif %}
+                    </small>
+                </div>
+
+                <div class="col-md-2">
+                    <small class="text-muted d-block">Date</small>
+                    <strong>{{ delay.date|date:"M d, Y" }}</strong>
+                </div>
+
+                <div class="col-md-2">
+                    <small class="text-muted d-block">Delay Time</small>
+                    <strong class="text-danger">{{ delay.delay_minutes }} minutes</strong>
+                    <span class="badge bg-{{ delay.severity|lower }} ms-2">
+                        {{ delay.get_severity_display }}
+                    </span>
+                </div>
+
+                <div class="col-md-2">
+                    <small class="text-muted d-block">Reason</small>
+                    <span>{{ delay.get_delay_reason_display|default:"Not specified" }}</span>
+                </div>
+
+                <div class="col-md-2">
+                    <small class="text-muted d-block">Status</small>
+                    {% if not delay.reviewed_at %}
+                        <span class="badge bg-warning text-dark">Pending Review</span>
+                    {% elif delay.is_excused %}
+                        <span class="badge bg-success">Excused</span>
+                    {% else %}
+                        <span class="badge bg-danger">Not Excused</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-1 text-end">
+                    {% if not delay.reviewed_at %}
+                        <a href="{% url 'hr:delay_incident_review' delay.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye"></i> Review
+                        </a>
+                    {% else %}
+                        <a href="{% url 'hr:delay_incident_review' delay.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-info-circle"></i> View
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if delay.employee_notes %}
+            <div class="mt-2 pt-2 border-top">
+                <small class="text-muted"><strong>Employee's Explanation:</strong></small>
+                <p class="mb-0 small">{{ delay.employee_notes }}</p>
+            </div>
+            {% endif %}
+
+            {% if delay.reviewed_at and delay.reviewer_notes %}
+            <div class="mt-2 pt-2 border-top">
+                <small class="text-muted">
+                    <strong>Reviewed by {{ delay.reviewed_by.get_full_name }}:</strong> {{ delay.reviewed_at|date:"M d, Y H:i" }}
+                </small>
+                <p class="mb-0 small">{{ delay.reviewer_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Delay incidents pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i>
+            <h5 class="mt-3 text-muted">No delay incidents found</h5>
+            <p class="text-muted">
+                {% if request.GET %}
+                    Try adjusting your filters or <a href="{% url 'hr:delay_incident_list' %}">clear all filters</a>
+                {% else %}
+                    There are no delay incidents to display
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
