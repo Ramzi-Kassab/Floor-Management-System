@@ -941,4 +941,3 @@ def global_search_api(request):
 
 # Health check endpoints
 from .health import health_check, readiness_check, liveness_check
-
