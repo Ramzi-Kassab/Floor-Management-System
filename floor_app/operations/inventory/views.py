@@ -16,7 +16,7 @@ from .models import (
 )
 from .forms import (
     ItemForm, SerialUnitForm, BOMHeaderForm, TransactionForm, StockAdjustmentForm,
-    BitDesignForm, BitDesignRevisionForm
+    BitDesignForm, BitDesignRevisionForm, LocationForm
 )
 
 
@@ -316,6 +316,146 @@ class BitDesignRevisionUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['title'] = f'Edit MAT Number: {self.object.mat_number}'
         context['submit_text'] = 'Update MAT'
+        return context
+
+
+# ============================================================================
+# LOCATION CRUD
+# ============================================================================
+class LocationListView(LoginRequiredMixin, ListView):
+    model = Location
+    template_name = 'inventory/locations/list.html'
+    context_object_name = 'locations'
+    paginate_by = 100  # Higher pagination for tree views
+
+    def get_queryset(self):
+        qs = Location.objects.filter(is_deleted=False).select_related('parent_location', 'capacity_uom')
+
+        # Search filter
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(code__icontains=search) |
+                Q(name__icontains=search) |
+                Q(address__icontains=search)
+            )
+
+        # Type filter
+        location_type = self.request.GET.get('type', '').strip()
+        if location_type:
+            qs = qs.filter(location_type=location_type)
+
+        # Active filter
+        is_active = self.request.GET.get('active', '').strip()
+        if is_active == 'true':
+            qs = qs.filter(is_active=True)
+        elif is_active == 'false':
+            qs = qs.filter(is_active=False)
+
+        return qs.order_by('parent_location__code', 'code')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Build tree structure for visualization
+        all_locations = list(context['locations'])
+        root_locations = [loc for loc in all_locations if loc.parent_location is None]
+
+        def build_tree(parent_id):
+            """Recursively build tree structure."""
+            return [
+                {
+                    'location': loc,
+                    'children': build_tree(loc.id)
+                }
+                for loc in all_locations if (loc.parent_location_id == parent_id)
+            ]
+
+        context['location_tree'] = [
+            {
+                'location': root,
+                'children': build_tree(root.id)
+            }
+            for root in root_locations
+        ]
+
+        context['location_types'] = Location.LOCATION_TYPE_CHOICES
+        context['total_locations'] = Location.objects.filter(is_deleted=False).count()
+        context['active_locations'] = Location.objects.filter(is_deleted=False, is_active=True).count()
+
+        return context
+
+
+class LocationDetailView(LoginRequiredMixin, DetailView):
+    model = Location
+    template_name = 'inventory/locations/detail.html'
+    context_object_name = 'location'
+
+    def get_queryset(self):
+        return Location.objects.filter(is_deleted=False).select_related(
+            'parent_location', 'capacity_uom'
+        ).prefetch_related('child_locations')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get child locations
+        context['child_locations'] = self.object.child_locations.filter(
+            is_deleted=False
+        ).order_by('code')
+
+        # Get serial units at this location
+        context['serial_units'] = SerialUnit.objects.filter(
+            location=self.object,
+            is_deleted=False
+        ).select_related('item', 'current_mat', 'condition', 'ownership')[:20]
+
+        # Get stock at this location
+        context['stock_records'] = InventoryStock.objects.filter(
+            location=self.object
+        ).select_related('item', 'condition', 'ownership').order_by('-quantity_on_hand')[:20]
+
+        return context
+
+
+class LocationCreateView(LoginRequiredMixin, CreateView):
+    model = Location
+    form_class = LocationForm
+    template_name = 'inventory/locations/form.html'
+    success_url = reverse_lazy('inventory:location_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, f'Location "{form.instance.code}" created successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Location'
+        context['submit_text'] = 'Create Location'
+        return context
+
+
+class LocationUpdateView(LoginRequiredMixin, UpdateView):
+    model = Location
+    form_class = LocationForm
+    template_name = 'inventory/locations/form.html'
+
+    def get_queryset(self):
+        return Location.objects.filter(is_deleted=False)
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:location_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+        messages.success(self.request, f'Location "{form.instance.code}" updated successfully.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Location: {self.object.code}'
+        context['submit_text'] = 'Update Location'
         return context
 
 

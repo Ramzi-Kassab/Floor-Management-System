@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ location.code }} - Location Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .location-header {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .info-card .card-title {
+        color: #17a2b8;
+        border-bottom: 2px solid #17a2b8;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        flex: 0 0 180px;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .location-code-display {
+        font-family: monospace;
+        font-size: 1.3rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items-center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .child-location-card {
+        background: #f8f9fa;
+        border-left: 3px solid #17a2b8;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-radius: 5px;
+        transition: all 0.2s;
+    }
+
+    .child-location-card:hover {
+        background: #e9ecef;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stock-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .stock-table td {
+        font-size: 0.9rem;
+    }
+
+    .path-display {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:location_list' %}">Locations</a></li>
+            <li class="breadcrumb-item active">{{ location.code }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Location Header -->
+    <div class="location-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="location-code-display">{{ location.code }}</span>
+                    {% if location.is_active %}
+                    <span class="status-badge-large bg-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Active
+                    </span>
+                    {% else %}
+                    <span class="status-badge-large bg-secondary">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Inactive
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="mb-2">{{ location.name }}</h1>
+                <div class="d-flex gap-3 flex-wrap align-items-center opacity-90">
+                    <span>
+                        <i class="bi bi-tag me-2"></i>
+                        {{ location.get_location_type_display }}
+                    </span>
+                    {% if location.parent_location %}
+                    <span>
+                        <i class="bi bi-diagram-3 me-2"></i>
+                        Parent:
+                        <a href="{% url 'inventory:location_detail' location.parent_location.pk %}"
+                           class="text-white text-decoration-underline">
+                            {{ location.parent_location.code }}
+                        </a>
+                    </span>
+                    {% endif %}
+                </div>
+                {% if location.parent_location %}
+                <div class="mt-2">
+                    <small class="opacity-75">Path:</small>
+                    <div class="path-display mt-1">{{ location.full_path }}</div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:location_list' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                    <a href="{% url 'inventory:location_edit' location.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Location Information -->
+        <div class="col-lg-6 mb-4">
+            <!-- Basic Information -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Location Information
+                </h5>
+                <div class="detail-row">
+                    <span class="detail-label">Code:</span>
+                    <span class="detail-value"><code>{{ location.code }}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ location.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Type:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-info">{{ location.get_location_type_display }}</span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Parent Location:</span>
+                    <span class="detail-value">
+                        {% if location.parent_location %}
+                        <a href="{% url 'inventory:location_detail' location.parent_location.pk %}">
+                            {{ location.parent_location.code }} - {{ location.parent_location.name }}
+                        </a>
+                        {% else %}
+                        <span class="text-muted">Root Location</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">
+                        {% if location.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if location.max_capacity %}
+                <div class="detail-row">
+                    <span class="detail-label">Max Capacity:</span>
+                    <span class="detail-value">
+                        {{ location.max_capacity }}
+                        {% if location.capacity_uom %}{{ location.capacity_uom.symbol }}{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if location.address %}
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-geo-alt me-2"></i>
+                    Address
+                </h5>
+                <p class="mb-0">{{ location.address }}</p>
+                {% if location.gps_coordinates %}
+                <div class="mt-2">
+                    <small class="text-muted">GPS Coordinates:</small>
+                    <code class="d-block mt-1">{{ location.gps_coordinates }}</code>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if location.notes %}
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-sticky me-2"></i>
+                    Notes
+                </h5>
+                <p class="mb-0">{{ location.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Related Data -->
+        <div class="col-lg-6 mb-4">
+            <!-- Child Locations -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    Child Locations ({{ child_locations.count }})
+                </h5>
+                {% if child_locations %}
+                    {% for child in child_locations %}
+                    <div class="child-location-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'inventory:location_detail' child.pk %}"
+                                   class="text-decoration-none fw-bold">
+                                    {{ child.code }}
+                                </a>
+                                <div class="text-muted small">{{ child.name }}</div>
+                            </div>
+                            <div>
+                                <span class="badge bg-info">{{ child.get_location_type_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p class="text-muted mb-0">No child locations</p>
+                {% endif %}
+            </div>
+
+            <!-- Serial Units at Location -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-upc-scan me-2"></i>
+                    Serial Units ({{ serial_units.count }})
+                </h5>
+                {% if serial_units %}
+                <div class="table-responsive">
+                    <table class="table table-hover stock-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Serial Number</th>
+                                <th>Item</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for unit in serial_units %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'inventory:serialunit_detail' unit.pk %}">
+                                        <code>{{ unit.serial_number }}</code>
+                                    </a>
+                                </td>
+                                <td>{{ unit.item.sku }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ unit.get_status_display }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if serial_units.count >= 20 %}
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing first 20 units</small>
+                </div>
+                {% endif %}
+                {% else %}
+                <p class="text-muted mb-0">No serial units at this location</p>
+                {% endif %}
+            </div>
+
+            <!-- Stock at Location -->
+            <div class="info-card">
+                <h5 class="card-title">
+                    <i class="bi bi-boxes me-2"></i>
+                    Inventory Stock ({{ stock_records.count }})
+                </h5>
+                {% if stock_records %}
+                <div class="table-responsive">
+                    <table class="table table-hover stock-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Condition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in stock_records %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'inventory:item_detail' stock.item.pk %}">
+                                        {{ stock.item.sku }}
+                                    </a>
+                                </td>
+                                <td>{{ stock.quantity_on_hand }}</td>
+                                <td>{{ stock.condition.name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if stock_records.count >= 20 %}
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing top 20 items by quantity</small>
+                </div>
+                {% endif %}
+                {% else %}
+                <p class="text-muted mb-0">No stock at this location</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any location-specific JavaScript here
+</script>
+{% endblock %}

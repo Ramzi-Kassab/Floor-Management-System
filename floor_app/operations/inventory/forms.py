@@ -162,6 +162,40 @@ class StockAdjustmentForm(forms.Form):
     )
 
 
+class LocationForm(forms.ModelForm):
+    """Form for creating/editing Inventory Locations."""
+
+    class Meta:
+        model = Location
+        fields = [
+            'code', 'name', 'location_type', 'parent_location',
+            'address', 'gps_coordinates', 'max_capacity', 'capacity_uom',
+            'is_active', 'notes'
+        ]
+        widgets = {
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., WH-01, BIN-A1-01'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'location_type': forms.Select(attrs={'class': 'form-select'}),
+            'parent_location': forms.Select(attrs={'class': 'form-select'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'gps_coordinates': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 24.7136,46.6753'}),
+            'max_capacity': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'capacity_uom': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['parent_location'].queryset = Location.objects.filter(is_active=True, is_deleted=False)
+        self.fields['parent_location'].required = False
+        self.fields['capacity_uom'].queryset = UnitOfMeasure.objects.filter(is_active=True)
+        self.fields['capacity_uom'].required = False
+        self.fields['max_capacity'].required = False
+        self.fields['address'].required = False
+        self.fields['gps_coordinates'].required = False
+
+
 class BitDesignForm(forms.ModelForm):
     """Form for creating/editing Bit Designs."""
 

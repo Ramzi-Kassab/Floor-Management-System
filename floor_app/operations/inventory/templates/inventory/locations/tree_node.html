@@ -1,0 +1,59 @@
+{% load static %}
+
+<div class="location-node level-{{ level }}">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center">
+                {% if node.children %}
+                    <i class="bi bi-plus-square tree-toggle" id="icon-{{ node.location.id }}"
+                       onclick="toggleNode({{ node.location.id }})"></i>
+                {% else %}
+                    <span class="tree-toggle"><i class="bi bi-dot"></i></span>
+                {% endif %}
+
+                <div class="flex-grow-1">
+                    <a href="{% url 'inventory:location_detail' node.location.pk %}"
+                       class="text-decoration-none">
+                        <span class="location-code">{{ node.location.code }}</span>
+                    </a>
+                    <div class="text-muted" style="font-size: 0.9rem;">
+                        {{ node.location.name }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <span class="badge bg-info location-type-badge">
+                {{ node.location.get_location_type_display }}
+            </span>
+        </div>
+
+        <div class="col-md-2">
+            {% if node.location.is_active %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+        </div>
+
+        <div class="col-md-2 text-end">
+            <a href="{% url 'inventory:location_detail' node.location.pk %}"
+               class="btn btn-sm btn-outline-primary me-1" title="View Details">
+                <i class="bi bi-eye"></i>
+            </a>
+            <a href="{% url 'inventory:location_edit' node.location.pk %}"
+               class="btn btn-sm btn-outline-warning" title="Edit">
+                <i class="bi bi-pencil"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if node.children %}
+    <div class="tree-children" id="children-{{ node.location.id }}">
+        {% for child_node in node.children %}
+            {% include 'inventory/locations/tree_node.html' with node=child_node level=level|add:1 %}
+        {% endfor %}
+    </div>
+{% endif %}

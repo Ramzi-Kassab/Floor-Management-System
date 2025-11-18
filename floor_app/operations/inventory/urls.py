@@ -25,6 +25,12 @@ urlpatterns = [
     path('mats/<int:pk>/', views.BitDesignRevisionDetailView.as_view(), name='mat_detail'),
     path('mats/<int:pk>/edit/', views.BitDesignRevisionUpdateView.as_view(), name='mat_edit'),
 
+    # Locations
+    path('locations/', views.LocationListView.as_view(), name='location_list'),
+    path('locations/create/', views.LocationCreateView.as_view(), name='location_create'),
+    path('locations/<int:pk>/', views.LocationDetailView.as_view(), name='location_detail'),
+    path('locations/<int:pk>/edit/', views.LocationUpdateView.as_view(), name='location_edit'),
+
     # Serial Units
     path('serial-units/', views.SerialUnitListView.as_view(), name='serialunit_list'),
     path('serial-units/create/', views.SerialUnitCreateView.as_view(), name='serialunit_create'),
