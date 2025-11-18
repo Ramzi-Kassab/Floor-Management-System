@@ -46,6 +46,15 @@ from .cutter import (
     CutterInventorySummary,
 )
 
+from .cutter_bom_grid import (
+    CutterBOMGridHeader,
+    CutterBOMGridCell,
+    CutterBOMSummary,
+    CutterMapHeader,
+    CutterMapCell,
+    BOMUsageTracking,
+)
+
 __all__ = [
     # Reference tables
     'ConditionType',
@@ -78,4 +87,11 @@ __all__ = [
     'CutterDetail',
     'CutterPriceHistory',
     'CutterInventorySummary',
+    # Cutter BOM & Map Grid
+    'CutterBOMGridHeader',
+    'CutterBOMGridCell',
+    'CutterBOMSummary',
+    'CutterMapHeader',
+    'CutterMapCell',
+    'BOMUsageTracking',
 ]

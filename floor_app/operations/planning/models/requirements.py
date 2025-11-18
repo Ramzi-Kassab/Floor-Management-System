@@ -390,7 +390,7 @@ class JobRequirement(PublicIdMixin, AuditMixin, SoftDeleteMixin):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='requirements_waived',
+        related_name='planning_requirements_waived',
         help_text="User who waived this requirement"
     )
     waiver_reason = models.TextField(

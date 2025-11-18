@@ -314,7 +314,7 @@ class RequirementInstance(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='requirements_waived',
+        related_name='evaluation_requirements_waived',
         help_text="User who waived the requirement"
     )
 
