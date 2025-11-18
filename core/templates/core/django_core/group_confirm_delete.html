@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confirmation-card {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    .warning-icon {
+        font-size: 4rem;
+        color: #dc3545;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .group-details {
+        background: #f8f9fa;
+        border-left: 4px solid #dc3545;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        border-radius: 4px;
+    }
+    .member-list {
+        max-height: 200px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="confirmation-card">
+        <div class="warning-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+
+        <h2 class="text-center text-danger mb-4">Delete Group?</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="group-details">
+            <h5><i class="bi bi-people-fill"></i> Group Information</h5>
+            <table class="table table-sm table-borderless mb-0">
+                <tr>
+                    <td><strong>Group Name:</strong></td>
+                    <td>{{ group.name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Total Members:</strong></td>
+                    <td>
+                        <span class="badge bg-primary">{{ member_count }}</span>
+                        {% if member_count > 0 %}
+                            <span class="text-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Will lose group permissions
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Total Permissions:</strong></td>
+                    <td><span class="badge bg-info">{{ group.permissions.count }}</span></td>
+                </tr>
+            </table>
+        </div>
+
+        {% if member_count > 0 %}
+        <div class="alert alert-warning">
+            <h6><i class="bi bi-exclamation-triangle"></i> Members Affected</h6>
+            <p class="mb-2">The following users are members of this group and will lose its permissions:</p>
+            <div class="member-list">
+                <ul class="list-unstyled mb-0">
+                    {% for user in group.user_set.all %}
+                    <li class="mb-1">
+                        <i class="bi bi-person"></i>
+                        <strong>{{ user.username }}</strong>
+                        {% if user.get_full_name %}
+                            ({{ user.get_full_name }})
+                        {% endif %}
+                        {% if user.is_staff %}
+                            <span class="badge bg-info">Staff</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="alert alert-danger">
+            <h6><i class="bi bi-info-circle"></i> What happens when you delete this group?</h6>
+            <ul class="mb-0">
+                <li>The group will be <strong>permanently deleted</strong></li>
+                <li>All {{ member_count }} member(s) will <strong>lose permissions</strong> from this group</li>
+                <li>Members' direct permissions will remain intact</li>
+                <li>Members can be reassigned to other groups</li>
+                <li><strong class="text-danger">This action cannot be undone!</strong></li>
+            </ul>
+        </div>
+
+        {% if group.permissions.exists %}
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <strong><i class="bi bi-shield-lock"></i> Permissions in This Group</strong>
+            </div>
+            <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                <div class="row">
+                    {% for perm in group.permissions.all %}
+                    <div class="col-md-6 mb-1">
+                        <small>
+                            <i class="bi bi-key"></i> {{ perm.name }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" id="deleteForm" class="mt-4">
+            {% csrf_token %}
+
+            {% if member_count > 0 %}
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                <label class="form-check-label" for="confirmDelete">
+                    <strong>I understand that {{ member_count }} user(s) will lose permissions from this group</strong>
+                </label>
+            </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'core:group_detail' group.pk %}" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-danger btn-lg" id="deleteBtn" {% if member_count > 0 %}disabled{% endif %}>
+                    <i class="bi bi-trash-fill"></i> Delete Group
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                To preserve the group, <a href="{% url 'core:group_edit' group.pk %}">edit it</a> instead.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('deleteForm');
+        const submitBtn = document.getElementById('deleteBtn');
+        const confirmCheckbox = document.getElementById('confirmDelete');
+
+        if (confirmCheckbox) {
+            confirmCheckbox.addEventListener('change', function() {
+                submitBtn.disabled = !this.checked;
+            });
+        }
+
+        form.addEventListener('submit', function(e) {
+            const groupName = "{{ group.name }}";
+            const memberCount = {{ member_count }};
+
+            let confirmMessage = `Are you absolutely sure you want to delete the group "${groupName}"?`;
+
+            if (memberCount > 0) {
+                confirmMessage += `\n\nThis will affect ${memberCount} user(s)!`;
+            }
+
+            confirmMessage += '\n\nThis action CANNOT be undone!';
+
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Disable button to prevent double submission
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Deleting...';
+        });
+    });
+</script>
+{% endblock %}
