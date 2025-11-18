@@ -42,6 +42,7 @@ from .forms import (
     GroupForm,
     UserPermissionsForm,
 )
+from .search_utils import GlobalSearch, SearchHistory
 
 
 @login_required
@@ -867,4 +868,73 @@ def group_delete(request, pk):
         'group': group,
         'member_count': group.user_set.count(),
     })
+
+
+# ============================================================================
+# GLOBAL SEARCH
+# ============================================================================
+
+@login_required
+def global_search(request):
+    """Global search across all modules."""
+    query = request.GET.get('q', '').strip()
+    modules = request.GET.getlist('modules')  # Filter by specific modules
+
+    results = []
+    total_count = 0
+
+    if query and len(query) >= 2:
+        # Execute search
+        search = GlobalSearch(query=query, modules=modules, limit_per_model=10)
+        results = search.execute()
+
+        # Calculate total count
+        total_count = sum(r['count'] for r in results)
+
+        # Save to search history
+        SearchHistory.add_search(request.user, query, module=None)
+
+    # Get recent searches for sidebar
+    recent_searches = SearchHistory.get_recent_searches(request.user, limit=5)
+
+    context = {
+        'title': 'Global Search',
+        'query': query,
+        'results': results,
+        'total_count': total_count,
+        'selected_modules': modules,
+        'recent_searches': recent_searches,
+        'available_modules': ['hr', 'inventory', 'core'],
+    }
+
+    return render(request, 'core/search_results.html', context)
+
+
+@login_required
+def global_search_api(request):
+    """AJAX API endpoint for live search autocomplete."""
+    query = request.GET.get('q', '').strip()
+
+    if not query or len(query) < 2:
+        return JsonResponse({'results': []})
+
+    # Execute search with lower limit for autocomplete
+    search = GlobalSearch(query=query, limit_per_model=5)
+    results = search.execute()
+
+    # Format results for autocomplete
+    formatted_results = []
+    for model_group in results:
+        for item in model_group['results']:
+            formatted_results.append({
+                'id': item['id'],
+                'text': item['display'],
+                'icon': model_group['model_icon'],
+                'label': model_group['model_label'],
+                'url': request.build_absolute_uri(
+                    reverse(item['url_pattern'], kwargs={'pk': item['id']})
+                ),
+            })
+
+    return JsonResponse({'results': formatted_results[:20]})
 
