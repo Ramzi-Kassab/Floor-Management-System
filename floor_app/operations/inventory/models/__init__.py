@@ -39,6 +39,13 @@ from .transactions import (
     InventoryTransaction,
 )
 
+from .cutter import (
+    CutterOwnershipCategory,
+    CutterDetail,
+    CutterPriceHistory,
+    CutterInventorySummary,
+)
+
 __all__ = [
     # Reference tables
     'ConditionType',
@@ -66,4 +73,9 @@ __all__ = [
     'BOMLine',
     # Transactions
     'InventoryTransaction',
+    # Cutter-specific
+    'CutterOwnershipCategory',
+    'CutterDetail',
+    'CutterPriceHistory',
+    'CutterInventorySummary',
 ]
