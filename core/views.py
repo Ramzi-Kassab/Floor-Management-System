@@ -35,6 +35,13 @@ from .models import (
     LossOfSaleCause,
     LossOfSaleEvent,
 )
+from .forms import (
+    UserCreateForm,
+    UserUpdateForm,
+    UserPasswordChangeForm,
+    GroupForm,
+    UserPermissionsForm,
+)
 
 
 @login_required
@@ -611,3 +618,253 @@ class SessionListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Active Sessions'
         return context
+
+
+# ============================================================================
+# USER CRUD VIEWS
+# ============================================================================
+
+class UserCreateView(LoginRequiredMixin, StaffRequiredMixin, CreateView):
+    """Create a new user"""
+    model = User
+    form_class = UserCreateForm
+    template_name = 'core/django_core/user_form.html'
+    success_url = reverse_lazy('core:user_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New User'
+        context['action'] = 'Create'
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f'User "{form.cleaned_data["username"]}" created successfully!')
+        return super().form_valid(form)
+
+
+class UserUpdateView(LoginRequiredMixin, StaffRequiredMixin, UpdateView):
+    """Update an existing user"""
+    model = User
+    form_class = UserUpdateForm
+    template_name = 'core/django_core/user_form.html'
+    success_url = reverse_lazy('core:user_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit User: {self.object.username}'
+        context['action'] = 'Update'
+        return context
+
+    def form_valid(self, form):
+        # Check if user is trying to deactivate themselves
+        if self.request.user == self.object and not form.cleaned_data.get('is_active'):
+            messages.error(self.request, 'You cannot deactivate your own account!')
+            return self.form_invalid(form)
+
+        messages.success(self.request, f'User "{self.object.username}" updated successfully!')
+        return super().form_valid(form)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_password_change(request, pk):
+    """Change user password (admin-initiated)"""
+    user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        form = UserPasswordChangeForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Password for "{user.username}" changed successfully!')
+            return redirect('core:user_detail', pk=pk)
+    else:
+        form = UserPasswordChangeForm(user)
+
+    return render(request, 'core/django_core/user_password_change.html', {
+        'title': f'Change Password: {user.username}',
+        'form': form,
+        'user_obj': user,
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_delete(request, pk):
+    """Delete (deactivate) a user"""
+    user = get_object_or_404(User, pk=pk)
+
+    # Prevent self-deletion
+    if request.user == user:
+        messages.error(request, 'You cannot delete your own account!')
+        return redirect('core:user_list')
+
+    # Prevent deleting last superuser
+    if user.is_superuser and User.objects.filter(is_superuser=True, is_active=True).count() == 1:
+        messages.error(request, 'Cannot delete the last active superuser!')
+        return redirect('core:user_list')
+
+    if request.method == 'POST':
+        # Soft delete by deactivating
+        user.is_active = False
+        user.save()
+        messages.success(request, f'User "{user.username}" deactivated successfully!')
+        return redirect('core:user_list')
+
+    return render(request, 'core/django_core/user_confirm_delete.html', {
+        'title': f'Deactivate User: {user.username}',
+        'user_obj': user,
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_toggle_active(request, pk):
+    """Toggle user active status"""
+    user = get_object_or_404(User, pk=pk)
+
+    # Prevent self-deactivation
+    if request.user == user and user.is_active:
+        messages.error(request, 'You cannot deactivate your own account!')
+        return redirect('core:user_detail', pk=pk)
+
+    user.is_active = not user.is_active
+    user.save()
+
+    status = 'activated' if user.is_active else 'deactivated'
+    messages.success(request, f'User "{user.username}" {status} successfully!')
+    return redirect('core:user_detail', pk=pk)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def user_permissions(request, pk):
+    """Manage user-specific permissions"""
+    user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        form = UserPermissionsForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Permissions for "{user.username}" updated successfully!')
+            return redirect('core:user_detail', pk=pk)
+    else:
+        form = UserPermissionsForm(instance=user)
+
+    # Group permissions by app and model
+    permissions_by_app = {}
+    for perm in Permission.objects.all().select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename'):
+        app_label = perm.content_type.app_label
+        model = perm.content_type.model
+
+        if app_label not in permissions_by_app:
+            permissions_by_app[app_label] = {}
+
+        if model not in permissions_by_app[app_label]:
+            permissions_by_app[app_label][model] = []
+
+        permissions_by_app[app_label][model].append(perm)
+
+    return render(request, 'core/django_core/user_permissions.html', {
+        'title': f'Manage Permissions: {user.username}',
+        'form': form,
+        'user_obj': user,
+        'permissions_by_app': permissions_by_app,
+    })
+
+
+# ============================================================================
+# GROUP CRUD VIEWS
+# ============================================================================
+
+class GroupCreateView(LoginRequiredMixin, StaffRequiredMixin, CreateView):
+    """Create a new group"""
+    model = Group
+    form_class = GroupForm
+    template_name = 'core/django_core/group_form.html'
+    success_url = reverse_lazy('core:group_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Group'
+        context['action'] = 'Create'
+
+        # Group permissions by app and model for better UX
+        permissions_by_app = {}
+        for perm in Permission.objects.all().select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename'):
+            app_label = perm.content_type.app_label
+            model = perm.content_type.model
+
+            if app_label not in permissions_by_app:
+                permissions_by_app[app_label] = {}
+
+            if model not in permissions_by_app[app_label]:
+                permissions_by_app[app_label][model] = []
+
+            permissions_by_app[app_label][model].append(perm)
+
+        context['permissions_by_app'] = permissions_by_app
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Group "{form.cleaned_data["name"]}" created successfully!')
+        return super().form_valid(form)
+
+
+class GroupUpdateView(LoginRequiredMixin, StaffRequiredMixin, UpdateView):
+    """Update an existing group"""
+    model = Group
+    form_class = GroupForm
+    template_name = 'core/django_core/group_form.html'
+    success_url = reverse_lazy('core:group_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Group: {self.object.name}'
+        context['action'] = 'Update'
+
+        # Group permissions by app and model for better UX
+        permissions_by_app = {}
+        for perm in Permission.objects.all().select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename'):
+            app_label = perm.content_type.app_label
+            model = perm.content_type.model
+
+            if app_label not in permissions_by_app:
+                permissions_by_app[app_label] = {}
+
+            if model not in permissions_by_app[app_label]:
+                permissions_by_app[app_label][model] = []
+
+            permissions_by_app[app_label][model].append(perm)
+
+        context['permissions_by_app'] = permissions_by_app
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Group "{self.object.name}" updated successfully!')
+        return super().form_valid(form)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def group_delete(request, pk):
+    """Delete a group"""
+    group = get_object_or_404(Group, pk=pk)
+
+    if request.method == 'POST':
+        group_name = group.name
+        # Check if group has members
+        member_count = group.user_set.count()
+
+        if member_count > 0:
+            messages.warning(request, f'Group "{group_name}" has {member_count} member(s). They will lose group permissions.')
+
+        group.delete()
+        messages.success(request, f'Group "{group_name}" deleted successfully!')
+        return redirect('core:group_list')
+
+    return render(request, 'core/django_core/group_confirm_delete.html', {
+        'title': f'Delete Group: {group.name}',
+        'group': group,
+        'member_count': group.user_set.count(),
+    })
+
