@@ -24,6 +24,12 @@ from .requirements import (
     JobRequirement,
     TechnicalInstruction,
 )
+from .visual_planning import (
+    WorkflowStage,
+    BitWorkflowPosition,
+    VisualBoardLayout,
+    WIPDashboardMetrics,
+)
 
 __all__ = [
     # Resource management
@@ -44,4 +50,9 @@ __all__ = [
     'RequirementTemplate',
     'JobRequirement',
     'TechnicalInstruction',
+    # Visual planning and WIP dashboard
+    'WorkflowStage',
+    'BitWorkflowPosition',
+    'VisualBoardLayout',
+    'WIPDashboardMetrics',
 ]
