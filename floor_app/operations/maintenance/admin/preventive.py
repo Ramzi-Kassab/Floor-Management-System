@@ -3,7 +3,7 @@ Admin configuration for Preventive Maintenance models.
 """
 from django.contrib import admin
 from floor_app.operations.maintenance.models import (
-    PMPlan,
+    PMTemplate,
     PMSchedule,
     PMTask,
 )
@@ -17,7 +17,7 @@ class PMScheduleInline(admin.TabularInline):
     raw_id_fields = ['asset']
 
 
-@admin.register(PMPlan)
+@admin.register(PMTemplate)
 class PMPlanAdmin(admin.ModelAdmin):
     list_display = [
         'code', 'name', 'frequency_display', 'estimated_duration_display',
