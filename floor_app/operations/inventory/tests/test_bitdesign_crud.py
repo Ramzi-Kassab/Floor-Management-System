@@ -14,7 +14,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from floor_app.operations.engineering.models import BitDesign, BitDesignRevision
+from floor_app.operations.inventory.models import BitDesign, BitDesignRevision
 
 User = get_user_model()
 
