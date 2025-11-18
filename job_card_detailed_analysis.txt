@@ -1,0 +1,460 @@
+C:\Users\HP-i7\AppData\Local\Programs\Python\Python310\lib\site-packages\openpyxl\worksheet\_reader.py:329: UserWarning: Conditional Formatting extension is not supported and will be removed
+  warn(msg)
+================================================================================
+JOB CARD TEMPLATE - DETAILED ANALYSIS
+================================================================================
+
+
+################################################################################
+# SHEET: Data
+################################################################################
+
+**Purpose:** Master data entry sheet - contains bit identification, MAT numbers, and references to other sheets
+
+**Dimensions:** 1999 rows x 196 columns
+
+**DATA SHEET CONTROL CENTER:**
+
+**Key Bit Identification Fields (Cols A-B, Rows 1-20):**
+
+  Row 1: ARDT Work Order No = 2025-ARDT-LV4-015
+  Row 2: Serial Number = 14204328
+  Row 3: Size = 8.5
+  Row 4: Type = GT65RHs
+  Row 5: LV5 Mat # = 1267829M
+  Row 6: Bit Date Received (MM/DD/YYYY) = 2025-01-16 00:00:00
+  Row 7: From  = ARDT-LV4
+  Row 8: LV3 or LV4 Mat # = 1158011
+  Row 9: LV3 or LV4 Remark = BOM, Might be changed, waiting Saad.
+  Row 10: New Type = None
+  Row 11: Evaluated by = None
+  Row 12: QC By = None
+  Row 13: Date of Evaluation (MM/DD/YYYY) = None
+  Row 14: =IF(Data!B7="SAUDI ARAMCO","DTD/TSSD:","Reviewed by Eng.:") = None
+  Row 15: Date of Review (MM/DD/YYYY) = None
+  Row 16: Requested by = FORMULA: =IF(B7<>"",B7,"")
+  Row 17: Department head = Ramzi
+  Row 18: =IF('Eval-LSTK'!D57<>"","Repair Date",IF('Eval-LSTK'!D59<>"","Scrap Date","Rerun Date")) = None
+  Row 19: Approved by = None
+  Row 20: Approval Date = None
+
+**Cross-Sheet Formula References (sampling first 50 rows):**
+
+  Row 2, Col 3: =IF(COUNTIF(Instructions!$L$1,"*WFD*"),"WFD","")...
+    → References: Instructions
+  Row 4, Col 15: =IF(COUNTIF(B7,"SAUDI ARAMCO"),"",IF(OR(Data!B7="ARDTS",Data!B7="Halliburton Reg...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Quotation
+  Row 5, Col 15: =IF(COUNTIF(B7,"SAUDI ARAMCO"),"",IF(OR(Data!B7="ARDTS",Data!B7="Halliburton Reg...
+    → References: ARDT Cutter Entry
+  Row 12, Col 5: =IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AQ$58+'ARDT Cutte...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 13, Col 5: =IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AR$58+'ARDT Cutte...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 14, Col 5: =IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AS$58+'ARDT Cutte...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 15, Col 5: =IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AT$58+'ARDT Cutte...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 16, Col 5: =IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AU$58+'ARDT Cutte...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 17, Col 5: =IF('Eng. Cutter Entry'!C4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AV$58+'ARDT Cutte...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 18, Col 1: =IF('Eval-LSTK'!D57<>"","Repair Date",IF('Eval-LSTK'!D59<>"","Scrap Date","Rerun...
+    → References: Eval-LSTK
+  Row 18, Col 5: =IF('Eng. Cutter Entry'!$C$4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AW$58+'ARDT Cut...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 19, Col 5: =IF('Eng. Cutter Entry'!$C$4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AX$58+'ARDT Cut...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 20, Col 5: =IF('Eng. Cutter Entry'!$C$4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AY$58+'ARDT Cut...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 21, Col 5: =IF('Eng. Cutter Entry'!$C$4<>"",IF($L$9<>1,('ARDT Cutter Entry'!AZ$58+'ARDT Cut...
+    → References: ARDT Cutter Entry, Eng. Cutter Entry, Rework
+  Row 25, Col 15: =Quotation!AN58...
+    → References: Quotation
+
+
+################################################################################
+# SHEET: Evaluation
+################################################################################
+
+**Purpose:** Cutter-by-cutter evaluation grid with symbols (X, O, S, R, L, V, P, I, B)
+
+**Dimensions:** 62 rows x 34 columns
+
+**EVALUATION GRID ANALYSIS:**
+
+**Sample Grid Area (Rows 5-25, Cols A-T):**
+
+  Row 5:  | Work Order No:  |  |  |  | =IF(Data!B1<... |  |  |  | 
+  Row 6:  |  |  |  |  |  |  |  |  | 
+  Row 7:  |  |  | Size:  |  | =IF(LEN(Data... |  |  |  | 
+  Row 8:  |  |  |  |  |  |  |  |  | 
+  Row 9:  |  |  | Type:  |  | =IF(Data!B4<... |  |  |  | 
+  Row 10:  |  |  |  |  |  |  |  |  | 
+  Row 11: Instructions... |  |  |  |  |  |  |  |  | 
+  Row 12:  |  |  |  |  |  |  |  |  | 
+  Row 13:  |  |  |  |  |  |  |  |  | 
+  Row 14:  |  |  |  |  |  |  |  |  | 
+  Row 15: Cutter's num... |  |  |  |  |  |  |  |  | 
+  Row 16:  |  | =IF(Data!BR3... | =IF(Data!BS3... | =IF(Data!BT3... | =IF(Data!BU3... | =IF(Data!BV3... | =IF(Data!BW3... | =IF(Data!BX3... | =IF(Data!BY3...
+  Row 17: Blade's number | 1 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 18:  | 2 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 19:  | 3 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 20:  | 4 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 21:  | 5 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 22:  | 6 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 23:  | 7 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 24:  | 8 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+  Row 25:  | 9 | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$... | =IF(Data!$L$...
+
+**Evaluation Symbols:** None detected in sampled area (may be in different location)
+
+**Blade/Pocket Structure (sampling):**
+
+  Row 11, Col 1: 'Instructions: Clearly mark the # 1 blade with permanent marker or pen; Begin with the inner most cutter on the blade, mark each cutter with X if needs to be replaced, R if needs to be rotated, and O if okay. Then go for the next blade in a clockwise direction and do the same. And  P if pocket needs to build up, I if Impact Arrestor needs to build up, V surrounding the fin needs to build up. After checking and marking cutters through all the blades, transfer Xs, Rs and Os to the Table below.'
+  Row 17, Col 1: 'Blade's number'
+
+
+################################################################################
+# SHEET: E checklist
+################################################################################
+
+**Purpose:** Evaluation checklist for QC procedures
+
+**Dimensions:** 31 rows x 22 columns
+
+**GENERAL STRUCTURE:**
+
+**First 20 rows x 10 columns:**
+
+  Row 1:  | ARABIAN ROCKBIT... |  |  |  |  | Document No: QA... |  |  | 
+  Row 2:  |  |  |  |  |  | Rev No & Date: ... |  |  | 
+  Row 3: FC BIT EVALUATI... |  |  |  |  |  | Reviewed by: Ah... |  |  | 
+  Row 4:  |  |  |  |  |  | Approved by: Ab... |  |  | 
+  Row 5:  |  |  |  |  |  |  |  |  | 
+  Row 6: Work Order No:  |  | ={formula} | Serial No:  |  | ={formula} |  | From: | ={formula} | 
+  Row 7:  |  |  |  |  |  | ={formula} |  |  | 
+  Row 8: Size:  |  | ={formula} | Type:  |  | ={formula} |  |  |  | 
+  Row 9:  |  |  |  |  |  |  |  |  | 
+  Row 10: Sr. No | Evaluation Step... |  |  | OK | Not OK | Remarks |  |  | 
+  Row 11: 1 | Bit Cleanliness... |  |  |  |  |  |  |  | 
+  Row 12: 2 | Paperwork |  |  |  |  |  |  |  | 
+  Row 13: 3 | Bit Stamping |  |  |  |  |  |  |  | 
+  Row 14: 4 | Die Check |  |  |  |  |  |  |  | 
+  Row 15: 5 | Ring Gauge ( Go... |  |  |  |  |  |  |  | 
+  Row 16: 6 | Ring Gauge ( No... |  |  |  |  |  |  |  | 
+  Row 17: 7 | Nozzle BoreLine... |  |  |  |  |  |  |  | 
+  Row 18: 8 | Nozzle Threads |  |  |  |  |  |  |  | 
+  Row 19: 9 | Apex |  |  |  |  |  |  |  | 
+  Row 20: 10 | Junk Slot |  |  |  |  |  |  |  | 
+
+
+################################################################################
+# SHEET: ARDT Cutter Entry
+################################################################################
+
+**Purpose:** Data entry for ARDT cutter replacements
+
+**Dimensions:** 461 rows x 63 columns
+
+**CUTTER ENTRY ANALYSIS:**
+
+**Detected Header Row:** Row 2
+
+**Headers:**
+  Col 3: Cutter's number from ID to Gauge area
+
+**Sample Data Rows (3 to 12):**
+
+  Row 3:  |  | =IF(Data!BR32<>""... | =IF(Data!BS32<>""... | =IF(Data!BT32<>""... | =IF(Data!BU32<>""... | =IF(Data!BV32<>""... | =IF(Data!BW32<>""... | =IF(Data!BX32<>""... | =IF(Data!BY32<>""...
+  Row 4: Blade's number | 1 | X | X | X | X | X | X | X | X
+  Row 5:  | 2 | X | X | X | X | X |  |  | 
+  Row 6:  | 3 | X | X | X | X | X | X | X | 
+  Row 7:  | 4 | X | X | X | X | X |  |  | 
+  Row 8:  | 5 | X | X | X | X | X | X | X | 
+  Row 9:  | 6 | X | X | X | X | X |  |  | 
+  Row 10:  | 7 |  |  |  |  |  |  |  | 
+  Row 11:  | 8 |  |  |  |  |  |  |  | 
+  Row 12:  | 9 |  |  |  |  |  |  |  | 
+
+
+################################################################################
+# SHEET: Eng. Cutter Entry
+################################################################################
+
+**Purpose:** Engineering-approved cutter replacements
+
+**Dimensions:** 39 rows x 54 columns
+
+**CUTTER ENTRY ANALYSIS:**
+
+**Detected Header Row:** Row 2
+
+**Headers:**
+  Col 3: Cutter's number from ID to Gauge area
+
+**Sample Data Rows (3 to 12):**
+
+  Row 3:  |  | =IF(Data!BR32<>""... | =IF(Data!BS32<>""... | =IF(Data!BT32<>""... | =IF(Data!BU32<>""... | =IF(Data!BV32<>""... | =IF(Data!BW32<>""... | =IF(Data!BX32<>""... | =IF(Data!BY32<>""...
+  Row 4: Blade's number | 1 |  |  |  |  |  |  |  | 
+  Row 5:  | 2 |  |  |  |  |  |  |  | 
+  Row 6:  | 3 |  |  |  |  |  |  |  | 
+  Row 7:  | 4 |  |  |  |  |  |  |  | 
+  Row 8:  | 5 |  |  |  |  |  |  |  | 
+  Row 9:  | 6 |  |  |  |  |  |  |  | 
+  Row 10:  | 7 |  |  |  |  |  |  |  | 
+  Row 11:  | 8 |  |  |  |  |  |  |  | 
+  Row 12:  | 9 |  |  |  |  |  |  |  | 
+
+
+################################################################################
+# SHEET: Eval-LSTK
+################################################################################
+
+**Purpose:** LSTK customer-specific evaluation form
+
+**Dimensions:** 62 rows x 27 columns
+
+**EVALUATION GRID ANALYSIS:**
+
+**Sample Grid Area (Rows 5-25, Cols A-T):**
+
+  Row 5:  |  |  |  |  |  |  |  |  | 
+  Row 6:  | Work Order No:  |  |  |  | =IF(Data!B1<... |  |  |  | 
+  Row 7:  |  |  |  |  |  |  |  |  | 
+  Row 8:  |  |  | Size:  |  | =IF(LEN(Data... |  |  |  | 
+  Row 9:  |  |  |  |  |  |  |  |  | 
+  Row 10:  |  |  | Type:  |  | =IF(Data!B4<... |  |  |  | 
+  Row 11:  |  |  |  |  |  |  |  |  | 
+  Row 12: Instructions... |  |  |  |  |  |  |  |  | 
+  Row 13:  |  |  |  |  |  |  |  |  | 
+  Row 14:  |  | Cutter's num... |  |  |  |  |  |  | 
+  Row 15:  |  | =IF(Data!BR3... | =IF(Data!BS3... | =IF(Data!BT3... | =IF(Data!BU3... | =IF(Data!BV3... | =IF(Data!BW3... | =IF(Data!BX3... | =IF(Data!BY3...
+  Row 16: Blade's number | 1 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 17:  | 2 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 18:  | 3 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 19:  | 4 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 20:  | 5 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 21:  | 6 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 22:  | 7 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 23:  | 8 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 24:  | 9 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+  Row 25:  | 10 | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!... | =IF(OR(Data!...
+
+**Evaluation Symbols:** None detected in sampled area (may be in different location)
+
+**Blade/Pocket Structure (sampling):**
+
+  Row 12, Col 1: 'Instructions: Clearly mark the # 1 blade with permanent marker or pen; Begin with the inner most cutter on the blade, mark each cutter with X if needs to be replaced, R if needs to be rotated, and O if okay. Then go for the next blade in a clockwise direction and do the same. And  P if pocket needs to build up, I if Impact Arrestor needs to build up, V surrounding the fin needs to build up. After checking and marking cutters through all the blades, transfer Xs, Rs and Os to the Table below.'
+  Row 16, Col 1: 'Blade's number'
+
+
+################################################################################
+# SHEET: Eval & Quot-AR
+################################################################################
+
+**Purpose:** ARAMCO evaluation and quotation
+
+**Dimensions:** 70 rows x 57 columns
+
+**EVALUATION GRID ANALYSIS:**
+
+**Sample Grid Area (Rows 5-25, Cols A-T):**
+
+  Row 5:  |  |  |  |  |  |  |  |  | 
+  Row 6: Work Order No:  |  |  |  |  | =IF(Data!B1<... |  |  |  | 
+  Row 7:  |  |  |  |  |  |  |  |  | 
+  Row 8:  |  |  | Size:  |  | =IF(LEN(Data... |  |  |  | 
+  Row 9:  |  |  |  |  |  |  |  |  | 
+  Row 10:  | Old Type:  |  |  |  | =IF(Data!B4<... |  |  |  | 
+  Row 11:  |  |  |  |  |  |  |  |  | 
+  Row 12:  | New Type:  |  |  |  | =IF(Data!B10... |  |  |  | 
+  Row 13: Note: X for ... |  |  |  |  |  |  |  |  | 
+  Row 14:  |  | Cutter's num... |  |  |  |  |  |  | 
+  Row 15:  |  | =IF(Data!$BQ... | =IF(Data!$BQ... | =IF(Data!$BQ... | =IF(Data!$BQ... | =IF(Data!$BQ... | =IF(Data!$BQ... | =IF(Data!$BQ... | =IF(Data!$BQ...
+  Row 16: Blade's number | 1 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 17:  | 2 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 18:  | 3 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 19:  | 4 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 20:  | 5 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 21:  | 6 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 22:  | 7 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 23:  | 8 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 24:  | 9 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+  Row 25:  | 10 | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA... | =TRIM(IF(TRA...
+
+**Evaluation Symbols:** None detected in sampled area (may be in different location)
+
+**Blade/Pocket Structure (sampling):**
+
+  Row 16, Col 1: 'Blade's number'
+
+
+################################################################################
+# SHEET: Instructions
+################################################################################
+
+**Purpose:** Technical repair/evaluation instructions
+
+**Dimensions:** 320 rows x 22 columns
+
+**GENERAL STRUCTURE:**
+
+**First 20 rows x 10 columns:**
+
+  Row 1:  |  |  |  |  |  |  |  |  | 
+  Row 2:  |  |  |  |  |  |  |  |  | 
+  Row 3: ORDER NO. | SEREAL NO. | SIZE | TYPE | LV5 MAT NO. | FROM | LV3 or LV4 MAT NO. | Cutters | REMARKS | Instruction
+  Row 4:  | 14081145 |  |  |  |  |  |  |  | Saad 12/11/2023...
+  Row 5:  |  |  |  | 1257458 |  |  |  |  | EXP/OFF
+  Row 6:  |  |  |  | 1257458M |  |  |  |  | EXP/OFF
+  Row 7:  |  |  |  |  |  | 1212690 |  |  | Gage relieved b...
+  Row 8:  |  |  |  |  | ARDT-LV4 | 1259957 |  |  | Gage relieved b...
+  Row 9:  |  |  |  |  | ARDT-LV4 | 1158011 |  |  | Check if hard f...
+  Row 10:  |  |  |  |  | ARDT-LV4 | 1269498 |  |  | Check if hard f...
+  Row 11:  | 13824396 |  |  |  |  |  |  |  | WFD
+  Row 12:  | 13955536 |  |  |  |  |  |  |  | WFD
+  Row 13:  | 13970758 |  |  |  |  |  |  |  | WFD
+  Row 14:  |  |  |  | 1092981 | ARDT-LV4 |  |  |  | Full gauge pad ...
+  Row 15:  |  |  |  | 1083564 | ARDT-LV4 |  |  |  | Full gauge pad ...
+  Row 16:  |  |  |  | 1176919 | ARDT-LV4 |  |  |  | Full gauge pad ...
+  Row 17:  |  |  |  | 1269308 | ARDT-LV4 |  |  |  | Full gauge pad ...
+  Row 18:  |  |  |  | 1092981 | ARDT-LV3 |  |  |  | Full gauge pad ...
+  Row 19:  |  |  |  | 1083564 | ARDT-LV3 |  |  |  | Full gauge pad ...
+  Row 20:  |  |  |  | 1176919 | ARDT-LV3 |  |  |  | Full gauge pad ...
+
+
+################################################################################
+# SHEET: Router Sheet
+################################################################################
+
+**Purpose:** Process routing and workflow tracking
+
+**Dimensions:** 61 rows x 10 columns
+
+**GENERAL STRUCTURE:**
+
+**First 20 rows x 10 columns:**
+
+  Row 1:  | ARABIAN ROCKBIT... |  |  |  |  |  | Document No: QA... |  | 
+  Row 2:  |  |  |  |  |  |  | Rev No & Date: ... |  | 
+  Row 3: FC BIT REPAIR R... |  |  |  |  |  |  | Reviewed by: Ah... |  | 
+  Row 4:  |  |  |  |  |  |  | Approved by: Ab... |  | 
+  Row 5:  |  |  |  |  |  |  |  |  | 
+  Row 6: Work Order No:  |  | ={formula} | Serial No:  |  | ={formula} |  |  | From:  | ={formula}
+  Row 7:  |  |  |  |  |  |  |  |  | 
+  Row 8: Size:  |  | ={formula} | Type:  |  | ={formula} |  |  |  | 
+  Row 9:  |  |  |  |  |  |  |  |  | 
+  Row 10: Step | Description |  | Date |  | Time Receipt | Operator Sign |  | Remarks | 
+  Row 11: 1 | Nozzle Removal |  | ={formula} |  | ={formula} | ={formula} |  |  | 
+  Row 12: 2 | Cerebro Removal... |  | ={formula} |  | ={formula} | ={formula} |  |  | 
+  Row 13: 3 | Cer.O-Ring Remo... |  | ={formula} |  | ={formula} | ={formula} |  |  | 
+  Row 14: 4 | Washing |  | ={formula} |  | ={formula} | ={formula} |  |  | 
+  Row 15: 5 | Sand Blasting |  | ={formula} |  | ={formula} | ={formula} |  |  | 
+  Row 16: 6 | Pressure Test (... |  | ={formula} |  | ={formula} | ={formula} |  |  | 
+  Row 17: 7 | Die Check |  | ={formula} |  | ={formula} | ={formula} |  |  | 
+  Row 18: 8 | Photos & Evalua... |  |  |  |  |  |  |  | 
+  Row 19: 9 | Bit Head Prepar... |  |  |  |  |  |  |  | 
+  Row 20: 10 | De-Brazing (If ... |  |  |  |  | T |  |  | 
+
+
+################################################################################
+# SHEET: API Thread Inspection
+################################################################################
+
+**Purpose:** API thread inspection checklist
+
+**Dimensions:** 41 rows x 35 columns
+
+**GENERAL STRUCTURE:**
+
+**First 20 rows x 10 columns:**
+
+  Row 1:  |  | ARABIAN ROCKBIT... |  |  |  |  |  |  | 
+  Row 2:  |  | P.O.BOX 31722, ... |  |  |  |  |  |  | 
+  Row 3:           |  | API Thread Insp... |  |  |  |  |  |  | Date: 06/07/202...
+  Row 4:  |  |  |  |  |  |  |  |  | 
+  Row 5:  |  |  |  |  |  |  |  |  | 
+  Row 6:  |  |  |  |  |  |  |  |  | 
+  Row 7: Order #: | ={formula} |  |  | Size: | ={formula} |  | Type: | ={formula} | 
+  Row 8:  |  |  |  |  |  |  |  |  | 
+  Row 9: Evaluation |  |  |  |  |  |  |  |  | 
+  Row 10: Check points |  |  |  |  | Ok |  | Not ok |  | Remarks
+  Row 11: Pin face |  |  |  |  |  |  |  |  | 
+  Row 12: Thread |  |  |  |  |  |  |  |  | 
+  Row 13: Pitch gauge |  |  |  |  |  |  |  |  | 
+  Row 14: Mud seal |  |  |  |  |  |  |  |  | 
+  Row 15: Other observation |  |  |  |  |  |  |  |  | 
+  Row 16: Pin height: |  |  |  |  |  |  |  |  | 
+  Row 17:  |  |  |  |  |  |  |  |  | 
+  Row 18: Thread repair: |  |  |  |  |  | Required |  |  | 
+  Row 19:  |  |  |  |  |  |  |  |  | 
+  Row 20: Tick the requir... |  |  |  |  | Repair / Brush |  |  |  | 
+
+
+################################################################################
+# SHEET: Die Check Entry
+################################################################################
+
+**Purpose:** Die check and NDT inspection data
+
+**Dimensions:** 38 rows x 36 columns
+
+**GENERAL STRUCTURE:**
+
+**First 20 rows x 10 columns:**
+
+  Row 1: Die Check Evalu... |  |  |  |  |  |  |  |  | 
+  Row 2:  |  | Cutter's number... |  |  |  |  |  |  | 
+  Row 3:  |  | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 4: Blade's number | 1 |  |  |  |  |  |  |  | 
+  Row 5:  | 2 |  |  |  |  |  |  |  | 
+  Row 6:  | 3 |  |  |  |  |  |  |  | 
+  Row 7:  | 4 |  |  |  |  |  |  |  | 
+  Row 8:  | 5 |  |  |  |  |  |  |  | 
+  Row 9:  | 6 |  |  |  |  |  |  |  | 
+  Row 10:  | 7 |  |  |  |  |  |  |  | 
+  Row 11:  | 8 |  |  |  |  |  |  |  | 
+  Row 12:  | 9 |  |  |  |  |  |  |  | 
+  Row 13:  | 10 |  |  |  |  |  |  |  | 
+  Row 14:  | 11 |  |  |  |  |  |  |  | 
+  Row 15:  | 12 |  |  |  |  |  |  |  | 
+  Row 16:  |  |  |  |  |  |  |  |  | 
+  Row 17: Remark: |  |  |  |  |  |  |  |  | 
+  Row 18:  |  |  |  |  |  |  |  |  | 
+  Row 19:  |  |  |  |  |  |  |  |  | 
+  Row 20:  |  |  |  |  |  |  |  |  | 
+
+
+################################################################################
+# SHEET: Quotation
+################################################################################
+
+**Purpose:** Cost quotation and pricing
+
+**Dimensions:** 66 rows x 40 columns
+
+**GENERAL STRUCTURE:**
+
+**First 20 rows x 10 columns:**
+
+  Row 1:  |  |  |  | ARABIAN ROCKBIT... |  |  |  |  | 
+  Row 2:  |  |  |  |  |  |  |  |  | 
+  Row 3:  |  |  |  | Contract Title:... |  |  |  |  | 
+  Row 4:  |  |  |  |  |  |  |  |  | 
+  Row 5:  |  |  |  | ARDT Order No:  |  |  |  |  | 
+  Row 6:  |  |  |  |  |  |  |  |  | 
+  Row 7:  | Serial No:  |  |  | ={formula} |  |  |  |  | 
+  Row 8:  |  |  |  |  |  |  |  |  | 
+  Row 9: ={formula} |  |  |  |  |  |  |  |  | 
+  Row 10:  |  |  |  |  |  |  |  |  | 
+  Row 11:  |  | Cutter's number... |  |  |  |  |  |  | 
+  Row 12:  |  | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 13: Blade's number | 1 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 14:  | 2 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 15:  | 3 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 16:  | 4 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 17:  | 5 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 18:  | 6 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 19:  | 7 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+  Row 20:  | 8 | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula} | ={formula}
+
