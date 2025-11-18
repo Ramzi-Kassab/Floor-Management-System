@@ -1027,3 +1027,210 @@ def clear_search_history(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============================================================================
+# NOTIFICATION API ENDPOINTS
+# ============================================================================
+
+@login_required
+def get_notifications(request):
+    """Get user's notifications with pagination."""
+    from .models import Notification
+    from django.utils.timesince import timesince
+
+    limit = int(request.GET.get('limit', 10))
+    offset = int(request.GET.get('offset', 0))
+    unread_only = request.GET.get('unread_only', 'false') == 'true'
+
+    # Base queryset
+    queryset = Notification.objects.filter(user=request.user)
+
+    if unread_only:
+        queryset = queryset.filter(is_read=False)
+
+    # Get total count
+    total_count = queryset.count()
+
+    # Apply pagination
+    notifications = queryset.order_by('-created_at')[offset:offset + limit]
+
+    # Format results
+    results = []
+    for notif in notifications:
+        results.append({
+            'id': notif.id,
+            'title': notif.title,
+            'message': notif.message,
+            'type': notif.notification_type,
+            'priority': notif.priority,
+            'is_read': notif.is_read,
+            'action_url': notif.action_url,
+            'action_text': notif.action_text,
+            'created_at': notif.created_at.isoformat(),
+            'time_ago': timesince(notif.created_at),
+            'icon': notif.get_icon(),
+        })
+
+    return JsonResponse({
+        'notifications': results,
+        'total': total_count,
+        'has_more': (offset + limit) < total_count,
+    })
+
+
+@login_required
+def get_unread_count(request):
+    """Get count of unread notifications."""
+    from .notification_utils import get_unread_count
+
+    count = get_unread_count(request.user)
+
+    return JsonResponse({'count': count})
+
+
+@login_required
+def mark_notification_read(request, notification_id):
+    """Mark a notification as read."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .models import Notification
+
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.mark_as_read()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Notification marked as read'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def mark_all_notifications_read(request):
+    """Mark all user's notifications as read."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .notification_utils import mark_all_read
+
+        count = mark_all_read(request.user)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{count} notification(s) marked as read',
+            'count': count
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def delete_notification(request, notification_id):
+    """Delete a notification."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from .models import Notification
+
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.delete()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Notification deleted'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============================================================================
+# EXPORT ENDPOINTS
+# ============================================================================
+
+@login_required
+def export_data(request):
+    """
+    Generic export endpoint for any model.
+
+    Query parameters:
+    - model: App label and model name (e.g., 'hr.Person', 'inventory.Item')
+    - format: 'csv', 'excel', or 'pdf'
+    - fields: Comma-separated list of field names
+    - headers: Comma-separated list of header labels (optional)
+    - filters: JSON object with filter criteria (optional)
+    """
+    from django.apps import apps
+    from .export_utils import export_queryset
+    import json as json_lib
+
+    try:
+        # Get parameters
+        model_str = request.GET.get('model', '')
+        export_format = request.GET.get('format', 'csv')
+        fields_str = request.GET.get('fields', '')
+        headers_str = request.GET.get('headers', '')
+        filters_str = request.GET.get('filters', '{}')
+
+        # Validate parameters
+        if not model_str or not fields_str:
+            return JsonResponse({'error': 'model and fields parameters required'}, status=400)
+
+        # Parse model
+        try:
+            app_label, model_name = model_str.split('.')
+            model_class = apps.get_model(app_label, model_name)
+        except (ValueError, LookupError):
+            return JsonResponse({'error': 'Invalid model specified'}, status=400)
+
+        # Parse fields and headers
+        fields = [f.strip() for f in fields_str.split(',')]
+        headers = [h.strip() for h in headers_str.split(',')] if headers_str else fields
+
+        # Get queryset
+        queryset = model_class.objects.all()
+
+        # Apply filters if provided
+        try:
+            filters = json_lib.loads(filters_str)
+            if filters:
+                queryset = queryset.filter(**filters)
+        except json_lib.JSONDecodeError:
+            pass  # Ignore invalid filter JSON
+
+        # Filter out soft-deleted records if model has is_deleted field
+        if hasattr(model_class, 'is_deleted'):
+            queryset = queryset.filter(is_deleted=False)
+
+        # Generate filename
+        filename = f"{model_class._meta.verbose_name_plural.replace(' ', '_').lower()}_export"
+
+        # Export
+        response = export_queryset(
+            request=request,
+            queryset=queryset,
+            fields=fields,
+            headers=headers,
+            filename=filename,
+            format=export_format
+        )
+
+        # Log the export
+        from .notification_utils import log_export
+        log_export(
+            user=request.user,
+            model_name=model_class._meta.verbose_name_plural,
+            record_count=queryset.count(),
+            export_format=export_format,
+            request=request
+        )
+
+        return response
+
+    except Exception as e:
+        return JsonResponse({'error': f'Export failed: {str(e)}'}, status=500)

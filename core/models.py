@@ -1004,6 +1004,19 @@ class Notification(models.Model):
             self.read_at = None
             self.save(update_fields=['is_read', 'read_at'])
 
+    def get_icon(self):
+        """Get Bootstrap icon class for notification type."""
+        icons = {
+            'INFO': 'bi-info-circle-fill',
+            'SUCCESS': 'bi-check-circle-fill',
+            'WARNING': 'bi-exclamation-triangle-fill',
+            'ERROR': 'bi-x-circle-fill',
+            'TASK': 'bi-clipboard-check',
+            'APPROVAL': 'bi-hand-thumbs-up',
+            'SYSTEM': 'bi-gear-fill',
+        }
+        return icons.get(self.notification_type, 'bi-bell-fill')
+
 
 class ActivityLog(models.Model):
     """

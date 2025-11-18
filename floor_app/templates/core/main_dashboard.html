@@ -4,6 +4,8 @@
 {% block title %}Floor Management System{% endblock %}
 
 {% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
     .department-card {
         transition: all 0.3s ease;
@@ -113,6 +115,37 @@
         <p class="page-subtitle">
             Select a department workbench to manage operations
         </p>
+    </div>
+
+    <!-- System Overview Charts -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-bar-chart-fill text-primary me-2"></i>
+                        Module Activity Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="moduleActivityChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-pie-chart-fill text-success me-2"></i>
+                        Module Distribution
+                    </h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <canvas id="moduleDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Department Workbenches -->
@@ -565,4 +598,196 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prepare data from Django context
+    const moduleData = {
+        hr: {{ hr_summary.employees|default:0 }},
+        inventory: {{ inventory_summary.items|default:0 }},
+        production: {{ production_summary.job_cards|default:0 }},
+        evaluation: {{ evaluation_summary.sessions|default:0 }},
+        purchasing: {{ purchasing_summary.suppliers|default:0 }},
+        qrcodes: {{ qrcodes_summary.codes|default:0 }},
+        knowledge: {{ knowledge_summary.articles|default:0 }},
+        maintenance: {{ maintenance_summary.assets|default:0 }},
+        quality: {{ quality_summary.open_ncrs|default:0 }},
+        planning: {{ planning_summary.schedules|default:0 }},
+        sales: {{ sales_summary.customers|default:0 }},
+    };
+
+    // Module Activity Bar Chart
+    const moduleActivityCtx = document.getElementById('moduleActivityChart').getContext('2d');
+    new Chart(moduleActivityCtx, {
+        type: 'bar',
+        data: {
+            labels: ['HR', 'Inventory', 'Production', 'Evaluation', 'Purchasing', 'QR Codes', 'Knowledge', 'Maintenance', 'Quality', 'Planning', 'Sales'],
+            datasets: [{
+                label: 'Records',
+                data: [
+                    moduleData.hr,
+                    moduleData.inventory,
+                    moduleData.production,
+                    moduleData.evaluation,
+                    moduleData.purchasing,
+                    moduleData.qrcodes,
+                    moduleData.knowledge,
+                    moduleData.maintenance,
+                    moduleData.quality,
+                    moduleData.planning,
+                    moduleData.sales
+                ],
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.8)',   // primary
+                    'rgba(13, 202, 240, 0.8)',   // info
+                    'rgba(255, 193, 7, 0.8)',    // warning
+                    'rgba(220, 53, 69, 0.8)',    // danger
+                    'rgba(25, 135, 84, 0.8)',    // success
+                    'rgba(33, 37, 41, 0.8)',     // dark
+                    'rgba(111, 66, 193, 0.8)',   // purple
+                    'rgba(108, 117, 125, 0.8)',  // secondary
+                    'rgba(220, 53, 69, 0.8)',    // danger
+                    'rgba(253, 126, 20, 0.8)',   // orange
+                    'rgba(32, 201, 151, 0.8)',   // teal
+                ],
+                borderColor: [
+                    'rgb(13, 110, 253)',
+                    'rgb(13, 202, 240)',
+                    'rgb(255, 193, 7)',
+                    'rgb(220, 53, 69)',
+                    'rgb(25, 135, 84)',
+                    'rgb(33, 37, 41)',
+                    'rgb(111, 66, 193)',
+                    'rgb(108, 117, 125)',
+                    'rgb(220, 53, 69)',
+                    'rgb(253, 126, 20)',
+                    'rgb(32, 201, 151)',
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Module Distribution Doughnut Chart
+    const moduleDistributionCtx = document.getElementById('moduleDistributionChart').getContext('2d');
+    new Chart(moduleDistributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['HR', 'Inventory', 'Production', 'Evaluation', 'Purchasing', 'QR Codes', 'Knowledge', 'Maintenance', 'Quality', 'Planning', 'Sales'],
+            datasets: [{
+                data: [
+                    moduleData.hr,
+                    moduleData.inventory,
+                    moduleData.production,
+                    moduleData.evaluation,
+                    moduleData.purchasing,
+                    moduleData.qrcodes,
+                    moduleData.knowledge,
+                    moduleData.maintenance,
+                    moduleData.quality,
+                    moduleData.planning,
+                    moduleData.sales
+                ],
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.8)',
+                    'rgba(13, 202, 240, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(25, 135, 84, 0.8)',
+                    'rgba(33, 37, 41, 0.8)',
+                    'rgba(111, 66, 193, 0.8)',
+                    'rgba(108, 117, 125, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(253, 126, 20, 0.8)',
+                    'rgba(32, 201, 151, 0.8)',
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 11
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return label + ': ' + value.toLocaleString() + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

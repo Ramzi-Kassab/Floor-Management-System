@@ -65,10 +65,9 @@
                 </button>
                 
                 <!-- Notifications -->
-                <div class="notification-bell">
-                    <i class="bi bi-bell bell-icon"></i>
-                    <span class="notification-badge">3</span>
-                </div>
+                {% if user.is_authenticated %}
+                    {% include "core/partials/notification_center.html" %}
+                {% endif %}
                 
                 <!-- User Menu -->
                 {% if user.is_authenticated %}

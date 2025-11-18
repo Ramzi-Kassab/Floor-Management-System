@@ -1,0 +1,89 @@
+{% comment %}
+Export Buttons Partial
+
+Usage in templates:
+    {% include "core/partials/export_buttons.html" with model="hr.Person" fields="id,first_name,last_name,email" headers="ID,First Name,Last Name,Email" %}
+
+Parameters:
+- model: App label and model name (e.g., 'hr.Person', 'inventory.Item')
+- fields: Comma-separated field names
+- headers: Comma-separated header labels (optional, defaults to field names)
+- filters: JSON string with filter criteria (optional)
+- btn_class: Additional CSS classes for buttons (optional)
+{% endcomment %}
+
+<div class="export-buttons btn-group" role="group" aria-label="Export options">
+    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle {{ btn_class|default:'' }}" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-download"></i> Export
+    </button>
+    <ul class="dropdown-menu">
+        <li>
+            <a class="dropdown-item export-btn"
+               href="#"
+               data-format="csv"
+               data-model="{{ model }}"
+               data-fields="{{ fields }}"
+               data-headers="{{ headers|default:fields }}"
+               data-filters="{{ filters|default:'{}' }}">
+                <i class="bi bi-filetype-csv"></i> Export as CSV
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item export-btn"
+               href="#"
+               data-format="excel"
+               data-model="{{ model }}"
+               data-fields="{{ fields }}"
+               data-headers="{{ headers|default:fields }}"
+               data-filters="{{ filters|default:'{}' }}">
+                <i class="bi bi-file-earmark-excel"></i> Export as Excel
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item export-btn"
+               href="#"
+               data-format="pdf"
+               data-model="{{ model }}"
+               data-fields="{{ fields }}"
+               data-headers="{{ headers|default:fields }}"
+               data-filters="{{ filters|default:'{}' }}">
+                <i class="bi bi-file-earmark-pdf"></i> Export as PDF
+            </a>
+        </li>
+    </ul>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.export-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const format = this.dataset.format;
+            const model = this.dataset.model;
+            const fields = this.dataset.fields;
+            const headers = this.dataset.headers;
+            const filters = this.dataset.filters;
+
+            // Build export URL
+            const params = new URLSearchParams({
+                model: model,
+                format: format,
+                fields: fields,
+                headers: headers,
+                filters: filters
+            });
+
+            const exportUrl = '{% url "core:api_export_data" %}?' + params.toString();
+
+            // Trigger download
+            window.location.href = exportUrl;
+
+            // Optional: Show toast notification
+            if (typeof showToast === 'function') {
+                showToast(`Exporting as ${format.toUpperCase()}...`, 'info');
+            }
+        });
+    });
+});
+</script>

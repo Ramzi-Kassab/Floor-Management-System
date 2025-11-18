@@ -32,6 +32,16 @@ urlpatterns = [
     path("api/filters/<str:filter_key>/delete/", views.delete_filter, name="api_filter_delete"),
     path("api/search/clear-history/", views.clear_search_history, name="api_clear_search_history"),
 
+    # Notification API Endpoints
+    path("api/notifications/", views.get_notifications, name="api_notifications_list"),
+    path("api/notifications/unread-count/", views.get_unread_count, name="api_notifications_unread_count"),
+    path("api/notifications/<int:notification_id>/read/", views.mark_notification_read, name="api_notification_read"),
+    path("api/notifications/mark-all-read/", views.mark_all_notifications_read, name="api_notifications_mark_all_read"),
+    path("api/notifications/<int:notification_id>/delete/", views.delete_notification, name="api_notification_delete"),
+
+    # Export API Endpoint
+    path("api/export/", views.export_data, name="api_export_data"),
+
     # Global Search
     path("search/", views.global_search, name="global_search"),
 
