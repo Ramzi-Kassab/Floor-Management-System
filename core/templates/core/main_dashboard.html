@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .kpi-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .kpi-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .module-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #667eea;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+
+    .module-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-decoration: none;
+    }
+
+    .module-card.hr { border-left-color: #667eea; }
+    .module-card.inventory { border-left-color: #17a2b8; }
+    .module-card.production { border-left-color: #fd7e14; }
+    .module-card.quality { border-left-color: #dc3545; }
+    .module-card.sales { border-left-color: #28a745; }
+    .module-card.finance { border-left-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="mb-2">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    Floor Management System
+                </h1>
+                <p class="mb-0 opacity-90">Comprehensive Overview & Key Performance Indicators</p>
+            </div>
+            <div class="col-auto">
+                <div class="text-end opacity-75">
+                    <i class="bi bi-calendar me-1"></i>
+                    <span id="currentDate"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top KPIs Row -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="kpi-card position-relative">
+                <i class="bi bi-people kpi-icon text-primary"></i>
+                <div class="kpi-label">Total Employees</div>
+                <div class="kpi-value text-primary">{{ hr_summary.employees }}</div>
+                <div class="small text-muted">Across {{ hr_summary.departments }} departments</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card position-relative">
+                <i class="bi bi-box-seam kpi-icon text-info"></i>
+                <div class="kpi-label">Inventory Items</div>
+                <div class="kpi-value text-info">{{ inventory_summary.items }}</div>
+                <div class="small text-muted">{{ inventory_summary.serial_units }} serial units</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card position-relative">
+                <i class="bi bi-clipboard-data kpi-icon text-warning"></i>
+                <div class="kpi-label">Job Cards</div>
+                <div class="kpi-value text-warning">{{ production_summary.job_cards }}</div>
+                <div class="small text-muted">{{ production_summary.batches }} batches</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card position-relative">
+                <i class="bi bi-graph-up kpi-icon text-success"></i>
+                <div class="kpi-label">Sales Orders</div>
+                <div class="kpi-value text-success">{{ sales_summary.orders }}</div>
+                <div class="small text-muted">{{ sales_summary.customers }} customers</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Module Distribution Chart -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-title">
+                    <i class="bi bi-pie-chart me-2"></i>
+                    Module Activity Distribution
+                </div>
+                <canvas id="moduleChart" height="250"></canvas>
+            </div>
+        </div>
+
+        <!-- System Health Chart -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-title">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    System Health Overview
+                </div>
+                <canvas id="healthChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Finance Overview Row -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-card">
+                <div class="chart-title">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Finance Overview
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="kpi-label">ERP References</div>
+                        <div class="kpi-value text-primary h3">{{ finance_summary.erp_references }}</div>
+                        <small class="text-warning">{{ finance_summary.pending_sync }} pending sync</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="kpi-label">Loss Events</div>
+                        <div class="kpi-value text-danger h3">{{ finance_summary.loss_events }}</div>
+                        <small class="text-muted">Total Loss: {{ finance_summary.total_loss|floatformat:2 }} SAR</small>
+                    </div>
+                </div>
+                <canvas id="financeChart" height="150"></canvas>
+            </div>
+        </div>
+
+        <!-- Quality & Maintenance -->
+        <div class="col-md-6">
+            <div class="chart-card">
+                <div class="chart-title">
+                    <i class="bi bi-tools me-2"></i>
+                    Quality & Maintenance
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="kpi-label">Open NCRs</div>
+                        <div class="kpi-value text-danger h3">{{ quality_summary.open_ncrs }}</div>
+                        <small class="text-muted">{{ quality_summary.dispositions }} dispositions</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="kpi-label">Work Orders</div>
+                        <div class="kpi-value text-warning h3">{{ maintenance_summary.work_orders }}</div>
+                        <small class="text-muted">{{ maintenance_summary.assets }} assets tracked</small>
+                    </div>
+                </div>
+                <canvas id="qualityMaintenanceChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access Modules -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3"><i class="bi bi-grid me-2"></i>Quick Access</h4>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{% url 'hr:dashboard' %}" class="module-card hr">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-people me-2"></i>Human Resources</h5>
+                        <div class="text-muted small">{{ hr_summary.employees }} Employees · {{ hr_summary.departments }} Departments</div>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{% url 'inventory:dashboard' %}" class="module-card inventory">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-box-seam me-2"></i>Inventory</h5>
+                        <div class="text-muted small">{{ inventory_summary.items }} Items · {{ inventory_summary.serial_units }} Serial Units</div>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{% url 'production:dashboard' %}" class="module-card production">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-gear me-2"></i>Production</h5>
+                        <div class="text-muted small">{{ production_summary.job_cards }} Job Cards · {{ production_summary.batches }} Batches</div>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{% url 'quality:dashboard' %}" class="module-card quality">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-shield-check me-2"></i>Quality</h5>
+                        <div class="text-muted small">{{ quality_summary.open_ncrs }} Open NCRs · {{ quality_summary.dispositions }} Dispositions</div>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{% url 'sales:dashboard' %}" class="module-card sales">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-cart me-2"></i>Sales</h5>
+                        <div class="text-muted small">{{ sales_summary.orders }} Orders · {{ sales_summary.customers }} Customers</div>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{% url 'core:finance_dashboard' %}" class="module-card finance">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="bi bi-currency-dollar me-2"></i>Finance</h5>
+                        <div class="text-muted small">{{ finance_summary.erp_references }} ERP References · {{ finance_summary.loss_events }} Loss Events</div>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Display current date
+document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+});
+
+// Module Distribution Pie Chart
+const moduleCtx = document.getElementById('moduleChart').getContext('2d');
+new Chart(moduleCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['HR', 'Inventory', 'Production', 'Sales', 'Evaluation', 'Purchasing'],
+        datasets: [{
+            data: [
+                {{ hr_summary.employees }},
+                {{ inventory_summary.items }},
+                {{ production_summary.job_cards }},
+                {{ sales_summary.orders }},
+                {{ evaluation_summary.sessions }},
+                {{ purchasing_summary.pos }}
+            ],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(23, 162, 184, 0.8)',
+                'rgba(253, 126, 20, 0.8)',
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(220, 53, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += context.parsed + ' records';
+                        return label;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// System Health Bar Chart
+const healthCtx = document.getElementById('healthChart').getContext('2d');
+new Chart(healthCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Employees', 'Items', 'Serial Units', 'Job Cards', 'Sales Orders', 'Assets'],
+        datasets: [{
+            label: 'Active Records',
+            data: [
+                {{ hr_summary.employees }},
+                {{ inventory_summary.items }},
+                {{ inventory_summary.serial_units }},
+                {{ production_summary.job_cards }},
+                {{ sales_summary.orders }},
+                {{ maintenance_summary.assets }}
+            ],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(23, 162, 184, 0.8)',
+                'rgba(23, 162, 184, 0.6)',
+                'rgba(253, 126, 20, 0.8)',
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(108, 117, 125, 0.8)'
+            ],
+            borderColor: [
+                'rgb(102, 126, 234)',
+                'rgb(23, 162, 184)',
+                'rgb(23, 162, 184)',
+                'rgb(253, 126, 20)',
+                'rgb(40, 167, 69)',
+                'rgb(108, 117, 125)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+
+// Finance Chart
+const financeCtx = document.getElementById('financeChart').getContext('2d');
+new Chart(financeCtx, {
+    type: 'bar',
+    data: {
+        labels: ['ERP References', 'Pending Sync', 'Loss Events'],
+        datasets: [{
+            label: 'Count',
+            data: [
+                {{ finance_summary.erp_references }},
+                {{ finance_summary.pending_sync }},
+                {{ finance_summary.loss_events }}
+            ],
+            backgroundColor: [
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(253, 126, 20, 0.8)',
+                'rgba(220, 53, 69, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+
+// Quality & Maintenance Chart
+const qmCtx = document.getElementById('qualityMaintenanceChart').getContext('2d');
+new Chart(qmCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Open NCRs', 'Dispositions', 'Work Orders', 'Assets'],
+        datasets: [{
+            label: 'Count',
+            data: [
+                {{ quality_summary.open_ncrs }},
+                {{ quality_summary.dispositions }},
+                {{ maintenance_summary.work_orders }},
+                {{ maintenance_summary.assets }}
+            ],
+            backgroundColor: [
+                'rgba(220, 53, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(253, 126, 20, 0.8)',
+                'rgba(108, 117, 125, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
