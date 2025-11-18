@@ -2,6 +2,7 @@
 from django.urls import path
 from . import views_employee_wizard as views
 from . import views_department
+from .views import leave_views
 
 app_name = "hr"
 
@@ -74,7 +75,31 @@ urlpatterns = [
     # ========== Reports & Settings ==========
     path("reports/", views.reports, name="reports"),
     path("settings/", views.settings, name="settings"),
-    
+
+    # ========== Leave Management ==========
+    # Leave Policies
+    path("leave/policies/", leave_views.LeavePolicyListView.as_view(), name="leave_policy_list"),
+    path("leave/policies/create/", leave_views.LeavePolicyCreateView.as_view(), name="leave_policy_create"),
+    path("leave/policies/<int:pk>/", leave_views.LeavePolicyDetailView.as_view(), name="leave_policy_detail"),
+    path("leave/policies/<int:pk>/edit/", leave_views.LeavePolicyUpdateView.as_view(), name="leave_policy_edit"),
+
+    # Leave Balances
+    path("leave/balances/", leave_views.leave_balance_dashboard, name="leave_balance_dashboard"),
+    path("leave/balances/<int:pk>/adjust/", leave_views.leave_balance_adjust, name="leave_balance_adjust"),
+    path("leave/balances/initialize/", leave_views.leave_balance_initialize, name="leave_balance_initialize"),
+
+    # Leave Requests
+    path("leave/requests/", leave_views.LeaveRequestListView.as_view(), name="leave_request_list"),
+    path("leave/requests/create/", leave_views.LeaveRequestCreateView.as_view(), name="leave_request_create"),
+    path("leave/requests/<int:pk>/", leave_views.LeaveRequestDetailView.as_view(), name="leave_request_detail"),
+    path("leave/requests/<int:pk>/submit/", leave_views.leave_request_submit, name="leave_request_submit"),
+    path("leave/requests/<int:pk>/approve/", leave_views.leave_request_approve, name="leave_request_approve"),
+    path("leave/requests/<int:pk>/cancel/", leave_views.leave_request_cancel, name="leave_request_cancel"),
+
+    # Leave Calendar & Dashboard
+    path("leave/calendar/", leave_views.leave_calendar, name="leave_calendar"),
+    path("leave/my-dashboard/", leave_views.my_leave_dashboard, name="my_leave_dashboard"),
+
     # ========== Legacy/Deprecated URLs (redirect to new system) ==========
     path("employees/create/", views.employee_wizard_start, name="employee_create"),  # Redirect to wizard
     path("employees/setup/new/", views.employee_wizard_start, name="employee_setup_new"),
