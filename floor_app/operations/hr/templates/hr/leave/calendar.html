@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Leave Calendar - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
+    .calendar {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .calendar-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .calendar-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 8px;
+    }
+    .calendar-table th {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: center;
+        font-weight: 600;
+        border-radius: 6px;
+    }
+    .calendar-table td {
+        background: white;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem;
+        text-align: center;
+        min-height: 100px;
+        vertical-align: top;
+        border-radius: 6px;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .calendar-table td:hover {
+        background: #f8f9fa;
+        transform: scale(1.02);
+    }
+    .calendar-table td.today {
+        border-color: #667eea;
+        background: #e7f3ff;
+    }
+    .calendar-table td.other-month {
+        background: #fafafa;
+        color: #999;
+    }
+    .day-number {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    .leave-badge {
+        display: block;
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        margin: 0.25rem 0;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+    }
+    .leave-badge:hover {
+        background: #764ba2;
+    }
+    .legend {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="calendar-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="bi bi-calendar3"></i> Leave Calendar</h1>
+                <p class="text-muted">View all approved leaves</p>
+            </div>
+            <div>
+                <a href="{% url 'hr:leave_request_create' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Request Leave
+                </a>
+                <a href="{% url 'hr:leave_request_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-list-ul"></i> List View
+                </a>
+            </div>
+        </div>
+
+        <!-- Calendar Navigation -->
+        <div class="calendar-header">
+            <div class="row align-items-center">
+                <div class="col-4 text-start">
+                    <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-light">
+                        <i class="bi bi-chevron-left"></i> Previous
+                    </a>
+                </div>
+                <div class="col-4">
+                    <h3 class="mb-0">{{ month_name }} {{ year }}</h3>
+                </div>
+                <div class="col-4 text-end">
+                    <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-light">
+                        Next <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="calendar">
+            <table class="calendar-table">
+                <thead>
+                    <tr>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th style="background: #ffe5e5;">Saturday</th>
+                        <th style="background: #ffe5e5;">Sunday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in calendar %}
+                    <tr>
+                        {% for day in week %}
+                        <td {% if day == 0 %}class="other-month"{% elif day == today_day and month == today_month and year == today_year %}class="today"{% endif %}>
+                            {% if day != 0 %}
+                                <div class="day-number">{{ day }}</div>
+                                {% if day in leaves_by_date %}
+                                    {% for leave in leaves_by_date|lookup:day %}
+                                    <div class="leave-badge" title="{{ leave.employee.get_full_name }} - {{ leave.leave_policy.name }}">
+                                        {{ leave.employee.get_full_name|truncatewords:2 }}
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e7f3ff; border: 2px solid #667eea;"></div>
+                <span>Today</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffe5e5;"></div>
+                <span>Weekend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #667eea;"></div>
+                <span>Approved Leave</span>
+            </div>
+        </div>
+
+        <!-- Leave Details Modal Placeholder -->
+        <div id="leaveDetails" class="mt-4" style="display: none;">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Leave Details</h6>
+                </div>
+                <div class="card-body" id="leaveDetailsContent">
+                    <!-- Details will be loaded here via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">{{ leaves_by_date|length }}</h3>
+                        <p class="text-muted mb-0">Days with Leaves</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">{{ total_leaves|default:0 }}</h3>
+                        <p class="text-muted mb-0">Total Leave Days</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info">{{ unique_employees|default:0 }}</h3>
+                        <p class="text-muted mb-0">Employees on Leave</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Box -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-question-circle"></i> How to Use the Calendar</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Navigate:</strong> Use Previous/Next buttons to move between months</li>
+                    <li><strong>View Details:</strong> Click on a leave badge to see full details</li>
+                    <li><strong>Request Leave:</strong> Click "Request Leave" button to submit a new request</li>
+                    <li><strong>Color Coding:</strong> Each badge represents an approved leave for that day</li>
+                    <li><strong>Multiple Leaves:</strong> Multiple badges on one day mean multiple employees are on leave</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add click handlers to leave badges
+    document.querySelectorAll('.leave-badge').forEach(badge => {
+        badge.addEventListener('click', function() {
+            const employeeName = this.getAttribute('title');
+            alert('Leave Details:\n' + employeeName);
+            // In production, this would load detailed leave information
+        });
+    });
+
+    // Django template filter to lookup dictionary by key
+    // This is a workaround since Django templates don't support dict[key] syntax directly
+</script>
+{% endblock %}
