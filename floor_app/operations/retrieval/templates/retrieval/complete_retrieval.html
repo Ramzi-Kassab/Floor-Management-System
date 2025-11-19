@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-arrow-counterclockwise"></i> {{ page_title }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action will execute the retrieval request and cannot be undone.
+                    </div>
+
+                    <h5 class="mb-3">Request Details:</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Request ID:</th>
+                            <td>#{{ request_obj.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Action Type:</th>
+                            <td><span class="badge bg-info">{{ request_obj.get_action_type_display }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Object:</th>
+                            <td>{{ request_obj.get_object_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td><span class="badge bg-{{ request_obj.get_status_badge_class }}">{{ request_obj.get_status_display }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Approved At:</th>
+                            <td>{{ request_obj.approved_at|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                    </table>
+
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> What will happen:</h6>
+                            <p class="mb-0">
+                                Based on your request type (<strong>{{ request_obj.get_action_type_display }}</strong>),
+                                the system will execute the appropriate retrieval action on the object.
+                            </p>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'retrieval:request_detail' request_obj.id %}" class="btn btn-secondary">
+                                <i class="bi bi-x"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Confirm and Complete Retrieval
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

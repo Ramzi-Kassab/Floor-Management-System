@@ -65,6 +65,58 @@ urlpatterns = [
     # === Analytics & Activity Monitoring ===
     path("analytics/", include(("floor_app.operations.analytics.urls", "analytics"), namespace="analytics")),
 
+    # === NEW SYSTEMS - Template-Based Views ===
+    # Notifications System
+    path("notifications/", include(("floor_app.operations.notifications.urls", "notifications"), namespace="notifications")),
+
+    # Approval Workflows
+    path("approvals/", include(("floor_app.operations.approvals.urls", "approvals"), namespace="approvals")),
+
+    # Device Tracking
+    path("devices/", include(("floor_app.operations.device_tracking.urls", "device_tracking"), namespace="device_tracking")),
+
+    # GPS Verification System
+    path("gps/", include(("floor_app.operations.gps_system.urls", "gps_system"), namespace="gps_system")),
+
+    # QR Code System (Enhanced)
+    path("qr/", include(("floor_app.operations.qr_system.urls", "qr_system"), namespace="qr_system")),
+
+    # Chat & Messaging
+    path("chat/", include(("floor_app.operations.chat.urls", "chat"), namespace="chat")),
+
+    # Data Extraction
+    path("data-extraction/", include(("floor_app.operations.data_extraction.urls", "data_extraction"), namespace="data_extraction")),
+
+    # 5S/FIVES System
+    path("fives/", include(("floor_app.operations.fives.urls", "fives"), namespace="fives")),
+
+    # HR Assets Management
+    path("hr-assets/", include(("floor_app.operations.hr_assets.urls", "hr_assets"), namespace="hr_assets")),
+
+    # Hiring & Recruitment
+    path("hiring/", include(("floor_app.operations.hiring.urls", "hiring"), namespace="hiring")),
+
+    # Hazard Observation Cards (HOC)
+    path("hoc/", include(("floor_app.operations.hoc.urls", "hoc"), namespace="hoc")),
+
+    # Journey Management
+    path("journey/", include(("floor_app.operations.journey_management.urls", "journey_management"), namespace="journey_management")),
+
+    # Meetings
+    path("meetings/", include(("floor_app.operations.meetings.urls", "meetings"), namespace="meetings")),
+
+    # User Preferences
+    path("preferences/", include(("floor_app.operations.user_preferences.urls", "user_preferences"), namespace="user_preferences")),
+
+    # Utility Tools
+    path("utils/", include(("floor_app.operations.utility_tools.urls", "utility_tools"), namespace="utility_tools")),
+
+    # Vendor Portal
+    path("vendors/", include(("floor_app.operations.vendor_portal.urls", "vendor_portal"), namespace="vendor_portal")),
+
+    # Retrieval/Undo System (Cross-cutting feature)
+    path("retrieval/", include(("floor_app.operations.retrieval.urls", "retrieval"), namespace="retrieval")),
+
     # === REST API Endpoints ===
     path("api/hoc/", include("floor_app.operations.hoc.api.urls")),
     path("api/journey-management/", include("floor_app.operations.journey_management.api.urls")),
@@ -75,6 +127,12 @@ urlpatterns = [
     path("api/hiring/", include("floor_app.operations.hiring.api.urls")),
     path("api/chat/", include("floor_app.operations.chat.api.urls")),
     path("api/data-extraction/", include("floor_app.operations.data_extraction.api.urls")),
+    path("api/notifications/", include("floor_app.operations.notifications.api.urls")),
+    path("api/approvals/", include("floor_app.operations.approvals.api.urls")),
+    path("api/device-tracking/", include("floor_app.operations.device_tracking.api.urls")),
+    path("api/gps/", include("floor_app.operations.gps_system.api.urls")),
+    path("api/qr/", include("floor_app.operations.qr_system.api.urls")),
+    path("api/retrieval/", include("floor_app.operations.retrieval.api.urls")),
     # path("api/utility-tools/", include("floor_app.operations.utility_tools.api.urls")),  # TODO: Install openpyxl
     # path("api/user-preferences/", include("floor_app.operations.user_preferences.api.urls")),  # TODO: Check dependencies
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

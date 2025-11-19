@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-text"></i> {{ page_title }}</h2>
+        <div>
+            {% if request.user == request_obj.employee %}
+                <a href="{% url 'retrieval:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'retrieval:supervisor_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Supervisor Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Request Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Request Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Request ID:</strong></div>
+                        <div class="col-md-8">#{{ request_obj.id }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Status:</strong></div>
+                        <div class="col-md-8">
+                            <span class="badge bg-{{ request_obj.get_status_badge_class }}">
+                                {{ request_obj.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Action Type:</strong></div>
+                        <div class="col-md-8">
+                            <span class="badge bg-info">{{ request_obj.get_action_type_display }}</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Employee:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.employee.get_full_name|default:request_obj.employee.username }}
+                            ({{ request_obj.employee.username }})
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Supervisor:</strong></div>
+                        <div class="col-md-8">
+                            {% if request_obj.supervisor %}
+                                {{ request_obj.supervisor.get_full_name|default:request_obj.supervisor.username }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Submitted:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.submitted_at|date:"Y-m-d H:i:s" }}
+                            <br><small class="text-muted">{{ request_obj.submitted_at|timesince }} ago</small>
+                        </div>
+                    </div>
+                    {% if request_obj.time_elapsed %}
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Time Elapsed:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.time_elapsed }}
+                            {% if request_obj.is_within_time_window %}
+                                <span class="badge bg-success">Within Auto-Approval Window</span>
+                            {% else %}
+                                <span class="badge bg-warning">Outside Auto-Approval Window</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Object Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Object Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Object Type:</strong></div>
+                        <div class="col-md-8">{{ request_obj.content_type.model|title }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Object:</strong></div>
+                        <div class="col-md-8">{{ request_obj.get_object_display }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Has Dependencies:</strong></div>
+                        <div class="col-md-8">
+                            {% if request_obj.has_dependent_processes %}
+                                <span class="badge bg-warning">Yes</span>
+                            {% else %}
+                                <span class="badge bg-success">No</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Reason for Retrieval</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ request_obj.reason }}</p>
+                </div>
+            </div>
+
+            <!-- Dependency Details -->
+            {% if request_obj.has_dependent_processes and request_obj.dependent_process_details %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Dependent Processes</h5>
+                </div>
+                <div class="card-body">
+                    {% if request_obj.dependent_process_details.dependencies %}
+                        <ul class="list-unstyled mb-0">
+                            {% for dep in request_obj.dependent_process_details.dependencies %}
+                            <li class="mb-2">
+                                <i class="bi bi-link-45deg"></i>
+                                <strong>{{ dep.model_verbose|default:dep.model }}:</strong>
+                                {{ dep.description }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if request_obj.dependent_process_details.reasons %}
+                        <hr>
+                        <h6>Check Results:</h6>
+                        <ul class="list-unstyled mb-0">
+                            {% for reason in request_obj.dependent_process_details.reasons %}
+                            <li class="mb-1">
+                                <i class="bi bi-info-circle"></i> {{ reason }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Rejection Details -->
+            {% if request_obj.is_rejected %}
+            <div class="card mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-x-circle"></i> Rejection Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Rejected By:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.rejected_by.get_full_name|default:request_obj.rejected_by.username }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Rejected At:</strong></div>
+                        <div class="col-md-8">{{ request_obj.rejected_at|date:"Y-m-d H:i:s" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Reason:</strong></div>
+                        <div class="col-md-8">{{ request_obj.rejection_reason }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Original Data Snapshot -->
+            {% if request_obj.original_data %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Original Data Snapshot</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded"><code>{{ request_obj.original_data|pprint }}</code></pre>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="col-lg-4">
+            <!-- Actions Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if request_obj.is_pending and request.user == request_obj.supervisor %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'retrieval:approve_retrieval' request_obj.id %}"
+                               class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Review & Approve/Reject
+                            </a>
+                        </div>
+                    {% elif request_obj.can_be_completed and request.user == request_obj.employee %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'retrieval:complete_retrieval' request_obj.id %}"
+                               class="btn btn-primary">
+                                <i class="bi bi-arrow-counterclockwise"></i> Complete Retrieval
+                            </a>
+                        </div>
+                    {% elif request_obj.is_pending and request.user == request_obj.employee %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'retrieval:cancel_retrieval' request_obj.id %}"
+                               class="btn btn-warning">
+                                <i class="bi bi-x-circle"></i> Cancel Request
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            No actions available for this request.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-3">
+                            <i class="bi bi-circle-fill text-primary"></i>
+                            <strong>Submitted</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ request_obj.submitted_at|date:"Y-m-d H:i:s" }}
+                            </small>
+                        </li>
+                        {% if request_obj.supervisor_notified_at %}
+                        <li class="mb-3">
+                            <i class="bi bi-circle-fill text-info"></i>
+                            <strong>Supervisor Notified</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ request_obj.supervisor_notified_at|date:"Y-m-d H:i:s" }}
+                            </small>
+                        </li>
+                        {% endif %}
+                        {% if request_obj.approved_at %}
+                        <li class="mb-3">
+                            <i class="bi bi-circle-fill text-success"></i>
+                            <strong>Approved</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ request_obj.approved_at|date:"Y-m-d H:i:s" }}
+                            </small>
+                        </li>
+                        {% endif %}
+                        {% if request_obj.rejected_at %}
+                        <li class="mb-3">
+                            <i class="bi bi-circle-fill text-danger"></i>
+                            <strong>Rejected</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ request_obj.rejected_at|date:"Y-m-d H:i:s" }}
+                            </small>
+                        </li>
+                        {% endif %}
+                        {% if request_obj.completed_at %}
+                        <li class="mb-3">
+                            <i class="bi bi-circle-fill text-primary"></i>
+                            <strong>Completed</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ request_obj.completed_at|date:"Y-m-d H:i:s" }}
+                            </small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Notification Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Supervisor Notification:</strong>
+                        {% if request_obj.notification_sent %}
+                            <span class="badge bg-success">Sent</span>
+                        {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% endif %}
+                    </div>
+                    {% if request_obj.supervisor_notified_at %}
+                    <div class="mb-0">
+                        <small class="text-muted">
+                            Sent at {{ request_obj.supervisor_notified_at|date:"Y-m-d H:i:s" }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
