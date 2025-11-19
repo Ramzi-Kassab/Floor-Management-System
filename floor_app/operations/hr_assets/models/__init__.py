@@ -7,7 +7,7 @@ Models for managing company assets: vehicles, parking, SIM cards, phones, camera
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
-from floor_app.core.models import AuditMixin
+from floor_app.mixins import AuditMixin
 
 
 # ============================================================================

@@ -72,7 +72,7 @@ urlpatterns = [
     path("api/hiring/", include("floor_app.operations.hiring.api.urls")),
     path("api/chat/", include("floor_app.operations.chat.api.urls")),
     path("api/data-extraction/", include("floor_app.operations.data_extraction.api.urls")),
-    path("api/utility-tools/", include("floor_app.operations.utility_tools.api.urls")),
-    path("api/user-preferences/", include("floor_app.operations.user_preferences.api.urls")),
+    # path("api/utility-tools/", include("floor_app.operations.utility_tools.api.urls")),  # TODO: Install openpyxl
+    # path("api/user-preferences/", include("floor_app.operations.user_preferences.api.urls")),  # TODO: Check dependencies
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

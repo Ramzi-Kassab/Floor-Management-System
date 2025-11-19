@@ -7,7 +7,7 @@ Models for workplace safety hazard observation and tracking system.
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
-from floor_app.core.models import AuditMixin
+from floor_app.mixins import AuditMixin
 
 
 class HazardCategory(AuditMixin):

@@ -7,7 +7,7 @@ Models for 5S (Sort, Set in Order, Shine, Standardize, Sustain) housekeeping sys
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
-from floor_app.core.models import AuditMixin
+from floor_app.mixins import AuditMixin
 
 
 class FiveSAuditTemplate(AuditMixin):

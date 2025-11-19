@@ -2,7 +2,7 @@
 
 from django.db import models
 from django.conf import settings
-from floor_app.core.models import AuditMixin
+from floor_app.mixins import AuditMixin
 
 
 class ChatRoom(AuditMixin):
