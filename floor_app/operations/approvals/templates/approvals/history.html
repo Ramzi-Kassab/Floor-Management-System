@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Approval History{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="bi bi-clock-history me-2"></i>Approval History</h2>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Request</th>
+                            <th>Workflow</th>
+                            <th>Requester</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in requests %}
+                        <tr>
+                            <td><strong>{{ request.title }}</strong></td>
+                            <td><span class="badge bg-info">{{ request.workflow.name }}</span></td>
+                            <td>{{ request.requester.get_full_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ request.status|lower }}">{{ request.get_status_display }}</span>
+                            </td>
+                            <td>{{ request.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'approvals:request_detail' request.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No history found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

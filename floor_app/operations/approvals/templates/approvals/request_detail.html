@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ request.title }} - Approval Request{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'approvals:pending' %}">Approvals</a></li>
+            <li class="breadcrumb-item active">{{ request.title|truncatewords:5 }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #0d6efd !important;">
+                <div class="card-body p-4">
+                    <div class="row align-items-start">
+                        <div class="col-md-8">
+                            <div class="mb-2">
+                                <span class="badge bg-info">{{ request.workflow.name }}</span>
+                                <span class="badge bg-{{ request.status|lower }} ms-2">{{ request.get_status_display }}</span>
+                            </div>
+                            <h3 class="mb-3">{{ request.title }}</h3>
+                            <p class="lead text-muted">{{ request.description }}</p>
+
+                            <div class="row g-3 text-muted small mt-3">
+                                <div class="col-md-4">
+                                    <i class="bi bi-person me-2"></i>
+                                    <strong>Requester:</strong><br>
+                                    {{ request.requester.get_full_name|default:request.requester.username }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-calendar3 me-2"></i>
+                                    <strong>Submitted:</strong><br>
+                                    {{ request.created_at|date:"M d, Y - h:i A" }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-alarm me-2"></i>
+                                    <strong>Due Date:</strong><br>
+                                    {{ request.due_date|date:"M d, Y"|default:"Not set" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 text-md-end">
+                            {% if request.can_approve %}
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-lg" onclick="approveRequest()">
+                                    <i class="bi bi-check-circle me-2"></i>Approve
+                                </button>
+                                <button class="btn btn-danger btn-lg" onclick="rejectRequest()">
+                                    <i class="bi bi-x-circle me-2"></i>Reject
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Request Data -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Request Details</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if request.data %}
+                            <table class="table table-sm">
+                                {% for key, value in request.data.items %}
+                                <tr>
+                                    <td class="fw-semibold" style="width: 40%;">{{ key }}</td>
+                                    <td>{{ value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                            {% else %}
+                            <p class="text-muted mb-0">No additional details provided.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Approval History -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Approval History</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for history in request.history.all %}
+                            <div class="d-flex gap-3 mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                <div>
+                                    {% if history.action == 'APPROVED' %}
+                                    <div class="bg-success text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-check-lg"></i>
+                                    </div>
+                                    {% elif history.action == 'REJECTED' %}
+                                    <div class="bg-danger text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-x-lg"></i>
+                                    </div>
+                                    {% else %}
+                                    <div class="bg-primary text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ history.get_action_display }}</div>
+                                    <div class="text-muted small">
+                                        by {{ history.actor.get_full_name|default:history.actor.username }}
+                                        • {{ history.created_at|date:"M d, Y - h:i A" }}
+                                    </div>
+                                    {% if history.comments %}
+                                    <div class="mt-2 bg-light p-2 rounded small">{{ history.comments }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted mb-0">No history yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Progress -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Workflow Progress</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for step in request.all_steps %}
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if step.status == 'APPROVED' %}
+                                    <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
+                                    {% elif step.status == 'REJECTED' %}
+                                    <i class="bi bi-x-circle-fill text-danger fs-5 me-2"></i>
+                                    {% elif step.status == 'PENDING' %}
+                                    <i class="bi bi-clock-fill text-warning fs-5 me-2"></i>
+                                    {% else %}
+                                    <i class="bi bi-circle text-secondary fs-5 me-2"></i>
+                                    {% endif %}
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold small">{{ step.level.name }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">
+                                            Level {{ step.level.level_number }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if step.approver %}
+                                <div class="ms-4 small text-muted">
+                                    {{ step.approver.get_full_name }}
+                                    {% if step.approved_at %}
+                                    <br>{{ step.approved_at|date:"M d, h:i A" }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if request.related_object %}
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Related Object</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="small">
+                                <div class="fw-semibold">{{ request.content_type.model|title }}</div>
+                                <div class="text-muted">{{ request.related_object }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4">
+                <a href="{% url 'approvals:pending' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Approvals
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function approveRequest() {
+    if (!confirm('Are you sure you want to approve this request?')) return;
+
+    const comments = prompt('Add comments (optional):');
+
+    fetch(`/api/approvals/requests/{{ request.id }}/approve/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ comments: comments })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    });
+}
+
+function rejectRequest() {
+    const reason = prompt('Please provide a reason for rejection:');
+
+    if (!reason) {
+        alert('Reason is required for rejection');
+        return;
+    }
+
+    fetch(`/api/approvals/requests/{{ request.id }}/reject/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delivery Status - Notifications{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'notifications:center' %}">Notifications</a></li>
+            <li class="breadcrumb-item active">Delivery Status</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-2"><i class="bi bi-truck text-primary me-2"></i>Delivery Status</h2>
+                    <p class="text-muted mb-0">Track notification delivery across all channels</p>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fs-3 fw-bold text-primary">{{ total_deliveries }}</div>
+                                    <div class="text-muted small">Total Sent</div>
+                                </div>
+                                <i class="bi bi-send-fill text-primary opacity-25" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fs-3 fw-bold text-success">{{ delivered_count }}</div>
+                                    <div class="text-muted small">Delivered</div>
+                                </div>
+                                <i class="bi bi-check-circle-fill text-success opacity-25" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fs-3 fw-bold text-warning">{{ pending_count }}</div>
+                                    <div class="text-muted small">Pending</div>
+                                </div>
+                                <i class="bi bi-clock-fill text-warning opacity-25" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fs-3 fw-bold text-danger">{{ failed_count }}</div>
+                                    <div class="text-muted small">Failed</div>
+                                </div>
+                                <i class="bi bi-x-circle-fill text-danger opacity-25" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery List -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Deliveries</h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary active" data-filter="all">All</button>
+                            <button class="btn btn-outline-success" data-filter="delivered">Delivered</button>
+                            <button class="btn btn-outline-warning" data-filter="pending">Pending</button>
+                            <button class="btn btn-outline-danger" data-filter="failed">Failed</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Notification</th>
+                                    <th>Channel</th>
+                                    <th>Recipient</th>
+                                    <th>Status</th>
+                                    <th>Sent</th>
+                                    <th>Delivered</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for delivery in deliveries %}
+                                <tr data-status="{{ delivery.status|lower }}">
+                                    <td><strong>{{ delivery.notification.title|truncatewords:5 }}</strong></td>
+                                    <td><span class="badge bg-info">{{ delivery.channel.get_channel_type_display }}</span></td>
+                                    <td>{{ delivery.notification.recipient_user.username }}</td>
+                                    <td>
+                                        {% if delivery.status == 'DELIVERED' %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Delivered
+                                        </span>
+                                        {% elif delivery.status == 'FAILED' %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Failed
+                                        </span>
+                                        {% elif delivery.status == 'PENDING' %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-clock me-1"></i>Pending
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ delivery.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ delivery.sent_at|date:"M d, H:i"|default:"-" }}</td>
+                                    <td>{{ delivery.delivered_at|date:"M d, H:i"|default:"-" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewDeliveryDetail({{ delivery.id }})">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        {% if delivery.status == 'FAILED' %}
+                                        <button class="btn btn-sm btn-outline-warning" onclick="retryDelivery({{ delivery.id }})">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        No delivery records found
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter deliveries
+document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const filter = this.dataset.filter;
+
+        // Update active button
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        // Filter rows
+        document.querySelectorAll('tbody tr[data-status]').forEach(row => {
+            if (filter === 'all' || row.dataset.status === filter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+
+function viewDeliveryDetail(id) {
+    // Show delivery detail modal or navigate
+    window.location.href = `/notifications/deliveries/${id}/`;
+}
+
+function retryDelivery(id) {
+    if (!confirm('Retry this delivery?')) return;
+
+    fetch(`/api/notifications/deliveries/${id}/retry/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

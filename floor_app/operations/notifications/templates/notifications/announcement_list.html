@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Announcements - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .announcement-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border-left: 4px solid transparent;
+    }
+
+    .announcement-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    .announcement-card.pinned {
+        border-left-color: #ffc107;
+        background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%);
+    }
+
+    .announcement-card.urgent {
+        border-left-color: #dc3545;
+    }
+
+    .announcement-card.high {
+        border-left-color: #fd7e14;
+    }
+
+    .announcement-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .announcement-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .filter-pills .btn {
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        border: 2px solid transparent;
+    }
+
+    .filter-pills .btn.active {
+        background: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+
+    .announcement-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .pin-icon {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #ffc107;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .announcement-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .read-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #0d6efd;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'notifications:center' %}">Notifications</a></li>
+            <li class="breadcrumb-item active">Announcements</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-megaphone-fill text-primary me-2"></i>
+                        Announcements
+                    </h2>
+                    <p class="text-muted mb-0">Company-wide announcements and important updates</p>
+                </div>
+                {% if user.is_staff %}
+                <a href="{% url 'notifications:announcement_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>New Announcement
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fs-4 fw-bold text-primary">{{ total_count|default:"0" }}</div>
+                            <div class="text-muted small">Active Announcements</div>
+                        </div>
+                        <i class="bi bi-megaphone text-primary opacity-25" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fs-4 fw-bold text-warning">{{ pinned_count|default:"0" }}</div>
+                            <div class="text-muted small">Pinned</div>
+                        </div>
+                        <i class="bi bi-pin-angle-fill text-warning opacity-25" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fs-4 fw-bold text-success">{{ unread_count|default:"0" }}</div>
+                            <div class="text-muted small">Unread</div>
+                        </div>
+                        <i class="bi bi-eye text-success opacity-25" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fs-4 fw-bold text-info">{{ today_count|default:"0" }}</div>
+                            <div class="text-muted small">Today</div>
+                        </div>
+                        <i class="bi bi-calendar-event text-info opacity-25" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <div class="filter-pills">
+                    <button class="btn btn-sm btn-outline-primary active" data-filter="all">All</button>
+                    <button class="btn btn-sm btn-outline-warning" data-filter="pinned">Pinned</button>
+                    <button class="btn btn-sm btn-outline-danger" data-filter="urgent">Urgent</button>
+                    <button class="btn btn-sm btn-outline-info" data-filter="unread">Unread</button>
+                </div>
+                <div class="ms-auto">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Search announcements..."
+                               id="announcementSearch">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcements Grid -->
+    <div class="row g-4" id="announcementsGrid">
+        {% for announcement in announcements %}
+        <div class="col-lg-6 col-xl-4 announcement-item"
+             data-filter="{% if announcement.is_pinned %}pinned{% endif %} {% if announcement.priority == 'URGENT' %}urgent{% endif %} {% if not announcement.is_read %}unread{% endif %}">
+            <div class="card announcement-card {% if announcement.is_pinned %}pinned{% endif %} {% if announcement.priority == 'URGENT' %}urgent{% elif announcement.priority == 'HIGH' %}high{% endif %}"
+                 onclick="window.location.href='{% url 'notifications:announcement_detail' announcement.id %}'">
+
+                {% if announcement.is_pinned %}
+                <div class="pin-icon">
+                    <i class="bi bi-pin-fill"></i>
+                </div>
+                {% endif %}
+
+                {% if announcement.image %}
+                <img src="{{ announcement.image.url }}" class="announcement-image" alt="{{ announcement.title }}">
+                {% endif %}
+
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-2">{{ announcement.title }}</h5>
+                            {% if not announcement.user_has_read %}
+                            <span class="read-indicator"></span>
+                            {% endif %}
+                        </div>
+                        <span class="announcement-badge bg-{{ announcement.priority|lower }}-subtle text-{{ announcement.priority|lower }}">
+                            {{ announcement.get_priority_display }}
+                        </span>
+                    </div>
+
+                    <p class="card-text text-muted">{{ announcement.message|truncatewords:20 }}</p>
+
+                    <div class="announcement-meta mt-3">
+                        <span>
+                            <i class="bi bi-calendar3 me-1"></i>
+                            {{ announcement.publish_at|date:"M d, Y" }}
+                        </span>
+                        <span>
+                            <i class="bi bi-person me-1"></i>
+                            {{ announcement.author.get_full_name|default:announcement.author.username }}
+                        </span>
+                        {% if announcement.target_type != 'ALL' %}
+                        <span>
+                            <i class="bi bi-people me-1"></i>
+                            {{ announcement.get_target_type_display }}
+                        </span>
+                        {% endif %}
+                        {% if announcement.expires_at %}
+                        <span>
+                            <i class="bi bi-clock-history me-1"></i>
+                            Expires {{ announcement.expires_at|date:"M d" }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if announcement.action_url %}
+                    <div class="mt-3">
+                        <a href="{{ announcement.action_url }}" class="btn btn-sm btn-outline-primary"
+                           onclick="event.stopPropagation()">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>
+                            {{ announcement.action_label|default:"Learn More" }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if announcement.attachments %}
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="bi bi-paperclip me-1"></i>
+                        {{ announcement.attachments|length }} attachment{{ announcement.attachments|length|pluralize }}
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-megaphone display-1 text-muted opacity-25"></i>
+                <h4 class="mt-3">No Announcements</h4>
+                <p class="text-muted">There are no active announcements at this time.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if announcements.has_other_pages %}
+    <nav aria-label="Announcements pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if announcements.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ announcements.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in announcements.paginator.page_range %}
+                {% if num == announcements.number %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > announcements.number|add:'-3' and num < announcements.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if announcements.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ announcements.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter announcements
+document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const filter = this.dataset.filter;
+
+        // Update active button
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        // Filter announcements
+        document.querySelectorAll('.announcement-item').forEach(item => {
+            if (filter === 'all' || item.dataset.filter.includes(filter)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Search announcements
+document.getElementById('announcementSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+
+    document.querySelectorAll('.announcement-item').forEach(item => {
+        const title = item.querySelector('.card-title').textContent.toLowerCase();
+        const text = item.querySelector('.card-text').textContent.toLowerCase();
+
+        if (title.includes(searchTerm) || text.includes(searchTerm)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
