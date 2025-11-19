@@ -1,5 +1,9 @@
 """
-Analytics and Activity Monitoring Module
-Tracks user activities, generates statistics, and provides insights
+Analytics, KPI Tracking, and Rule Engine Module
+
+Provides:
+- App usage analytics (who uses what, when)
+- Information request tracking (email reduction measurement)
+- Automation rule engine (proactive condition monitoring)
+- Combined KPI dashboards
 """
-default_app_config = 'floor_app.operations.analytics.apps.AnalyticsConfig'

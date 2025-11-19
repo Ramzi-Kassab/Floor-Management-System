@@ -39,6 +39,31 @@ from .transactions import (
     InventoryTransaction,
 )
 
+from .cutter import (
+    CutterOwnershipCategory,
+    CutterDetail,
+    CutterPriceHistory,
+    CutterInventorySummary,
+)
+
+from .cutter_bom_grid import (
+    CutterBOMGridHeader,
+    CutterBOMGridCell,
+    CutterBOMSummary,
+    CutterMapHeader,
+    CutterMapCell,
+    BOMUsageTracking,
+)
+
+from .roller_cone import (
+    RollerConeBitType,
+    RollerConeBearing,
+    RollerConeSeal,
+    RollerConeDesign,
+    RollerConeComponent,
+    RollerConeBOM,
+)
+
 __all__ = [
     # Reference tables
     'ConditionType',
@@ -66,4 +91,23 @@ __all__ = [
     'BOMLine',
     # Transactions
     'InventoryTransaction',
+    # Cutter-specific
+    'CutterOwnershipCategory',
+    'CutterDetail',
+    'CutterPriceHistory',
+    'CutterInventorySummary',
+    # Cutter BOM & Map Grid
+    'CutterBOMGridHeader',
+    'CutterBOMGridCell',
+    'CutterBOMSummary',
+    'CutterMapHeader',
+    'CutterMapCell',
+    'BOMUsageTracking',
+    # Roller Cone
+    'RollerConeBitType',
+    'RollerConeBearing',
+    'RollerConeSeal',
+    'RollerConeDesign',
+    'RollerConeComponent',
+    'RollerConeBOM',
 ]
