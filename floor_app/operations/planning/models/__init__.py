@@ -18,6 +18,18 @@ from .metrics import (
     WIPSnapshot,
     DeliveryForecast,
 )
+from .requirements import (
+    RequirementCategory,
+    RequirementTemplate,
+    JobRequirement,
+    TechnicalInstruction,
+)
+from .visual_planning import (
+    WorkflowStage,
+    BitWorkflowPosition,
+    VisualBoardLayout,
+    WIPDashboardMetrics,
+)
 
 __all__ = [
     # Resource management
@@ -33,4 +45,14 @@ __all__ = [
     'JobMetrics',
     'WIPSnapshot',
     'DeliveryForecast',
+    # Requirements and instructions
+    'RequirementCategory',
+    'RequirementTemplate',
+    'JobRequirement',
+    'TechnicalInstruction',
+    # Visual planning and WIP dashboard
+    'WorkflowStage',
+    'BitWorkflowPosition',
+    'VisualBoardLayout',
+    'WIPDashboardMetrics',
 ]

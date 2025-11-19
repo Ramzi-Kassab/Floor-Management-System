@@ -1,235 +1,284 @@
 """
-Admin configuration for Analytics models
+Analytics Admin Configuration
 """
+
 from django.contrib import admin
 from django.utils.html import format_html
-from django.db.models import Count
-from .models import (
-    UserSession, PageView, UserActivity, ModuleUsage,
-    SystemMetric, ErrorLog, SearchQuery, DailyStatistics
+from floor_app.operations.analytics.models import (
+    AppEvent,
+    EventSummary,
+    InformationRequest,
+    RequestTrend,
+    AutomationRule,
+    AutomationRuleExecution,
+    RuleTemplate,
 )
 
 
-@admin.register(UserSession)
-class UserSessionAdmin(admin.ModelAdmin):
-    list_display = ['user', 'login_time', 'logout_time', 'duration_display', 'device_type', 'browser', 'is_active', 'ip_address']
-    list_filter = ['is_active', 'device_type', 'browser', 'operating_system', 'login_time']
-    search_fields = ['user__username', 'user__email', 'ip_address', 'session_key']
-    readonly_fields = ['session_key', 'login_time', 'last_activity', 'duration_seconds', 'user_agent']
-    date_hierarchy = 'login_time'
+@admin.register(AppEvent)
+class AppEventAdmin(admin.ModelAdmin):
+    list_display = [
+        'timestamp', 'user', 'event_type', 'view_name',
+        'event_category', 'duration_ms', 'http_method'
+    ]
+    list_filter = [
+        'event_type', 'event_category', 'http_method',
+        'timestamp'
+    ]
+    search_fields = [
+        'view_name', 'http_path', 'user__username'
+    ]
+    readonly_fields = [
+        'user', 'event_type', 'view_name', 'event_category',
+        'http_path', 'http_method', 'timestamp', 'duration_ms',
+        'client_ip', 'user_agent', 'metadata'
+    ]
+    date_hierarchy = 'timestamp'
+    ordering = ['-timestamp']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(EventSummary)
+class EventSummaryAdmin(admin.ModelAdmin):
+    list_display = [
+        'period_type', 'period_start', 'view_name',
+        'event_category', 'event_count', 'unique_users'
+    ]
+    list_filter = ['period_type', 'event_category']
+    search_fields = ['view_name']
+    readonly_fields = [
+        'period_type', 'period_start', 'period_end',
+        'event_type', 'view_name', 'event_category',
+        'event_count', 'unique_users', 'avg_duration_ms'
+    ]
+    date_hierarchy = 'period_start'
+    ordering = ['-period_start']
+
+
+@admin.register(InformationRequest)
+class InformationRequestAdmin(admin.ModelAdmin):
+    list_display = [
+        'summary', 'requester', 'channel', 'request_category',
+        'status', 'is_repeated', 'request_datetime', 'covered_status'
+    ]
+    list_filter = [
+        'status', 'channel', 'request_category',
+        'is_repeated', 'is_now_covered_by_system'
+    ]
+    search_fields = [
+        'summary', 'details', 'requester_name', 'requester_email'
+    ]
+    readonly_fields = [
+        'request_datetime', 'created_at', 'updated_at', 'covered_since'
+    ]
+    date_hierarchy = 'request_datetime'
+    ordering = ['-request_datetime']
 
     fieldsets = (
-        ('Session Information', {
-            'fields': ('user', 'session_key', 'is_active')
+        ('Request Information', {
+            'fields': (
+                'requester', 'requester_name', 'requester_email', 'requester_role',
+                'channel', 'request_datetime', 'summary', 'details',
+                'request_category', 'priority'
+            )
         }),
-        ('Time Tracking', {
-            'fields': ('login_time', 'last_activity', 'logout_time', 'duration_seconds')
+        ('Related Objects', {
+            'fields': (
+                'related_job_card', 'related_serial_unit', 'related_customer'
+            )
         }),
-        ('Device & Browser', {
-            'fields': ('device_type', 'browser', 'operating_system', 'user_agent')
+        ('Frequency', {
+            'fields': (
+                'is_repeated', 'repeat_count', 'similar_requests'
+            )
         }),
-        ('Network', {
-            'fields': ('ip_address', 'country', 'city')
+        ('System Coverage', {
+            'fields': (
+                'status', 'is_now_covered_by_system', 'covered_by_view_name',
+                'covered_by_url', 'covered_since'
+            )
+        }),
+        ('Response', {
+            'fields': (
+                'response_time_minutes', 'response_notes'
+            )
+        }),
+        ('Metadata', {
+            'fields': (
+                'tags', 'created_at', 'updated_at'
+            )
         }),
     )
 
-    def duration_display(self, obj):
-        return obj.get_duration_display()
-    duration_display.short_description = 'Duration'
-
-    def has_add_permission(self, request):
-        return False  # Sessions are created automatically
-
-
-@admin.register(PageView)
-class PageViewAdmin(admin.ModelAdmin):
-    list_display = ['user', 'url_name', 'module', 'timestamp', 'load_time_badge']
-    list_filter = ['module', 'timestamp']
-    search_fields = ['user__username', 'url', 'url_name']
-    readonly_fields = ['session', 'user', 'url', 'url_name', 'module', 'view_name', 'timestamp', 'referrer', 'load_time_ms', 'query_params']
-    date_hierarchy = 'timestamp'
-
-    def load_time_badge(self, obj):
-        if obj.load_time_ms is None:
-            return '-'
-        color = 'green' if obj.load_time_ms < 500 else 'orange' if obj.load_time_ms < 1000 else 'red'
-        return format_html('<span style="color: {}">{} ms</span>', color, obj.load_time_ms)
-    load_time_badge.short_description = 'Load Time'
-
-    def has_add_permission(self, request):
-        return False
+    def covered_status(self, obj):
+        if obj.is_now_covered_by_system:
+            return format_html('<span style="color: green;">✓ Covered</span>')
+        else:
+            return format_html('<span style="color: red;">✗ Not Covered</span>')
+    covered_status.short_description = 'Covered?'
 
 
-@admin.register(UserActivity)
-class UserActivityAdmin(admin.ModelAdmin):
-    list_display = ['user', 'action_type', 'module', 'description_short', 'timestamp', 'success_badge']
-    list_filter = ['action_type', 'module', 'success', 'timestamp']
-    search_fields = ['user__username', 'description', 'module']
-    readonly_fields = ['session', 'user', 'action_type', 'module', 'description', 'content_type', 'object_id', 'timestamp', 'metadata', 'success', 'error_message']
-    date_hierarchy = 'timestamp'
+@admin.register(RequestTrend)
+class RequestTrendAdmin(admin.ModelAdmin):
+    list_display = [
+        'period_type', 'period_start', 'request_category',
+        'total_requests', 'covered_requests', 'open_requests'
+    ]
+    list_filter = ['period_type', 'request_category']
+    readonly_fields = [
+        'period_type', 'period_start', 'period_end', 'request_category',
+        'total_requests', 'covered_requests', 'open_requests',
+        'repeated_requests', 'avg_response_time_minutes'
+    ]
+    date_hierarchy = 'period_start'
+    ordering = ['-period_start']
+
+
+@admin.register(AutomationRule)
+class AutomationRuleAdmin(admin.ModelAdmin):
+    list_display = [
+        'rule_code', 'name', 'rule_scope', 'severity',
+        'is_active', 'is_approved', 'trigger_mode',
+        'last_run_status', 'total_triggers'
+    ]
+    list_filter = [
+        'rule_scope', 'severity', 'is_active', 'is_approved',
+        'trigger_mode', 'action_type'
+    ]
+    search_fields = ['rule_code', 'name', 'description']
+    readonly_fields = [
+        'created_at', 'updated_at', 'last_run_at',
+        'last_status', 'last_error', 'total_executions', 'total_triggers'
+    ]
+    ordering = ['rule_scope', 'name']
 
     fieldsets = (
-        ('Activity Information', {
-            'fields': ('user', 'session', 'action_type', 'module', 'description')
+        ('Identification', {
+            'fields': ('name', 'rule_code', 'description', 'tags')
         }),
-        ('Target Object', {
-            'fields': ('content_type', 'object_id')
+        ('Scope & Target', {
+            'fields': ('rule_scope', 'target_model')
         }),
-        ('Status', {
-            'fields': ('success', 'error_message', 'timestamp')
+        ('Condition', {
+            'fields': ('condition_definition',),
+            'description': 'JSON structure defining when this rule triggers'
         }),
-        ('Additional Data', {
-            'fields': ('metadata',),
-            'classes': ('collapse',)
+        ('Action', {
+            'fields': ('action_type', 'action_config', 'severity')
+        }),
+        ('Trigger Configuration', {
+            'fields': ('trigger_mode', 'schedule_cron', 'event_trigger')
+        }),
+        ('Control', {
+            'fields': (
+                'is_active', 'is_approved', 'approved_by', 'approved_at',
+                'min_interval_seconds', 'max_triggers_per_day'
+            )
+        }),
+        ('Execution Status', {
+            'fields': (
+                'last_run_at', 'last_status', 'last_error',
+                'total_executions', 'total_triggers'
+            )
+        }),
+        ('Metadata', {
+            'fields': ('notes', 'created_at', 'updated_at', 'created_by')
         }),
     )
 
-    def description_short(self, obj):
-        return obj.description[:100] + '...' if len(obj.description) > 100 else obj.description
-    description_short.short_description = 'Description'
-
-    def success_badge(self, obj):
-        color = 'green' if obj.success else 'red'
-        text = '✓ Success' if obj.success else '✗ Failed'
-        return format_html('<span style="color: {}">{}</span>', color, text)
-    success_badge.short_description = 'Status'
-
-    def has_add_permission(self, request):
-        return False
-
-
-@admin.register(ModuleUsage)
-class ModuleUsageAdmin(admin.ModelAdmin):
-    list_display = ['module', 'date', 'page_views', 'unique_users', 'total_actions', 'avg_load_time_ms']
-    list_filter = ['module', 'date']
-    search_fields = ['module']
-    readonly_fields = ['created_at', 'updated_at']
-    date_hierarchy = 'date'
-
-    def has_add_permission(self, request):
-        return False
-
-
-@admin.register(SystemMetric)
-class SystemMetricAdmin(admin.ModelAdmin):
-    list_display = ['metric_type', 'value', 'unit', 'timestamp']
-    list_filter = ['metric_type', 'timestamp']
-    readonly_fields = ['metric_type', 'value', 'unit', 'timestamp', 'metadata']
-    date_hierarchy = 'timestamp'
-
-    def has_add_permission(self, request):
-        return False
-
-
-@admin.register(ErrorLog)
-class ErrorLogAdmin(admin.ModelAdmin):
-    list_display = ['severity_badge', 'error_type', 'module', 'user', 'timestamp', 'resolved_badge']
-    list_filter = ['severity', 'module', 'is_resolved', 'timestamp']
-    search_fields = ['error_type', 'error_message', 'module', 'user__username']
-    readonly_fields = ['session', 'user', 'severity', 'error_type', 'error_message', 'url', 'module', 'view_name', 'traceback', 'timestamp', 'request_data', 'user_agent', 'ip_address']
-    date_hierarchy = 'timestamp'
-
-    fieldsets = (
-        ('Error Information', {
-            'fields': ('severity', 'error_type', 'error_message', 'timestamp')
-        }),
-        ('Context', {
-            'fields': ('user', 'session', 'url', 'module', 'view_name')
-        }),
-        ('Technical Details', {
-            'fields': ('traceback', 'request_data', 'user_agent', 'ip_address'),
-            'classes': ('collapse',)
-        }),
-        ('Resolution', {
-            'fields': ('is_resolved', 'resolved_at', 'resolved_by', 'resolution_notes')
-        }),
-    )
-
-    def severity_badge(self, obj):
-        colors = {
-            'debug': 'gray',
-            'info': 'blue',
-            'warning': 'orange',
-            'error': 'red',
-            'critical': 'darkred'
-        }
-        color = colors.get(obj.severity, 'black')
+    def last_run_status(self, obj):
+        if obj.last_status == 'success':
+            color = 'green'
+        elif obj.last_status == 'error':
+            color = 'red'
+        else:
+            color = 'gray'
         return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
+            '<span style="color: {};">{}</span>',
             color,
-            obj.get_severity_display().upper()
+            obj.last_status or 'Never run'
         )
-    severity_badge.short_description = 'Severity'
+    last_run_status.short_description = 'Last Status'
 
-    def resolved_badge(self, obj):
-        if obj.is_resolved:
-            return format_html('<span style="color: green;">✓ Resolved</span>')
-        return format_html('<span style="color: red;">✗ Unresolved</span>')
-    resolved_badge.short_description = 'Status'
+    actions = ['activate_rules', 'deactivate_rules', 'run_rules_now']
+
+    def activate_rules(self, request, queryset):
+        count = queryset.update(is_active=True)
+        self.message_user(request, f'{count} rules activated')
+    activate_rules.short_description = 'Activate selected rules'
+
+    def deactivate_rules(self, request, queryset):
+        count = queryset.update(is_active=False)
+        self.message_user(request, f'{count} rules deactivated')
+    deactivate_rules.short_description = 'Deactivate selected rules'
+
+    def run_rules_now(self, request, queryset):
+        results = []
+        for rule in queryset:
+            try:
+                execution = rule.execute()
+                results.append(f"{rule.rule_code}: {'TRIGGERED' if execution.was_triggered else 'NO_TRIGGER'}")
+            except Exception as e:
+                results.append(f"{rule.rule_code}: ERROR - {str(e)}")
+        self.message_user(request, '; '.join(results))
+    run_rules_now.short_description = 'Run selected rules now'
+
+
+@admin.register(AutomationRuleExecution)
+class AutomationRuleExecutionAdmin(admin.ModelAdmin):
+    list_display = [
+        'executed_at', 'rule', 'was_triggered',
+        'action_executed', 'target_display', 'execution_duration_ms'
+    ]
+    list_filter = [
+        'was_triggered', 'action_executed', 'executed_at', 'rule__rule_scope'
+    ]
+    search_fields = ['rule__rule_code', 'rule__name', 'comment']
+    readonly_fields = [
+        'rule', 'executed_at', 'was_triggered', 'context_data',
+        'comment', 'action_executed', 'action_result', 'action_error',
+        'execution_duration_ms'
+    ]
+    date_hierarchy = 'executed_at'
+    ordering = ['-executed_at']
+
+    def target_display(self, obj):
+        if obj.target_object:
+            return str(obj.target_object)
+        return '-'
+    target_display.short_description = 'Target'
 
     def has_add_permission(self, request):
         return False
 
-
-@admin.register(SearchQuery)
-class SearchQueryAdmin(admin.ModelAdmin):
-    list_display = ['user', 'search_term', 'module', 'results_count', 'clicked_result', 'timestamp']
-    list_filter = ['module', 'clicked_result', 'timestamp']
-    search_fields = ['user__username', 'search_term', 'module']
-    readonly_fields = ['user', 'session', 'module', 'search_term', 'filters_applied', 'results_count', 'timestamp', 'clicked_result']
-    date_hierarchy = 'timestamp'
-
-    def has_add_permission(self, request):
+    def has_change_permission(self, request, obj=None):
         return False
 
 
-@admin.register(DailyStatistics)
-class DailyStatisticsAdmin(admin.ModelAdmin):
-    list_display = ['date', 'active_users', 'total_logins', 'total_page_views', 'total_actions', 'total_errors']
-    list_filter = ['date']
-    search_fields = ['date']
-    readonly_fields = ['date', 'total_users', 'active_users', 'new_users', 'total_logins', 'total_page_views',
-                      'total_actions', 'avg_session_duration_seconds', 'avg_page_load_time_ms', 'total_errors',
-                      'critical_errors', 'module_statistics', 'peak_concurrent_users', 'peak_hour',
-                      'created_at', 'updated_at']
+@admin.register(RuleTemplate)
+class RuleTemplateAdmin(admin.ModelAdmin):
+    list_display = [
+        'template_name', 'rule_scope', 'usage_count', 'is_active'
+    ]
+    list_filter = ['rule_scope', 'is_active']
+    search_fields = ['template_name', 'description']
+    readonly_fields = ['usage_count', 'created_at', 'updated_at']
+    ordering = ['rule_scope', 'template_name']
 
     fieldsets = (
-        ('Date', {
-            'fields': ('date',)
+        ('Template Info', {
+            'fields': ('template_name', 'description', 'rule_scope', 'is_active')
         }),
-        ('User Metrics', {
-            'fields': ('total_users', 'active_users', 'new_users')
+        ('Template Definition', {
+            'fields': ('template_definition',),
+            'description': 'JSON structure with placeholders'
         }),
-        ('Activity Metrics', {
-            'fields': ('total_logins', 'total_page_views', 'total_actions')
-        }),
-        ('Performance Metrics', {
-            'fields': ('avg_session_duration_seconds', 'avg_page_load_time_ms')
-        }),
-        ('Error Metrics', {
-            'fields': ('total_errors', 'critical_errors')
-        }),
-        ('Module Breakdown', {
-            'fields': ('module_statistics',),
-            'classes': ('collapse',)
-        }),
-        ('Peak Usage', {
-            'fields': ('peak_concurrent_users', 'peak_hour')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
+        ('Usage', {
+            'fields': ('usage_count', 'created_at', 'updated_at')
         }),
     )
-
-    actions = ['generate_statistics']
-
-    def generate_statistics(self, request, queryset):
-        """Regenerate statistics for selected dates"""
-        from .models import DailyStatistics
-        count = 0
-        for stat in queryset:
-            DailyStatistics.generate_for_date(stat.date)
-            count += 1
-        self.message_user(request, f"Successfully regenerated statistics for {count} date(s).")
-    generate_statistics.short_description = "Regenerate statistics for selected dates"

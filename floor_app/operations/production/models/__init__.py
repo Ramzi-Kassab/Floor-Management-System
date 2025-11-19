@@ -35,6 +35,11 @@ from .checklist import (
     JobChecklistItem,
 )
 
+from .quotation import (
+    Quotation,
+    QuotationLine,
+)
+
 __all__ = [
     # Reference tables
     'OperationDefinition',
@@ -60,4 +65,7 @@ __all__ = [
     # Checklist layer
     'JobChecklistInstance',
     'JobChecklistItem',
+    # Quotation layer
+    'Quotation',
+    'QuotationLine',
 ]

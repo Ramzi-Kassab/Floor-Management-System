@@ -141,7 +141,7 @@ class InventoryTransaction(PostingMixin):
         null=True,
         blank=True,
         related_name='transactions_from',
-        help_text="Source ownership"
+        help_text="Source ownership (generic)"
     )
     to_ownership = models.ForeignKey(
         'OwnershipType',
@@ -149,7 +149,37 @@ class InventoryTransaction(PostingMixin):
         null=True,
         blank=True,
         related_name='transactions_to',
-        help_text="Destination ownership"
+        help_text="Destination ownership (generic)"
+    )
+
+    # Cutter-specific ownership tracking (for Excel integration)
+    # These provide finer-grained tracking than generic ownership
+    # Used for cutters: ENO As New, ENO Ground, ARDT Reclaim, LSTK Reclaim, New Stock
+    cutter_ownership_category = models.ForeignKey(
+        'CutterOwnershipCategory',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transactions',
+        help_text="Cutter ownership category (for cutter items only)"
+    )
+
+    # For transactions that affect quantity IN/OUT per ownership category
+    # quantity_in: Positive quantity added to this ownership category (PO receipt, reclaim, grinding)
+    # quantity_out: Positive quantity removed from this ownership category (consumption, scrap)
+    quantity_in = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text="Quantity added to ownership category (for cutters)"
+    )
+    quantity_out = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text="Quantity removed from ownership category (for cutters)"
     )
 
     # For RETROFIT: MAT change tracking
