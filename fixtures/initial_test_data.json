@@ -1,0 +1,114 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "username": "admin",
+      "email": "admin@floor management.local",
+      "is_staff": true,
+      "is_superuser": true,
+      "is_active": true,
+      "date_joined": "2025-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 1,
+    "fields": {
+      "code": "PROD",
+      "name": "Production",
+      "description": "Manufacturing and production department",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 2,
+    "fields": {
+      "code": "QC",
+      "name": "Quality Control",
+      "description": "Quality control and assurance",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 3,
+    "fields": {
+      "code": "MAINT",
+      "name": "Maintenance",
+      "description": "Equipment maintenance and repair",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 4,
+    "fields": {
+      "code": "WARE",
+      "name": "Warehouse",
+      "description": "Inventory and warehouse operations",
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 1,
+    "fields": {
+      "code": "WH-A01",
+      "name": "Warehouse A - Zone 1",
+      "description": "Main warehouse zone 1",
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 2,
+    "fields": {
+      "code": "WH-A02",
+      "name": "Warehouse A - Zone 2",
+      "description": "Main warehouse zone 2",
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 3,
+    "fields": {
+      "code": "PROD-01",
+      "name": "Production Floor 1",
+      "description": "Main production floor",
+      "is_active": true
+    }
+  },
+  {
+    "model": "core.costcenter",
+    "pk": 1,
+    "fields": {
+      "code": "CC-1000",
+      "name": "Production - Bits",
+      "description": "Bit manufacturing cost center",
+      "is_active": true
+    }
+  },
+  {
+    "model": "core.costcenter",
+    "pk": 2,
+    "fields": {
+      "code": "CC-2000",
+      "name": "Quality Control",
+      "description": "QC and testing cost center",
+      "is_active": true
+    }
+  },
+  {
+    "model": "core.costcenter",
+    "pk": 3,
+    "fields": {
+      "code": "CC-3000",
+      "name": "Maintenance",
+      "description": "Maintenance operations cost center",
+      "is_active": true
+    }
+  }
+]

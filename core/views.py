@@ -938,3 +938,7 @@ def global_search_api(request):
 
     return JsonResponse({'results': formatted_results[:20]})
 
+
+# Health check endpoints
+from .views.health import health_check, readiness_check, liveness_check
+
