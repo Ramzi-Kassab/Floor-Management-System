@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Schedule Meeting - Meeting Management{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+<style>
+    .room-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .room-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .room-card.selected {
+        border: 2px solid #0d6efd;
+        background-color: #e7f1ff;
+    }
+    .feature-badge {
+        font-size: 0.75rem;
+        margin: 2px;
+    }
+    .time-slot {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .time-slot.available {
+        background-color: #d1e7dd;
+        border: 1px solid #badbcc;
+    }
+    .time-slot.available:hover {
+        background-color: #badbcc;
+    }
+    .time-slot.booked {
+        background-color: #f8d7da;
+        border: 1px solid #f5c2c7;
+        cursor: not-allowed;
+    }
+    .calendar-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-calendar-plus"></i> Schedule Meeting</h2>
+            <p class="text-muted">Book a meeting room and schedule your meeting</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Panel: Meeting Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Meeting Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="meetingScheduleForm">
+                        {% csrf_token %}
+
+                        <!-- Meeting Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="title" class="form-label">Meeting Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="meeting_type" class="form-label">Meeting Type</label>
+                                <select class="form-select" id="meeting_type" name="meeting_type">
+                                    <option value="INTERNAL">Internal Meeting</option>
+                                    <option value="CLIENT">Client Meeting</option>
+                                    <option value="TRAINING">Training</option>
+                                    <option value="INTERVIEW">Interview</option>
+                                    <option value="WORKSHOP">Workshop</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+
+                        <!-- Date and Time -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="meeting_date" class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="meeting_date" name="meeting_date" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" required>
+                            </div>
+                        </div>
+
+                        <!-- Room Selection -->
+                        <div class="mb-3">
+                            <label for="room" class="form-label">Meeting Room <span class="text-danger">*</span></label>
+                            <input type="hidden" id="room" name="room" required>
+                            <div id="roomSelection" class="row g-3">
+                                {% for room in rooms %}
+                                <div class="col-md-6">
+                                    <div class="card room-card h-100" data-room-id="{{ room.id }}" data-capacity="{{ room.capacity }}">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ room.code }} - {{ room.name }}</h6>
+                                            <p class="card-text text-muted small mb-2">
+                                                <i class="bi bi-geo-alt"></i> {{ room.building|default:"" }} {% if room.floor_level %}Floor {{ room.floor_level }}{% endif %}
+                                            </p>
+                                            <div class="mb-2">
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-people"></i> Capacity: {{ room.capacity }}
+                                                </span>
+                                                {% if room.has_projector %}
+                                                <span class="badge bg-secondary feature-badge">
+                                                    <i class="bi bi-projector"></i> Projector
+                                                </span>
+                                                {% endif %}
+                                                {% if room.has_video_conference %}
+                                                <span class="badge bg-secondary feature-badge">
+                                                    <i class="bi bi-camera-video"></i> Video Conf
+                                                </span>
+                                                {% endif %}
+                                                {% if room.has_whiteboard %}
+                                                <span class="badge bg-secondary feature-badge">
+                                                    <i class="bi bi-easel"></i> Whiteboard
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12">
+                                    <div class="alert alert-warning">No meeting rooms available</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Attendees -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="participants" class="form-label">Internal Participants</label>
+                                <select class="form-select" id="participants" name="participants" multiple>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expected_attendees" class="form-label">Expected Attendees <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="expected_attendees" name="expected_attendees" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="external_participants" class="form-label">External Participants</label>
+                            <textarea class="form-control" id="external_participants" name="external_participants" rows="2"
+                                      placeholder="Enter names and email addresses of external participants"></textarea>
+                        </div>
+
+                        <!-- Additional Requirements -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Additional Requirements</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="catering_required" name="catering_required">
+                                            <label class="form-check-label" for="catering_required">
+                                                Catering Required
+                                            </label>
+                                        </div>
+                                        <div id="cateringDetails" class="d-none mb-3">
+                                            <textarea class="form-control" name="catering_details" rows="2"
+                                                      placeholder="Enter catering details"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="it_support_required" name="it_support_required">
+                                            <label class="form-check-label" for="it_support_required">
+                                                IT Support Required
+                                            </label>
+                                        </div>
+                                        <div id="itSupportDetails" class="d-none mb-3">
+                                            <textarea class="form-control" name="it_support_details" rows="2"
+                                                      placeholder="Enter IT support requirements"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="setup_requirements" class="form-label">Setup Requirements</label>
+                                    <textarea class="form-control" id="setup_requirements" name="setup_requirements" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recurring Meeting -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_recurring" name="is_recurring">
+                                    <label class="form-check-label" for="is_recurring">
+                                        <h6 class="mb-0">Recurring Meeting</h6>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="card-body d-none" id="recurringOptions">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="recurrence_frequency" class="form-label">Frequency</label>
+                                        <select class="form-select" id="recurrence_frequency" name="recurrence_frequency">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="WEEKLY" selected>Weekly</option>
+                                            <option value="BIWEEKLY">Bi-weekly</option>
+                                            <option value="MONTHLY">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="recurrence_end_date" class="form-label">End Date</label>
+                                        <input type="date" class="form-control" id="recurrence_end_date" name="recurrence_end_date">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="recurrence_count" class="form-label">Number of Occurrences</label>
+                                        <input type="number" class="form-control" id="recurrence_count" name="recurrence_count" min="1" max="52">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='{% url "meetings:meeting_list" %}'">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Schedule Meeting
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Calendar View -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar3"></i> Calendar</h5>
+                </div>
+                <div class="card-body calendar-container p-0">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+
+            <!-- Room Availability -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock"></i> Room Availability</h5>
+                </div>
+                <div class="card-body">
+                    <div id="availabilityView">
+                        <p class="text-muted">Select a date and room to view availability</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 for participants
+    $('#participants').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select participants',
+        allowClear: true
+    });
+
+    // Initialize Calendar
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        selectable: true,
+        select: function(info) {
+            document.getElementById('meeting_date').value = info.startStr;
+        },
+        events: '/api/meetings/calendar/',
+        eventClick: function(info) {
+            alert('Meeting: ' + info.event.title);
+        }
+    });
+    calendar.render();
+
+    // Room Selection
+    document.querySelectorAll('.room-card').forEach(card => {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('room').value = this.dataset.roomId;
+            checkRoomAvailability();
+        });
+    });
+
+    // Toggle additional requirement details
+    document.getElementById('catering_required').addEventListener('change', function() {
+        document.getElementById('cateringDetails').classList.toggle('d-none', !this.checked);
+    });
+
+    document.getElementById('it_support_required').addEventListener('change', function() {
+        document.getElementById('itSupportDetails').classList.toggle('d-none', !this.checked);
+    });
+
+    // Toggle recurring options
+    document.getElementById('is_recurring').addEventListener('change', function() {
+        document.getElementById('recurringOptions').classList.toggle('d-none', !this.checked);
+    });
+
+    // Check room availability
+    function checkRoomAvailability() {
+        const roomId = document.getElementById('room').value;
+        const date = document.getElementById('meeting_date').value;
+        const startTime = document.getElementById('start_time').value;
+        const endTime = document.getElementById('end_time').value;
+
+        if (roomId && date && startTime && endTime) {
+            fetch(`/api/meetings/rooms/${roomId}/availability/?date=${date}&start_time=${startTime}&end_time=${endTime}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayAvailability(data);
+                });
+        }
+    }
+
+    function displayAvailability(data) {
+        const container = document.getElementById('availabilityView');
+        if (data.is_available) {
+            container.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> Room is available for selected time
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> Room is not available
+                </div>
+                <div class="mt-3">
+                    <h6>Suggested Time Slots:</h6>
+                    ${data.suggestions ? data.suggestions.map(slot => `
+                        <div class="time-slot available">
+                            ${slot.start} - ${slot.end}
+                        </div>
+                    `).join('') : '<p class="text-muted">No suggestions available</p>'}
+                </div>
+            `;
+        }
+    }
+
+    // Event listeners for availability check
+    ['meeting_date', 'start_time', 'end_time'].forEach(id => {
+        document.getElementById(id).addEventListener('change', checkRoomAvailability);
+    });
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('meeting_date').setAttribute('min', today);
+
+    // Form validation
+    document.getElementById('meetingScheduleForm').addEventListener('submit', function(e) {
+        const room = document.getElementById('room').value;
+        if (!room) {
+            e.preventDefault();
+            alert('Please select a meeting room');
+            return false;
+        }
+
+        const startTime = document.getElementById('start_time').value;
+        const endTime = document.getElementById('end_time').value;
+        if (startTime >= endTime) {
+            e.preventDefault();
+            alert('End time must be after start time');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

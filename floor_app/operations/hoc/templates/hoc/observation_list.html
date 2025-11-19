@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Hazard Observation Cards - Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .severity-critical {
+        background-color: #dc3545;
+        color: white;
+        border-left: 5px solid #a71d2a;
+    }
+    .severity-high {
+        background-color: #fd7e14;
+        color: white;
+        border-left: 5px solid #d66a0a;
+    }
+    .severity-medium {
+        background-color: #ffc107;
+        color: #212529;
+        border-left: 5px solid #cc9a06;
+    }
+    .severity-low {
+        background-color: #28a745;
+        color: white;
+        border-left: 5px solid #1e7e34;
+    }
+
+    .badge-severity-critical {
+        background-color: #dc3545;
+    }
+    .badge-severity-high {
+        background-color: #fd7e14;
+    }
+    .badge-severity-medium {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .badge-severity-low {
+        background-color: #28a745;
+    }
+
+    .status-submitted {
+        background-color: #6c757d;
+    }
+    .status-under-review {
+        background-color: #0dcaf0;
+    }
+    .status-approved {
+        background-color: #0d6efd;
+    }
+    .status-action-assigned {
+        background-color: #6610f2;
+    }
+    .status-in-progress {
+        background-color: #fd7e14;
+    }
+    .status-completed {
+        background-color: #198754;
+    }
+    .status-verified {
+        background-color: #20c997;
+    }
+    .status-closed {
+        background-color: #212529;
+    }
+
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .overdue-flag {
+        color: #dc3545;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .days-open-badge {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+
+    .quick-action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .grid-view .card {
+        height: 100%;
+        transition: all 0.3s;
+    }
+
+    .grid-view .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                Hazard Observation Cards
+            </h2>
+            <p class="text-muted">Monitor and manage workplace safety observations</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'operations:submit_hoc' %}" class="btn btn-danger btn-lg">
+                <i class="bi bi-plus-circle"></i> Submit New HOC
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Total Observations</p>
+                            <h3 class="mb-0">{{ total_observations|default:0 }}</h3>
+                        </div>
+                        <div class="text-primary" style="font-size: 2.5rem;">
+                            <i class="bi bi-clipboard-data"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Open</p>
+                            <h3 class="mb-0 text-warning">{{ open_observations|default:0 }}</h3>
+                        </div>
+                        <div class="text-warning" style="font-size: 2.5rem;">
+                            <i class="bi bi-folder-open"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Completed</p>
+                            <h3 class="mb-0 text-success">{{ completed_observations|default:0 }}</h3>
+                        </div>
+                        <div class="text-success" style="font-size: 2.5rem;">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Overdue</p>
+                            <h3 class="mb-0 text-danger">{{ overdue_observations|default:0 }}</h3>
+                        </div>
+                        <div class="text-danger" style="font-size: 2.5rem;">
+                            <i class="bi bi-exclamation-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Severity Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card severity-critical shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="mb-1">{{ critical_count|default:0 }}</h4>
+                    <p class="mb-0">Critical Severity</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card severity-high shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="mb-1">{{ high_count|default:0 }}</h4>
+                    <p class="mb-0">High Severity</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card severity-medium shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="mb-1">{{ medium_count|default:0 }}</h4>
+                    <p class="mb-0">Medium Severity</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card severity-low shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="mb-1">{{ low_count|default:0 }}</h4>
+                    <p class="mb-0">Low Severity</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filter-section">
+        <form method="get" id="filterForm" class="row g-3">
+            <div class="col-md-3">
+                <label for="searchInput" class="form-label">
+                    <i class="bi bi-search"></i> Search
+                </label>
+                <input type="text" class="form-control" id="searchInput" name="search"
+                       placeholder="Card #, location, submitter..."
+                       value="{{ request.GET.search }}"
+                       aria-label="Search observations">
+            </div>
+
+            <div class="col-md-2">
+                <label for="severityFilter" class="form-label">Severity</label>
+                <select class="form-select" id="severityFilter" name="severity" aria-label="Filter by severity">
+                    <option value="">All Severities</option>
+                    <option value="critical" {% if request.GET.severity == 'critical' %}selected{% endif %}>Critical</option>
+                    <option value="high" {% if request.GET.severity == 'high' %}selected{% endif %}>High</option>
+                    <option value="medium" {% if request.GET.severity == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="low" {% if request.GET.severity == 'low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="statusFilter" class="form-label">Status</label>
+                <select class="form-select" id="statusFilter" name="status" aria-label="Filter by status">
+                    <option value="">All Status</option>
+                    <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>Submitted</option>
+                    <option value="under_review" {% if request.GET.status == 'under_review' %}selected{% endif %}>Under Review</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="action_assigned" {% if request.GET.status == 'action_assigned' %}selected{% endif %}>Action Assigned</option>
+                    <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="verified" {% if request.GET.status == 'verified' %}selected{% endif %}>Verified</option>
+                    <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="categoryFilter" class="form-label">Category</label>
+                <select class="form-select" id="categoryFilter" name="category" aria-label="Filter by category">
+                    <option value="">All Categories</option>
+                    <option value="safety" {% if request.GET.category == 'safety' %}selected{% endif %}>Safety</option>
+                    <option value="environmental" {% if request.GET.category == 'environmental' %}selected{% endif %}>Environmental</option>
+                    <option value="quality" {% if request.GET.category == 'quality' %}selected{% endif %}>Quality</option>
+                    <option value="ergonomic" {% if request.GET.category == 'ergonomic' %}selected{% endif %}>Ergonomic</option>
+                    <option value="housekeeping" {% if request.GET.category == 'housekeeping' %}selected{% endif %}>Housekeeping</option>
+                    <option value="other" {% if request.GET.category == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="departmentFilter" class="form-label">Department</label>
+                <select class="form-select" id="departmentFilter" name="department" aria-label="Filter by department">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:'s' %}selected{% endif %}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filter
+                </button>
+            </div>
+        </form>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <label for="dateFrom" class="form-label">Date Range</label>
+                <div class="input-group">
+                    <input type="date" class="form-control" id="dateFrom" name="date_from"
+                           value="{{ request.GET.date_from }}" aria-label="From date">
+                    <span class="input-group-text">to</span>
+                    <input type="date" class="form-control" id="dateTo" name="date_to"
+                           value="{{ request.GET.date_to }}" aria-label="To date">
+                </div>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-end justify-content-end">
+                <div class="btn-group" role="group" aria-label="View toggle">
+                    <input type="radio" class="btn-check" name="view" id="tableView" value="table" checked>
+                    <label class="btn btn-outline-secondary" for="tableView">
+                        <i class="bi bi-list-ul"></i> Table
+                    </label>
+
+                    <input type="radio" class="btn-check" name="view" id="gridView" value="grid">
+                    <label class="btn btn-outline-secondary" for="gridView">
+                        <i class="bi bi-grid-3x3"></i> Grid
+                    </label>
+                </div>
+
+                <a href="{% url 'operations:observation_list' %}" class="btn btn-outline-secondary ms-2">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableViewContainer" class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" role="table" aria-label="Hazard observations table">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Card #</th>
+                            <th scope="col">Title</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Severity</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Submitted By</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Due Date</th>
+                            <th scope="col">Days Open</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for observation in observations %}
+                        <tr>
+                            <td>
+                                <strong>{{ observation.card_number }}</strong>
+                                {% if observation.is_overdue %}
+                                <i class="bi bi-flag-fill overdue-flag ms-1"
+                                   title="Overdue" aria-label="Overdue indicator"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'operations:observation_detail' observation.id %}"
+                                   class="text-decoration-none">
+                                    {{ observation.title|truncatewords:8 }}
+                                </a>
+                            </td>
+                            <td>{{ observation.location }}</td>
+                            <td>
+                                <span class="badge badge-severity-{{ observation.severity }} px-3 py-2">
+                                    {{ observation.get_severity_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge status-{{ observation.status }} px-3 py-2">
+                                    {{ observation.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ observation.submitted_by.get_full_name|default:observation.submitted_by.username }}</td>
+                            <td>{{ observation.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if observation.due_date %}
+                                    {{ observation.due_date|date:"M d, Y" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge days-open-badge {% if observation.days_open > 30 %}bg-danger{% elif observation.days_open > 14 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ observation.days_open }} days
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group" aria-label="Quick actions">
+                                    <a href="{% url 'operations:observation_detail' observation.id %}"
+                                       class="btn btn-sm btn-outline-primary quick-action-btn"
+                                       aria-label="View observation {{ observation.card_number }}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if perms.operations.can_review_hoc %}
+                                    <button type="button" class="btn btn-sm btn-outline-info quick-action-btn"
+                                            onclick="reviewObservation({{ observation.id }})"
+                                            aria-label="Review observation {{ observation.card_number }}">
+                                        <i class="bi bi-clipboard-check"></i>
+                                    </button>
+                                    {% endif %}
+                                    {% if perms.operations.can_assign_hoc %}
+                                    <button type="button" class="btn btn-sm btn-outline-warning quick-action-btn"
+                                            onclick="assignObservation({{ observation.id }})"
+                                            aria-label="Assign observation {{ observation.card_number }}">
+                                        <i class="bi bi-person-plus"></i>
+                                    </button>
+                                    {% endif %}
+                                    {% if perms.operations.can_close_hoc %}
+                                    <button type="button" class="btn btn-sm btn-outline-success quick-action-btn"
+                                            onclick="closeObservation({{ observation.id }})"
+                                            aria-label="Close observation {{ observation.card_number }}">
+                                        <i class="bi bi-check2"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-5">
+                                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                <p class="text-muted mt-3">No hazard observations found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div id="gridViewContainer" class="row grid-view d-none">
+        {% for observation in observations %}
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-header severity-{{ observation.severity }} py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>{{ observation.card_number }}</strong>
+                        {% if observation.is_overdue %}
+                        <i class="bi bi-flag-fill" aria-label="Overdue"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ observation.title|truncatewords:6 }}</h6>
+                    <p class="card-text text-muted small">
+                        <i class="bi bi-geo-alt"></i> {{ observation.location }}
+                    </p>
+                    <div class="mb-2">
+                        <span class="badge badge-severity-{{ observation.severity }}">
+                            {{ observation.get_severity_display }}
+                        </span>
+                        <span class="badge status-{{ observation.status }}">
+                            {{ observation.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="card-text small">
+                        <i class="bi bi-person"></i> {{ observation.submitted_by.get_full_name|default:observation.submitted_by.username }}<br>
+                        <i class="bi bi-calendar"></i> {{ observation.created_at|date:"M d, Y" }}<br>
+                        <i class="bi bi-clock"></i> {{ observation.days_open }} days open
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'operations:observation_detail' observation.id %}"
+                       class="btn btn-sm btn-primary w-100">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3">No hazard observations found</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // View toggle functionality
+    document.getElementById('tableView').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('tableViewContainer').classList.remove('d-none');
+            document.getElementById('gridViewContainer').classList.add('d-none');
+        }
+    });
+
+    document.getElementById('gridView').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('tableViewContainer').classList.add('d-none');
+            document.getElementById('gridViewContainer').classList.remove('d-none');
+        }
+    });
+
+    // Quick action functions
+    function reviewObservation(id) {
+        window.location.href = `/operations/hoc/${id}/review/`;
+    }
+
+    function assignObservation(id) {
+        window.location.href = `/operations/hoc/${id}/assign/`;
+    }
+
+    function closeObservation(id) {
+        if (confirm('Are you sure you want to close this observation?')) {
+            window.location.href = `/operations/hoc/${id}/close/`;
+        }
+    }
+
+    // Date range filter sync
+    document.getElementById('dateFrom').addEventListener('change', function() {
+        const form = document.getElementById('filterForm');
+        const dateToField = document.getElementById('dateTo');
+        if (!dateToField.value) {
+            dateToField.value = new Date().toISOString().split('T')[0];
+        }
+        form.submit();
+    });
+
+    document.getElementById('dateTo').addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+</script>
+{% endblock %}

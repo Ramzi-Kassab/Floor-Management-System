@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Notification Preferences - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preference-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    .preference-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    .channel-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem;
+        border-radius: 10px;
+        background: white;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .channel-toggle:hover {
+        border-color: #0d6efd;
+    }
+
+    .channel-toggle.active {
+        border-color: #0d6efd;
+        background: #e7f3ff;
+    }
+
+    .channel-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .quiet-hours-picker {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+        cursor: pointer;
+    }
+
+    .form-switch .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .notification-type-row {
+        padding: 1rem;
+        border-radius: 8px;
+        transition: background 0.2s ease;
+    }
+
+    .notification-type-row:hover {
+        background: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'notifications:center' %}">Notifications</a></li>
+            <li class="breadcrumb-item active">Preferences</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="bi bi-gear-fill text-primary me-2"></i>
+                        Notification Preferences
+                    </h2>
+                    <p class="text-muted mb-0">Customize how and when you receive notifications</p>
+                </div>
+                <a href="{% url 'notifications:center' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+            </div>
+
+            <form method="post" id="preferencesForm">
+                {% csrf_token %}
+
+                <!-- Channel Preferences -->
+                <div class="card preference-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-broadcast me-2"></i>
+                            Notification Channels
+                        </h5>
+                        <small class="text-muted">Choose how you want to receive notifications</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="channel-toggle {% if preferences.enable_whatsapp %}active{% endif %}">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <div class="channel-icon" style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white;">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">WhatsApp</h6>
+                                            <small class="text-muted">Instant messaging</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="enable_whatsapp"
+                                               id="enable_whatsapp" {% if preferences.enable_whatsapp %}checked{% endif %}>
+                                    </div>
+                                </div>
+                                {% if preferences.enable_whatsapp %}
+                                <div class="mt-2">
+                                    <input type="text" class="form-control" name="whatsapp_number"
+                                           value="{{ preferences.whatsapp_number }}"
+                                           placeholder="WhatsApp Number (+966XXXXXXXXX)">
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="channel-toggle {% if preferences.enable_email %}active{% endif %}">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <div class="channel-icon" style="background: linear-gradient(135deg, #0078D4 0%, #0053A4 100%); color: white;">
+                                            <i class="bi bi-envelope-fill"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">Email</h6>
+                                            <small class="text-muted">{{ user.email }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="enable_email"
+                                               id="enable_email" {% if preferences.enable_email %}checked{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="channel-toggle {% if preferences.enable_sms %}active{% endif %}">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <div class="channel-icon" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white;">
+                                            <i class="bi bi-phone-fill"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">SMS</h6>
+                                            <small class="text-muted">Text messages</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="enable_sms"
+                                               id="enable_sms" {% if preferences.enable_sms %}checked{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="channel-toggle {% if preferences.enable_push %}active{% endif %}">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <div class="channel-icon" style="background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%); color: white;">
+                                            <i class="bi bi-app-indicator"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">Push Notifications</h6>
+                                            <small class="text-muted">Mobile & desktop</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="enable_push"
+                                               id="enable_push" {% if preferences.enable_push %}checked{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="channel-toggle {% if preferences.enable_in_app %}active{% endif %}">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <div class="channel-icon" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%); color: white;">
+                                            <i class="bi bi-bell-fill"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">In-App</h6>
+                                            <small class="text-muted">Within this platform</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="enable_in_app"
+                                               id="enable_in_app" {% if preferences.enable_in_app %}checked{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="channel-toggle {% if preferences.enable_telegram %}active{% endif %}">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <div class="channel-icon" style="background: linear-gradient(135deg, #0088cc 0%, #006699 100%); color: white;">
+                                            <i class="bi bi-telegram"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">Telegram</h6>
+                                            <small class="text-muted">Optional</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="enable_telegram"
+                                               id="enable_telegram" {% if preferences.enable_telegram %}checked{% endif %}>
+                                    </div>
+                                </div>
+                                {% if preferences.enable_telegram %}
+                                <div class="mt-2">
+                                    <input type="text" class="form-control" name="telegram_chat_id"
+                                           value="{{ preferences.telegram_chat_id }}"
+                                           placeholder="Telegram Chat ID">
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiet Hours -->
+                <div class="card preference-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-moon-stars me-2"></i>
+                            Quiet Hours
+                        </h5>
+                        <small class="text-muted">Pause notifications during specific hours</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="quiet_hours_enabled"
+                                   id="quiet_hours_enabled" {% if preferences.quiet_hours_enabled %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="quiet_hours_enabled">
+                                Enable Quiet Hours
+                            </label>
+                        </div>
+
+                        <div class="quiet-hours-picker" id="quietHoursPicker" {% if not preferences.quiet_hours_enabled %}style="display:none"{% endif %}>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Start Time</label>
+                                    <input type="time" class="form-control" name="quiet_hours_start"
+                                           value="{{ preferences.quiet_hours_start|date:'H:i' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">End Time</label>
+                                    <input type="time" class="form-control" name="quiet_hours_end"
+                                           value="{{ preferences.quiet_hours_end|date:'H:i' }}">
+                                </div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Non-urgent notifications will be held during this period
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Digest -->
+                <div class="card preference-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-newspaper me-2"></i>
+                            Daily Digest
+                        </h5>
+                        <small class="text-muted">Receive a summary of all notifications once a day</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="enable_daily_digest"
+                                   id="enable_daily_digest" {% if preferences.enable_daily_digest %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="enable_daily_digest">
+                                Enable Daily Digest
+                            </label>
+                        </div>
+
+                        <div id="digestTimePicker" {% if not preferences.enable_daily_digest %}style="display:none"{% endif %}>
+                            <label class="form-label fw-semibold">Delivery Time</label>
+                            <input type="time" class="form-control" name="digest_time"
+                                   value="{{ preferences.digest_time|date:'H:i' }}" style="max-width: 200px;">
+                            <small class="text-muted mt-2 d-block">
+                                <i class="bi bi-info-circle me-1"></i>
+                                You'll receive a daily summary via email
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Type Preferences -->
+                <div class="card preference-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-filter me-2"></i>
+                            Notification Types
+                        </h5>
+                        <small class="text-muted">Customize notifications by type</small>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th class="text-center">WhatsApp</th>
+                                        <th class="text-center">Email</th>
+                                        <th class="text-center">SMS</th>
+                                        <th class="text-center">Push</th>
+                                        <th class="text-center">In-App</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="notification-type-row">
+                                        <td><i class="bi bi-hand-thumbs-up text-warning me-2"></i>Approval Requests</td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input"></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                    </tr>
+                                    <tr class="notification-type-row">
+                                        <td><i class="bi bi-clipboard-check text-success me-2"></i>Task Assignments</td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input"></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input"></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                    </tr>
+                                    <tr class="notification-type-row">
+                                        <td><i class="bi bi-exclamation-triangle text-danger me-2"></i>System Alerts</td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                    </tr>
+                                    <tr class="notification-type-row">
+                                        <td><i class="bi bi-megaphone text-primary me-2"></i>Announcements</td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input"></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input"></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input"></td>
+                                        <td class="text-center"><input type="checkbox" class="form-check-input" checked></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'notifications:center' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle me-2"></i>Save Preferences
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('quiet_hours_enabled').addEventListener('change', function() {
+    document.getElementById('quietHoursPicker').style.display = this.checked ? 'block' : 'none';
+});
+
+document.getElementById('enable_daily_digest').addEventListener('change', function() {
+    document.getElementById('digestTimePicker').style.display = this.checked ? 'block' : 'none';
+});
+
+// Toggle channel-toggle active class
+document.querySelectorAll('.channel-toggle input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const toggle = this.closest('.channel-toggle');
+        if (this.checked) {
+            toggle.classList.add('active');
+        } else {
+            toggle.classList.remove('active');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,872 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Job Offers - Hiring Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .offer-card {
+        border-left: 4px solid;
+        transition: all 0.3s;
+    }
+    .offer-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .offer-card.draft { border-left-color: #6c757d; }
+    .offer-card.sent { border-left-color: #0d6efd; }
+    .offer-card.accepted { border-left-color: #198754; }
+    .offer-card.rejected { border-left-color: #dc3545; }
+    .offer-card.negotiating { border-left-color: #ffc107; }
+    .offer-card.expired { border-left-color: #6f42c1; }
+
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    .timeline-step {
+        position: relative;
+        padding-left: 40px;
+        margin-bottom: 20px;
+    }
+    .timeline-step::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: -20px;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-step:last-child::before {
+        display: none;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #dee2e6;
+    }
+    .timeline-marker.completed {
+        background: #198754;
+        border-color: #198754;
+    }
+    .timeline-marker.active {
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .countdown {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .countdown.urgent {
+        color: #dc3545;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+
+    .stats-card {
+        border-left: 4px solid;
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-3px);
+    }
+    .stats-card.total { border-left-color: #0d6efd; }
+    .stats-card.accepted { border-left-color: #198754; }
+    .stats-card.pending { border-left-color: #ffc107; }
+    .stats-card.rejected { border-left-color: #dc3545; }
+
+    .approval-flow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .approval-step {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        position: relative;
+    }
+    .approval-step.approved {
+        background: #d1e7dd;
+        border-color: #198754;
+        color: #198754;
+    }
+    .approval-step.pending {
+        background: #fff3cd;
+        border-color: #ffc107;
+        color: #856404;
+    }
+    .approval-arrow {
+        color: #dee2e6;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Job Offers</h2>
+            <p class="text-muted">Manage and track job offers</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOfferModal">
+            <i class="bi bi-plus-circle"></i> Create Offer
+        </button>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card total">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Offers</h6>
+                            <h3 class="mb-0">42</h3>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-file-earmark-text fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">This quarter</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card accepted">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Accepted</h6>
+                            <h3 class="mb-0">28</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-success">66.7% acceptance rate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card pending">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Pending Response</h6>
+                            <h3 class="mb-0">8</h3>
+                        </div>
+                        <div class="text-warning">
+                            <i class="bi bi-hourglass-split fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-warning">Awaiting candidate decision</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card rejected">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Rejected/Declined</h6>
+                            <h3 class="mb-0">6</h3>
+                        </div>
+                        <div class="text-danger">
+                            <i class="bi bi-x-circle fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">This quarter</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" placeholder="Search offer, candidate..." id="searchOffer">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="sent">Sent</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="negotiating">Negotiating</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="departmentFilter">
+                        <option value="">All Departments</option>
+                        <option>Engineering</option>
+                        <option>Sales</option>
+                        <option>Marketing</option>
+                        <option>HR</option>
+                        <option>Finance</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" placeholder="From Date">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" placeholder="To Date">
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offers Table -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Offer #</th>
+                            <th>Candidate</th>
+                            <th>Position</th>
+                            <th>Department</th>
+                            <th>Salary</th>
+                            <th>Start Date</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>OFF-2025-0245</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">JS</div>
+                                    <div>
+                                        <div class="fw-bold">John Smith</div>
+                                        <small class="text-muted">john.smith@email.com</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Senior Full Stack Developer</td>
+                            <td>Engineering</td>
+                            <td><strong>$140,000</strong></td>
+                            <td>Dec 1, 2025</td>
+                            <td>
+                                <div class="countdown urgent">2 days</div>
+                            </td>
+                            <td><span class="badge bg-primary">Sent</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#offerDetailModal">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>OFF-2025-0242</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">MC</div>
+                                    <div>
+                                        <div class="fw-bold">Michael Chen</div>
+                                        <small class="text-muted">m.chen@email.com</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Data Analyst</td>
+                            <td>Engineering</td>
+                            <td><strong>$95,000</strong></td>
+                            <td>Nov 25, 2025</td>
+                            <td>
+                                <span class="text-success">Accepted</span>
+                            </td>
+                            <td><span class="badge bg-success">Accepted</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#offerDetailModal">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info">
+                                        <i class="bi bi-file-earmark-check"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>OFF-2025-0238</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">EJ</div>
+                                    <div>
+                                        <div class="fw-bold">Emily Johnson</div>
+                                        <small class="text-muted">emily.j@email.com</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Product Marketing Manager</td>
+                            <td>Marketing</td>
+                            <td><strong>$110,000</strong></td>
+                            <td>Dec 5, 2025</td>
+                            <td>
+                                <div class="countdown">7 days</div>
+                            </td>
+                            <td><span class="badge bg-warning">Negotiating</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#offerDetailModal">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#negotiationModal">
+                                        <i class="bi bi-chat-dots"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>OFF-2025-0235</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">SD</div>
+                                    <div>
+                                        <div class="fw-bold">Sarah Davis</div>
+                                        <small class="text-muted">sarah.davis@email.com</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>UX Designer</td>
+                            <td>Engineering</td>
+                            <td><strong>$88,000</strong></td>
+                            <td>-</td>
+                            <td>
+                                <span class="text-danger">Declined</span>
+                            </td>
+                            <td><span class="badge bg-danger">Rejected</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#offerDetailModal">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning">
+                                        <i class="bi bi-archive"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>OFF-2025-0230</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">LP</div>
+                                    <div>
+                                        <div class="fw-bold">Lisa Parker</div>
+                                        <small class="text-muted">lisa.p@email.com</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>DevOps Engineer</td>
+                            <td>Engineering</td>
+                            <td><strong>$125,000</strong></td>
+                            <td>Nov 30, 2025</td>
+                            <td>
+                                <span class="text-success">Accepted</span>
+                            </td>
+                            <td><span class="badge bg-success">Accepted</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#offerDetailModal">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info">
+                                        <i class="bi bi-file-earmark-check"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>OFF-2025-0228</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; background: #6c757d; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">DW</div>
+                                    <div>
+                                        <div class="fw-bold">Daniel Wilson</div>
+                                        <small class="text-muted">d.wilson@email.com</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Sales Manager</td>
+                            <td>Sales</td>
+                            <td><strong>$105,000</strong></td>
+                            <td>-</td>
+                            <td>
+                                <span class="text-secondary">Not sent</span>
+                            </td>
+                            <td><span class="badge bg-secondary">Draft</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success">
+                                        <i class="bi bi-send"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Offer Detail Modal -->
+<div class="modal fade" id="offerDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Offer Details - OFF-2025-0245</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <!-- Candidate & Position Info -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3">Candidate Information</h6>
+                                        <p class="mb-2"><strong>Name:</strong> John Smith</p>
+                                        <p class="mb-2"><strong>Email:</strong> john.smith@email.com</p>
+                                        <p class="mb-2"><strong>Phone:</strong> +1 (555) 123-4567</p>
+                                        <p class="mb-2"><strong>Application:</strong> #APP-2025-0342</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3">Position Details</h6>
+                                        <p class="mb-2"><strong>Position:</strong> Senior Full Stack Developer</p>
+                                        <p class="mb-2"><strong>Department:</strong> Engineering</p>
+                                        <p class="mb-2"><strong>Location:</strong> New York, NY / Remote</p>
+                                        <p class="mb-2"><strong>Job Type:</strong> Full-time</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Compensation Package -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h6 class="mb-3">Compensation Package</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3">
+                                            <label class="text-muted small">Base Salary</label>
+                                            <h4 class="mb-0 text-primary">$140,000</h4>
+                                            <small>Per year</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3">
+                                            <label class="text-muted small">Sign-on Bonus</label>
+                                            <h4 class="mb-0 text-success">$10,000</h4>
+                                            <small>One-time payment</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3">
+                                            <label class="text-muted small">Annual Bonus</label>
+                                            <h4 class="mb-0 text-info">Up to 15%</h4>
+                                            <small>Performance-based</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3">
+                                            <label class="text-muted small">Equity/Stock Options</label>
+                                            <h4 class="mb-0 text-warning">5,000 RSUs</h4>
+                                            <small>4-year vesting</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="mb-3">
+                                    <h6>Benefits</h6>
+                                    <ul class="mb-0">
+                                        <li>Health, Dental, and Vision Insurance</li>
+                                        <li>401(k) with 5% company match</li>
+                                        <li>25 days PTO + 10 holidays</li>
+                                        <li>Remote work flexibility</li>
+                                        <li>Professional development budget: $5,000/year</li>
+                                        <li>Gym membership reimbursement</li>
+                                    </ul>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Start Date:</strong> December 1, 2025</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Employment Type:</strong> Full-time, At-will</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Offer Timeline -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h6 class="mb-3">Offer Timeline</h6>
+                                <div class="timeline">
+                                    <div class="timeline-step">
+                                        <div class="timeline-marker completed"></div>
+                                        <div>
+                                            <strong>Offer Created</strong>
+                                            <p class="text-muted small mb-0">November 10, 2025 at 2:30 PM by Sarah Johnson</p>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-step">
+                                        <div class="timeline-marker completed"></div>
+                                        <div>
+                                            <strong>Approval Process Completed</strong>
+                                            <p class="text-muted small mb-0">November 12, 2025 at 11:00 AM</p>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-step">
+                                        <div class="timeline-marker completed"></div>
+                                        <div>
+                                            <strong>Offer Sent to Candidate</strong>
+                                            <p class="text-muted small mb-0">November 12, 2025 at 2:00 PM via email</p>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-step">
+                                        <div class="timeline-marker active"></div>
+                                        <div>
+                                            <strong>Awaiting Candidate Response</strong>
+                                            <p class="text-muted small mb-0">Offer expires November 22, 2025</p>
+                                            <div class="countdown urgent mt-2">2 days remaining</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Negotiation Notes -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="mb-3">Negotiation Notes</h6>
+                                <div class="mb-3">
+                                    <div class="d-flex mb-2">
+                                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">SJ</div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between">
+                                                <strong>Sarah Johnson</strong>
+                                                <small class="text-muted">Nov 15, 2025</small>
+                                            </div>
+                                            <p class="mb-0 small">Candidate expressed interest but mentioned competing offer with higher base salary. May need to adjust compensation.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <textarea class="form-control mb-2" rows="2" placeholder="Add negotiation note..."></textarea>
+                                    <button class="btn btn-sm btn-primary">Add Note</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <!-- Status & Actions -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h6 class="mb-3">Offer Status</h6>
+                                <div class="text-center mb-3">
+                                    <span class="badge bg-primary fs-5">Sent</span>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success">
+                                        <i class="bi bi-download"></i> Download Offer Letter
+                                    </button>
+                                    <button class="btn btn-outline-primary">
+                                        <i class="bi bi-send"></i> Resend Offer
+                                    </button>
+                                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editOfferModal">
+                                        <i class="bi bi-pencil"></i> Edit Offer
+                                    </button>
+                                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#withdrawOfferModal">
+                                        <i class="bi bi-x-circle"></i> Withdraw Offer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Approval Workflow -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h6 class="mb-3">Approval Workflow</h6>
+                                <div class="approval-flow flex-column align-items-stretch">
+                                    <div class="approval-step approved mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>Hiring Manager</strong>
+                                                <p class="mb-0 small">Mike Chen</p>
+                                            </div>
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </div>
+                                        <small class="text-muted">Approved: Nov 10, 2025</small>
+                                    </div>
+                                    <div class="approval-step approved mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>HR Director</strong>
+                                                <p class="mb-0 small">Sarah Johnson</p>
+                                            </div>
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </div>
+                                        <small class="text-muted">Approved: Nov 11, 2025</small>
+                                    </div>
+                                    <div class="approval-step approved">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>Finance Director</strong>
+                                                <p class="mb-0 small">Robert Lee</p>
+                                            </div>
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </div>
+                                        <small class="text-muted">Approved: Nov 12, 2025</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expiry Countdown -->
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6 class="mb-3">Offer Expires In</h6>
+                                <div class="countdown urgent mb-3">2 days</div>
+                                <p class="text-muted small mb-0">November 22, 2025 at 11:59 PM</p>
+                                <hr>
+                                <button class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="bi bi-calendar-plus"></i> Extend Expiry Date
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-primary">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Offer Modal -->
+<div class="modal fade" id="createOfferModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Job Offer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Candidate / Application *</label>
+                        <select class="form-select" required>
+                            <option value="">Select candidate...</option>
+                            <option>John Smith - Senior Full Stack Developer (#APP-2025-0342)</option>
+                            <option>Emily Johnson - Product Marketing Manager (#APP-2025-0338)</option>
+                            <option>Michael Chen - Data Analyst (#APP-2025-0329)</option>
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Base Salary *</label>
+                            <input type="number" class="form-control" placeholder="140000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sign-on Bonus</label>
+                            <input type="number" class="form-control" placeholder="10000">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Annual Bonus (%)</label>
+                            <input type="number" class="form-control" placeholder="15">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Stock Options/RSUs</label>
+                            <input type="number" class="form-control" placeholder="5000">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date *</label>
+                            <input type="date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Offer Expiry Date *</label>
+                            <input type="date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Benefits Summary</label>
+                        <textarea class="form-control" rows="3" placeholder="List key benefits..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Additional Terms</label>
+                        <textarea class="form-control" rows="2" placeholder="Any special conditions or notes..."></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="requireApproval" checked>
+                        <label class="form-check-label" for="requireApproval">
+                            Require approval before sending
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-primary">Save as Draft</button>
+                <button type="button" class="btn btn-primary">Create & Send for Approval</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Negotiation Modal -->
+<div class="modal fade" id="negotiationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Negotiation Notes - Emily Johnson</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Current Status:</strong> Candidate is negotiating terms
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Candidate Counter-Offer</label>
+                    <input type="number" class="form-control" placeholder="Salary requested">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Company Counter-Offer</label>
+                    <input type="number" class="form-control" placeholder="Revised salary offer">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Negotiation Notes</label>
+                    <textarea class="form-control" rows="4" placeholder="Record negotiation details..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Notes</button>
+                <button type="button" class="btn btn-success">Send Revised Offer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Offer Modal -->
+<div class="modal fade" id="withdrawOfferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Withdraw Job Offer</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    This action cannot be undone. The candidate will be notified.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reason for Withdrawal *</label>
+                    <select class="form-select" required>
+                        <option value="">Select reason...</option>
+                        <option>Position no longer available</option>
+                        <option>Budget constraints</option>
+                        <option>Better candidate found</option>
+                        <option>Failed background check</option>
+                        <option>Candidate took too long to respond</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Additional Notes (Internal)</label>
+                    <textarea class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="notifyCandidate" checked>
+                    <label class="form-check-label" for="notifyCandidate">
+                        Send notification to candidate
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Confirm Withdrawal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% endblock %}

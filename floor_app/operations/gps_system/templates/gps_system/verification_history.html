@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verification History{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="bi bi-clock-history me-2"></i>Verification History</h2>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Zone</th>
+                            <th>Status</th>
+                            <th>Distance</th>
+                            <th>Location</th>
+                            <th>Date/Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for verification in verifications %}
+                        <tr>
+                            <td><strong>{{ verification.employee.person.get_full_name_en }}</strong></td>
+                            <td>{{ verification.zone.name }}</td>
+                            <td>
+                                {% if verification.is_verified %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Verified</span>
+                                {% else %}
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Failed</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ verification.distance_from_zone }}m</td>
+                            <td class="small"><code>{{ verification.latitude }}, {{ verification.longitude }}</code></td>
+                            <td>{{ verification.created_at|date:"M d, Y - h:i A" }}</td>
+                            <td>
+                                <a href="{% url 'gps_system:map_view' %}?lat={{ verification.latitude }}&lng={{ verification.longitude }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-map"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No verification history</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

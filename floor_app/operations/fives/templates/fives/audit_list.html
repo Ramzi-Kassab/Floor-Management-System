@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}5S Audits{% endblock %}
+
+{% block extra_css %}
+<style>
+    .score-circle { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; }
+    .score-excellent { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+    .score-good { background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; }
+    .score-fair { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; }
+    .score-poor { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
+    .audit-card { transition: all 0.3s; border-left: 4px solid transparent; }
+    .audit-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .audit-card.completed { border-left-color: #28a745; }
+    .audit-card.in-progress { border-left-color: #ffc107; }
+    .audit-card.scheduled { border-left-color: #17a2b8; }
+    .s-breakdown { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+    .s-item { text-align: center; padding: 0.5rem; background: #f8f9fa; border-radius: 8px; }
+    .gamification-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem; border-radius: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-clipboard-check me-2"></i>5S Audits</h2>
+            <p class="text-muted mb-0">Sort • Set in Order • Shine • Standardize • Sustain</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'fives:leaderboard' %}" class="btn btn-outline-primary">
+                <i class="bi bi-trophy me-2"></i>Leaderboard
+            </a>
+            <a href="{% url 'fives:audit_form' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Audit
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Dashboard -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold">{{ stats.total_audits }}</div>
+                            <div class="small opacity-75">Total Audits</div>
+                        </div>
+                        <i class="bi bi-clipboard-data fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold text-success">{{ stats.avg_score|floatformat:1 }}%</div>
+                            <div class="small text-muted">Average Score</div>
+                        </div>
+                        <i class="bi bi-graph-up-arrow fs-1 text-success opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold text-warning">{{ stats.audits_this_month }}</div>
+                            <div class="small text-muted">This Month</div>
+                        </div>
+                        <i class="bi bi-calendar-month fs-1 text-warning opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold text-info">{{ stats.total_points }}</div>
+                            <div class="small text-muted">Points Awarded</div>
+                        </div>
+                        <i class="bi bi-star fs-1 text-info opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0" id="searchAudits" placeholder="Search audits...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterArea">
+                        <option value="">All Areas</option>
+                        {% for area in unique_areas %}
+                        <option value="{{ area }}">{{ area }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterScore">
+                        <option value="">All Scores</option>
+                        <option value="excellent">Excellent (90+)</option>
+                        <option value="good">Good (70-89)</option>
+                        <option value="fair">Fair (50-69)</option>
+                        <option value="poor">Poor (<50)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="sortBy">
+                        <option value="date">Most Recent</option>
+                        <option value="score">Highest Score</option>
+                        <option value="area">Area A-Z</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audits Grid -->
+    <div class="row g-4" id="auditsGrid">
+        {% for audit in audits %}
+        <div class="col-md-6 col-lg-4 audit-item"
+             data-status="{{ audit.status|lower }}"
+             data-area="{{ audit.area_name }}"
+             data-score="{% if audit.percentage_score >= 90 %}excellent{% elif audit.percentage_score >= 70 %}good{% elif audit.percentage_score >= 50 %}fair{% else %}poor{% endif %}"
+             data-date="{{ audit.audit_date|date:'U' }}"
+             data-score-value="{{ audit.percentage_score|default:0 }}">
+            <div class="card border-0 shadow-sm audit-card {{ audit.status|lower }} h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="mb-1"><strong>{{ audit.audit_number }}</strong></h6>
+                            <small class="text-muted">{{ audit.audit_date|date:"M d, Y" }}</small>
+                        </div>
+                        {% if audit.percentage_score %}
+                        <div class="score-circle
+                            {% if audit.percentage_score >= 90 %}score-excellent
+                            {% elif audit.percentage_score >= 70 %}score-good
+                            {% elif audit.percentage_score >= 50 %}score-fair
+                            {% else %}score-poor{% endif %}">
+                            {{ audit.percentage_score|floatformat:0 }}%
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <h5 class="mb-2">{{ audit.area_name }}</h5>
+                        <div class="small text-muted">
+                            {% if audit.department %}
+                            <i class="bi bi-building me-1"></i>{{ audit.department }}
+                            {% endif %}
+                            {% if audit.building %}
+                            • {{ audit.building }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="badge bg-{% if audit.status == 'COMPLETED' %}success{% elif audit.status == 'IN_PROGRESS' %}warning{% elif audit.status == 'SCHEDULED' %}info{% else %}secondary{% endif %}">
+                            {{ audit.get_status_display }}
+                        </span>
+                        {% if audit.points_awarded > 0 %}
+                        <span class="gamification-badge ms-2">
+                            <i class="bi bi-star-fill me-1"></i>{{ audit.points_awarded }} pts
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if audit.status == 'COMPLETED' %}
+                    <div class="s-breakdown mb-3">
+                        <div class="s-item">
+                            <div class="fw-bold">{{ audit.sort_score|default:"-" }}</div>
+                            <small class="text-muted">Sort</small>
+                        </div>
+                        <div class="s-item">
+                            <div class="fw-bold">{{ audit.set_in_order_score|default:"-" }}</div>
+                            <small class="text-muted">Set</small>
+                        </div>
+                        <div class="s-item">
+                            <div class="fw-bold">{{ audit.shine_score|default:"-" }}</div>
+                            <small class="text-muted">Shine</small>
+                        </div>
+                        <div class="s-item">
+                            <div class="fw-bold">{{ audit.standardize_score|default:"-" }}</div>
+                            <small class="text-muted">Std</small>
+                        </div>
+                        <div class="s-item">
+                            <div class="fw-bold">{{ audit.sustain_score|default:"-" }}</div>
+                            <small class="text-muted">Sustain</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="small text-muted mb-3">
+                        <div><i class="bi bi-person me-2"></i>Audited by: <strong>{{ audit.audited_by.get_full_name }}</strong></div>
+                        {% if audit.responsible_person %}
+                        <div><i class="bi bi-person-badge me-2"></i>Responsible: <strong>{{ audit.responsible_person.get_full_name }}</strong></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'fives:audit_detail' audit.id %}" class="btn btn-sm btn-primary flex-fill">
+                            <i class="bi bi-eye me-1"></i>View Details
+                        </a>
+                        {% if audit.status != 'COMPLETED' %}
+                        <a href="{% url 'fives:audit_form' audit.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-clipboard-x fs-1 text-muted d-block mb-3"></i>
+                    <h5 class="text-muted">No audits found</h5>
+                    <p class="text-muted">Start your first 5S audit to track housekeeping standards</p>
+                    <a href="{% url 'fives:audit_form' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create First Audit
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search
+document.getElementById('searchAudits')?.addEventListener('input', applyFilters);
+document.getElementById('filterStatus')?.addEventListener('change', applyFilters);
+document.getElementById('filterArea')?.addEventListener('change', applyFilters);
+document.getElementById('filterScore')?.addEventListener('change', applyFilters);
+document.getElementById('sortBy')?.addEventListener('change', applySort);
+
+function applyFilters() {
+    const search = document.getElementById('searchAudits').value.toLowerCase();
+    const status = document.getElementById('filterStatus').value;
+    const area = document.getElementById('filterArea').value;
+    const score = document.getElementById('filterScore').value;
+
+    document.querySelectorAll('.audit-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const itemStatus = item.dataset.status;
+        const itemArea = item.dataset.area;
+        const itemScore = item.dataset.score;
+
+        let show = true;
+        if (search && !text.includes(search)) show = false;
+        if (status && itemStatus !== status) show = false;
+        if (area && itemArea !== area) show = false;
+        if (score && itemScore !== score) show = false;
+
+        item.style.display = show ? '' : 'none';
+    });
+}
+
+function applySort() {
+    const sortBy = document.getElementById('sortBy').value;
+    const grid = document.getElementById('auditsGrid');
+    const items = Array.from(document.querySelectorAll('.audit-item'));
+
+    items.sort((a, b) => {
+        if (sortBy === 'date') {
+            return parseInt(b.dataset.date) - parseInt(a.dataset.date);
+        } else if (sortBy === 'score') {
+            return parseFloat(b.dataset.scoreValue) - parseFloat(a.dataset.scoreValue);
+        } else if (sortBy === 'area') {
+            return a.dataset.area.localeCompare(b.dataset.area);
+        }
+        return 0;
+    });
+
+    items.forEach(item => grid.appendChild(item));
+}
+</script>
+{% endblock %}

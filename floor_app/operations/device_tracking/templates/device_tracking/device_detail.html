@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ device.device_name }} - Device Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-start">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <span class="badge {% if device.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if device.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                                {% if device.is_primary_device %}
+                                <span class="badge bg-warning text-dark ms-2"><i class="bi bi-star-fill me-1"></i>Primary Device</span>
+                                {% endif %}
+                            </div>
+                            <h3 class="mb-3">{{ device.device_name }}</h3>
+                            <p class="text-muted">Device ID: <code>{{ device.device_id }}</code></p>
+
+                            <div class="row g-3 mt-3">
+                                <div class="col-md-6">
+                                    <div class="small text-muted">Owner</div>
+                                    <div class="fw-semibold">{{ device.employee.person.get_full_name_en }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="small text-muted">Device Type</div>
+                                    <div class="fw-semibold">
+                                        <i class="bi bi-{% if device.device_type == 'ANDROID' %}android{% elif device.device_type == 'IOS' %}apple{% else %}laptop{% endif %} me-2"></i>
+                                        {{ device.get_device_type_display }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="small text-muted">Model</div>
+                                    <div class="fw-semibold">{{ device.device_model|default:"Unknown" }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="small text-muted">OS Version</div>
+                                    <div class="fw-semibold">{{ device.os_version|default:"Unknown" }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="small text-muted">Registered</div>
+                                    <div class="fw-semibold">{{ device.registered_at|date:"M d, Y" }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="small text-muted">Last Seen</div>
+                                    <div class="fw-semibold">{{ device.last_seen_at|timesince }} ago</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'device_tracking:location_history' device.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-geo-alt me-2"></i>Location History
+                                </a>
+                                {% if device.is_active %}
+                                <button class="btn btn-outline-danger" onclick="deactivateDevice()">
+                                    <i class="bi bi-x-circle me-2"></i>Deactivate
+                                </button>
+                                {% else %}
+                                <button class="btn btn-outline-success" onclick="activateDevice()">
+                                    <i class="bi bi-check-circle me-2"></i>Activate
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-activity me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activity %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex gap-3">
+                                <div>
+                                    <div class="bg-primary text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-geo-alt"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ activity.action }}</div>
+                                    <div class="small text-muted">{{ activity.location_name }}</div>
+                                    <div class="small text-muted">{{ activity.timestamp|date:"M d, Y - h:i A" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted">No recent activity</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deactivateDevice() {
+    if (!confirm('Deactivate this device?')) return;
+
+    fetch(`/api/device-tracking/devices/{{ device.id }}/deactivate/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') location.reload();
+    });
+}
+
+function activateDevice() {
+    fetch(`/api/device-tracking/devices/{{ device.id }}/activate/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') location.reload();
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}QR Code Integration Guide{% endblock %}
+
+{% block extra_css %}
+<style>
+    .integration-hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 3rem; margin-bottom: 2rem; }
+    .system-card { border-left: 4px solid #0d6efd; transition: all 0.3s; cursor: pointer; }
+    .system-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .system-card.device { border-left-color: #667eea; }
+    .system-card.gps { border-left-color: #f5576c; }
+    .system-card.approval { border-left-color: #00f2fe; }
+    .system-card.inventory { border-left-color: #38f9d7; }
+    .system-card.hr { border-left-color: #fee140; }
+    .system-card.notification { border-left-color: #ff6b6b; }
+    .flow-diagram { background: #f8f9fa; border-radius: 12px; padding: 2rem; margin: 2rem 0; }
+    .flow-step { background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #0d6efd; position: relative; }
+    .flow-step::after { content: '↓'; position: absolute; left: 50%; bottom: -1.5rem; font-size: 1.5rem; color: #6c757d; }
+    .flow-step:last-child::after { display: none; }
+    .use-case-card { background: linear-gradient(to right, #f8f9fa 0%, white 100%); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #dee2e6; }
+    .icon-large { font-size: 3rem; }
+    .badge-system { padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
+    .code-block { background: #2d3748; color: #e2e8f0; border-radius: 8px; padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.9rem; overflow-x: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <div class="integration-hero text-center">
+        <i class="bi bi-qr-code-scan icon-large d-block mb-3"></i>
+        <h1 class="mb-3">QR Code System Integration Guide</h1>
+        <p class="lead mb-4">Comprehensive documentation on how QR codes integrate across all Floor Management Systems</p>
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="{% url 'qr_system:generate' %}" class="btn btn-light btn-lg">
+                <i class="bi bi-plus-circle me-2"></i>Generate QR Code
+            </a>
+            <a href="{% url 'qr_system:qr_list' %}" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-list me-2"></i>View All QR Codes
+            </a>
+        </div>
+    </div>
+
+    <!-- Overview -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="mb-3"><i class="bi bi-info-circle me-2"></i>System Overview</h3>
+                    <p class="lead mb-3">The QR Code System serves as a universal bridge connecting multiple Floor Management modules, enabling quick mobile access, automated workflows, and real-time tracking.</p>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill text-success fs-3 me-3"></i>
+                                <div>
+                                    <strong>6 System Integrations</strong>
+                                    <div class="small text-muted">Connected modules</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-lightning-fill text-warning fs-3 me-3"></i>
+                                <div>
+                                    <strong>Real-time Processing</strong>
+                                    <div class="small text-muted">Instant workflows</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-phone-fill text-primary fs-3 me-3"></i>
+                                <div>
+                                    <strong>Mobile-First Design</strong>
+                                    <div class="small text-muted">Camera-based scanning</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integrated Systems -->
+    <h3 class="mb-4"><i class="bi bi-diagram-3 me-2"></i>Integrated Systems</h3>
+    <div class="row g-4 mb-5">
+        <!-- Device Tracking -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm system-card device h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle p-3 me-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <i class="bi bi-phone fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Device Tracking</h5>
+                            <small class="text-muted">Mobile device management</small>
+                        </div>
+                    </div>
+                    <p class="mb-3">QR codes enable instant device registration and location-based check-ins for employee devices.</p>
+                    <div class="mb-3">
+                        <span class="badge-system" style="background: #e7f1ff; color: #0d6efd;">
+                            <i class="bi bi-qr-code me-1"></i>Device Registration QR
+                        </span>
+                    </div>
+                    <ul class="small mb-3">
+                        <li>Scan to register new device</li>
+                        <li>Auto-capture device specs</li>
+                        <li>Check-in/out at locations</li>
+                        <li>Track device movement</li>
+                    </ul>
+                    <a href="#device-flow" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-arrow-right me-1"></i>View Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- GPS Verification -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm system-card gps h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle p-3 me-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                            <i class="bi bi-geo-alt fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">GPS Verification</h5>
+                            <small class="text-muted">Location-based check-ins</small>
+                        </div>
+                    </div>
+                    <p class="mb-3">Place QR codes at physical locations for GPS-verified employee presence tracking.</p>
+                    <div class="mb-3">
+                        <span class="badge-system" style="background: #ffe7ef; color: #f5576c;">
+                            <i class="bi bi-qr-code me-1"></i>Location Check-In QR
+                        </span>
+                    </div>
+                    <ul class="small mb-3">
+                        <li>Physical location markers</li>
+                        <li>GPS coordinate verification</li>
+                        <li>Attendance tracking</li>
+                        <li>Zone-based permissions</li>
+                    </ul>
+                    <a href="#gps-flow" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-arrow-right me-1"></i>View Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Workflows -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm system-card approval h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle p-3 me-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                            <i class="bi bi-hand-thumbs-up fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Approval Workflows</h5>
+                            <small class="text-muted">Quick mobile approvals</small>
+                        </div>
+                    </div>
+                    <p class="mb-3">Generate QR codes for approval requests enabling one-scan approve/reject actions.</p>
+                    <div class="mb-3">
+                        <span class="badge-system" style="background: #e0f7ff; color: #00a8e8;">
+                            <i class="bi bi-qr-code me-1"></i>Approval Request QR
+                        </span>
+                    </div>
+                    <ul class="small mb-3">
+                        <li>Mobile approval scanning</li>
+                        <li>Multi-level workflows</li>
+                        <li>Instant notifications</li>
+                        <li>Audit trail tracking</li>
+                    </ul>
+                    <a href="#approval-flow" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-arrow-right me-1"></i>View Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory/Asset Tracking -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm system-card inventory h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle p-3 me-3" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                            <i class="bi bi-box fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Asset Tracking</h5>
+                            <small class="text-muted">Inventory management</small>
+                        </div>
+                    </div>
+                    <p class="mb-3">Label physical assets with QR codes for instant access to details, history, and maintenance.</p>
+                    <div class="mb-3">
+                        <span class="badge-system" style="background: #e0ffef; color: #00ba88;">
+                            <i class="bi bi-qr-code me-1"></i>Asset Label QR
+                        </span>
+                    </div>
+                    <ul class="small mb-3">
+                        <li>Asset identification</li>
+                        <li>Maintenance history</li>
+                        <li>Location tracking</li>
+                        <li>Transfer management</li>
+                    </ul>
+                    <a href="#inventory-flow" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-arrow-right me-1"></i>View Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- HR System -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm system-card hr h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle p-3 me-3" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                            <i class="bi bi-person-badge fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">HR System</h5>
+                            <small class="text-muted">Employee management</small>
+                        </div>
+                    </div>
+                    <p class="mb-3">Employee badge QR codes for attendance, access control, and identification.</p>
+                    <div class="mb-3">
+                        <span class="badge-system" style="background: #fff4e0; color: #e8a700;">
+                            <i class="bi bi-qr-code me-1"></i>Employee Badge QR
+                        </span>
+                    </div>
+                    <ul class="small mb-3">
+                        <li>Digital employee badges</li>
+                        <li>Attendance tracking</li>
+                        <li>Access control</li>
+                        <li>Profile quick access</li>
+                    </ul>
+                    <a href="#hr-flow" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-arrow-right me-1"></i>View Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm system-card notification h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle p-3 me-3" style="background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%); color: white;">
+                            <i class="bi bi-bell fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Notifications</h5>
+                            <small class="text-muted">Multi-channel alerts</small>
+                        </div>
+                    </div>
+                    <p class="mb-3">QR codes in announcements and notifications for quick access to detailed content.</p>
+                    <div class="mb-3">
+                        <span class="badge-system" style="background: #ffe0e0; color: #e63946;">
+                            <i class="bi bi-qr-code me-1"></i>Announcement QR
+                        </span>
+                    </div>
+                    <ul class="small mb-3">
+                        <li>Quick announcement access</li>
+                        <li>Event registration</li>
+                        <li>Document linking</li>
+                        <li>Engagement tracking</li>
+                    </ul>
+                    <a href="#notification-flow" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-arrow-right me-1"></i>View Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Workflows -->
+    <h3 class="mb-4"><i class="bi bi-diagram-2 me-2"></i>Integration Workflows</h3>
+
+    <!-- Device Tracking Workflow -->
+    <div class="card border-0 shadow-sm mb-4" id="device-flow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-phone me-2"></i>Device Tracking Integration</h5>
+        </div>
+        <div class="card-body">
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>Step 1: Generate Device QR Code</strong>
+                    <p class="mb-0 small">Admin generates a QR code for a specific device or device registration endpoint.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2: Physical QR Placement</strong>
+                    <p class="mb-0 small">QR code is printed and attached to device or placed at check-in locations.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3: Employee Scans QR</strong>
+                    <p class="mb-0 small">Employee uses mobile camera to scan the QR code.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4: Automatic Registration/Check-In</strong>
+                    <p class="mb-0 small">System automatically registers device or logs check-in with GPS coordinates and timestamp.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 5: Real-time Tracking Updates</strong>
+                    <p class="mb-0 small">Dashboard updates with device location and status in real-time.</p>
+                </div>
+            </div>
+
+            <div class="alert alert-info border-0">
+                <strong>API Endpoint:</strong> <code>POST /api/device-tracking/qr-scan/</code>
+                <div class="code-block mt-2">
+{
+  "qr_code": "DEV-2024-ABC123",
+  "latitude": 24.7136,
+  "longitude": 46.6753,
+  "device_info": "iPhone 13 Pro"
+}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GPS Verification Workflow -->
+    <div class="card border-0 shadow-sm mb-4" id="gps-flow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>GPS Verification Integration</h5>
+        </div>
+        <div class="card-body">
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>Step 1: Create GPS Zone</strong>
+                    <p class="mb-0 small">Admin defines a GPS zone with coordinates and radius in the GPS System.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2: Generate Location QR</strong>
+                    <p class="mb-0 small">System generates QR code linked to the specific GPS zone.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3: Deploy QR at Location</strong>
+                    <p class="mb-0 small">QR code is placed at the physical location (office entrance, warehouse, site).</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4: Employee Scans & Verifies</strong>
+                    <p class="mb-0 small">Employee scans QR and system captures GPS coordinates from their device.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 5: Validation & Attendance Logging</strong>
+                    <p class="mb-0 small">System validates employee is within zone radius and logs attendance/check-in.</p>
+                </div>
+            </div>
+
+            <div class="alert alert-success border-0">
+                <strong>Use Cases:</strong>
+                <ul class="mb-0">
+                    <li>Employee attendance at office locations</li>
+                    <li>Field worker site verification</li>
+                    <li>Warehouse check-in/out</li>
+                    <li>Construction site presence tracking</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Workflow -->
+    <div class="card border-0 shadow-sm mb-4" id="approval-flow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-hand-thumbs-up me-2"></i>Approval Workflows Integration</h5>
+        </div>
+        <div class="card-body">
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>Step 1: Approval Request Created</strong>
+                    <p class="mb-0 small">Employee submits an approval request (leave, expense, purchase order).</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 2: System Generates Approval QR</strong>
+                    <p class="mb-0 small">Unique QR code is generated for the specific approval request.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 3: Notification Sent to Approver</strong>
+                    <p class="mb-0 small">Approver receives notification via WhatsApp/Email/SMS with embedded QR code.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 4: Quick Scan Approval</strong>
+                    <p class="mb-0 small">Approver scans QR code to view request details and approve/reject instantly.</p>
+                </div>
+                <div class="flow-step">
+                    <strong>Step 5: Automated Workflow Progression</strong>
+                    <p class="mb-0 small">System advances to next approval level or completes workflow, notifying all parties.</p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="alert alert-primary border-0">
+                        <strong><i class="bi bi-lightning-fill me-2"></i>Speed Benefit</strong>
+                        <p class="mb-0 small">Reduces approval time from hours to seconds via mobile scanning.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning border-0">
+                        <strong><i class="bi bi-shield-check me-2"></i>Security</strong>
+                        <p class="mb-0 small">QR codes contain encrypted tokens preventing unauthorized approvals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-World Use Cases -->
+    <h3 class="mb-4"><i class="bi bi-lightbulb me-2"></i>Real-World Use Cases</h3>
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="use-case-card">
+                <h6><i class="bi bi-building me-2 text-primary"></i>Office Attendance Tracking</h6>
+                <p class="small mb-2">Deploy GPS-verified QR codes at office entrances. Employees scan on arrival/departure for automatic attendance logging with GPS verification.</p>
+                <div class="small text-muted">
+                    <strong>Systems Used:</strong> GPS Verification + Device Tracking + HR
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="use-case-card">
+                <h6><i class="bi bi-tools me-2 text-success"></i>Equipment Maintenance Workflow</h6>
+                <p class="small mb-2">QR codes on equipment link to maintenance history. Technicians scan to log work, request parts, or submit approval requests for repairs.</p>
+                <div class="small text-muted">
+                    <strong>Systems Used:</strong> Asset Tracking + Approval Workflows + Notifications
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="use-case-card">
+                <h6><i class="bi bi-truck me-2 text-warning"></i>Warehouse Inventory Management</h6>
+                <p class="small mb-2">Each inventory item has a QR code. Warehouse staff scan to check-in/out items, update locations, and trigger low-stock notifications.</p>
+                <div class="small text-muted">
+                    <strong>Systems Used:</strong> Asset Tracking + GPS Verification + Notifications
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="use-case-card">
+                <h6><i class="bi bi-file-earmark-text me-2 text-info"></i>Document Approval Process</h6>
+                <p class="small mb-2">Generate QR codes for document approval requests. Managers scan to review and approve documents on mobile devices from anywhere.</p>
+                <div class="small text-muted">
+                    <strong>Systems Used:</strong> Approval Workflows + Notifications + Data Extraction
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Implementation -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-code-slash me-2"></i>Technical Implementation</h5>
+        </div>
+        <div class="card-body">
+            <h6 class="mb-3">QR Code Generation</h6>
+            <div class="code-block mb-4">
+# Generate QR Code for Device Registration
+from floor_app.operations.qr_system.models import QRCode
+
+qr = QRCode.objects.create(
+    label="Device Registration - Warehouse",
+    qr_type="device",
+    target_url="/api/device-tracking/register/",
+    metadata={"location_id": 5, "zone": "warehouse"},
+    created_by=request.user
+)
+            </div>
+
+            <h6 class="mb-3">QR Code Scanning Handler</h6>
+            <div class="code-block mb-4">
+# API endpoint to handle QR scans
+@api_view(['POST'])
+def handle_qr_scan(request, qr_code):
+    qr = QRCode.objects.get(code=qr_code)
+
+    # Route to appropriate handler based on type
+    if qr.qr_type == 'device':
+        return handle_device_registration(request, qr)
+    elif qr.qr_type == 'location':
+        return handle_gps_verification(request, qr)
+    elif qr.qr_type == 'approval':
+        return handle_approval_action(request, qr)
+
+    # Log scan
+    QRScan.objects.create(
+        qr_code=qr,
+        scanned_by=request.user,
+        latitude=request.data.get('latitude'),
+        longitude=request.data.get('longitude')
+    )
+            </div>
+
+            <h6 class="mb-3">Frontend Integration</h6>
+            <div class="code-block">
+// JavaScript QR Scanner (using HTML5 camera API)
+async function scanQRCode() {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const qrData = await detectQRFromStream(stream);
+
+    // Get GPS coordinates
+    const position = await navigator.geolocation.getCurrentPosition();
+
+    // Submit to backend
+    const response = await fetch(`/api/qr-scan/${qrData}/`, {
+        method: 'POST',
+        body: JSON.stringify({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+        })
+    });
+}
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-star me-2"></i>Best Practices</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h6><i class="bi bi-shield-check me-2 text-success"></i>Security</h6>
+                    <ul class="small">
+                        <li>Use encrypted QR codes with expiry dates for sensitive operations</li>
+                        <li>Implement rate limiting to prevent QR code abuse</li>
+                        <li>Log all QR scans with GPS coordinates for audit trail</li>
+                        <li>Validate user permissions before processing QR actions</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="bi bi-speedometer2 me-2 text-primary"></i>Performance</h6>
+                    <ul class="small">
+                        <li>Cache frequently scanned QR codes for faster processing</li>
+                        <li>Use async processing for notification triggers</li>
+                        <li>Optimize QR image generation and storage</li>
+                        <li>Implement CDN for QR code image delivery</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="bi bi-person-check me-2 text-info"></i>User Experience</h6>
+                    <ul class="small">
+                        <li>Provide clear labels on all physical QR codes</li>
+                        <li>Include fallback manual entry option</li>
+                        <li>Show immediate feedback after successful scan</li>
+                        <li>Design for various lighting and camera conditions</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="bi bi-graph-up me-2 text-warning"></i>Analytics</h6>
+                    <ul class="small">
+                        <li>Track QR scan frequency and patterns</li>
+                        <li>Monitor GPS verification success rates</li>
+                        <li>Analyze user adoption across departments</li>
+                        <li>Identify underutilized QR codes for removal</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Smooth scroll to workflow sections
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+</script>
+{% endblock %}

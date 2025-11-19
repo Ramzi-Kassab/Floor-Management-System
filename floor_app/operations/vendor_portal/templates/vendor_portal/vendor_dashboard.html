@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Vendor Dashboard - {{ vendor.company_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        transition: transform 0.2s;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+    }
+    .performance-badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Welcome, {{ vendor.company_name }}</h2>
+                    <p class="text-muted mb-0">
+                        Vendor Code: <strong>{{ vendor.vendor_code }}</strong> |
+                        Status: <span class="badge bg-{{ vendor.status|lower }}">{{ vendor.get_status_display }}</span>
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2">
+                        <i class="bi bi-bell"></i> Notifications
+                        {% if notification_count > 0 %}
+                        <span class="badge bg-danger">{{ notification_count }}</span>
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'vendor_portal:profile' %}" class="btn btn-primary">
+                        <i class="bi bi-person-circle"></i> My Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card metric-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                                <i class="bi bi-cart-check fs-3"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total Orders</h6>
+                            <h3 class="mb-0">{{ vendor.total_orders|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
+                                <i class="bi bi-graph-up-arrow fs-3"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Performance Rating</h6>
+                            <h3 class="mb-0">{{ vendor.rating|default:"N/A" }}</h3>
+                            {% if vendor.rating %}
+                            <small class="text-muted">out of 5.0</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 text-info rounded-3 p-3">
+                                <i class="bi bi-truck fs-3"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">On-Time Delivery</h6>
+                            <h3 class="mb-0">{{ vendor.on_time_delivery_rate|default:"N/A" }}%</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                                <i class="bi bi-file-text fs-3"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">RFQ Response Rate</h6>
+                            <h3 class="mb-0">
+                                {% if vendor.total_rfqs_received > 0 %}
+                                    {{ vendor.total_rfqs_responded|default:0 }}/{{ vendor.total_rfqs_received }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Orders -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-cart3"></i> Recent Purchase Orders</h5>
+                        <a href="{% url 'vendor_portal:orders' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>PO Number</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Delivery Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for po in recent_orders %}
+                                <tr>
+                                    <td><strong>{{ po.po_number }}</strong></td>
+                                    <td>{{ po.po_date|date:"M d, Y" }}</td>
+                                    <td>{{ po.currency }} {{ po.total_amount|floatformat:2 }}</td>
+                                    <td>{{ po.expected_delivery_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="badge
+                                            {% if po.status == 'COMPLETED' %}bg-success
+                                            {% elif po.status == 'IN_PROGRESS' %}bg-primary
+                                            {% elif po.status == 'ACKNOWLEDGED' %}bg-info
+                                            {% elif po.status == 'SENT' %}bg-warning
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ po.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'vendor_portal:order_detail' po.pk %}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        No purchase orders yet
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent RFQs -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Active RFQs</h5>
+                        <a href="{% url 'vendor_portal:rfqs' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>RFQ Number</th>
+                                    <th>Title</th>
+                                    <th>Issue Date</th>
+                                    <th>Deadline</th>
+                                    <th>Priority</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rfq in active_rfqs %}
+                                <tr>
+                                    <td><strong>{{ rfq.rfq_number }}</strong></td>
+                                    <td>{{ rfq.title|truncatewords:5 }}</td>
+                                    <td>{{ rfq.issue_date|date:"M d, Y" }}</td>
+                                    <td>{{ rfq.submission_deadline|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge
+                                            {% if rfq.priority == 'URGENT' %}bg-danger
+                                            {% elif rfq.priority == 'HIGH' %}bg-warning
+                                            {% elif rfq.priority == 'MEDIUM' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ rfq.get_priority_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'vendor_portal:rfq_detail' rfq.pk %}" class="btn btn-sm btn-outline-primary">
+                                            Submit Quote
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        No active RFQs at the moment
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Performance Summary -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-award"></i> Performance Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% if latest_review %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Quality</span>
+                            <span>
+                                {% for i in "12345" %}
+                                    <i class="bi bi-star{% if forloop.counter <= latest_review.quality_rating %}-fill text-warning{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Delivery</span>
+                            <span>
+                                {% for i in "12345" %}
+                                    <i class="bi bi-star{% if forloop.counter <= latest_review.delivery_rating %}-fill text-warning{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Communication</span>
+                            <span>
+                                {% for i in "12345" %}
+                                    <i class="bi bi-star{% if forloop.counter <= latest_review.communication_rating %}-fill text-warning{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Pricing</span>
+                            <span>
+                                {% for i in "12345" %}
+                                    <i class="bi bi-star{% if forloop.counter <= latest_review.pricing_rating %}-fill text-warning{% endif %}"></i>
+                                {% endfor %}
+                            </span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <h3 class="mb-1">{{ latest_review.overall_rating }}</h3>
+                        <small class="text-muted">Overall Rating</small>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No performance reviews yet</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'vendor_portal:submit_quotation' %}" class="btn btn-primary">
+                            <i class="bi bi-file-earmark-text"></i> Submit Quotation
+                        </a>
+                        <a href="{% url 'vendor_portal:orders' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-cart"></i> View Purchase Orders
+                        </a>
+                        <a href="{% url 'vendor_portal:invoices' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-receipt"></i> Manage Invoices
+                        </a>
+                        <a href="{% url 'vendor_portal:documents' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-folder"></i> Upload Documents
+                        </a>
+                        <a href="{% url 'vendor_portal:support' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-question-circle"></i> Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Communications -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots"></i> Recent Messages</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for comm in recent_communications %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ comm.subject }}</h6>
+                                <small class="text-muted">{{ comm.sent_date|date:"M d" }}</small>
+                            </div>
+                            <p class="mb-1 small text-muted">{{ comm.message|truncatewords:10 }}</p>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center">No recent messages</p>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'vendor_portal:communications' %}" class="btn btn-sm btn-outline-primary">View All Messages</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any dashboard-specific JavaScript here
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

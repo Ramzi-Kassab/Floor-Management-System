@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Purchase Orders - {{ vendor.company_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-card {
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .status-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .status-timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .status-timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    .status-timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -24px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #6c757d;
+        border: 2px solid white;
+    }
+    .status-timeline-item.active::before {
+        background: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+    }
+    .status-timeline-item.completed::before {
+        background: #198754;
+    }
+    .filter-sidebar {
+        position: sticky;
+        top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Purchase Orders</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{% url 'vendor_portal:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Purchase Orders</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm filter-sidebar">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm" method="get">
+                        <!-- Status Filter -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Status</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="status" value="SENT" id="status_sent">
+                                <label class="form-check-label" for="status_sent">
+                                    Sent to Vendor
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="status" value="ACKNOWLEDGED" id="status_ack">
+                                <label class="form-check-label" for="status_ack">
+                                    Acknowledged
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="status" value="IN_PROGRESS" id="status_progress">
+                                <label class="form-check-label" for="status_progress">
+                                    In Progress
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="status" value="PARTIALLY_DELIVERED" id="status_partial">
+                                <label class="form-check-label" for="status_partial">
+                                    Partially Delivered
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="status" value="COMPLETED" id="status_completed">
+                                <label class="form-check-label" for="status_completed">
+                                    Completed
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Date Range</label>
+                            <input type="date" class="form-control mb-2" name="date_from" placeholder="From">
+                            <input type="date" class="form-control" name="date_to" placeholder="To">
+                        </div>
+
+                        <!-- Amount Range -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Amount Range</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="amount_min" placeholder="Min">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="amount_max" placeholder="Max">
+                            </div>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Search</label>
+                            <input type="text" class="form-control" name="search" placeholder="PO Number or items...">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            <button type="reset" class="btn btn-outline-secondary" onclick="window.location.href='{% url 'vendor_portal:orders' %}'">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div class="col-lg-9">
+            <!-- Summary Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <small class="text-muted d-block">Total Orders</small>
+                            <h4 class="mb-0">{{ total_orders }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <small class="text-muted d-block">Active</small>
+                            <h4 class="mb-0 text-primary">{{ active_orders }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <small class="text-muted d-block">Completed</small>
+                            <h4 class="mb-0 text-success">{{ completed_orders }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <small class="text-muted d-block">Total Value</small>
+                            <h4 class="mb-0">${{ total_value|floatformat:0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">All Purchase Orders</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary active" onclick="toggleView('table')">
+                                <i class="bi bi-table"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleView('cards')">
+                                <i class="bi bi-grid"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Table View -->
+                    <div id="tableView" class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>PO Number</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Amount</th>
+                                    <th>Delivery Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in purchase_orders %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ order.po_number }}</strong>
+                                        {% if order.vendor_reference %}
+                                        <br><small class="text-muted">Ref: {{ order.vendor_reference }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.po_date|date:"M d, Y" }}</td>
+                                    <td>{{ order.line_items|length }} item(s)</td>
+                                    <td>
+                                        <strong>{{ order.currency }} {{ order.total_amount|floatformat:2 }}</strong>
+                                        <br><small class="text-muted">Subtotal: {{ order.subtotal|floatformat:2 }}</small>
+                                    </td>
+                                    <td>
+                                        {{ order.expected_delivery_date|date:"M d, Y" }}
+                                        {% if order.actual_delivery_date %}
+                                        <br><small class="text-success">Delivered: {{ order.actual_delivery_date|date:"M d, Y" }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge
+                                            {% if order.status == 'COMPLETED' %}bg-success
+                                            {% elif order.status == 'IN_PROGRESS' %}bg-primary
+                                            {% elif order.status == 'ACKNOWLEDGED' %}bg-info
+                                            {% elif order.status == 'SENT' %}bg-warning
+                                            {% elif order.status == 'PARTIALLY_DELIVERED' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'vendor_portal:order_detail' order.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            {% if order.status == 'SENT' %}
+                                            <button class="btn btn-sm btn-success" onclick="acknowledgeOrder({{ order.pk }})">
+                                                <i class="bi bi-check-circle"></i> Acknowledge
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                        <p>No purchase orders found</p>
+                                        <small>Purchase orders will appear here once they are issued</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Card View (Hidden by default) -->
+                    <div id="cardsView" class="p-3" style="display: none;">
+                        <div class="row g-3">
+                            {% for order in purchase_orders %}
+                            <div class="col-md-6">
+                                <div class="card order-card border shadow-sm h-100" onclick="window.location.href='{% url 'vendor_portal:order_detail' order.pk %}'">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <h5 class="mb-1">{{ order.po_number }}</h5>
+                                                <small class="text-muted">{{ order.po_date|date:"M d, Y" }}</small>
+                                            </div>
+                                            <span class="badge
+                                                {% if order.status == 'COMPLETED' %}bg-success
+                                                {% elif order.status == 'IN_PROGRESS' %}bg-primary
+                                                {% elif order.status == 'ACKNOWLEDGED' %}bg-info
+                                                {% elif order.status == 'SENT' %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ order.get_status_display }}
+                                            </span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-muted">Amount:</span>
+                                                <strong>{{ order.currency }} {{ order.total_amount|floatformat:2 }}</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-muted">Items:</span>
+                                                <span>{{ order.line_items|length }}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-muted">Delivery:</span>
+                                                <span>{{ order.expected_delivery_date|date:"M d, Y" }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-grid">
+                                            <a href="{% url 'vendor_portal:order_detail' order.pk %}" class="btn btn-sm btn-outline-primary">
+                                                View Details
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="card-footer bg-white">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export Purchase Orders</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="exportForm" method="post" action="{% url 'vendor_portal:export_orders' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Export Format</label>
+                        <select class="form-select" name="format">
+                            <option value="pdf">PDF Report</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                            <option value="csv">CSV File</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Range</label>
+                        <input type="date" class="form-control mb-2" name="export_date_from">
+                        <input type="date" class="form-control" name="export_date_to">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="include_line_items" id="includeItems" checked>
+                        <label class="form-check-label" for="includeItems">
+                            Include line item details
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="exportForm" class="btn btn-primary">
+                    <i class="bi bi-download"></i> Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleView(view) {
+    const tableView = document.getElementById('tableView');
+    const cardsView = document.getElementById('cardsView');
+    const buttons = document.querySelectorAll('.btn-group button');
+
+    if (view === 'table') {
+        tableView.style.display = 'block';
+        cardsView.style.display = 'none';
+        buttons[0].classList.add('active');
+        buttons[1].classList.remove('active');
+    } else {
+        tableView.style.display = 'none';
+        cardsView.style.display = 'block';
+        buttons[0].classList.remove('active');
+        buttons[1].classList.add('active');
+    }
+}
+
+function acknowledgeOrder(orderId) {
+    if (confirm('Confirm that you have received and reviewed this purchase order?')) {
+        fetch(`/vendor-portal/orders/${orderId}/acknowledge/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Purchase order acknowledged successfully!');
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+}
+
+// Auto-submit filter form on checkbox change
+document.querySelectorAll('#filterForm input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        // Optional: Auto-submit or wait for Apply button
+        // document.getElementById('filterForm').submit();
+    });
+});
+</script>
+{% endblock %}

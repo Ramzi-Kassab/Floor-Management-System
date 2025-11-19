@@ -1,0 +1,885 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}HOC {{ observation.card_number }} - Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .severity-badge-large {
+        font-size: 1.5rem;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    .severity-critical {
+        background-color: #dc3545;
+        color: white;
+    }
+    .severity-high {
+        background-color: #fd7e14;
+        color: white;
+    }
+    .severity-medium {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .severity-low {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-badge-large {
+        font-size: 1.25rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+    }
+
+    .status-submitted { background-color: #6c757d; color: white; }
+    .status-under-review { background-color: #0dcaf0; color: #212529; }
+    .status-approved { background-color: #0d6efd; color: white; }
+    .status-action-assigned { background-color: #6610f2; color: white; }
+    .status-in-progress { background-color: #fd7e14; color: white; }
+    .status-completed { background-color: #198754; color: white; }
+    .status-verified { background-color: #20c997; color: #212529; }
+    .status-closed { background-color: #212529; color: white; }
+
+    .info-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+
+    .info-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        min-width: 180px;
+    }
+
+    .info-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .timeline {
+        position: relative;
+        padding: 1rem 0;
+    }
+
+    .timeline-item {
+        display: flex;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 40px;
+        bottom: -20px;
+        width: 2px;
+        background-color: #dee2e6;
+    }
+
+    .timeline-item:last-child::before {
+        display: none;
+    }
+
+    .timeline-marker {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        border: 3px solid #dee2e6;
+        margin-right: 1rem;
+        z-index: 1;
+        flex-shrink: 0;
+    }
+
+    .timeline-marker.completed {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+
+    .timeline-marker.current {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+        50% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+    }
+
+    .timeline-content {
+        flex: 1;
+        background-color: #fff;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+    .photo-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .photo-item {
+        position: relative;
+        cursor: pointer;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1;
+        border: 2px solid #dee2e6;
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .photo-item:hover img {
+        transform: scale(1.1);
+    }
+
+    .photo-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .lightbox {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .lightbox.active {
+        display: flex;
+    }
+
+    .lightbox img {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+    }
+
+    .lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    .comment-thread {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .comment-item {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+
+    .comment-time {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .cost-tracking {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .cost-item {
+        text-align: center;
+        padding: 1rem;
+        background-color: #e9ecef;
+        border-radius: 8px;
+    }
+
+    .cost-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .cost-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #212529;
+    }
+
+    .days-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .days-indicator.overdue {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .days-indicator.warning {
+        color: #fd7e14;
+        font-weight: bold;
+    }
+
+    .verification-form {
+        background-color: #e7f3ff;
+        border: 2px solid #0d6efd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .info-card {
+            break-inside: avoid;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4 no-print">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                Hazard Observation Card
+            </h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-outline-secondary">
+                <i class="bi bi-printer"></i> Print HOC
+            </button>
+            <a href="{% url 'operations:observation_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Card Header -->
+    <div class="card mb-4 shadow">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h3 class="mb-2">{{ observation.card_number }}</h3>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-calendar"></i> Submitted: {{ observation.created_at|date:"M d, Y H:i" }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <span class="severity-badge-large severity-{{ observation.severity }}">
+                        {{ observation.get_severity_display }}
+                    </span>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="status-badge-large status-{{ observation.status }}">
+                        {{ observation.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <!-- Hazard Information -->
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-info-circle-fill"></i> Hazard Information
+                </h4>
+
+                <div class="info-row">
+                    <div class="info-label">Category:</div>
+                    <div class="info-value">
+                        <span class="badge bg-primary">{{ observation.get_category_display }}</span>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Title:</div>
+                    <div class="info-value"><strong>{{ observation.title }}</strong></div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Description:</div>
+                    <div class="info-value">{{ observation.description }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Location:</div>
+                    <div class="info-value">
+                        <i class="bi bi-geo-alt-fill text-danger"></i> {{ observation.location }}
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Department:</div>
+                    <div class="info-value">{{ observation.department.name }}</div>
+                </div>
+
+                {% if observation.building %}
+                <div class="info-row">
+                    <div class="info-label">Building:</div>
+                    <div class="info-value">{{ observation.building }}</div>
+                </div>
+                {% endif %}
+
+                {% if observation.floor_level %}
+                <div class="info-row">
+                    <div class="info-label">Floor Level:</div>
+                    <div class="info-value">{{ observation.floor_level }}</div>
+                </div>
+                {% endif %}
+
+                {% if observation.gps_latitude and observation.gps_longitude %}
+                <div class="info-row">
+                    <div class="info-label">GPS Coordinates:</div>
+                    <div class="info-value">
+                        <code>{{ observation.gps_latitude }}, {{ observation.gps_longitude }}</code>
+                        <a href="https://www.google.com/maps?q={{ observation.gps_latitude }},{{ observation.gps_longitude }}"
+                           target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                            <i class="bi bi-map"></i> View on Map
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Impact Assessment -->
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-shield-exclamation"></i> Impact Assessment
+                </h4>
+
+                <div class="info-row">
+                    <div class="info-label">Potential Consequence:</div>
+                    <div class="info-value">{{ observation.potential_consequence }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">People at Risk:</div>
+                    <div class="info-value">
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-people-fill"></i> {{ observation.people_at_risk }} person(s)
+                        </span>
+                    </div>
+                </div>
+
+                {% if observation.immediate_action %}
+                <div class="info-row">
+                    <div class="info-label">Immediate Action Taken:</div>
+                    <div class="info-value">{{ observation.immediate_action }}</div>
+                </div>
+                {% endif %}
+
+                <div class="info-row">
+                    <div class="info-label">Area Isolated:</div>
+                    <div class="info-value">
+                        {% if observation.area_isolated %}
+                            <i class="bi bi-check-circle-fill text-success"></i> Yes
+                        {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i> No
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Work Stopped:</div>
+                    <div class="info-value">
+                        {% if observation.work_stopped %}
+                            <i class="bi bi-check-circle-fill text-success"></i> Yes
+                        {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i> No
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo Gallery -->
+            {% if observation.photos.all %}
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-camera-fill"></i> Photo Documentation
+                </h4>
+
+                <div class="photo-gallery">
+                    {% for photo in observation.photos.all %}
+                    <div class="photo-item" onclick="openLightbox('{{ photo.image.url }}')">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.get_photo_type_display }}">
+                        <div class="photo-label">
+                            {{ photo.get_photo_type_display }}
+                            <br><small>{{ photo.uploaded_at|date:"M d, Y" }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Corrective Action Plan -->
+            {% if observation.corrective_action_plan %}
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-wrench"></i> Corrective Action Plan
+                </h4>
+
+                <div class="info-row">
+                    <div class="info-label">Planned Action:</div>
+                    <div class="info-value">{{ observation.corrective_action_plan }}</div>
+                </div>
+
+                {% if observation.actual_actions_taken %}
+                <div class="info-row">
+                    <div class="info-label">Actual Actions Taken:</div>
+                    <div class="info-value">{{ observation.actual_actions_taken }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Cost Tracking -->
+            {% if observation.estimated_cost or observation.actual_cost %}
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-currency-dollar"></i> Cost Tracking
+                </h4>
+
+                <div class="cost-tracking">
+                    <div class="cost-item">
+                        <div class="cost-label">Estimated Cost</div>
+                        <div class="cost-value">
+                            ${{ observation.estimated_cost|default:"0.00"|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Actual Cost</div>
+                        <div class="cost-value">
+                            ${{ observation.actual_cost|default:"0.00"|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Comments Thread -->
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-chat-dots-fill"></i> Comments
+                    <span class="badge bg-secondary">{{ observation.comments.count }}</span>
+                </h4>
+
+                <div class="comment-thread">
+                    {% for comment in observation.comments.all %}
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-author">
+                                <i class="bi bi-person-circle"></i>
+                                {{ comment.user.get_full_name|default:comment.user.username }}
+                            </span>
+                            <span class="comment-time">
+                                <i class="bi bi-clock"></i>
+                                {{ comment.created_at|date:"M d, Y H:i" }}
+                            </span>
+                        </div>
+                        <div class="comment-body">{{ comment.text }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-3">No comments yet</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Add Comment Form -->
+                <form method="post" action="{% url 'operations:add_hoc_comment' observation.id %}" class="mt-3 no-print">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="comment"
+                               placeholder="Add a comment..." required aria-label="Add comment">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-lg-4">
+            <!-- Status Timeline -->
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-arrow-right-circle-fill"></i> Status Timeline
+                </h4>
+
+                <div class="timeline">
+                    {% for status in status_timeline %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker {% if status.is_current %}current{% elif status.is_completed %}completed{% endif %}">
+                            {% if status.is_completed %}
+                                <i class="bi bi-check"></i>
+                            {% elif status.is_current %}
+                                <i class="bi bi-arrow-right"></i>
+                            {% else %}
+                                <i class="bi bi-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="timeline-content">
+                            <strong>{{ status.name }}</strong>
+                            {% if status.timestamp %}
+                            <br><small class="text-muted">{{ status.timestamp|date:"M d, Y H:i" }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Assignment Information -->
+            {% if observation.assigned_to %}
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-person-check-fill"></i> Assignment
+                </h4>
+
+                <div class="info-row">
+                    <div class="info-label">Assigned To:</div>
+                    <div class="info-value">
+                        {{ observation.assigned_to.get_full_name|default:observation.assigned_to.username }}
+                    </div>
+                </div>
+
+                {% if observation.due_date %}
+                <div class="info-row">
+                    <div class="info-label">Due Date:</div>
+                    <div class="info-value">
+                        {{ observation.due_date|date:"M d, Y" }}
+                        <br>
+                        {% if observation.is_overdue %}
+                        <span class="days-indicator overdue">
+                            <i class="bi bi-flag-fill"></i>
+                            Overdue by {{ observation.overdue_days }} day(s)
+                        </span>
+                        {% else %}
+                        <span class="days-indicator {% if observation.days_until_due <= 3 %}warning{% endif %}">
+                            <i class="bi bi-clock"></i>
+                            {{ observation.days_until_due }} day(s) remaining
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="info-row">
+                    <div class="info-label">Days Open:</div>
+                    <div class="info-value">
+                        <span class="badge {% if observation.days_open > 30 %}bg-danger{% elif observation.days_open > 14 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ observation.days_open }} days
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Submission Information -->
+            <div class="info-card">
+                <h4 class="info-card-title">
+                    <i class="bi bi-person-fill"></i> Submission Details
+                </h4>
+
+                <div class="info-row">
+                    <div class="info-label">Submitted By:</div>
+                    <div class="info-value">
+                        {{ observation.submitted_by.get_full_name|default:observation.submitted_by.username }}
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Submitted On:</div>
+                    <div class="info-value">{{ observation.created_at|date:"M d, Y H:i" }}</div>
+                </div>
+
+                {% if observation.repeat_observation %}
+                <div class="info-row">
+                    <div class="info-label">Repeat Observation:</div>
+                    <div class="info-value">
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-arrow-repeat"></i> Yes
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if observation.related_incident %}
+                <div class="info-row">
+                    <div class="info-label">Related Incident:</div>
+                    <div class="info-value">
+                        <a href="#">{{ observation.related_incident }}</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="info-card no-print">
+                <h4 class="info-card-title">
+                    <i class="bi bi-lightning-fill"></i> Actions
+                </h4>
+
+                <div class="action-buttons">
+                    {% if perms.operations.can_review_hoc and observation.status == 'submitted' %}
+                    <button class="btn btn-info w-100" onclick="updateStatus('under_review')">
+                        <i class="bi bi-clipboard-check"></i> Start Review
+                    </button>
+                    {% endif %}
+
+                    {% if perms.operations.can_assign_hoc and observation.status == 'approved' %}
+                    <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#assignModal">
+                        <i class="bi bi-person-plus"></i> Assign Action
+                    </button>
+                    {% endif %}
+
+                    {% if observation.assigned_to == request.user and observation.status == 'action_assigned' %}
+                    <button class="btn btn-warning w-100" onclick="updateStatus('in_progress')">
+                        <i class="bi bi-play-circle"></i> Start Work
+                    </button>
+                    {% endif %}
+
+                    {% if observation.assigned_to == request.user and observation.status == 'in_progress' %}
+                    <button class="btn btn-success w-100" onclick="updateStatus('completed')">
+                        <i class="bi bi-check-circle"></i> Mark Completed
+                    </button>
+                    {% endif %}
+
+                    {% if perms.operations.can_verify_hoc and observation.status == 'completed' %}
+                    <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#verifyModal">
+                        <i class="bi bi-shield-check"></i> Verify & Close
+                    </button>
+                    {% endif %}
+
+                    <a href="{% url 'operations:edit_hoc' observation.id %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+            </div>
+
+            <!-- Verification Form (for Safety Officers) -->
+            {% if perms.operations.can_verify_hoc and observation.status == 'completed' %}
+            <div class="verification-form no-print">
+                <h5 class="mb-3">
+                    <i class="bi bi-shield-check"></i> Verification Required
+                </h5>
+                <p class="mb-3">
+                    As a safety officer, please verify that the corrective actions have been
+                    properly implemented and the hazard has been eliminated.
+                </p>
+                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#verifyModal">
+                    <i class="bi bi-clipboard-check"></i> Complete Verification
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImage" src="" alt="Enlarged photo">
+</div>
+
+<!-- Assign Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'operations:assign_hoc' observation.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignModalLabel">Assign Corrective Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="assigned_to" class="form-label">Assign To:</label>
+                        <select class="form-select" id="assigned_to" name="assigned_to" required>
+                            <option value="">Select a person</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label">Due Date:</label>
+                        <input type="date" class="form-control" id="due_date" name="due_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="action_plan" class="form-label">Corrective Action Plan:</label>
+                        <textarea class="form-control" id="action_plan" name="action_plan" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Verify Modal -->
+<div class="modal fade" id="verifyModal" tabindex="-1" aria-labelledby="verifyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'operations:verify_hoc' observation.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="verifyModalLabel">Verify Corrective Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="verification_notes" class="form-label">Verification Notes:</label>
+                        <textarea class="form-control" id="verification_notes" name="verification_notes"
+                                  rows="4" required></textarea>
+                        <div class="form-text">
+                            Confirm that the corrective action has been implemented and the hazard eliminated.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hazard_eliminated"
+                                   name="hazard_eliminated" value="true" required>
+                            <label class="form-check-label" for="hazard_eliminated">
+                                I confirm that the hazard has been eliminated and the area is safe
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Verify & Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openLightbox(imageUrl) {
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImage = document.getElementById('lightboxImage');
+        lightboxImage.src = imageUrl;
+        lightbox.classList.add('active');
+    }
+
+    function closeLightbox() {
+        const lightbox = document.getElementById('lightbox');
+        lightbox.classList.remove('active');
+    }
+
+    function updateStatus(newStatus) {
+        if (confirm('Are you sure you want to update the status?')) {
+            fetch(`{% url 'operations:update_hoc_status' observation.id %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating status: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        }
+    }
+
+    // Set minimum due date to today
+    const dueDateInput = document.getElementById('due_date');
+    if (dueDateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dueDateInput.min = today;
+    }
+</script>
+{% endblock %}

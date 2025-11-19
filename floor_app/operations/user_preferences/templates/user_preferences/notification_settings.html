@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Notification Settings - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-bell-fill me-2"></i>Notification Settings
+                    </h4>
+                    <p class="mb-0 mt-1 small">Manage how you receive notifications and alerts</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="notificationForm">
+                        {% csrf_token %}
+
+                        <!-- General Notification Settings -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-gear-fill text-primary me-2"></i>General Settings
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-envelope-fill text-info me-2"></i>Email Notifications
+                                                    </h6>
+                                                    <small class="text-muted">Receive notifications via email</small>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="enable_email_notifications"
+                                                           name="enable_email_notifications" {% if preferences.enable_email_notifications %}checked{% endif %}>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-app-indicator text-success me-2"></i>Push Notifications
+                                                    </h6>
+                                                    <small class="text-muted">Receive browser push notifications</small>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="enable_push_notifications"
+                                                           name="enable_push_notifications" {% if preferences.enable_push_notifications %}checked{% endif %}>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-volume-up-fill text-warning me-2"></i>Notification Sounds
+                                                    </h6>
+                                                    <small class="text-muted">Play sound for notifications</small>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="enable_sound"
+                                                           name="enable_sound" {% if preferences.enable_sound %}checked{% endif %}>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-geo-alt-fill text-danger me-2"></i>Notification Position
+                                                </h6>
+                                                <select class="form-select form-select-sm mt-2" id="notification_position" name="notification_position">
+                                                    <option value="TOP_RIGHT" {% if preferences.notification_position == 'TOP_RIGHT' %}selected{% endif %}>Top Right</option>
+                                                    <option value="TOP_LEFT" {% if preferences.notification_position == 'TOP_LEFT' %}selected{% endif %}>Top Left</option>
+                                                    <option value="BOTTOM_RIGHT" {% if preferences.notification_position == 'BOTTOM_RIGHT' %}selected{% endif %}>Bottom Right</option>
+                                                    <option value="BOTTOM_LEFT" {% if preferences.notification_position == 'BOTTOM_LEFT' %}selected{% endif %}>Bottom Left</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Channels -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-broadcast text-primary me-2"></i>Notification Channels
+                            </h5>
+                            <div class="alert alert-info" role="alert">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                Choose which types of notifications you want to receive for each channel
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Notification Type</th>
+                                            <th class="text-center">
+                                                <i class="bi bi-envelope-fill text-info"></i>
+                                                <div class="small">Email</div>
+                                            </th>
+                                            <th class="text-center">
+                                                <i class="bi bi-app-indicator text-success"></i>
+                                                <div class="small">Push</div>
+                                            </th>
+                                            <th class="text-center">
+                                                <i class="bi bi-phone-fill text-primary"></i>
+                                                <div class="small">SMS</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <strong>Work Orders</strong>
+                                                <div class="small text-muted">New assignments and updates</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="email_work_orders"
+                                                           name="email_work_orders" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="push_work_orders"
+                                                           name="push_work_orders" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="sms_work_orders"
+                                                           name="sms_work_orders">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Maintenance Alerts</strong>
+                                                <div class="small text-muted">Preventive maintenance reminders</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="email_maintenance"
+                                                           name="email_maintenance" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="push_maintenance"
+                                                           name="push_maintenance" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="sms_maintenance"
+                                                           name="sms_maintenance">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Inventory Alerts</strong>
+                                                <div class="small text-muted">Low stock and reorder notifications</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="email_inventory"
+                                                           name="email_inventory" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="push_inventory"
+                                                           name="push_inventory">
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="sms_inventory"
+                                                           name="sms_inventory">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>System Updates</strong>
+                                                <div class="small text-muted">System announcements and updates</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="email_system"
+                                                           name="email_system" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="push_system"
+                                                           name="push_system">
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="sms_system"
+                                                           name="sms_system">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Reports & Analytics</strong>
+                                                <div class="small text-muted">Generated reports and insights</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="email_reports"
+                                                           name="email_reports" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="push_reports"
+                                                           name="push_reports">
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="sms_reports"
+                                                           name="sms_reports">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Approvals Required</strong>
+                                                <div class="small text-muted">Pending approvals and requests</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="email_approvals"
+                                                           name="email_approvals" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="push_approvals"
+                                                           name="push_approvals" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="sms_approvals"
+                                                           name="sms_approvals">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Team Mentions</strong>
+                                                <div class="small text-muted">When someone mentions you</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="email_mentions"
+                                                           name="email_mentions" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="push_mentions"
+                                                           name="push_mentions" checked>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input" type="checkbox" id="sms_mentions"
+                                                           name="sms_mentions">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Quiet Hours -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-moon-stars-fill text-primary me-2"></i>Quiet Hours
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="enable_quiet_hours" name="enable_quiet_hours">
+                                        <label class="form-check-label" for="enable_quiet_hours">
+                                            <strong>Enable Quiet Hours</strong>
+                                            <div class="small text-muted">Mute non-urgent notifications during specific hours</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="quiet_hours_start" class="form-label">Start Time</label>
+                                    <input type="time" class="form-control" id="quiet_hours_start" name="quiet_hours_start" value="22:00">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="quiet_hours_end" class="form-label">End Time</label>
+                                    <input type="time" class="form-control" id="quiet_hours_end" name="quiet_hours_end" value="08:00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Digest Settings -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-collection text-primary me-2"></i>Digest Settings
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="enable_daily_digest" name="enable_daily_digest">
+                                        <label class="form-check-label" for="enable_daily_digest">
+                                            <strong>Daily Digest</strong>
+                                            <div class="small text-muted">Receive a summary of daily activities</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="digest_time" class="form-label">Delivery Time</label>
+                                    <input type="time" class="form-control" id="digest_time" name="digest_time" value="08:00">
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_weekly_digest" name="enable_weekly_digest">
+                                        <label class="form-check-label" for="enable_weekly_digest">
+                                            <strong>Weekly Summary</strong>
+                                            <div class="small text-muted">Receive a weekly performance summary every Monday</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a href="{% url 'user_preferences:preferences_dashboard' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Preferences
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-success me-2" id="testNotification">
+                                    <i class="bi bi-megaphone-fill me-2"></i>Test Notification
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary me-2" onclick="location.reload();">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save-fill me-2"></i>Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('notificationForm');
+    const testBtn = document.getElementById('testNotification');
+
+    // Master toggle functionality
+    const emailMaster = document.getElementById('enable_email_notifications');
+    const pushMaster = document.getElementById('enable_push_notifications');
+
+    emailMaster.addEventListener('change', function() {
+        const emailToggles = document.querySelectorAll('[id^="email_"]');
+        emailToggles.forEach(toggle => {
+            if (toggle.id !== 'enable_email_notifications') {
+                toggle.disabled = !this.checked;
+                if (!this.checked) toggle.checked = false;
+            }
+        });
+    });
+
+    pushMaster.addEventListener('change', function() {
+        const pushToggles = document.querySelectorAll('[id^="push_"]');
+        pushToggles.forEach(toggle => {
+            if (toggle.id !== 'enable_push_notifications') {
+                toggle.disabled = !this.checked;
+                if (!this.checked) toggle.checked = false;
+            }
+        });
+    });
+
+    // Quiet hours toggle
+    const quietHoursToggle = document.getElementById('enable_quiet_hours');
+    const quietHoursStart = document.getElementById('quiet_hours_start');
+    const quietHoursEnd = document.getElementById('quiet_hours_end');
+
+    quietHoursToggle.addEventListener('change', function() {
+        quietHoursStart.disabled = !this.checked;
+        quietHoursEnd.disabled = !this.checked;
+    });
+
+    // Digest toggle
+    const dailyDigestToggle = document.getElementById('enable_daily_digest');
+    const digestTime = document.getElementById('digest_time');
+
+    dailyDigestToggle.addEventListener('change', function() {
+        digestTime.disabled = !this.checked;
+    });
+
+    // Test notification
+    testBtn.addEventListener('click', function() {
+        // Check if push notifications are enabled
+        if (!pushMaster.checked) {
+            alert('Push notifications are disabled. Please enable them first.');
+            return;
+        }
+
+        // Request permission if needed
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                showTestNotification();
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        showTestNotification();
+                    }
+                });
+            } else {
+                alert('Notification permission denied. Please enable it in your browser settings.');
+            }
+        }
+    });
+
+    function showTestNotification() {
+        const notification = new Notification('Floor Management System', {
+            body: 'This is a test notification. Your notification settings are working correctly!',
+            icon: '/static/images/logo.png',
+            badge: '/static/images/badge.png'
+        });
+
+        // Play sound if enabled
+        if (document.getElementById('enable_sound').checked) {
+            const audio = new Audio('/static/sounds/notification.mp3');
+            audio.play().catch(e => console.log('Could not play sound:', e));
+        }
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+    }
+
+    // Unsaved changes indicator
+    const inputs = form.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const saveBtn = form.querySelector('button[type="submit"]');
+            if (!saveBtn.classList.contains('btn-warning')) {
+                saveBtn.classList.remove('btn-primary');
+                saveBtn.classList.add('btn-warning');
+                saveBtn.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>Unsaved Changes';
+            }
+        });
+    });
+
+    // Initialize disabled states
+    quietHoursStart.disabled = !quietHoursToggle.checked;
+    quietHoursEnd.disabled = !quietHoursToggle.checked;
+    digestTime.disabled = !dailyDigestToggle.checked;
+});
+</script>
+{% endblock %}

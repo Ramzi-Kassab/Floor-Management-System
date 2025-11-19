@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Location History - {{ device.device_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: #e9ecef; }
+    .timeline-item { position: relative; padding-bottom: 2rem; }
+    .timeline-marker { position: absolute; left: -1.6rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: #0d6efd; border: 3px solid white; box-shadow: 0 0 0 2px #0d6efd; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1">{{ device.device_name }}</h4>
+                            <p class="text-muted mb-0">{{ device.employee.person.get_full_name_en }}</p>
+                        </div>
+                        <a href="{% url 'device_tracking:detail' device.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Location History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for entry in location_history %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">{{ entry.location_name }}</h6>
+                                            <p class="text-muted small mb-0">
+                                                <i class="bi bi-geo-alt me-1"></i>
+                                                {% if entry.latitude and entry.longitude %}
+                                                {{ entry.latitude }}, {{ entry.longitude }}
+                                                {% else %}
+                                                Location not recorded
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        <span class="badge bg-primary">{{ entry.action }}</span>
+                                    </div>
+                                    <div class="row g-2 small text-muted mt-3">
+                                        <div class="col-md-6">
+                                            <i class="bi bi-box-arrow-in-right me-1"></i>
+                                            Check-In: {{ entry.check_in_at|date:"M d, Y - h:i A" }}
+                                        </div>
+                                        {% if entry.check_out_at %}
+                                        <div class="col-md-6">
+                                            <i class="bi bi-box-arrow-right me-1"></i>
+                                            Check-Out: {{ entry.check_out_at|date:"M d, Y - h:i A" }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <i class="bi bi-clock me-1"></i>
+                                            Duration: {{ entry.duration }}
+                                        </div>
+                                        {% else %}
+                                        <div class="col-md-6">
+                                            <span class="badge bg-success">Currently Active</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if entry.notes %}
+                                    <div class="mt-2 pt-2 border-top small">
+                                        <strong>Notes:</strong> {{ entry.notes }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">No location history available</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

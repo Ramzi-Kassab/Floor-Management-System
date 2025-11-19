@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}QR Code Details - {{ qr.label }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qr-preview-large { max-width: 400px; background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.12); margin: 0 auto; }
+    .qr-preview-large img { width: 100%; height: auto; }
+    .info-card { border-left: 4px solid #0d6efd; }
+    .scan-timeline { position: relative; padding-left: 2rem; }
+    .scan-timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+    .scan-event { position: relative; padding-bottom: 1.5rem; }
+    .scan-event::before { content: ''; position: absolute; left: -1.56rem; top: 0.5rem; width: 12px; height: 12px; border-radius: 50%; background: white; border: 3px solid #0d6efd; z-index: 1; }
+    .integration-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; }
+    .stat-box { background: #f8f9fa; border-radius: 8px; padding: 1rem; text-align: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{% url 'qr_system:qr_list' %}">QR Codes</a></li>
+                    <li class="breadcrumb-item active">{{ qr.label }}</li>
+                </ol>
+            </nav>
+            <h2><i class="bi bi-qr-code me-2"></i>{{ qr.label }}</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>Print
+            </button>
+            <a href="{{ qr.image_url }}" download class="btn btn-outline-primary">
+                <i class="bi bi-download me-2"></i>Download
+            </a>
+            <button class="btn btn-{% if qr.is_active %}warning{% else %}success{% endif %}" onclick="toggleStatus()">
+                <i class="bi bi-{% if qr.is_active %}pause{% else %}play{% endif %}-circle me-2"></i>
+                {% if qr.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- QR Code Preview -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <div class="qr-preview-large">
+                        <img src="{{ qr.image_url }}" alt="{{ qr.label }}">
+                    </div>
+                    <div class="mt-4">
+                        <code class="d-block fs-6 mb-2">{{ qr.code }}</code>
+                        <span class="badge bg-{% if qr.is_active %}success{% elif qr.is_expired %}danger{% else %}secondary{% endif %} px-3 py-2">
+                            {% if qr.is_active %}Active{% elif qr.is_expired %}Expired{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="fs-3 fw-bold text-primary">{{ qr.scan_count }}</div>
+                                <div class="small text-muted">Total Scans</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="fs-3 fw-bold text-success">{{ qr.unique_scanners }}</div>
+                                <div class="small text-muted">Unique Users</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="fs-3 fw-bold text-warning">{{ qr.scans_today }}</div>
+                                <div class="small text-muted">Today</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="fs-3 fw-bold text-info">{{ qr.scans_this_week }}</div>
+                                <div class="small text-muted">This Week</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if qr.last_scanned_at %}
+                    <div class="small text-muted">
+                        <i class="bi bi-clock me-2"></i>Last scan: {{ qr.last_scanned_at|timesince }} ago
+                    </div>
+                    {% else %}
+                    <div class="small text-muted">
+                        <i class="bi bi-clock me-2"></i>Never scanned
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Details and Timeline -->
+        <div class="col-lg-8">
+            <!-- QR Code Information -->
+            <div class="card border-0 shadow-sm info-card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>QR Code Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="small text-muted d-block">Label</label>
+                            <strong>{{ qr.label }}</strong>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted d-block">Type</label>
+                            <span class="badge" style="background: linear-gradient(135deg, {% if qr.qr_type == 'device' %}#667eea 0%, #764ba2{% elif qr.qr_type == 'location' %}#f093fb 0%, #f5576c{% elif qr.qr_type == 'approval' %}#4facfe 0%, #00f2fe{% elif qr.qr_type == 'asset' %}#43e97b 0%, #38f9d7{% elif qr.qr_type == 'employee' %}#fa709a 0%, #fee140{% else %}#667eea 0%, #764ba2{% endif %} 100%); color: white; padding: 0.35rem 0.75rem; font-size: 0.9rem;">
+                                <i class="bi bi-{% if qr.qr_type == 'device' %}phone{% elif qr.qr_type == 'location' %}geo-alt{% elif qr.qr_type == 'approval' %}hand-thumbs-up{% elif qr.qr_type == 'asset' %}box{% elif qr.qr_type == 'employee' %}person-badge{% else %}link{% endif %} me-1"></i>
+                                {{ qr.get_qr_type_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted d-block">QR Code</label>
+                            <code>{{ qr.code }}</code>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted d-block">Target URL</label>
+                            <a href="{{ qr.target_url }}" target="_blank" class="small">{{ qr.target_url|truncatechars:40 }}</a>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted d-block">Created</label>
+                            <strong>{{ qr.created_at|date:"M d, Y h:i A" }}</strong>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted d-block">Created By</label>
+                            <strong>{{ qr.created_by.get_full_name|default:qr.created_by.username }}</strong>
+                        </div>
+                        {% if qr.expiry_date %}
+                        <div class="col-md-6">
+                            <label class="small text-muted d-block">Expiry Date</label>
+                            <strong class="{% if qr.is_expired %}text-danger{% endif %}">
+                                {{ qr.expiry_date|date:"M d, Y" }}
+                                {% if qr.is_expired %}<i class="bi bi-exclamation-triangle ms-1"></i>{% endif %}
+                            </strong>
+                        </div>
+                        {% endif %}
+                        {% if qr.metadata %}
+                        <div class="col-12">
+                            <label class="small text-muted d-block">Metadata</label>
+                            <pre class="bg-light p-2 rounded"><code>{{ qr.metadata|safe }}</code></pre>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integration Info -->
+            {% if qr.qr_type != 'url' %}
+            <div class="alert alert-info border-0 shadow-sm mb-4">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-puzzle fs-3 me-3"></i>
+                    <div>
+                        <h6 class="alert-heading">Cross-System Integration</h6>
+                        <p class="mb-0 small">
+                            {% if qr.qr_type == 'device' %}
+                                This QR code is integrated with the <strong>Device Tracking System</strong>. Scanning it will register or check-in the device.
+                            {% elif qr.qr_type == 'location' %}
+                                This QR code is integrated with the <strong>GPS Verification System</strong>. Scanning it will verify the user's physical presence at this location.
+                            {% elif qr.qr_type == 'approval' %}
+                                This QR code is integrated with the <strong>Approval Workflows System</strong>. Scanning it allows quick approval or rejection of requests.
+                            {% elif qr.qr_type == 'asset' %}
+                                This QR code is integrated with the <strong>Inventory Management System</strong>. Scanning it provides instant access to asset details and history.
+                            {% elif qr.qr_type == 'employee' %}
+                                This QR code is integrated with the <strong>HR System</strong>. It can be used for attendance tracking and employee identification.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Scan History -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Scans</h5>
+                    <a href="{% url 'qr_system:scan_history' %}?qr_code={{ qr.id }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_scans %}
+                    <div class="scan-timeline">
+                        {% for scan in recent_scans %}
+                        <div class="scan-event">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ scan.scanned_by.get_full_name|default:scan.scanned_by.username }}</strong>
+                                    <div class="small text-muted">
+                                        <i class="bi bi-calendar me-1"></i>{{ scan.scanned_at|date:"M d, Y - h:i A" }}
+                                    </div>
+                                    {% if scan.latitude and scan.longitude %}
+                                    <div class="small text-muted">
+                                        <i class="bi bi-geo-alt me-1"></i>{{ scan.latitude }}, {{ scan.longitude }}
+                                    </div>
+                                    {% endif %}
+                                    {% if scan.device_info %}
+                                    <div class="small text-muted">
+                                        <i class="bi bi-phone me-1"></i>{{ scan.device_info }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-light text-dark">
+                                    {{ scan.scanned_at|timesince }} ago
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-clock-history fs-1 d-block mb-2"></i>
+                        <p class="mb-0">No scans recorded yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleStatus() {
+    fetch(`/api/qr-codes/{{ qr.id }}/toggle-status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

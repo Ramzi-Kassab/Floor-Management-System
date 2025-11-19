@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Room Booking - Meeting Management{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css" rel="stylesheet">
+<style>
+    .room-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+    }
+    .room-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+    }
+    .room-card.unavailable {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .room-image {
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 4rem;
+    }
+    .feature-icon {
+        font-size: 1.5rem;
+        margin: 5px;
+        color: #0d6efd;
+    }
+    .availability-calendar {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+    }
+    .time-slot {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #dee2e6;
+    }
+    .time-slot.available {
+        background-color: #d1e7dd;
+        border-color: #badbcc;
+    }
+    .time-slot.available:hover {
+        background-color: #a3cfbb;
+    }
+    .time-slot.booked {
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+        cursor: not-allowed;
+    }
+    .time-slot.selected {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+    .booking-modal .modal-dialog {
+        max-width: 800px;
+    }
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    .capacity-indicator {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .capacity-bar {
+        width: 100px;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .capacity-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #198754, #ffc107, #dc3545);
+        transition: width 0.3s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h2><i class="bi bi-door-open"></i> Meeting Room Booking</h2>
+            <p class="text-muted">Find and book available meeting rooms</p>
+        </div>
+        <div class="col-lg-4 text-end">
+            <a href="{% url 'meetings:meeting_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list"></i> View All Meetings
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Panel: Filters and Room List -->
+        <div class="col-lg-8">
+            <!-- Filters -->
+            <div class="filter-card mb-4">
+                <h5 class="mb-3"><i class="bi bi-funnel"></i> Filter Rooms</h5>
+                <form id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="date_filter" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date_filter" name="date">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="start_time_filter" class="form-label">Start Time</label>
+                            <input type="time" class="form-control" id="start_time_filter" name="start_time">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_time_filter" class="form-label">End Time</label>
+                            <input type="time" class="form-control" id="end_time_filter" name="end_time">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="capacity_filter" class="form-label">Min Capacity</label>
+                            <input type="number" class="form-control" id="capacity_filter" name="capacity" min="1" placeholder="People">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="building_filter" class="form-label">Building</label>
+                            <select class="form-select" id="building_filter" name="building">
+                                <option value="">All Buildings</option>
+                                {% for building in buildings %}
+                                <option value="{{ building }}">{{ building }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label">Features Required</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="has_projector" name="has_projector">
+                                    <label class="form-check-label" for="has_projector">Projector</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="has_video_conference" name="has_video_conference">
+                                    <label class="form-check-label" for="has_video_conference">Video Conference</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="has_whiteboard" name="has_whiteboard">
+                                    <label class="form-check-label" for="has_whiteboard">Whiteboard</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="has_tv" name="has_tv">
+                                    <label class="form-check-label" for="has_tv">TV</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                            <i class="bi bi-search"></i> Search Rooms
+                        </button>
+                        <button type="reset" class="btn btn-secondary" onclick="resetFilters()">
+                            <i class="bi bi-x-circle"></i> Clear Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Room Cards -->
+            <div class="row g-4" id="roomsContainer">
+                {% for room in rooms %}
+                <div class="col-md-6 room-item" data-room-id="{{ room.id }}">
+                    <div class="card room-card">
+                        <div class="room-image">
+                            {% if room.photo %}
+                            <img src="{{ room.photo.url }}" alt="{{ room.name }}" class="w-100">
+                            {% else %}
+                            <i class="bi bi-door-open"></i>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ room.code }} - {{ room.name }}</h5>
+                            <p class="card-text text-muted">
+                                <i class="bi bi-geo-alt"></i>
+                                {{ room.building|default:"Building" }}
+                                {% if room.floor_level %} - Floor {{ room.floor_level }}{% endif %}
+                                {% if room.location_details %}<br><small>{{ room.location_details }}</small>{% endif %}
+                            </p>
+
+                            <!-- Capacity -->
+                            <div class="mb-3">
+                                <div class="capacity-indicator">
+                                    <i class="bi bi-people"></i>
+                                    <strong>Capacity:</strong>
+                                    <span class="badge bg-info">{{ room.capacity }} people</span>
+                                </div>
+                            </div>
+
+                            <!-- Features -->
+                            <div class="mb-3">
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% if room.has_projector %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-projector"></i> Projector
+                                    </span>
+                                    {% endif %}
+                                    {% if room.has_video_conference %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-camera-video"></i> Video Conf
+                                    </span>
+                                    {% endif %}
+                                    {% if room.has_whiteboard %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-easel"></i> Whiteboard
+                                    </span>
+                                    {% endif %}
+                                    {% if room.has_tv %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-tv"></i> TV
+                                    </span>
+                                    {% endif %}
+                                    {% if room.has_phone %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-telephone"></i> Phone
+                                    </span>
+                                    {% endif %}
+                                    {% if room.has_wifi %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-wifi"></i> WiFi
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if room.description %}
+                            <p class="card-text small text-muted">{{ room.description|truncatewords:20 }}</p>
+                            {% endif %}
+
+                            <!-- Availability Status -->
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="availability-status" data-room-id="{{ room.id }}">
+                                    <span class="badge bg-secondary">Check availability</span>
+                                </div>
+                                <button class="btn btn-primary btn-sm" onclick="bookRoom({{ room.id }}, '{{ room.name }}')">
+                                    <i class="bi bi-calendar-check"></i> Book Room
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No meeting rooms available
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Panel: Calendar and Details -->
+        <div class="col-lg-4">
+            <!-- Calendar -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar3"></i> Availability Calendar</h5>
+                </div>
+                <div class="card-body availability-calendar p-2">
+                    <div id="miniCalendar"></div>
+                </div>
+            </div>
+
+            <!-- Selected Room Details -->
+            <div class="card shadow-sm" id="roomDetailsCard" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Room Details</h5>
+                </div>
+                <div class="card-body" id="roomDetailsContent">
+                    <!-- Details will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Time Slots -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock"></i> Available Time Slots</h5>
+                </div>
+                <div class="card-body" id="timeSlotsContainer">
+                    <p class="text-muted">Select a date and room to view available time slots</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Booking Modal -->
+<div class="modal fade booking-modal" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-calendar-check"></i> Quick Book Room</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickBookForm">
+                    <input type="hidden" id="modal_room_id" name="room_id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Room</label>
+                        <input type="text" class="form-control" id="modal_room_name" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal_title" class="form-label">Meeting Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="modal_title" name="title" required>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="modal_date" class="form-label">Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="modal_date" name="date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modal_attendees" class="form-label">Attendees <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="modal_attendees" name="attendees" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="modal_start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="modal_start_time" name="start_time" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modal_end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="modal_end_time" name="end_time" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="modal_description" name="description" rows="2"></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> For more options, use the <a href="{% url 'meetings:meeting_scheduler' %}">full scheduler</a>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuickBooking()">
+                    <i class="bi bi-check-circle"></i> Book Room
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize mini calendar
+    const calendarEl = document.getElementById('miniCalendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next',
+            center: 'title',
+            right: ''
+        },
+        height: 'auto',
+        selectable: true,
+        select: function(info) {
+            document.getElementById('date_filter').value = info.startStr;
+            document.getElementById('modal_date').value = info.startStr;
+            checkRoomAvailability();
+        },
+        events: '/api/meetings/calendar/'
+    });
+    calendar.render();
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date_filter').setAttribute('min', today);
+    document.getElementById('modal_date').setAttribute('min', today);
+
+    // Initialize with today's date
+    document.getElementById('date_filter').value = today;
+    document.getElementById('modal_date').value = today;
+});
+
+function applyFilters() {
+    checkRoomAvailability();
+}
+
+function resetFilters() {
+    document.getElementById('filterForm').reset();
+    document.querySelectorAll('.room-card').forEach(card => {
+        card.classList.remove('unavailable');
+    });
+}
+
+function checkRoomAvailability() {
+    const date = document.getElementById('date_filter').value;
+    const startTime = document.getElementById('start_time_filter').value;
+    const endTime = document.getElementById('end_time_filter').value;
+
+    if (!date || !startTime || !endTime) {
+        return;
+    }
+
+    // Check availability for all rooms
+    document.querySelectorAll('.room-item').forEach(item => {
+        const roomId = item.dataset.roomId;
+        fetch(`/api/meetings/rooms/${roomId}/availability/?date=${date}&start_time=${startTime}&end_time=${endTime}`)
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = item.querySelector('.availability-status');
+                const card = item.querySelector('.room-card');
+
+                if (data.is_available) {
+                    statusElement.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Available</span>';
+                    card.classList.remove('unavailable');
+                } else {
+                    statusElement.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Booked</span>';
+                    card.classList.add('unavailable');
+                }
+            });
+    });
+}
+
+function bookRoom(roomId, roomName) {
+    document.getElementById('modal_room_id').value = roomId;
+    document.getElementById('modal_room_name').value = roomName;
+
+    const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+    modal.show();
+}
+
+function submitQuickBooking() {
+    const form = document.getElementById('quickBookForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    fetch('/api/meetings/bookings/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Room booked successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+            location.reload();
+        } else {
+            alert('Booking failed: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+    });
+}
+
+// Auto-check availability when date/time changes
+['date_filter', 'start_time_filter', 'end_time_filter'].forEach(id => {
+    document.getElementById(id).addEventListener('change', function() {
+        const date = document.getElementById('date_filter').value;
+        const startTime = document.getElementById('start_time_filter').value;
+        const endTime = document.getElementById('end_time_filter').value;
+
+        if (date && startTime && endTime) {
+            checkRoomAvailability();
+        }
+    });
+});
+</script>
+{% endblock %}

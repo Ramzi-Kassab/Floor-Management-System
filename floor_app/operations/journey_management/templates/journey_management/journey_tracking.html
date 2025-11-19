@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Journey Tracking - {{ journey.journey_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 0.375rem;
+    }
+    .tracking-panel {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .status-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    .status-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    .status-item::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #0d6efd;
+    }
+    .status-item::after {
+        content: '';
+        position: absolute;
+        left: -1.1rem;
+        top: 1.2rem;
+        width: 2px;
+        height: calc(100% - 0.5rem);
+        background: #dee2e6;
+    }
+    .status-item:last-child::after {
+        display: none;
+    }
+    .status-item.completed::before {
+        background: #198754;
+        box-shadow: 0 0 0 2px #198754;
+    }
+    .status-item.current::before {
+        background: #ffc107;
+        box-shadow: 0 0 0 2px #ffc107;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .info-card {
+        border-left: 4px solid #0d6efd;
+        background: #f8f9fa;
+    }
+    .check-in-card {
+        transition: all 0.3s;
+    }
+    .check-in-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .live-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #dc3545;
+        border-radius: 50%;
+        animation: blink 1s infinite;
+        margin-right: 0.5rem;
+    }
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0.3; }
+    }
+    @media (max-width: 768px) {
+        #map {
+            height: 300px;
+        }
+        .tracking-panel {
+            max-height: none;
+            margin-top: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-2">
+                <i class="bi bi-broadcast"></i> Live Journey Tracking
+                <span class="live-indicator"></span>
+            </h2>
+            <p class="text-muted mb-0">{{ journey.journey_number }} - {{ journey.title }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'journey_management:journey_detail' journey.id %}" class="btn btn-outline-primary">
+                <i class="bi bi-info-circle"></i> Journey Details
+            </a>
+            <a href="{% url 'journey_management:journey_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-list"></i> All Journeys
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="alert alert-info mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <strong><i class="bi bi-clock"></i> Status:</strong>
+                <span class="badge bg-info">{{ journey.get_status_display }}</span>
+            </div>
+            <div class="col-md-3">
+                <strong><i class="bi bi-person"></i> Traveler:</strong>
+                {{ journey.traveler.get_full_name|default:journey.traveler.username }}
+            </div>
+            <div class="col-md-3">
+                <strong><i class="bi bi-truck"></i> Vehicle:</strong>
+                {{ journey.vehicle_number|default:"N/A" }}
+            </div>
+            <div class="col-md-3">
+                <strong><i class="bi bi-speedometer2"></i> Distance:</strong>
+                {{ journey.estimated_distance_km|default:"0" }} km
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Map View -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-map"></i> Route Map</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map"></div>
+                </div>
+                <div class="card-footer">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <small class="text-muted d-block">Departure</small>
+                            <strong>{{ journey.planned_departure_time|date:"H:i" }}</strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">ETA</small>
+                            <strong>{{ journey.planned_return_time|date:"H:i" }}</strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">Last Update</small>
+                            <strong id="lastUpdate">Just now</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Quick Actions</h6>
+                    <div class="row g-2">
+                        <div class="col-md-3 col-6">
+                            <button class="btn btn-outline-success w-100" data-bs-toggle="modal" data-bs-target="#checkInModal">
+                                <i class="bi bi-geo-alt"></i><br>
+                                <small>Check In</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <button class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#reportIssueModal">
+                                <i class="bi bi-exclamation-triangle"></i><br>
+                                <small>Report Issue</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <button class="btn btn-outline-info w-100" id="shareLocationBtn">
+                                <i class="bi bi-share"></i><br>
+                                <small>Share Location</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <button class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#emergencyModal">
+                                <i class="bi bi-shield-exclamation"></i><br>
+                                <small>Emergency</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking Panel -->
+        <div class="col-lg-4">
+            <!-- Journey Info -->
+            <div class="card info-card mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="bi bi-info-circle"></i> Journey Information</h6>
+                    <div class="mb-2">
+                        <small class="text-muted">From:</small><br>
+                        <strong>{{ journey.departure_location }}</strong>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">To:</small><br>
+                        <strong>{{ journey.destination }}</strong>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Risk Level:</small><br>
+                        {% if journey.risk_level == 'LOW' %}
+                            <span class="badge bg-success">Low Risk</span>
+                        {% elif journey.risk_level == 'MEDIUM' %}
+                            <span class="badge bg-warning">Medium Risk</span>
+                        {% elif journey.risk_level == 'HIGH' %}
+                            <span class="badge bg-danger">High Risk</span>
+                        {% elif journey.risk_level == 'CRITICAL' %}
+                            <span class="badge bg-dark">Critical</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-0">
+                        <small class="text-muted">Emergency Contact:</small><br>
+                        <strong>{{ journey.emergency_contact_name }}</strong><br>
+                        <a href="tel:{{ journey.emergency_contact_phone }}">{{ journey.emergency_contact_phone }}</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waypoints Progress -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-signpost"></i> Route Progress</h6>
+                </div>
+                <div class="card-body tracking-panel">
+                    <div class="status-timeline">
+                        <div class="status-item completed">
+                            <strong>{{ journey.departure_location }}</strong>
+                            <br><small class="text-muted">Departed: {{ journey.actual_departure_time|date:"M d, H:i"|default:"Pending" }}</small>
+                        </div>
+
+                        {% for waypoint in journey.waypoints.all %}
+                        <div class="status-item {% if waypoint.completed %}completed{% elif forloop.first %}current{% endif %}">
+                            <strong>Stop {{ waypoint.sequence }}: {{ waypoint.location_name }}</strong>
+                            <br><small class="text-muted">{{ waypoint.purpose|default:"Waypoint" }}</small>
+                            {% if waypoint.actual_arrival_time %}
+                                <br><small class="text-success"><i class="bi bi-check-circle"></i> Arrived: {{ waypoint.actual_arrival_time|date:"H:i" }}</small>
+                            {% else %}
+                                <br><small class="text-muted">ETA: {{ waypoint.planned_arrival_time|date:"H:i"|default:"TBD" }}</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="status-item">
+                            <strong>{{ journey.destination }}</strong>
+                            <br><small class="text-muted">ETA: {{ journey.planned_return_time|date:"M d, H:i" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Check-Ins -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Recent Check-Ins</h6>
+                </div>
+                <div class="card-body tracking-panel">
+                    {% if journey.check_ins.all %}
+                        {% for check_in in journey.check_ins.all|slice:":5" %}
+                        <div class="check-in-card card mb-2">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ check_in.get_check_type_display }}</strong>
+                                        <br><small class="text-muted">{{ check_in.location_name }}</small>
+                                        <br><small class="text-muted"><i class="bi bi-clock"></i> {{ check_in.check_time|date:"M d, H:i" }}</small>
+                                    </div>
+                                    {% if check_in.all_safe %}
+                                        <span class="badge bg-success">Safe</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Issue</span>
+                                    {% endif %}
+                                </div>
+                                {% if check_in.notes %}
+                                    <p class="mb-0 mt-2"><small>{{ check_in.notes }}</small></p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No check-ins yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Check-In Modal -->
+<div class="modal fade" id="checkInModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Check-In</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'journey_management:journey_checkin' journey.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Check-In Type</label>
+                        <select name="check_type" class="form-select" required>
+                            <option value="WAYPOINT">Waypoint Check</option>
+                            <option value="ARRIVAL">Arrival Check</option>
+                            <option value="DEPARTURE">Departure Check</option>
+                            <option value="RETURN">Return Check</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Location</label>
+                        <input type="text" name="location_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="all_safe" value="1" checked id="allSafe">
+                        <label class="form-check-label" for="allSafe">
+                            Everything is safe and as expected
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Submit Check-In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Report Issue Modal -->
+<div class="modal fade" id="reportIssueModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Report Issue</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'journey_management:report_issue' journey.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Issue Type</label>
+                        <select name="issue_type" class="form-select" required>
+                            <option value="VEHICLE">Vehicle Issue</option>
+                            <option value="ROUTE">Route Issue</option>
+                            <option value="DELAY">Delay</option>
+                            <option value="WEATHER">Weather</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Modal -->
+<div class="modal fade" id="emergencyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> Emergency Alert</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong>Emergency Contacts:</strong><br>
+                    {{ journey.emergency_contact_name }}: <a href="tel:{{ journey.emergency_contact_phone }}">{{ journey.emergency_contact_phone }}</a><br>
+                    Emergency Services: <a href="tel:911">911</a>
+                </div>
+                <p>Click below to send an emergency alert to your emergency contact and operations team.</p>
+                <form method="post" action="{% url 'journey_management:emergency_alert' journey.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Emergency Details</label>
+                        <textarea name="details" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-broadcast"></i> Send Emergency Alert
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet.js for maps -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// Initialize map
+const map = L.map('map').setView([0, 0], 2);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+}).addTo(map);
+
+// Add markers for departure and destination
+const departureMarker = L.marker([0, 0]).addTo(map)
+    .bindPopup('<strong>{{ journey.departure_location }}</strong><br>Departure Point');
+
+const destinationMarker = L.marker([0, 0]).addTo(map)
+    .bindPopup('<strong>{{ journey.destination }}</strong><br>Destination');
+
+// Add route line (example)
+const routeLine = L.polyline([], {color: 'blue', weight: 3}).addTo(map);
+
+// Simulate live tracking updates
+function updateTracking() {
+    // In a real implementation, this would fetch actual GPS data
+    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+}
+
+// Update every 30 seconds
+setInterval(updateTracking, 30000);
+
+// Share location
+document.getElementById('shareLocationBtn').addEventListener('click', function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const shareUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Current Location',
+                    text: 'Journey: {{ journey.journey_number }}',
+                    url: shareUrl
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(shareUrl);
+                alert('Location link copied to clipboard!');
+            }
+        });
+    } else {
+        alert('Geolocation is not supported by this browser.');
+    }
+});
+
+// Auto-refresh page every 2 minutes to get latest data
+setTimeout(function() {
+    location.reload();
+}, 120000);
+</script>
+{% endblock %}

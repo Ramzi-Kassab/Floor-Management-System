@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Journey Management Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .journey-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-left: 4px solid #dee2e6;
+    }
+    .journey-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .journey-card.status-IN_PROGRESS {
+        border-left-color: #0dcaf0;
+    }
+    .journey-card.status-APPROVED {
+        border-left-color: #198754;
+    }
+    .journey-card.status-DRAFT {
+        border-left-color: #6c757d;
+    }
+    .journey-card.status-COMPLETED {
+        border-left-color: #0d6efd;
+    }
+    .journey-card.status-CANCELLED {
+        border-left-color: #dc3545;
+    }
+    .risk-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .stats-card {
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (max-width: 768px) {
+        .stats-card {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-2"><i class="bi bi-map"></i> Journey Management Dashboard</h2>
+            <p class="text-muted">Track and manage field operations journeys</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'journey_management:journey_planner' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Plan New Journey
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stats-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Active Journeys</h6>
+                            <h3 class="mb-0">{{ stats.active_count|default:0 }}</h3>
+                        </div>
+                        <i class="bi bi-geo-alt-fill" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Completed Today</h6>
+                            <h3 class="mb-0">{{ stats.completed_today|default:0 }}</h3>
+                        </div>
+                        <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stats-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Pending Approval</h6>
+                            <h3 class="mb-0">{{ stats.pending_approval|default:0 }}</h3>
+                        </div>
+                        <i class="bi bi-clock-fill" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stats-card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Overdue</h6>
+                            <h3 class="mb-0">{{ stats.overdue_count|default:0 }}</h3>
+                        </div>
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label"><small>Status</small></label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="SUBMITTED">Submitted</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label"><small>Risk Level</small></label>
+                <select name="risk_level" class="form-select form-select-sm">
+                    <option value="">All Risk Levels</option>
+                    <option value="LOW">Low Risk</option>
+                    <option value="MEDIUM">Medium Risk</option>
+                    <option value="HIGH">High Risk</option>
+                    <option value="CRITICAL">Critical Risk</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label"><small>Date From</small></label>
+                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label"><small>Date To</small></label>
+                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-funnel"></i> Apply Filters
+                </button>
+                <a href="{% url 'journey_management:journey_list' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Journey List -->
+    <div class="row">
+        <div class="col-12">
+            {% if journeys %}
+                {% for journey in journeys %}
+                <div class="card journey-card status-{{ journey.status }} mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <a href="{% url 'journey_management:journey_detail' journey.id %}" class="text-decoration-none">
+                                                {{ journey.journey_number }}
+                                            </a>
+                                        </h5>
+                                        <p class="mb-2 text-muted">{{ journey.title }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        {% if journey.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary">Draft</span>
+                                        {% elif journey.status == 'SUBMITTED' %}
+                                            <span class="badge bg-warning">Submitted</span>
+                                        {% elif journey.status == 'APPROVED' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif journey.status == 'IN_PROGRESS' %}
+                                            <span class="badge bg-info">In Progress</span>
+                                        {% elif journey.status == 'COMPLETED' %}
+                                            <span class="badge bg-primary">Completed</span>
+                                        {% elif journey.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        {% endif %}
+
+                                        {% if journey.risk_level == 'LOW' %}
+                                            <span class="badge bg-success risk-badge">Low Risk</span>
+                                        {% elif journey.risk_level == 'MEDIUM' %}
+                                            <span class="badge bg-warning risk-badge">Medium Risk</span>
+                                        {% elif journey.risk_level == 'HIGH' %}
+                                            <span class="badge bg-danger risk-badge">High Risk</span>
+                                        {% elif journey.risk_level == 'CRITICAL' %}
+                                            <span class="badge bg-dark risk-badge">Critical</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <i class="bi bi-person"></i> {{ journey.traveler.get_full_name|default:journey.traveler.username }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <i class="bi bi-truck"></i> {{ journey.get_vehicle_type_display }}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <small>
+                                            <i class="bi bi-geo-alt text-success"></i>
+                                            <strong>From:</strong> {{ journey.departure_location }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small>
+                                            <i class="bi bi-geo-alt-fill text-danger"></i>
+                                            <strong>To:</strong> {{ journey.destination }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="text-md-end">
+                                    <p class="mb-1">
+                                        <small class="text-muted">Departure</small><br>
+                                        <strong>{{ journey.planned_departure_time|date:"M d, Y H:i" }}</strong>
+                                    </p>
+                                    <p class="mb-2">
+                                        <small class="text-muted">Return</small><br>
+                                        <strong>{{ journey.planned_return_time|date:"M d, Y H:i" }}</strong>
+                                    </p>
+
+                                    {% if journey.is_overdue %}
+                                        <span class="badge bg-danger mb-2">
+                                            <i class="bi bi-exclamation-triangle"></i> Overdue
+                                        </span><br>
+                                    {% endif %}
+
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'journey_management:journey_detail' journey.id %}" class="btn btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if journey.status == 'IN_PROGRESS' %}
+                                            <a href="{% url 'journey_management:journey_tracking' journey.id %}" class="btn btn-outline-info" title="Track Journey">
+                                                <i class="bi bi-map"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if journey.status == 'DRAFT' %}
+                                            <a href="{% url 'journey_management:journey_edit' journey.id %}" class="btn btn-outline-secondary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Journey pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-map" style="font-size: 4rem; color: #dee2e6;"></i>
+                        <h4 class="mt-3 text-muted">No Journeys Found</h4>
+                        <p class="text-muted">Start by planning your first journey</p>
+                        <a href="{% url 'journey_management:journey_planner' %}" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus-circle"></i> Plan New Journey
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-select current filter values
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.has('status')) {
+            document.querySelector('[name="status"]').value = urlParams.get('status');
+        }
+        if (urlParams.has('risk_level')) {
+            document.querySelector('[name="risk_level"]').value = urlParams.get('risk_level');
+        }
+    });
+</script>
+{% endblock %}

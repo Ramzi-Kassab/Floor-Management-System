@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Extraction Results{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-table { font-size: 0.9rem; }
+    .preview-table th { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
+    .validation-error { background-color: #fff3cd; }
+    .validation-success { background-color: #d1e7dd; }
+    .stats-card { border-left: 4px solid #0d6efd; }
+    .error-badge { background: #dc3545; color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; }
+    .success-badge { background: #28a745; color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; }
+    .table-container { max-height: 500px; overflow-y: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-table me-2"></i>Extraction Results</h2>
+            <p class="text-muted mb-0">{{ extraction.file_name }} - {{ extraction.created_at|date:"M d, Y h:i A" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'data_extraction:upload' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>New Extraction
+            </a>
+            {% if extraction.status == 'validated' %}
+            <button class="btn btn-success" onclick="confirmImport()">
+                <i class="bi bi-check-circle me-2"></i>Import Data
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold text-primary">{{ extraction.total_rows }}</div>
+                            <div class="small text-muted">Total Rows</div>
+                        </div>
+                        <i class="bi bi-file-earmark-spreadsheet fs-1 text-primary opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm stats-card" style="border-left-color: #28a745;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold text-success">{{ extraction.valid_rows }}</div>
+                            <div class="small text-muted">Valid Rows</div>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 text-success opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm stats-card" style="border-left-color: #dc3545;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold text-danger">{{ extraction.error_rows }}</div>
+                            <div class="small text-muted">Errors</div>
+                        </div>
+                        <i class="bi bi-exclamation-triangle fs-1 text-danger opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm stats-card" style="border-left-color: #ffc107;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-3 fw-bold text-warning">{{ extraction.warning_rows }}</div>
+                            <div class="small text-muted">Warnings</div>
+                        </div>
+                        <i class="bi bi-exclamation-circle fs-1 text-warning opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Validation Status -->
+    {% if extraction.status == 'validated' %}
+    <div class="alert alert-success border-0 shadow-sm mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">Validation Complete</h5>
+                <p class="mb-0">All data has been validated and is ready for import. {{ extraction.valid_rows }} rows will be imported.</p>
+            </div>
+        </div>
+    </div>
+    {% elif extraction.status == 'error' %}
+    <div class="alert alert-danger border-0 shadow-sm mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">Validation Failed</h5>
+                <p class="mb-0">{{ extraction.error_rows }} rows contain errors. Please review and fix the errors below.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Field Mapping Summary -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Field Mapping</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for mapping in extraction.field_mappings %}
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-light text-dark me-2">{{ mapping.excel_column }}</span>
+                        <i class="bi bi-arrow-right mx-2 text-muted"></i>
+                        <span class="badge bg-primary">{{ mapping.system_field }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Preview -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-table me-2"></i>Data Preview</h5>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary active" data-filter="all">All</button>
+                <button class="btn btn-outline-success" data-filter="valid">Valid Only</button>
+                <button class="btn btn-outline-danger" data-filter="errors">Errors Only</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-container">
+                <table class="table table-sm table-hover preview-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 80px;">Status</th>
+                            {% for field in extraction.mapped_fields %}
+                            <th>{{ field }}</th>
+                            {% endfor %}
+                            <th style="width: 300px;">Validation Messages</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in extraction.preview_data %}
+                        <tr class="{% if row.has_errors %}validation-error{% else %}validation-success{% endif %}" data-status="{% if row.has_errors %}error{% else %}valid{% endif %}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {% if row.has_errors %}
+                                <span class="error-badge"><i class="bi bi-x-circle me-1"></i>Error</span>
+                                {% else %}
+                                <span class="success-badge"><i class="bi bi-check-circle me-1"></i>Valid</span>
+                                {% endif %}
+                            </td>
+                            {% for field, value in row.data.items %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                            <td>
+                                {% if row.validation_messages %}
+                                <ul class="small mb-0 ps-3">
+                                    {% for message in row.validation_messages %}
+                                    <li class="{% if message.type == 'error' %}text-danger{% else %}text-warning{% endif %}">
+                                        {{ message.text }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <span class="text-success small"><i class="bi bi-check me-1"></i>No issues</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Summary -->
+    {% if extraction.error_summary %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Error Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                {% for error in extraction.error_summary %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ error.field }}</h6>
+                            <p class="mb-1 text-danger">{{ error.message }}</p>
+                            <small class="text-muted">Affected rows: {{ error.row_numbers|join:", " }}</small>
+                        </div>
+                        <span class="badge bg-danger rounded-pill">{{ error.count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Import Confirmation Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-cloud-upload me-2"></i>Confirm Import</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to import <strong>{{ extraction.valid_rows }} rows</strong> of data into the system.</p>
+                <p>This action cannot be undone. Are you sure you want to proceed?</p>
+                {% if extraction.error_rows > 0 %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {{ extraction.error_rows }} rows with errors will be skipped.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'data_extraction:import' extraction.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Import Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmImport() {
+    const modal = new bootstrap.Modal(document.getElementById('importModal'));
+    modal.show();
+}
+
+// Filter table rows
+document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        const filter = this.dataset.filter;
+        document.querySelectorAll('tbody tr[data-status]').forEach(row => {
+            if (filter === 'all') {
+                row.style.display = '';
+            } else if (filter === 'valid') {
+                row.style.display = row.dataset.status === 'valid' ? '' : 'none';
+            } else if (filter === 'errors') {
+                row.style.display = row.dataset.status === 'error' ? '' : 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

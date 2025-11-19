@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}5S Leaderboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; }
+    .podium-container { display: flex; align-items: flex-end; justify-content: center; gap: 1rem; margin: 2rem 0; }
+    .podium-place { text-align: center; transition: all 0.3s; cursor: pointer; }
+    .podium-place:hover { transform: translateY(-8px); }
+    .podium-place-2 { order: 1; }
+    .podium-place-1 { order: 2; }
+    .podium-place-3 { order: 3; }
+    .podium-avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; box-shadow: 0 8px 24px rgba(0,0,0,0.2); margin-bottom: 1rem; object-fit: cover; }
+    .podium-place-1 .podium-avatar { width: 120px; height: 120px; border-width: 5px; }
+    .podium-base { border-radius: 12px 12px 0 0; padding: 1.5rem 1rem; color: white; font-weight: 700; }
+    .podium-place-1 .podium-base { height: 200px; background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); box-shadow: 0 8px 32px rgba(255, 215, 0, 0.5); }
+    .podium-place-2 .podium-base { height: 150px; background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%); box-shadow: 0 8px 24px rgba(192, 192, 192, 0.5); }
+    .podium-place-3 .podium-base { height: 120px; background: linear-gradient(135deg, #cd7f32 0%, #d4a574 100%); box-shadow: 0 8px 24px rgba(205, 127, 50, 0.5); }
+    .medal-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .podium-place-1 .medal-icon { color: #ffd700; }
+    .podium-place-2 .medal-icon { color: #c0c0c0; }
+    .podium-place-3 .medal-icon { color: #cd7f32; }
+    .leaderboard-table { background: white; border-radius: 12px; overflow: hidden; }
+    .rank-cell { width: 60px; text-align: center; font-weight: 700; font-size: 1.2rem; }
+    .rank-1 { color: #ffd700; }
+    .rank-2 { color: #c0c0c0; }
+    .rank-3 { color: #cd7f32; }
+    .rank-trend { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 0.75rem; }
+    .rank-trend.up { background: #d4edda; color: #28a745; }
+    .rank-trend.down { background: #f8d7da; color: #dc3545; }
+    .rank-trend.same { background: #e2e3e5; color: #6c757d; }
+    .badge-display { display: inline-flex; gap: 0.25rem; }
+    .achievement-badge { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+    .badge-legendary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .badge-epic { background: linear-gradient(135deg, #6f42c1 0%, #9b59b6 100%); color: white; }
+    .badge-rare { background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; }
+    .badge-common { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+    .score-bar { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+    .score-bar-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease; }
+    .period-selector { background: white; border-radius: 12px; padding: 0.5rem; display: inline-flex; gap: 0.5rem; }
+    .period-btn { border: none; background: transparent; padding: 0.5rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.3s; cursor: pointer; }
+    .period-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .period-btn:hover:not(.active) { background: #f8f9fa; }
+    .announcement-card { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); border-left: 4px solid #ffc107; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+    .competition-badge { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 700; animation: pulse 2s infinite; }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    .filter-card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .team-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .stats-card { background: white; border-radius: 12px; padding: 1.5rem; text-align: center; transition: all 0.3s; }
+    .stats-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .stats-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="leaderboard-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-trophy me-2"></i>5S Leaderboard</h2>
+                <p class="mb-0 opacity-75">Competition breeds excellence • Track your progress</p>
+            </div>
+            <div>
+                <a href="{% url 'fives:achievements' %}" class="btn btn-light">
+                    <i class="bi bi-award me-2"></i>My Achievements
+                </a>
+                <a href="{% url 'fives:audit_list' %}" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Audits
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Competition Announcement -->
+    {% if current_competition %}
+    <div class="announcement-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-megaphone fs-4"></i>
+                    <h5 class="mb-0">{{ current_competition.name }}</h5>
+                    <span class="competition-badge">LIVE</span>
+                </div>
+                <p class="mb-2">{{ current_competition.description }}</p>
+                <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>Ends: {{ current_competition.end_date|date:"M d, Y" }}
+                </small>
+            </div>
+            <div class="text-center">
+                <div class="display-6 fw-bold">{{ current_competition.prize }}</div>
+                <small class="text-muted">Grand Prize</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Period Selector & Filters -->
+    <div class="filter-card">
+        <div class="row align-items-center g-3">
+            <div class="col-md-6">
+                <div class="period-selector">
+                    <button class="period-btn {% if period == 'weekly' %}active{% endif %}" onclick="changePeriod('weekly')">
+                        Weekly
+                    </button>
+                    <button class="period-btn {% if period == 'monthly' %}active{% endif %}" onclick="changePeriod('monthly')">
+                        Monthly
+                    </button>
+                    <button class="period-btn {% if period == 'quarterly' %}active{% endif %}" onclick="changePeriod('quarterly')">
+                        Quarterly
+                    </button>
+                    <button class="period-btn {% if period == 'yearly' %}active{% endif %}" onclick="changePeriod('yearly')">
+                        Yearly
+                    </button>
+                    <button class="period-btn {% if period == 'all-time' %}active{% endif %}" onclick="changePeriod('all-time')">
+                        All Time
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="departmentFilter">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept }}">{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0" id="searchLeaderboard" placeholder="Search teams...">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 3 Podium -->
+    {% if top_three %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-5">
+            <h4 class="text-center mb-4">Top Performers</h4>
+            <div class="podium-container">
+                {% for entry in top_three %}
+                <div class="podium-place podium-place-{{ forloop.counter }}">
+                    <img src="{% if entry.team_logo %}{{ entry.team_logo.url }}{% else %}{% static 'images/default-team.png' %}{% endif %}"
+                         alt="{{ entry.team_name }}" class="podium-avatar">
+                    <div class="podium-base">
+                        <div class="medal-icon">
+                            {% if forloop.counter == 1 %}
+                            <i class="bi bi-trophy-fill"></i>
+                            {% elif forloop.counter == 2 %}
+                            <i class="bi bi-award-fill"></i>
+                            {% else %}
+                            <i class="bi bi-star-fill"></i>
+                            {% endif %}
+                        </div>
+                        <div class="h5 mb-2">{{ entry.area_name }}</div>
+                        <div class="small opacity-75 mb-2">{{ entry.department }}</div>
+                        <div class="display-6">{{ entry.total_score|floatformat:0 }}</div>
+                        <div class="small opacity-75">points</div>
+                        <div class="mt-2">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-star-fill me-1"></i>{{ entry.avg_score|floatformat:1 }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Statistics Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="h4 fw-bold mb-1">{{ total_participants }}</div>
+                <div class="text-muted">Active Teams</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                    <i class="bi bi-clipboard-check"></i>
+                </div>
+                <div class="h4 fw-bold mb-1">{{ total_audits }}</div>
+                <div class="text-muted">Audits Completed</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white;">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="h4 fw-bold mb-1">{{ avg_improvement|floatformat:1 }}%</div>
+                <div class="text-muted">Avg Improvement</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon" style="background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white;">
+                    <i class="bi bi-star"></i>
+                </div>
+                <div class="h4 fw-bold mb-1">{{ total_points }}</div>
+                <div class="text-muted">Total Points</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table leaderboard-table mb-0">
+                    <thead>
+                        <tr>
+                            <th class="rank-cell">Rank</th>
+                            <th>Area/Team</th>
+                            <th>Department</th>
+                            <th class="text-center">Avg Score</th>
+                            <th class="text-center">Points</th>
+                            <th class="text-center">Audits</th>
+                            <th class="text-center">Badges</th>
+                            <th class="text-center">Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        {% for entry in leaderboard %}
+                        <tr class="leaderboard-row" data-department="{{ entry.department }}" data-team="{{ entry.area_name|lower }}">
+                            <td class="rank-cell rank-{% if forloop.counter <= 3 %}{{ forloop.counter }}{% endif %}">
+                                {% if forloop.counter == 1 %}
+                                <i class="bi bi-trophy-fill"></i>
+                                {% elif forloop.counter == 2 %}
+                                <i class="bi bi-award-fill"></i>
+                                {% elif forloop.counter == 3 %}
+                                <i class="bi bi-star-fill"></i>
+                                {% else %}
+                                {{ forloop.counter }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="{% if entry.team_logo %}{{ entry.team_logo.url }}{% else %}{% static 'images/default-team.png' %}{% endif %}"
+                                         alt="{{ entry.area_name }}" class="team-avatar">
+                                    <div>
+                                        <div class="fw-bold">{{ entry.area_name }}</div>
+                                        {% if entry.responsible_person %}
+                                        <small class="text-muted">Lead: {{ entry.responsible_person.get_full_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ entry.department|default:"General" }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="fw-bold mb-1">{{ entry.avg_score|floatformat:1 }}%</div>
+                                <div class="score-bar">
+                                    <div class="score-bar-fill" style="width: {{ entry.avg_score }}%;"></div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="fw-bold" style="color: #667eea;">{{ entry.total_points }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ entry.audit_count }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="badge-display">
+                                    {% if entry.legendary_badges > 0 %}
+                                    <span class="achievement-badge badge-legendary" title="{{ entry.legendary_badges }} Legendary">
+                                        {{ entry.legendary_badges }}
+                                    </span>
+                                    {% endif %}
+                                    {% if entry.epic_badges > 0 %}
+                                    <span class="achievement-badge badge-epic" title="{{ entry.epic_badges }} Epic">
+                                        {{ entry.epic_badges }}
+                                    </span>
+                                    {% endif %}
+                                    {% if entry.rare_badges > 0 %}
+                                    <span class="achievement-badge badge-rare" title="{{ entry.rare_badges }} Rare">
+                                        {{ entry.rare_badges }}
+                                    </span>
+                                    {% endif %}
+                                    {% if entry.common_badges > 0 %}
+                                    <span class="achievement-badge badge-common" title="{{ entry.common_badges }} Common">
+                                        {{ entry.common_badges }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if entry.trend == 'up' %}
+                                <span class="rank-trend up" title="Trending up">
+                                    <i class="bi bi-arrow-up"></i>
+                                </span>
+                                {% elif entry.trend == 'down' %}
+                                <span class="rank-trend down" title="Trending down">
+                                    <i class="bi bi-arrow-down"></i>
+                                </span>
+                                {% else %}
+                                <span class="rank-trend same" title="No change">
+                                    <i class="bi bi-dash"></i>
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-trophy fs-1 text-muted d-block mb-3"></i>
+                                <h5 class="text-muted">No data available</h5>
+                                <p class="text-muted">Start completing audits to see the leaderboard</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if leaderboard.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav>
+            <ul class="pagination">
+                {% if leaderboard.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ leaderboard.previous_page_number }}&period={{ period }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in leaderboard.paginator.page_range %}
+                <li class="page-item {% if leaderboard.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}&period={{ period }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if leaderboard.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ leaderboard.next_page_number }}&period={{ period }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Period selection
+function changePeriod(period) {
+    window.location.href = `?period=${period}`;
+}
+
+// Filter functionality
+document.getElementById('departmentFilter')?.addEventListener('change', applyFilters);
+document.getElementById('searchLeaderboard')?.addEventListener('input', applyFilters);
+
+function applyFilters() {
+    const department = document.getElementById('departmentFilter').value.toLowerCase();
+    const search = document.getElementById('searchLeaderboard').value.toLowerCase();
+
+    document.querySelectorAll('.leaderboard-row').forEach(row => {
+        const rowDept = row.dataset.department.toLowerCase();
+        const rowTeam = row.dataset.team.toLowerCase();
+
+        let show = true;
+        if (department && rowDept !== department) show = false;
+        if (search && !rowTeam.includes(search)) show = false;
+
+        row.style.display = show ? '' : 'none';
+    });
+
+    // Update rank numbers
+    updateRankNumbers();
+}
+
+function updateRankNumbers() {
+    let visibleRank = 1;
+    document.querySelectorAll('.leaderboard-row').forEach(row => {
+        if (row.style.display !== 'none') {
+            const rankCell = row.querySelector('.rank-cell');
+            if (visibleRank <= 3) {
+                const icons = ['bi-trophy-fill', 'bi-award-fill', 'bi-star-fill'];
+                rankCell.innerHTML = `<i class="bi ${icons[visibleRank - 1]}"></i>`;
+                rankCell.className = `rank-cell rank-${visibleRank}`;
+            } else {
+                rankCell.textContent = visibleRank;
+                rankCell.className = 'rank-cell';
+            }
+            visibleRank++;
+        }
+    });
+}
+
+// Animate score bars on load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        document.querySelectorAll('.score-bar-fill').forEach(bar => {
+            bar.style.transition = 'width 1s ease';
+        });
+    }, 100);
+});
+
+// Podium hover effects
+document.querySelectorAll('.podium-place').forEach(place => {
+    place.addEventListener('click', function() {
+        const teamName = this.querySelector('.h5').textContent.trim();
+        alert(`View details for ${teamName}`);
+        // In production, this would navigate to team details page
+    });
+});
+</script>
+{% endblock %}

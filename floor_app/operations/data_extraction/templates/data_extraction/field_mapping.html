@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Field Mapping{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="bi bi-arrow-left-right me-2"></i>Map Fields</h2>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Excel Column</th>
+                            <th>System Field</th>
+                            <th>Sample Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for column in excel_columns %}
+                        <tr>
+                            <td><strong>{{ column.name }}</strong></td>
+                            <td>
+                                <select class="form-select" name="mapping_{{ column.index }}">
+                                    <option value="">-- Skip --</option>
+                                    {% for field in system_fields %}
+                                    <option value="{{ field.name }}">{{ field.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><code>{{ column.sample }}</code></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle me-2"></i>Confirm Mapping & Extract
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

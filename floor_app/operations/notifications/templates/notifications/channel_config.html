@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Channel Configuration - Notifications{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'notifications:center' %}">Notifications</a></li>
+            <li class="breadcrumb-item active">Channel Configuration</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-2"><i class="bi bi-broadcast text-primary me-2"></i>Channel Configuration</h2>
+                    <p class="text-muted mb-0">Configure notification delivery channels</p>
+                </div>
+            </div>
+
+            <!-- Channels List -->
+            <div class="row g-4">
+                {% for channel in channels %}
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="fw-semibold">{{ channel.get_channel_type_display }}</h5>
+                                    <span class="badge {% if channel.is_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if channel.is_enabled %}Enabled{% else %}Disabled{% endif %}
+                                    </span>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" style="width: 3rem; height: 1.5rem;"
+                                           {% if channel.is_enabled %}checked{% endif %}
+                                           onchange="toggleChannel({{ channel.id }}, this.checked)">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">Priority</label>
+                                <input type="number" class="form-control form-control-sm" value="{{ channel.priority }}"
+                                       onchange="updateChannelPriority({{ channel.id }}, this.value)">
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small text-muted">Max/Hour</label>
+                                    <input type="number" class="form-control form-control-sm"
+                                           value="{{ channel.max_per_hour|default:'' }}"
+                                           placeholder="Unlimited"
+                                           onchange="updateRateLimit({{ channel.id }}, 'hour', this.value)">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-muted">Max/Day</label>
+                                    <input type="number" class="form-control form-control-sm"
+                                           value="{{ channel.max_per_day|default:'' }}"
+                                           placeholder="Unlimited"
+                                           onchange="updateRateLimit({{ channel.id }}, 'day', this.value)">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-sm btn-outline-primary w-100"
+                                    onclick="configureChannel({{ channel.id }})">
+                                <i class="bi bi-gear me-2"></i>Advanced Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleChannel(channelId, enabled) {
+    fetch(`/api/notifications/channels/${channelId}/`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ is_enabled: enabled })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        }
+    });
+}
+
+function updateChannelPriority(channelId, priority) {
+    fetch(`/api/notifications/channels/${channelId}/`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ priority: parseInt(priority) })
+    });
+}
+
+function updateRateLimit(channelId, type, value) {
+    const field = type === 'hour' ? 'max_per_hour' : 'max_per_day';
+    fetch(`/api/notifications/channels/${channelId}/`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ [field]: value ? parseInt(value) : null })
+    });
+}
+
+function configureChannel(channelId) {
+    window.location.href = `/notifications/channels/${channelId}/configure/`;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}User Preferences - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-gear-fill me-2"></i>User Preferences
+                    </h4>
+                    <p class="mb-0 mt-1 small">Customize your Floor Management System experience</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="preferencesForm">
+                        {% csrf_token %}
+
+                        <!-- Appearance Settings -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-palette-fill text-primary me-2"></i>Appearance
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="theme" class="form-label">Theme</label>
+                                    <select class="form-select" id="theme" name="theme">
+                                        <option value="LIGHT" {% if preferences.theme == 'LIGHT' %}selected{% endif %}>Light Theme</option>
+                                        <option value="DARK" {% if preferences.theme == 'DARK' %}selected{% endif %}>Dark Theme</option>
+                                        <option value="AUTO" {% if preferences.theme == 'AUTO' %}selected{% endif %}>Auto (System)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="language" class="form-label">Language</label>
+                                    <select class="form-select" id="language" name="language">
+                                        <option value="en" {% if preferences.language == 'en' %}selected{% endif %}>English</option>
+                                        <option value="ar" {% if preferences.language == 'ar' %}selected{% endif %}>Arabic</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="density" class="form-label">UI Density</label>
+                                    <select class="form-select" id="density" name="density">
+                                        <option value="COMPACT" {% if preferences.density == 'COMPACT' %}selected{% endif %}>Compact</option>
+                                        <option value="COMFORTABLE" {% if preferences.density == 'COMFORTABLE' %}selected{% endif %}>Comfortable</option>
+                                        <option value="SPACIOUS" {% if preferences.density == 'SPACIOUS' %}selected{% endif %}>Spacious</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date & Time Settings -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-clock-fill text-primary me-2"></i>Date & Time
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="timezone" class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone" name="timezone">
+                                        <option value="UTC" {% if preferences.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                                        <option value="America/New_York" {% if preferences.timezone == 'America/New_York' %}selected{% endif %}>Eastern Time (US & Canada)</option>
+                                        <option value="America/Chicago" {% if preferences.timezone == 'America/Chicago' %}selected{% endif %}>Central Time (US & Canada)</option>
+                                        <option value="America/Denver" {% if preferences.timezone == 'America/Denver' %}selected{% endif %}>Mountain Time (US & Canada)</option>
+                                        <option value="America/Los_Angeles" {% if preferences.timezone == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (US & Canada)</option>
+                                        <option value="Europe/London" {% if preferences.timezone == 'Europe/London' %}selected{% endif %}>London</option>
+                                        <option value="Europe/Paris" {% if preferences.timezone == 'Europe/Paris' %}selected{% endif %}>Paris</option>
+                                        <option value="Asia/Dubai" {% if preferences.timezone == 'Asia/Dubai' %}selected{% endif %}>Dubai</option>
+                                        <option value="Asia/Tokyo" {% if preferences.timezone == 'Asia/Tokyo' %}selected{% endif %}>Tokyo</option>
+                                        <option value="Asia/Singapore" {% if preferences.timezone == 'Asia/Singapore' %}selected{% endif %}>Singapore</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="date_format" class="form-label">Date Format</label>
+                                    <select class="form-select" id="date_format" name="date_format">
+                                        <option value="YYYY-MM-DD" {% if preferences.date_format == 'YYYY-MM-DD' %}selected{% endif %}>YYYY-MM-DD (2025-01-18)</option>
+                                        <option value="DD-MM-YYYY" {% if preferences.date_format == 'DD-MM-YYYY' %}selected{% endif %}>DD-MM-YYYY (18-01-2025)</option>
+                                        <option value="MM-DD-YYYY" {% if preferences.date_format == 'MM-DD-YYYY' %}selected{% endif %}>MM-DD-YYYY (01-18-2025)</option>
+                                        <option value="DD/MM/YYYY" {% if preferences.date_format == 'DD/MM/YYYY' %}selected{% endif %}>DD/MM/YYYY (18/01/2025)</option>
+                                        <option value="MM/DD/YYYY" {% if preferences.date_format == 'MM/DD/YYYY' %}selected{% endif %}>MM/DD/YYYY (01/18/2025)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="time_format" class="form-label">Time Format</label>
+                                    <select class="form-select" id="time_format" name="time_format">
+                                        <option value="24H" {% if preferences.time_format == '24H' %}selected{% endif %}>24 Hour (13:00)</option>
+                                        <option value="12H" {% if preferences.time_format == '12H' %}selected{% endif %}>12 Hour (1:00 PM)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Table Display Settings -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-table text-primary me-2"></i>Table Display
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="default_page_size" class="form-label">Default Page Size</label>
+                                    <input type="number" class="form-control" id="default_page_size" name="default_page_size"
+                                           value="{{ preferences.default_page_size }}" min="5" max="100">
+                                    <small class="text-muted">Number of rows per page (5-100)</small>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label d-block mb-3">Display Options</label>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="enable_row_numbers"
+                                                       name="enable_row_numbers" {% if preferences.enable_row_numbers %}checked{% endif %}>
+                                                <label class="form-check-label" for="enable_row_numbers">
+                                                    Show Row Numbers
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="enable_zebra_striping"
+                                                       name="enable_zebra_striping" {% if preferences.enable_zebra_striping %}checked{% endif %}>
+                                                <label class="form-check-label" for="enable_zebra_striping">
+                                                    Zebra Striping
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="enable_hover_highlight"
+                                                       name="enable_hover_highlight" {% if preferences.enable_hover_highlight %}checked{% endif %}>
+                                                <label class="form-check-label" for="enable_hover_highlight">
+                                                    Hover Highlight
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dashboard Settings -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-speedometer2 text-primary me-2"></i>Dashboard
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="default_dashboard" class="form-label">Default Dashboard</label>
+                                    <select class="form-select" id="default_dashboard" name="default_dashboard">
+                                        <option value="" {% if not preferences.default_dashboard %}selected{% endif %}>Main Dashboard</option>
+                                        <option value="maintenance" {% if preferences.default_dashboard == 'maintenance' %}selected{% endif %}>Maintenance Dashboard</option>
+                                        <option value="operations" {% if preferences.default_dashboard == 'operations' %}selected{% endif %}>Operations Dashboard</option>
+                                        <option value="analytics" {% if preferences.default_dashboard == 'analytics' %}selected{% endif %}>Analytics Dashboard</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="notification_position" class="form-label">Notification Position</label>
+                                    <select class="form-select" id="notification_position" name="notification_position">
+                                        <option value="TOP_RIGHT" {% if preferences.notification_position == 'TOP_RIGHT' %}selected{% endif %}>Top Right</option>
+                                        <option value="TOP_LEFT" {% if preferences.notification_position == 'TOP_LEFT' %}selected{% endif %}>Top Left</option>
+                                        <option value="BOTTOM_RIGHT" {% if preferences.notification_position == 'BOTTOM_RIGHT' %}selected{% endif %}>Bottom Right</option>
+                                        <option value="BOTTOM_LEFT" {% if preferences.notification_position == 'BOTTOM_LEFT' %}selected{% endif %}>Bottom Left</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other Settings -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-sliders text-primary me-2"></i>Other Settings
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="auto_save_forms"
+                                               name="auto_save_forms" {% if preferences.auto_save_forms %}checked{% endif %}>
+                                        <label class="form-check-label" for="auto_save_forms">
+                                            Auto-save Forms
+                                        </label>
+                                        <small class="d-block text-muted">Automatically save form drafts</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="confirm_before_delete"
+                                               name="confirm_before_delete" {% if preferences.confirm_before_delete %}checked{% endif %}>
+                                        <label class="form-check-label" for="confirm_before_delete">
+                                            Confirm Before Delete
+                                        </label>
+                                        <small class="d-block text-muted">Show confirmation dialog</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="show_tooltips"
+                                               name="show_tooltips" {% if preferences.show_tooltips %}checked{% endif %}>
+                                        <label class="form-check-label" for="show_tooltips">
+                                            Show Tooltips
+                                        </label>
+                                        <small class="d-block text-muted">Display helpful tooltips</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a href="{% url 'user_preferences:notification_settings' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-bell-fill me-2"></i>Notification Settings
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary me-2" onclick="location.reload();">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save-fill me-2"></i>Save Preferences
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('preferencesForm');
+
+    // Live theme preview
+    const themeSelect = document.getElementById('theme');
+    themeSelect.addEventListener('change', function() {
+        const theme = this.value.toLowerCase();
+        if (theme === 'dark') {
+            document.body.setAttribute('data-bs-theme', 'dark');
+        } else if (theme === 'light') {
+            document.body.setAttribute('data-bs-theme', 'light');
+        } else {
+            // Auto - detect system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.setAttribute('data-bs-theme', 'dark');
+            } else {
+                document.body.setAttribute('data-bs-theme', 'light');
+            }
+        }
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const pageSize = parseInt(document.getElementById('default_page_size').value);
+        if (pageSize < 5 || pageSize > 100) {
+            e.preventDefault();
+            alert('Default page size must be between 5 and 100');
+            return false;
+        }
+    });
+
+    // Auto-save indicator
+    const inputs = form.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const saveBtn = form.querySelector('button[type="submit"]');
+            if (!saveBtn.classList.contains('btn-warning')) {
+                saveBtn.classList.remove('btn-primary');
+                saveBtn.classList.add('btn-warning');
+                saveBtn.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>Unsaved Changes';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

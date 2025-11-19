@@ -1,0 +1,893 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}File Tools - Utility Tools{% endblock %}
+
+{% block extra_css %}
+<style>
+    .file-tool-card {
+        transition: all 0.3s ease;
+        border: 2px dashed #e3e6f0;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-tool-card:hover {
+        border-color: #4e73df;
+        box-shadow: 0 8px 16px rgba(78, 115, 223, 0.2);
+        transform: translateY(-3px);
+    }
+
+    .file-tool-card.active {
+        border-color: #4e73df;
+        border-style: solid;
+        background: #f8f9fc;
+    }
+
+    .upload-zone {
+        border: 3px dashed #cbd5e0;
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        background: #f7fafc;
+        transition: all 0.3s ease;
+        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .upload-zone.dragover {
+        border-color: #4e73df;
+        background: #e3e8ff;
+        transform: scale(1.02);
+    }
+
+    .upload-icon {
+        font-size: 64px;
+        color: #4e73df;
+        margin-bottom: 20px;
+    }
+
+    .file-preview {
+        background: white;
+        border: 1px solid #e3e6f0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .file-preview:hover {
+        background: #f8f9fc;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .file-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .conversion-options {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .btn-convert {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-convert:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        color: white;
+    }
+
+    .progress-container {
+        display: none;
+        margin-top: 20px;
+    }
+
+    .tool-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 15px;
+    }
+
+    .nav-pills .nav-link {
+        border-radius: 10px;
+        padding: 12px 20px;
+        transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .output-format-btn {
+        padding: 10px 20px;
+        border: 2px solid #e3e6f0;
+        border-radius: 8px;
+        background: white;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .output-format-btn:hover {
+        border-color: #4e73df;
+        background: #f8f9fc;
+    }
+
+    .output-format-btn.selected {
+        border-color: #4e73df;
+        background: #e3e8ff;
+        color: #4e73df;
+        font-weight: 600;
+    }
+
+    .conversion-history {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1"><i class="bi bi-file-earmark-arrow-up"></i> File Tools</h2>
+                    <p class="text-muted mb-0">Convert and process your files with ease</p>
+                </div>
+                <a href="{% url 'utility_tools:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tool Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-pills" id="fileToolTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pdf-tab" data-bs-toggle="pill" data-bs-target="#pdf-tools" type="button">
+                        <i class="bi bi-file-pdf"></i> PDF Tools
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="excel-tab" data-bs-toggle="pill" data-bs-target="#excel-tools" type="button">
+                        <i class="bi bi-file-excel"></i> Excel/CSV
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="image-tab" data-bs-toggle="pill" data-bs-target="#image-tools" type="button">
+                        <i class="bi bi-image"></i> Image Tools
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="word-tab" data-bs-toggle="pill" data-bs-target="#word-tools" type="button">
+                        <i class="bi bi-file-word"></i> Word Tools
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <div class="tab-content" id="fileToolTabContent">
+                <!-- PDF Tools -->
+                <div class="tab-pane fade show active" id="pdf-tools" role="tabpanel">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectPDFTool('merge')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-files"></i>
+                                    </div>
+                                    <h6>Merge PDFs</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectPDFTool('split')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-scissors"></i>
+                                    </div>
+                                    <h6>Split PDF</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectPDFTool('compress')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-file-zip"></i>
+                                    </div>
+                                    <h6>Compress PDF</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectPDFTool('convert')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                    </div>
+                                    <h6>Convert PDF</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PDF Upload Zone -->
+                    <div class="upload-zone" id="pdfUploadZone">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <h4>Drag & Drop PDF Files</h4>
+                        <p class="text-muted mb-3">or click to browse</p>
+                        <input type="file" id="pdfFileInput" accept=".pdf" multiple class="d-none">
+                        <button class="btn btn-primary" onclick="document.getElementById('pdfFileInput').click()">
+                            <i class="bi bi-folder-open"></i> Choose Files
+                        </button>
+                        <p class="mt-3 text-muted small">Maximum file size: 50MB per file</p>
+                    </div>
+
+                    <div id="pdfFileList" class="mt-4"></div>
+
+                    <div id="pdfConversionOptions" class="conversion-options" style="display: none;">
+                        <h5 class="mb-3">Conversion Options</h5>
+                        <div id="pdfOptionsContent"></div>
+                        <div class="text-center mt-4">
+                            <button class="btn btn-convert" onclick="processPDF()">
+                                <i class="bi bi-play-circle"></i> Process Files
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="progress-container" id="pdfProgress">
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                 role="progressbar" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Excel/CSV Tools -->
+                <div class="tab-pane fade" id="excel-tools" role="tabpanel">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card file-tool-card text-center" onclick="selectExcelTool('excel-to-csv')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-file-excel"></i>
+                                    </div>
+                                    <h6>Excel to CSV</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card file-tool-card text-center" onclick="selectExcelTool('csv-to-excel')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-table"></i>
+                                    </div>
+                                    <h6>CSV to Excel</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card file-tool-card text-center" onclick="selectExcelTool('json-to-excel')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-file-code"></i>
+                                    </div>
+                                    <h6>JSON to Excel</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upload-zone" id="excelUploadZone">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <h4>Drag & Drop Files</h4>
+                        <p class="text-muted mb-3">Excel (.xlsx, .xls) or CSV files</p>
+                        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv,.json" class="d-none">
+                        <button class="btn btn-success" onclick="document.getElementById('excelFileInput').click()">
+                            <i class="bi bi-folder-open"></i> Choose Files
+                        </button>
+                    </div>
+
+                    <div id="excelFileList" class="mt-4"></div>
+
+                    <div id="excelConversionOptions" class="conversion-options" style="display: none;">
+                        <h5 class="mb-3">Output Format</h5>
+                        <div class="row g-2 mb-3" id="excelFormatOptions">
+                            <div class="col-auto">
+                                <button class="output-format-btn" data-format="csv">
+                                    <i class="bi bi-file-earmark-text"></i> CSV
+                                </button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="output-format-btn" data-format="xlsx">
+                                    <i class="bi bi-file-excel"></i> Excel (XLSX)
+                                </button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="output-format-btn" data-format="json">
+                                    <i class="bi bi-file-code"></i> JSON
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button class="btn btn-convert" onclick="processExcel()">
+                                <i class="bi bi-play-circle"></i> Convert Files
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Tools -->
+                <div class="tab-pane fade" id="image-tools" role="tabpanel">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectImageTool('resize')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-purple bg-opacity-10 text-purple">
+                                        <i class="bi bi-arrows-angle-expand"></i>
+                                    </div>
+                                    <h6>Resize Image</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectImageTool('compress')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-purple bg-opacity-10 text-purple">
+                                        <i class="bi bi-file-zip"></i>
+                                    </div>
+                                    <h6>Compress</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectImageTool('convert')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-purple bg-opacity-10 text-purple">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                    </div>
+                                    <h6>Convert Format</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card file-tool-card text-center" onclick="selectImageTool('to-pdf')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-purple bg-opacity-10 text-purple">
+                                        <i class="bi bi-file-pdf"></i>
+                                    </div>
+                                    <h6>Images to PDF</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upload-zone" id="imageUploadZone">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <h4>Drag & Drop Images</h4>
+                        <p class="text-muted mb-3">JPG, PNG, GIF, WebP, BMP</p>
+                        <input type="file" id="imageFileInput" accept="image/*" multiple class="d-none">
+                        <button class="btn btn-primary" onclick="document.getElementById('imageFileInput').click()">
+                            <i class="bi bi-folder-open"></i> Choose Images
+                        </button>
+                    </div>
+
+                    <div id="imageFileList" class="mt-4"></div>
+
+                    <div id="imageConversionOptions" class="conversion-options" style="display: none;">
+                        <h5 class="mb-3">Image Options</h5>
+                        <div id="imageOptionsContent"></div>
+                        <div class="text-center mt-4">
+                            <button class="btn btn-convert" onclick="processImage()">
+                                <i class="bi bi-play-circle"></i> Process Images
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Word Tools -->
+                <div class="tab-pane fade" id="word-tools" role="tabpanel">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card file-tool-card text-center" onclick="selectWordTool('word-to-pdf')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-info bg-opacity-10 text-info">
+                                        <i class="bi bi-file-word"></i>
+                                    </div>
+                                    <h6>Word to PDF</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card file-tool-card text-center" onclick="selectWordTool('pdf-to-word')">
+                                <div class="card-body">
+                                    <div class="tool-icon bg-info bg-opacity-10 text-info">
+                                        <i class="bi bi-file-pdf"></i>
+                                    </div>
+                                    <h6>PDF to Word</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upload-zone" id="wordUploadZone">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <h4>Drag & Drop Documents</h4>
+                        <p class="text-muted mb-3">Word (.docx, .doc) or PDF files</p>
+                        <input type="file" id="wordFileInput" accept=".doc,.docx,.pdf" class="d-none">
+                        <button class="btn btn-info text-white" onclick="document.getElementById('wordFileInput').click()">
+                            <i class="bi bi-folder-open"></i> Choose Files
+                        </button>
+                    </div>
+
+                    <div id="wordFileList" class="mt-4"></div>
+
+                    <div id="wordConversionOptions" class="conversion-options" style="display: none;">
+                        <div class="text-center mt-4">
+                            <button class="btn btn-convert" onclick="processWord()">
+                                <i class="bi bi-play-circle"></i> Convert Files
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Info -->
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Quick Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Supported Formats:</strong>
+                        <ul class="mt-2 small">
+                            <li>PDF: Merge, Split, Compress, Convert</li>
+                            <li>Excel: XLSX, XLS, CSV, JSON</li>
+                            <li>Images: JPG, PNG, GIF, WebP, BMP</li>
+                            <li>Word: DOCX, DOC</li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-shield-check"></i> Your files are processed securely and never stored on our servers.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion History -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Conversions</h5>
+                </div>
+                <div class="card-body conversion-history">
+                    <div id="conversionHistory">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                            <p class="mt-2">No recent conversions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <button class="btn btn-sm btn-outline-danger w-100" onclick="clearConversionHistory()">
+                        <i class="bi bi-trash"></i> Clear History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentTool = null;
+    let selectedFiles = [];
+    let selectedFormat = null;
+
+    // Drag and Drop Handlers
+    function setupDragDrop(zoneId, inputId) {
+        const zone = document.getElementById(zoneId);
+        const input = document.getElementById(inputId);
+
+        zone.addEventListener('click', () => input.click());
+
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('dragover');
+        });
+
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files, zoneId.replace('UploadZone', ''));
+        });
+
+        input.addEventListener('change', (e) => {
+            handleFiles(e.target.files, zoneId.replace('UploadZone', ''));
+        });
+    }
+
+    // Handle Files
+    function handleFiles(files, toolType) {
+        selectedFiles = Array.from(files);
+        displayFiles(selectedFiles, toolType);
+        showConversionOptions(toolType);
+    }
+
+    // Display Files
+    function displayFiles(files, toolType) {
+        const listId = toolType + 'FileList';
+        const fileList = document.getElementById(listId);
+
+        let html = '<h6 class="mb-3">Selected Files:</h6>';
+        files.forEach((file, index) => {
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            const fileExtension = file.name.split('.').pop().toUpperCase();
+
+            html += `
+                <div class="file-preview">
+                    <div class="file-info">
+                        <div class="file-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-file-earmark"></i>
+                        </div>
+                        <div>
+                            <strong>${file.name}</strong><br>
+                            <small class="text-muted">${fileSize} MB • ${fileExtension}</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeFile(${index}, '${toolType}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+        });
+
+        fileList.innerHTML = html;
+    }
+
+    // Remove File
+    function removeFile(index, toolType) {
+        selectedFiles.splice(index, 1);
+        if (selectedFiles.length === 0) {
+            document.getElementById(toolType + 'FileList').innerHTML = '';
+            document.getElementById(toolType + 'ConversionOptions').style.display = 'none';
+        } else {
+            displayFiles(selectedFiles, toolType);
+        }
+    }
+
+    // Show Conversion Options
+    function showConversionOptions(toolType) {
+        document.getElementById(toolType + 'ConversionOptions').style.display = 'block';
+    }
+
+    // PDF Tools
+    function selectPDFTool(tool) {
+        currentTool = tool;
+        document.querySelectorAll('#pdf-tools .file-tool-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+
+        const optionsContent = document.getElementById('pdfOptionsContent');
+
+        switch(tool) {
+            case 'merge':
+                optionsContent.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Merge Order</label>
+                        <select class="form-select">
+                            <option>By file name</option>
+                            <option>By upload order</option>
+                            <option>Custom order</option>
+                        </select>
+                    </div>
+                `;
+                break;
+            case 'split':
+                optionsContent.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Split Method</label>
+                        <select class="form-select">
+                            <option>Every page</option>
+                            <option>Every N pages</option>
+                            <option>By page ranges</option>
+                        </select>
+                    </div>
+                `;
+                break;
+            case 'compress':
+                optionsContent.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Compression Level</label>
+                        <select class="form-select">
+                            <option>Low (High Quality)</option>
+                            <option>Medium (Balanced)</option>
+                            <option>High (Small Size)</option>
+                        </select>
+                    </div>
+                `;
+                break;
+            case 'convert':
+                optionsContent.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Convert To</label>
+                        <select class="form-select">
+                            <option>Word (DOCX)</option>
+                            <option>Excel (XLSX)</option>
+                            <option>Images (JPG)</option>
+                            <option>Images (PNG)</option>
+                        </select>
+                    </div>
+                `;
+                break;
+        }
+    }
+
+    function processPDF() {
+        simulateProcessing('pdfProgress', 'PDF');
+    }
+
+    // Excel Tools
+    function selectExcelTool(tool) {
+        currentTool = tool;
+        document.querySelectorAll('#excel-tools .file-tool-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+    }
+
+    function processExcel() {
+        if (!selectedFormat) {
+            alert('Please select an output format');
+            return;
+        }
+        simulateProcessing('excelProgress', 'Excel');
+    }
+
+    // Image Tools
+    function selectImageTool(tool) {
+        currentTool = tool;
+        document.querySelectorAll('#image-tools .file-tool-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+
+        const optionsContent = document.getElementById('imageOptionsContent');
+
+        switch(tool) {
+            case 'resize':
+                optionsContent.innerHTML = `
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Width (px)</label>
+                            <input type="number" class="form-control" value="800">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Height (px)</label>
+                            <input type="number" class="form-control" value="600">
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="maintainAspect" checked>
+                        <label class="form-check-label" for="maintainAspect">
+                            Maintain aspect ratio
+                        </label>
+                    </div>
+                `;
+                break;
+            case 'compress':
+                optionsContent.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Quality: <span id="qualityValue">80</span>%</label>
+                        <input type="range" class="form-range" min="1" max="100" value="80"
+                               oninput="document.getElementById('qualityValue').textContent = this.value">
+                    </div>
+                `;
+                break;
+            case 'convert':
+                optionsContent.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Output Format</label>
+                        <select class="form-select">
+                            <option>JPG</option>
+                            <option>PNG</option>
+                            <option>WebP</option>
+                            <option>BMP</option>
+                            <option>GIF</option>
+                        </select>
+                    </div>
+                `;
+                break;
+        }
+    }
+
+    function processImage() {
+        simulateProcessing('imageProgress', 'Image');
+    }
+
+    // Word Tools
+    function selectWordTool(tool) {
+        currentTool = tool;
+        document.querySelectorAll('#word-tools .file-tool-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+    }
+
+    function processWord() {
+        simulateProcessing('wordProgress', 'Word');
+    }
+
+    // Simulate Processing
+    function simulateProcessing(progressId, type) {
+        const progressContainer = document.querySelector('.progress-container');
+        const progressBar = progressContainer.querySelector('.progress-bar');
+
+        progressContainer.style.display = 'block';
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
+                    showSuccessMessage(type);
+                    addToConversionHistory(type);
+                }, 500);
+            }
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = Math.floor(progress) + '%';
+        }, 300);
+    }
+
+    // Show Success Message
+    function showSuccessMessage(type) {
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle"></i> ${type} conversion completed successfully!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        setTimeout(() => toast.remove(), 5000);
+    }
+
+    // Conversion History
+    function addToConversionHistory(type) {
+        const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
+        history.unshift({
+            type: type,
+            tool: currentTool,
+            files: selectedFiles.length,
+            timestamp: new Date().toLocaleString()
+        });
+        localStorage.setItem('conversionHistory', JSON.stringify(history.slice(0, 20)));
+        loadConversionHistory();
+    }
+
+    function loadConversionHistory() {
+        const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
+        const historyDiv = document.getElementById('conversionHistory');
+
+        if (history.length === 0) {
+            historyDiv.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                    <p class="mt-2">No recent conversions</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        history.forEach(item => {
+            html += `
+                <div class="file-preview">
+                    <div>
+                        <strong>${item.type} - ${item.tool}</strong><br>
+                        <small class="text-muted">${item.files} file(s) • ${item.timestamp}</small>
+                    </div>
+                </div>
+            `;
+        });
+
+        historyDiv.innerHTML = html;
+    }
+
+    function clearConversionHistory() {
+        if (confirm('Clear all conversion history?')) {
+            localStorage.removeItem('conversionHistory');
+            loadConversionHistory();
+        }
+    }
+
+    // Format Selection for Excel
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.output-format-btn')) {
+            const btn = e.target.closest('.output-format-btn');
+            document.querySelectorAll('.output-format-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedFormat = btn.dataset.format;
+        }
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        setupDragDrop('pdfUploadZone', 'pdfFileInput');
+        setupDragDrop('excelUploadZone', 'excelFileInput');
+        setupDragDrop('imageUploadZone', 'imageFileInput');
+        setupDragDrop('wordUploadZone', 'wordFileInput');
+        loadConversionHistory();
+    });
+</script>
+{% endblock %}
