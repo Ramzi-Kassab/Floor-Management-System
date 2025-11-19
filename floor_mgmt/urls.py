@@ -61,5 +61,18 @@ urlpatterns = [
 
     # === Sales, Lifecycle & Drilling Operations ===
     path("sales/", include(("floor_app.operations.sales.urls", "sales"), namespace="sales")),
+
+    # === REST API Endpoints ===
+    path("api/hoc/", include("floor_app.operations.hoc.api.urls")),
+    path("api/journey-management/", include("floor_app.operations.journey_management.api.urls")),
+    path("api/hr-assets/", include("floor_app.operations.hr_assets.api.urls")),
+    path("api/meetings/", include("floor_app.operations.meetings.api.urls")),
+    path("api/fives/", include("floor_app.operations.fives.api.urls")),
+    path("api/vendor-portal/", include("floor_app.operations.vendor_portal.api.urls")),
+    path("api/hiring/", include("floor_app.operations.hiring.api.urls")),
+    path("api/chat/", include("floor_app.operations.chat.api.urls")),
+    path("api/data-extraction/", include("floor_app.operations.data_extraction.api.urls")),
+    path("api/utility-tools/", include("floor_app.operations.utility_tools.api.urls")),
+    path("api/user-preferences/", include("floor_app.operations.user_preferences.api.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
