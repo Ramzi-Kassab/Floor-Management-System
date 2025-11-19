@@ -81,7 +81,24 @@ class BitDesign(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     belong to the same BitDesign.
 
     Example: HP-X123 is the design; HP-X123-M0, HP-X123-M1 are revisions.
+
+    Supports both PDC bits (with cutters) and Roller Cone bits (with cones/bearings).
     """
+
+    # Bit Category - PDC or Roller Cone
+    BIT_CATEGORY_CHOICES = [
+        ('PDC', 'PDC (Polycrystalline Diamond Compact)'),
+        ('ROLLER_CONE', 'Roller Cone (Tricone/Bicone)'),
+    ]
+
+    bit_category = models.CharField(
+        max_length=20,
+        choices=BIT_CATEGORY_CHOICES,
+        default='PDC',
+        db_index=True,
+        help_text="Type of bit technology (PDC or Roller Cone)"
+    )
+
     design_code = models.CharField(
         max_length=50,
         unique=True,

@@ -55,6 +55,15 @@ from .cutter_bom_grid import (
     BOMUsageTracking,
 )
 
+from .roller_cone import (
+    RollerConeBitType,
+    RollerConeBearing,
+    RollerConeSeal,
+    RollerConeDesign,
+    RollerConeComponent,
+    RollerConeBOM,
+)
+
 __all__ = [
     # Reference tables
     'ConditionType',
@@ -94,4 +103,11 @@ __all__ = [
     'CutterMapHeader',
     'CutterMapCell',
     'BOMUsageTracking',
+    # Roller Cone
+    'RollerConeBitType',
+    'RollerConeBearing',
+    'RollerConeSeal',
+    'RollerConeDesign',
+    'RollerConeComponent',
+    'RollerConeBOM',
 ]
