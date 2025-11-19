@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-person-check"></i> {{ page_title }}</h2>
+        <div>
+            <a href="{% url 'retrieval:supervisor_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Request Summary -->
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Request Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Request ID:</strong></div>
+                        <div class="col-md-8">#{{ request_obj.id }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Employee:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.employee.get_full_name|default:request_obj.employee.username }}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Action Type:</strong></div>
+                        <div class="col-md-8">
+                            <span class="badge bg-info">{{ request_obj.get_action_type_display }}</span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Object:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.content_type.model|title }}: {{ request_obj.get_object_display }}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Submitted:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.submitted_at|date:"Y-m-d H:i:s" }}
+                            <span class="text-muted">({{ request_obj.submitted_at|timesince }} ago)</span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Time Elapsed:</strong></div>
+                        <div class="col-md-8">
+                            {{ request_obj.time_elapsed }}
+                            {% if request_obj.is_within_time_window %}
+                                <span class="badge bg-success">Within 15 min window</span>
+                            {% else %}
+                                <span class="badge bg-warning">Outside 15 min window</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-md-4"><strong>Dependencies:</strong></div>
+                        <div class="col-md-8">
+                            {% if request_obj.has_dependent_processes %}
+                                <span class="badge bg-danger">Yes - Has Dependencies</span>
+                            {% else %}
+                                <span class="badge bg-success">No Dependencies</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Employee's Reason</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ request_obj.reason }}</p>
+                </div>
+            </div>
+
+            <!-- Dependencies Details -->
+            {% if request_obj.has_dependent_processes %}
+            <div class="card mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Warning: Dependent Processes Exist</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">This object has the following dependent processes that may be affected:</p>
+                    {% if request_obj.dependent_process_details.dependencies %}
+                        <ul class="mb-0">
+                            {% for dep in request_obj.dependent_process_details.dependencies %}
+                            <li class="mb-2">
+                                <strong>{{ dep.model_verbose|default:dep.model }}:</strong>
+                                {{ dep.description }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Approval Form -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Your Decision</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Decision:</strong></label>
+                            <div>
+                                {% for choice in form.decision %}
+                                    <div class="form-check form-check-inline">
+                                        {{ choice }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.decision.errors %}
+                            <div class="invalid-feedback d-block">{{ form.decision.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.comments.id_for_label }}" class="form-label">
+                                {{ form.comments.label }}
+                            </label>
+                            {{ form.comments }}
+                            <small class="form-text text-muted">{{ form.comments.help_text }}</small>
+                            {% if form.comments.errors %}
+                            <div class="invalid-feedback d-block">{{ form.comments.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4" id="rejection-reason-group" style="display: none;">
+                            <label for="{{ form.rejection_reason.id_for_label }}" class="form-label">
+                                {{ form.rejection_reason.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.rejection_reason }}
+                            <small class="form-text text-muted">{{ form.rejection_reason.help_text }}</small>
+                            {% if form.rejection_reason.errors %}
+                            <div class="invalid-feedback d-block">{{ form.rejection_reason.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send"></i> Submit Decision
+                            </button>
+                            <a href="{% url 'retrieval:supervisor_dashboard' %}" class="btn btn-secondary btn-lg">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Employee Metrics -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Employee Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div style="font-size: 3rem; font-weight: bold;
+                            color: {% if employee_metrics.accuracy_rate >= 95 %}#28a745{% elif employee_metrics.accuracy_rate >= 90 %}#ffc107{% else %}#dc3545{% endif %}">
+                            {{ employee_metrics.accuracy_rate }}%
+                        </div>
+                        <div class="text-muted">Monthly Accuracy Rate</div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h4 class="mb-0">{{ employee_metrics.total_actions }}</h4>
+                            <small class="text-muted">Total Actions</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="mb-0">{{ employee_metrics.retrieval_requests }}</h4>
+                            <small class="text-muted">Retrieval Requests</small>
+                        </div>
+                    </div>
+
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h4 class="mb-0 text-success">{{ employee_metrics.auto_approved }}</h4>
+                            <small class="text-muted">Auto-Approved</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="mb-0 text-warning">{{ employee_metrics.manually_approved }}</h4>
+                            <small class="text-muted">Manual Approved</small>
+                        </div>
+                    </div>
+
+                    <div class="row text-center">
+                        <div class="col-12">
+                            <h4 class="mb-0 text-danger">{{ employee_metrics.rejected }}</h4>
+                            <small class="text-muted">Rejected Requests</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Reference -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Decision Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-success"><i class="bi bi-check-circle"></i> Approve If:</h6>
+                    <ul class="small mb-3">
+                        <li>Reason is valid and clear</li>
+                        <li>Employee has good accuracy record</li>
+                        <li>No critical dependencies exist</li>
+                        <li>Retrieval won't affect other processes</li>
+                    </ul>
+
+                    <h6 class="text-danger"><i class="bi bi-x-circle"></i> Reject If:</h6>
+                    <ul class="small mb-0">
+                        <li>Reason is unclear or invalid</li>
+                        <li>Too many retrieval requests</li>
+                        <li>Critical dependencies exist</li>
+                        <li>Retrieval would cause issues</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Request Details -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-text"></i> Full Details</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'retrieval:request_detail' request_obj.id %}"
+                       class="btn btn-outline-primary w-100">
+                        <i class="bi bi-eye"></i> View Complete Request Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const decisionInputs = document.querySelectorAll('input[name="decision"]');
+    const rejectionGroup = document.getElementById('rejection-reason-group');
+
+    decisionInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value === 'reject') {
+                rejectionGroup.style.display = 'block';
+            } else {
+                rejectionGroup.style.display = 'none';
+            }
+        });
+
+        // Check on page load
+        if (input.checked && input.value === 'reject') {
+            rejectionGroup.style.display = 'block';
+        }
+    });
+});
+</script>
+{% endblock %}

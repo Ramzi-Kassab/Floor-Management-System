@@ -1,0 +1,24 @@
+{% load retrieval_tags %}
+
+{% if size == 'small' %}
+<span class="badge bg-{{ metrics.accuracy_rate|accuracy_color }}"
+      title="Accuracy: {{ metrics.accuracy_rate }}% ({{ metrics.total_actions }} actions, {{ metrics.retrieval_requests }} retrievals)">
+    {{ metrics.accuracy_rate }}%
+</span>
+{% elif size == 'large' %}
+<div class="card text-center">
+    <div class="card-body">
+        <h1 class="text-{{ metrics.accuracy_rate|accuracy_color }}">{{ metrics.accuracy_rate }}%</h1>
+        <p class="text-muted mb-0">{{ period|title }} Accuracy</p>
+        <hr>
+        <small class="text-muted">
+            {{ metrics.total_actions }} actions | {{ metrics.retrieval_requests }} retrievals
+        </small>
+    </div>
+</div>
+{% else %}
+<div class="d-inline-block text-center p-2 border rounded">
+    <div class="h3 mb-0 text-{{ metrics.accuracy_rate|accuracy_color }}">{{ metrics.accuracy_rate }}%</div>
+    <small class="text-muted">{{ period|title }}</small>
+</div>
+{% endif %}

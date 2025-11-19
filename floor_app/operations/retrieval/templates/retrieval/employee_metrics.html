@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .metric-value {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        color: #6c757d;
+        font-size: 1rem;
+    }
+
+    .period-card {
+        border-left: 4px solid;
+        transition: all 0.2s;
+    }
+
+    .period-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .accuracy-high { color: #28a745; border-color: #28a745; }
+    .accuracy-medium { color: #ffc107; border-color: #ffc107; }
+    .accuracy-low { color: #dc3545; border-color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-graph-up"></i> {{ page_title }}</h2>
+        <div>
+            <a href="{% url 'retrieval:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row mb-4">
+        {% for period, data in metrics.items %}
+        <div class="col-md-4 col-lg-2">
+            <div class="card period-card {% if data.accuracy_rate >= 95 %}accuracy-high{% elif data.accuracy_rate >= 90 %}accuracy-medium{% else %}accuracy-low{% endif %}">
+                <div class="card-body metric-card">
+                    <div class="metric-value">{{ data.accuracy_rate }}%</div>
+                    <div class="metric-label">{{ period|title }}</div>
+                    <hr>
+                    <small class="text-muted">
+                        {{ data.total_actions }} actions<br>
+                        {{ data.retrieval_requests }} retrievals
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Detailed Breakdown -->
+    <div class="row mb-4">
+        {% for period, data in metrics.items %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ period|title }} Period</h5>
+                    <small class="text-muted">
+                        {{ data.start_date|date:"Y-m-d" }} to {{ data.end_date|date:"Y-m-d" }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h3 class="mb-0">{{ data.accuracy_rate }}%</h3>
+                            <small class="text-muted">Accuracy Rate</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="mb-0">{{ data.error_rate }}%</h3>
+                            <small class="text-muted">Error Rate</small>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td>Total Actions:</td>
+                            <td class="text-end"><strong>{{ data.total_actions }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Retrieval Requests:</td>
+                            <td class="text-end"><strong>{{ data.retrieval_requests }}</strong></td>
+                        </tr>
+                        <tr class="text-success">
+                            <td>Auto-Approved:</td>
+                            <td class="text-end"><strong>{{ data.auto_approved }}</strong></td>
+                        </tr>
+                        <tr class="text-warning">
+                            <td>Manual Approved:</td>
+                            <td class="text-end"><strong>{{ data.manually_approved }}</strong></td>
+                        </tr>
+                        <tr class="text-danger">
+                            <td>Rejected:</td>
+                            <td class="text-end"><strong>{{ data.rejected }}</strong></td>
+                        </tr>
+                        <tr class="text-primary">
+                            <td>Completed:</td>
+                            <td class="text-end"><strong>{{ data.completed }}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Retrieval Requests</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if recent_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Object</th>
+                            <th>Action</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in recent_requests %}
+                        <tr>
+                            <td>#{{ request.id }}</td>
+                            <td>
+                                <small class="text-muted">{{ request.content_type.model }}</small><br>
+                                {{ request.get_object_display|truncatewords:5 }}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ request.get_action_type_display }}</span>
+                            </td>
+                            <td>
+                                {{ request.submitted_at|date:"Y-m-d H:i" }}<br>
+                                <small class="text-muted">{{ request.submitted_at|timesince }} ago</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ request.get_status_badge_class }}">
+                                    {{ request.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'retrieval:request_detail' request.id %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
+                <p class="text-muted mt-3">No retrieval requests found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

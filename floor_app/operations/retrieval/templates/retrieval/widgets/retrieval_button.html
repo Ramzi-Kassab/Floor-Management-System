@@ -1,0 +1,15 @@
+{% load static %}
+
+{% if can_retrieve %}
+<a href="{% url 'retrieval:create_request' content_type_id object.pk %}"
+   class="{{ button_class }}"
+   title="Request retrieval/undo for this record">
+    <i class="bi bi-arrow-counterclockwise"></i> Request Retrieval
+</a>
+{% else %}
+<button class="{{ button_class }}"
+        disabled
+        title="Retrieval not available: {{ reasons|join:', ' }}">
+    <i class="bi bi-arrow-counterclockwise"></i> Request Retrieval
+</button>
+{% endif %}
