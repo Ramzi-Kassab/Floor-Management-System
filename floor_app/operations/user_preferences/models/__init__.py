@@ -35,7 +35,7 @@ class UserPreference(AuditMixin):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='preferences',
+        related_name='floor_preferences',
         help_text="User who owns these preferences"
     )
 

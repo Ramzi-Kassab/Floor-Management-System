@@ -236,7 +236,8 @@ class AssetDocument(models.Model):
 
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='documents')
     document = models.ForeignKey(
-        'knowledge.Document', on_delete=models.CASCADE, related_name='asset_usages'
+        'knowledge.Document', on_delete=models.CASCADE, related_name='asset_usages',
+        null=True, blank=True
     )
     document_type = models.CharField(max_length=20, choices=DocumentType.choices, default=DocumentType.OTHER)
     description = models.CharField(max_length=255, blank=True)

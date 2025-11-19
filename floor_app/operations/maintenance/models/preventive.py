@@ -89,7 +89,7 @@ class PMSchedule(models.Model):
     """Schedule linking PM template to specific asset with timing."""
 
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='pm_schedules')
-    pm_template = models.ForeignKey(PMTemplate, on_delete=models.CASCADE, related_name='schedules')
+    pm_template = models.ForeignKey(PMTemplate, on_delete=models.CASCADE, related_name='schedules', null=True, blank=True)
 
     # Timing
     last_performed_at = models.DateTimeField(null=True, blank=True)

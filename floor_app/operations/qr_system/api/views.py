@@ -42,7 +42,7 @@ class QRCodeViewSet(viewsets.ModelViewSet):
     destroy: Deactivate a QR code
     """
 
-    queryset = QRCode.objects.filter(status='ACTIVE').select_related('content_type')
+    queryset = QRCode.objects.filter(is_active=True).select_related('content_type')
     serializer_class = QRCodeSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['qr_type', 'status']
