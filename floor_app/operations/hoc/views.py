@@ -11,9 +11,9 @@ from django.db.models import Q, Count
 from django.utils import timezone
 
 from .models import (
-    HOCObservation,
-    HOCCategory,
-    HOCAction,
+    HazardObservation,
+    HazardCategory,
+    HOCComment,
 )
 
 
@@ -21,7 +21,7 @@ from .models import (
 def observation_list(request):
     """List all HOC observations."""
     try:
-        observations = HOCObservation.objects.select_related(
+        observations = HazardObservation.objects.select_related(
             'reported_by',
             'category',
             'location'
@@ -52,23 +52,23 @@ def observation_list(request):
             )
 
         # Get categories for filter
-        categories = HOCCategory.objects.filter(is_active=True)
+        categories = HazardCategory.objects.filter(is_active=True)
 
         # Statistics
         stats = {
-            'total': HOCObservation.objects.count(),
-            'open': HOCObservation.objects.filter(status='OPEN').count(),
-            'in_progress': HOCObservation.objects.filter(status='IN_PROGRESS').count(),
-            'closed': HOCObservation.objects.filter(status='CLOSED').count(),
-            'critical': HOCObservation.objects.filter(severity='CRITICAL').count(),
+            'total': HazardObservation.objects.count(),
+            'open': HazardObservation.objects.filter(status='OPEN').count(),
+            'in_progress': HazardObservation.objects.filter(status='IN_PROGRESS').count(),
+            'closed': HazardObservation.objects.filter(status='CLOSED').count(),
+            'critical': HazardObservation.objects.filter(severity='CRITICAL').count(),
         }
 
         context = {
             'observations': observations,
             'categories': categories,
             'stats': stats,
-            'status_choices': HOCObservation.STATUS_CHOICES,
-            'severity_choices': HOCObservation.SEVERITY_CHOICES,
+            'status_choices': HazardObservation.STATUS_CHOICES,
+            'severity_choices': HazardObservation.SEVERITY_CHOICES,
             'page_title': 'HOC Observations',
         }
 
@@ -95,7 +95,7 @@ def submit_hoc(request):
                 if not all([title, description, category_id, severity]):
                     messages.error(request, 'Please fill in all required fields.')
                 else:
-                    observation = HOCObservation.objects.create(
+                    observation = HazardObservation.objects.create(
                         title=title,
                         description=description,
                         category_id=category_id,
@@ -117,12 +117,12 @@ def submit_hoc(request):
                 messages.error(request, f'Error submitting observation: {str(e)}')
 
         # Get categories
-        categories = HOCCategory.objects.filter(is_active=True)
+        categories = HazardCategory.objects.filter(is_active=True)
 
         context = {
             'categories': categories,
-            'severity_choices': HOCObservation.SEVERITY_CHOICES,
-            'observation_types': HOCObservation.OBSERVATION_TYPES,
+            'severity_choices': HazardObservation.SEVERITY_CHOICES,
+            'observation_types': HazardObservation.OBSERVATION_TYPES,
             'page_title': 'Submit HOC',
         }
 
@@ -138,7 +138,7 @@ def observation_detail(request, pk):
     """View observation details."""
     try:
         observation = get_object_or_404(
-            HOCObservation.objects.select_related(
+            HazardObservation.objects.select_related(
                 'reported_by',
                 'category',
                 'location',
@@ -164,7 +164,7 @@ def observation_detail(request, pk):
                 elif action == 'add_action':
                     action_description = request.POST.get('action_description')
                     if action_description:
-                        HOCAction.objects.create(
+                        HOCComment.objects.create(
                             observation=observation,
                             action_description=action_description,
                             action_by=request.user,
@@ -183,7 +183,7 @@ def observation_detail(request, pk):
         context = {
             'observation': observation,
             'actions': actions,
-            'status_choices': HOCObservation.STATUS_CHOICES,
+            'status_choices': HazardObservation.STATUS_CHOICES,
             'page_title': f'HOC - {observation.title}',
         }
 
@@ -199,32 +199,32 @@ def hoc_analytics(request):
     """HOC analytics and reports."""
     try:
         # Statistics by category
-        by_category = HOCObservation.objects.values(
+        by_category = HazardObservation.objects.values(
             'category__name'
         ).annotate(count=Count('id')).order_by('-count')
 
         # Statistics by severity
-        by_severity = HOCObservation.objects.values(
+        by_severity = HazardObservation.objects.values(
             'severity'
         ).annotate(count=Count('id'))
 
         # Monthly trend
         from django.db.models.functions import TruncMonth
-        monthly_trend = HOCObservation.objects.annotate(
+        monthly_trend = HazardObservation.objects.annotate(
             month=TruncMonth('observation_date')
         ).values('month').annotate(count=Count('id')).order_by('month')
 
         # Top reporters
-        top_reporters = HOCObservation.objects.values(
+        top_reporters = HazardObservation.objects.values(
             'reported_by__username'
         ).annotate(count=Count('id')).order_by('-count')[:10]
 
         # Overall stats
         stats = {
-            'total_observations': HOCObservation.objects.count(),
-            'open': HOCObservation.objects.filter(status='OPEN').count(),
-            'critical': HOCObservation.objects.filter(severity='CRITICAL').count(),
-            'this_month': HOCObservation.objects.filter(
+            'total_observations': HazardObservation.objects.count(),
+            'open': HazardObservation.objects.filter(status='OPEN').count(),
+            'critical': HazardObservation.objects.filter(severity='CRITICAL').count(),
+            'this_month': HazardObservation.objects.filter(
                 observation_date__gte=timezone.now().replace(day=1)
             ).count(),
         }

@@ -8,9 +8,9 @@ from rest_framework import serializers
 from floor_app.operations.qr_system.models import (
     QRCode,
     QRScanLog,
-    QRBatchGeneration,
-    QRPrintJob,
-    QRTemplate
+    QRBatch,
+    QRCodePrintJob,
+    QRCodeTemplate
 )
 
 
@@ -178,7 +178,7 @@ class QRScanSerializer(serializers.Serializer):
     metadata = serializers.JSONField(required=False)
 
 
-class QRBatchGenerationSerializer(serializers.ModelSerializer):
+class QRBatchSerializer(serializers.ModelSerializer):
     """Serializer for QR batch generations."""
 
     qr_type_display = serializers.CharField(
@@ -192,7 +192,7 @@ class QRBatchGenerationSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()
 
     class Meta:
-        model = QRBatchGeneration
+        model = QRBatch
         fields = [
             'id',
             'batch_name',
@@ -219,7 +219,7 @@ class QRBatchGenerationSerializer(serializers.ModelSerializer):
         return 'System'
 
 
-class QRBatchGenerationCreateSerializer(serializers.Serializer):
+class QRBatchCreateSerializer(serializers.Serializer):
     """Serializer for creating batch QR codes."""
 
     batch_name = serializers.CharField(max_length=200)
@@ -236,7 +236,7 @@ class QRBatchGenerationCreateSerializer(serializers.Serializer):
     metadata = serializers.JSONField(required=False)
 
 
-class QRPrintJobSerializer(serializers.ModelSerializer):
+class QRCodePrintJobSerializer(serializers.ModelSerializer):
     """Serializer for QR print jobs."""
 
     status_display = serializers.CharField(
@@ -250,7 +250,7 @@ class QRPrintJobSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = QRPrintJob
+        model = QRCodePrintJob
         fields = [
             'id',
             'job_name',
@@ -283,7 +283,7 @@ class QRTemplateSerializer(serializers.ModelSerializer):
     """Serializer for QR templates."""
 
     class Meta:
-        model = QRTemplate
+        model = QRCodeTemplate
         fields = [
             'id',
             'name',

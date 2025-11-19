@@ -15,7 +15,7 @@ from floor_app.operations.notifications.models import (
     NotificationTemplate,
     Notification,
     NotificationDelivery,
-    UserNotificationPreference,
+    NotificationPreference,
     Announcement,
     AnnouncementRead
 )
@@ -26,7 +26,7 @@ from .serializers import (
     NotificationSerializer,
     NotificationCreateSerializer,
     NotificationDeliverySerializer,
-    UserNotificationPreferenceSerializer,
+    NotificationPreferenceSerializer,
     AnnouncementSerializer,
     AnnouncementCreateSerializer,
     AnnouncementReadSerializer
@@ -321,7 +321,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         })
 
 
-class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
+class NotificationPreferenceViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing user notification preferences.
 
@@ -330,8 +330,8 @@ class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
     update: Update notification preferences
     """
 
-    queryset = UserNotificationPreference.objects.all()
-    serializer_class = UserNotificationPreferenceSerializer
+    queryset = NotificationPreference.objects.all()
+    serializer_class = NotificationPreferenceSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -339,9 +339,9 @@ class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if user.is_staff:
-            return UserNotificationPreference.objects.all()
+            return NotificationPreference.objects.all()
 
-        return UserNotificationPreference.objects.filter(user=user)
+        return NotificationPreference.objects.filter(user=user)
 
     @action(detail=False, methods=['get', 'put', 'patch'])
     def me(self, request):
@@ -352,7 +352,7 @@ class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
         PUT/PATCH /api/notification-preferences/me/
         """
         # Get or create preferences for current user
-        preference, created = UserNotificationPreference.objects.get_or_create(
+        preference, created = NotificationPreference.objects.get_or_create(
             user=request.user
         )
 

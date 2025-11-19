@@ -15,6 +15,16 @@ from .automation_rule import (
     AutomationRuleExecution,
     RuleTemplate,
 )
+from .tracking import (
+    UserSession,
+    PageView,
+    UserActivity,
+    ModuleUsage,
+    SystemMetric,
+    ErrorLog,
+    SearchQuery,
+    DailyStatistics,
+)
 
 __all__ = [
     # Event tracking
@@ -27,4 +37,13 @@ __all__ = [
     'AutomationRule',
     'AutomationRuleExecution',
     'RuleTemplate',
+    # User tracking
+    'UserSession',
+    'PageView',
+    'UserActivity',
+    'ModuleUsage',
+    'SystemMetric',
+    'ErrorLog',
+    'SearchQuery',
+    'DailyStatistics',
 ]

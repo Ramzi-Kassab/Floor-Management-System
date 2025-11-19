@@ -10,8 +10,8 @@ from django.contrib import messages
 from django.utils import timezone
 
 from .models import (
-    Calculator,
-    FileConversion,
+    ToolUsageLog,
+    SavedConversion,
     ToolUsageLog,
 )
 
@@ -28,10 +28,10 @@ def tools_dashboard(request):
     """
     try:
         # Get available calculators
-        calculators = Calculator.objects.filter(is_active=True).order_by('name')
+        calculators = ToolUsageLog.objects.filter(is_active=True).order_by('name')
 
         # Get recent file conversions
-        recent_conversions = FileConversion.objects.filter(
+        recent_conversions = SavedConversion.objects.filter(
             user=request.user
         ).order_by('-created_at')[:10]
 
@@ -42,8 +42,8 @@ def tools_dashboard(request):
 
         # Statistics
         stats = {
-            'total_tools': Calculator.objects.filter(is_active=True).count(),
-            'conversions_today': FileConversion.objects.filter(
+            'total_tools': ToolUsageLog.objects.filter(is_active=True).count(),
+            'conversions_today': SavedConversion.objects.filter(
                 user=request.user,
                 created_at__date=timezone.now().date()
             ).count(),
@@ -54,7 +54,7 @@ def tools_dashboard(request):
         }
 
         # Tool categories
-        tool_categories = Calculator.objects.filter(
+        tool_categories = ToolUsageLog.objects.filter(
             is_active=True
         ).values('category').distinct()
 
@@ -84,7 +84,7 @@ def tools_dashboard(request):
 @login_required
 def calculators(request):
     """
-    Calculators and computation tools.
+    ToolUsageLogs and computation tools.
 
     Provides:
     - Mathematical calculators
@@ -94,7 +94,7 @@ def calculators(request):
     """
     try:
         # Get all calculators
-        all_calculators = Calculator.objects.filter(is_active=True)
+        all_calculators = ToolUsageLog.objects.filter(is_active=True)
 
         # Filter by category
         category_filter = request.GET.get('category')
@@ -121,7 +121,7 @@ def calculators(request):
                         input_values[field_name] = value
 
                 if calculator_id:
-                    calculator = get_object_or_404(Calculator, pk=calculator_id)
+                    calculator = get_object_or_404(ToolUsageLog, pk=calculator_id)
 
                     # Log usage
                     ToolUsageLog.objects.create(
@@ -141,7 +141,7 @@ def calculators(request):
                         'selected_calculator': calculator,
                         'result': result,
                         'input_values': input_values,
-                        'page_title': 'Calculators',
+                        'page_title': 'ToolUsageLogs',
                     }
                     return render(request, 'utility_tools/calculators.html', context)
 
@@ -149,7 +149,7 @@ def calculators(request):
                 messages.error(request, f'Error performing calculation: {str(e)}')
 
         # Get calculator categories
-        categories = Calculator.objects.filter(
+        categories = ToolUsageLog.objects.filter(
             is_active=True
         ).values_list('category', flat=True).distinct()
 
@@ -158,7 +158,7 @@ def calculators(request):
             'categories': categories,
             'category_filter': category_filter,
             'search_query': search_query,
-            'page_title': 'Calculators',
+            'page_title': 'ToolUsageLogs',
         }
 
     except Exception as e:
@@ -166,7 +166,7 @@ def calculators(request):
         context = {
             'calculators': [],
             'categories': [],
-            'page_title': 'Calculators',
+            'page_title': 'ToolUsageLogs',
         }
 
     return render(request, 'utility_tools/calculators.html', context)
@@ -195,7 +195,7 @@ def file_tools(request):
                     messages.error(request, 'Please select conversion type.')
                 else:
                     # Create conversion record
-                    conversion = FileConversion.objects.create(
+                    conversion = SavedConversion.objects.create(
                         user=request.user,
                         conversion_type=conversion_type,
                         original_file=uploaded_file,
@@ -228,18 +228,18 @@ def file_tools(request):
                 messages.error(request, f'Error converting file: {str(e)}')
 
         # Get user's recent conversions
-        conversions = FileConversion.objects.filter(
+        conversions = SavedConversion.objects.filter(
             user=request.user
         ).order_by('-created_at')[:20]
 
         # Conversion types
-        conversion_types = FileConversion.CONVERSION_TYPES
+        conversion_types = SavedConversion.CONVERSION_TYPES
 
         # Statistics
         stats = {
-            'total_conversions': FileConversion.objects.filter(user=request.user).count(),
-            'completed': FileConversion.objects.filter(user=request.user, status='COMPLETED').count(),
-            'failed': FileConversion.objects.filter(user=request.user, status='FAILED').count(),
+            'total_conversions': SavedConversion.objects.filter(user=request.user).count(),
+            'completed': SavedConversion.objects.filter(user=request.user, status='COMPLETED').count(),
+            'failed': SavedConversion.objects.filter(user=request.user, status='FAILED').count(),
         }
 
         context = {

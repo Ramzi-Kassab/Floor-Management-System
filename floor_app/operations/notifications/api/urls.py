@@ -10,7 +10,7 @@ from .views import (
     NotificationChannelViewSet,
     NotificationTemplateViewSet,
     NotificationViewSet,
-    UserNotificationPreferenceViewSet,
+    NotificationPreferenceViewSet,
     AnnouncementViewSet
 )
 
@@ -21,7 +21,7 @@ router = DefaultRouter()
 router.register(r'channels', NotificationChannelViewSet, basename='notification-channel')
 router.register(r'templates', NotificationTemplateViewSet, basename='notification-template')
 router.register(r'notifications', NotificationViewSet, basename='notification')
-router.register(r'preferences', UserNotificationPreferenceViewSet, basename='notification-preference')
+router.register(r'preferences', NotificationPreferenceViewSet, basename='notification-preference')
 router.register(r'announcements', AnnouncementViewSet, basename='announcement')
 
 urlpatterns = [

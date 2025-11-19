@@ -10,7 +10,7 @@ from floor_app.operations.notifications.models import (
     NotificationTemplate,
     Notification,
     NotificationDelivery,
-    UserNotificationPreference,
+    NotificationPreference,
     Announcement,
     AnnouncementRead
 )
@@ -207,11 +207,11 @@ class NotificationCreateSerializer(serializers.Serializer):
         return data
 
 
-class UserNotificationPreferenceSerializer(serializers.ModelSerializer):
+class NotificationPreferenceSerializer(serializers.ModelSerializer):
     """Serializer for user notification preferences."""
 
     class Meta:
-        model = UserNotificationPreference
+        model = NotificationPreference
         fields = [
             'id',
             'user',

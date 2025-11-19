@@ -14,9 +14,9 @@ from django.http import HttpResponse
 from floor_app.operations.qr_system.models import (
     QRCode,
     QRScanLog,
-    QRBatchGeneration,
-    QRPrintJob,
-    QRTemplate
+    QRBatch,
+    QRCodePrintJob,
+    QRCodeTemplate
 )
 from floor_app.operations.qr_system.services import QRCodeService
 from .serializers import (
@@ -24,9 +24,9 @@ from .serializers import (
     QRCodeCreateSerializer,
     QRScanLogSerializer,
     QRScanSerializer,
-    QRBatchGenerationSerializer,
-    QRBatchGenerationCreateSerializer,
-    QRPrintJobSerializer,
+    QRBatchSerializer,
+    QRBatchCreateSerializer,
+    QRCodePrintJobSerializer,
     QRTemplateSerializer
 )
 
@@ -256,7 +256,7 @@ class QRCodeViewSet(viewsets.ModelViewSet):
         return Response(stats)
 
 
-class QRBatchGenerationViewSet(viewsets.ModelViewSet):
+class QRBatchViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing batch QR code generation.
 
@@ -265,8 +265,8 @@ class QRBatchGenerationViewSet(viewsets.ModelViewSet):
     create: Create a new batch generation
     """
 
-    queryset = QRBatchGeneration.objects.all().prefetch_related('qr_codes')
-    serializer_class = QRBatchGenerationSerializer
+    queryset = QRBatch.objects.all().prefetch_related('qr_codes')
+    serializer_class = QRBatchSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['status', 'qr_type']
     ordering = ['-created_at']
@@ -274,8 +274,8 @@ class QRBatchGenerationViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Use different serializer for create action."""
         if self.action == 'create':
-            return QRBatchGenerationCreateSerializer
-        return QRBatchGenerationSerializer
+            return QRBatchCreateSerializer
+        return QRBatchSerializer
 
     def create(self, request, *args, **kwargs):
         """
@@ -297,7 +297,7 @@ class QRBatchGenerationViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
 
         # Create batch generation
-        batch = QRBatchGeneration.objects.create(
+        batch = QRBatch.objects.create(
             batch_name=data['batch_name'],
             qr_type=data['qr_type'],
             quantity=data['quantity'],
@@ -312,7 +312,7 @@ class QRBatchGenerationViewSet(viewsets.ModelViewSet):
         try:
             batch.generate_codes()
 
-            output_serializer = QRBatchGenerationSerializer(batch)
+            output_serializer = QRBatchSerializer(batch)
             return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -390,7 +390,7 @@ class QRScanLogViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
-class QRPrintJobViewSet(viewsets.ModelViewSet):
+class QRCodePrintJobViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing QR print jobs.
 
@@ -399,8 +399,8 @@ class QRPrintJobViewSet(viewsets.ModelViewSet):
     create: Create a new print job
     """
 
-    queryset = QRPrintJob.objects.all().prefetch_related('qr_codes')
-    serializer_class = QRPrintJobSerializer
+    queryset = QRCodePrintJob.objects.all().prefetch_related('qr_codes')
+    serializer_class = QRCodePrintJobSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['status', 'template']
     ordering = ['-created_at']
@@ -437,7 +437,7 @@ class QRTemplateViewSet(viewsets.ModelViewSet):
     destroy: Delete a template
     """
 
-    queryset = QRTemplate.objects.all()
+    queryset = QRCodeTemplate.objects.all()
     serializer_class = QRTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['template_type', 'paper_size', 'is_default']

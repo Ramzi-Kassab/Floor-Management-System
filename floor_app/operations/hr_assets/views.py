@@ -11,13 +11,17 @@ from django.db.models import Q, Count
 from django.utils import timezone
 
 from .models import (
-    CompanyVehicle,
+    Vehicle,
     VehicleAssignment,
-    ParkingSpace,
-    ParkingAllocation,
+    ParkingZone,
+    ParkingSpot,
+    ParkingAssignment,
     SIMCard,
-    CompanyPhone,
-    SecurityCamera,
+    SIMAssignment,
+    Phone,
+    PhoneAssignment,
+    Camera,
+    CameraAssignment,
 )
 
 
@@ -25,7 +29,7 @@ from .models import (
 def vehicle_list(request):
     """List all company vehicles with filters."""
     try:
-        vehicles = CompanyVehicle.objects.annotate(
+        vehicles = Vehicle.objects.annotate(
             assignment_count=Count('assignments')
         ).order_by('-is_available', 'registration_number')
 
@@ -45,9 +49,9 @@ def vehicle_list(request):
             )
 
         stats = {
-            'total': CompanyVehicle.objects.count(),
-            'available': CompanyVehicle.objects.filter(is_available=True).count(),
-            'assigned': CompanyVehicle.objects.filter(is_available=False).count(),
+            'total': Vehicle.objects.count(),
+            'available': Vehicle.objects.filter(is_available=True).count(),
+            'assigned': Vehicle.objects.filter(is_available=False).count(),
         }
 
         context = {
@@ -67,21 +71,21 @@ def vehicle_list(request):
 def parking_dashboard(request):
     """Parking management dashboard."""
     try:
-        parking_spaces = ParkingSpace.objects.annotate(
+        parking_spaces = ParkingSpot.objects.annotate(
             allocation_count=Count('allocations')
         ).order_by('zone', 'space_number')
 
-        allocations = ParkingAllocation.objects.select_related(
+        allocations = ParkingAssignment.objects.select_related(
             'parking_space',
             'employee',
             'allocated_by'
         ).filter(is_active=True).order_by('-allocated_at')
 
         stats = {
-            'total_spaces': ParkingSpace.objects.count(),
-            'available': ParkingSpace.objects.filter(is_occupied=False).count(),
-            'occupied': ParkingSpace.objects.filter(is_occupied=True).count(),
-            'reserved': ParkingSpace.objects.filter(is_reserved=True).count(),
+            'total_spaces': ParkingSpot.objects.count(),
+            'available': ParkingSpot.objects.filter(is_occupied=False).count(),
+            'occupied': ParkingSpot.objects.filter(is_occupied=True).count(),
+            'reserved': ParkingSpot.objects.filter(is_reserved=True).count(),
         }
 
         context = {
@@ -144,7 +148,7 @@ def sim_list(request):
 def phone_list(request):
     """List all company phones."""
     try:
-        phones = CompanyPhone.objects.select_related(
+        phones = Phone.objects.select_related(
             'assigned_to',
             'sim_card'
         ).order_by('-is_active', 'make', 'model')
@@ -164,9 +168,9 @@ def phone_list(request):
             )
 
         stats = {
-            'total': CompanyPhone.objects.count(),
-            'active': CompanyPhone.objects.filter(is_active=True).count(),
-            'assigned': CompanyPhone.objects.filter(assigned_to__isnull=False).count(),
+            'total': Phone.objects.count(),
+            'active': Phone.objects.filter(is_active=True).count(),
+            'assigned': Phone.objects.filter(assigned_to__isnull=False).count(),
         }
 
         context = {
@@ -186,7 +190,7 @@ def phone_list(request):
 def camera_list(request):
     """List all security cameras."""
     try:
-        cameras = SecurityCamera.objects.order_by('location', 'camera_name')
+        cameras = Camera.objects.order_by('location', 'camera_name')
 
         status_filter = request.GET.get('status')
         if status_filter == 'active':
@@ -203,9 +207,9 @@ def camera_list(request):
             )
 
         stats = {
-            'total': SecurityCamera.objects.count(),
-            'active': SecurityCamera.objects.filter(is_active=True).count(),
-            'recording': SecurityCamera.objects.filter(is_recording=True).count(),
+            'total': Camera.objects.count(),
+            'active': Camera.objects.filter(is_active=True).count(),
+            'recording': Camera.objects.filter(is_recording=True).count(),
         }
 
         context = {
@@ -227,24 +231,24 @@ def asset_dashboard(request):
     try:
         stats = {
             'vehicles': {
-                'total': CompanyVehicle.objects.count(),
-                'available': CompanyVehicle.objects.filter(is_available=True).count(),
+                'total': Vehicle.objects.count(),
+                'available': Vehicle.objects.filter(is_available=True).count(),
             },
             'parking': {
-                'total': ParkingSpace.objects.count(),
-                'available': ParkingSpace.objects.filter(is_occupied=False).count(),
+                'total': ParkingSpot.objects.count(),
+                'available': ParkingSpot.objects.filter(is_occupied=False).count(),
             },
             'sim_cards': {
                 'total': SIMCard.objects.count(),
                 'active': SIMCard.objects.filter(is_active=True).count(),
             },
             'phones': {
-                'total': CompanyPhone.objects.count(),
-                'active': CompanyPhone.objects.filter(is_active=True).count(),
+                'total': Phone.objects.count(),
+                'active': Phone.objects.filter(is_active=True).count(),
             },
             'cameras': {
-                'total': SecurityCamera.objects.count(),
-                'active': SecurityCamera.objects.filter(is_active=True).count(),
+                'total': Camera.objects.count(),
+                'active': Camera.objects.filter(is_active=True).count(),
             },
         }
 

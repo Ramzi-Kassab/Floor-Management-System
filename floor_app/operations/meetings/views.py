@@ -1,5 +1,5 @@
 """
-Meeting Management System Views
+MorningMeeting Management System Views
 
 Template-rendering views for meeting scheduling, room booking, and management.
 """
@@ -11,9 +11,9 @@ from django.db.models import Q, Count
 from django.utils import timezone
 
 from .models import (
-    Meeting,
+    MorningMeeting,
     MeetingRoom,
-    MeetingAttendee,
+    MorningMeetingAttendance,
 )
 
 
@@ -33,7 +33,7 @@ def meeting_scheduler(request):
                 if not all([title, meeting_date, start_time, end_time]):
                     messages.error(request, 'Please fill in all required fields.')
                 else:
-                    meeting = Meeting.objects.create(
+                    meeting = MorningMeeting.objects.create(
                         title=title,
                         meeting_date=meeting_date,
                         start_time=start_time,
@@ -48,14 +48,14 @@ def meeting_scheduler(request):
                         meeting.save()
 
                     # Add organizer as attendee
-                    MeetingAttendee.objects.create(
+                    MorningMeetingAttendance.objects.create(
                         meeting=meeting,
                         user=request.user,
                         is_organizer=True,
                         response='ACCEPTED'
                     )
 
-                    messages.success(request, 'Meeting scheduled successfully.')
+                    messages.success(request, 'MorningMeeting scheduled successfully.')
                     return redirect('meetings:meeting_list')
 
             except Exception as e:
@@ -65,7 +65,7 @@ def meeting_scheduler(request):
         rooms = MeetingRoom.objects.filter(is_active=True)
 
         # Get upcoming meetings
-        upcoming_meetings = Meeting.objects.filter(
+        upcoming_meetings = MorningMeeting.objects.filter(
             meeting_date__gte=timezone.now().date(),
             status='SCHEDULED'
         ).select_related('organizer', 'room').order_by('meeting_date', 'start_time')[:10]
@@ -73,12 +73,12 @@ def meeting_scheduler(request):
         context = {
             'rooms': rooms,
             'upcoming_meetings': upcoming_meetings,
-            'page_title': 'Schedule Meeting',
+            'page_title': 'Schedule MorningMeeting',
         }
 
     except Exception as e:
         messages.error(request, f'Error loading scheduler: {str(e)}')
-        context = {'rooms': [], 'upcoming_meetings': [], 'page_title': 'Schedule Meeting'}
+        context = {'rooms': [], 'upcoming_meetings': [], 'page_title': 'Schedule MorningMeeting'}
 
     return render(request, 'meetings/meeting_scheduler.html', context)
 
@@ -87,7 +87,7 @@ def meeting_scheduler(request):
 def meeting_list(request):
     """List all meetings."""
     try:
-        meetings = Meeting.objects.select_related(
+        meetings = MorningMeeting.objects.select_related(
             'organizer',
             'room'
         ).annotate(
@@ -123,10 +123,10 @@ def meeting_list(request):
 
         # Statistics
         stats = {
-            'total': Meeting.objects.count(),
-            'scheduled': Meeting.objects.filter(status='SCHEDULED').count(),
-            'completed': Meeting.objects.filter(status='COMPLETED').count(),
-            'my_upcoming': Meeting.objects.filter(
+            'total': MorningMeeting.objects.count(),
+            'scheduled': MorningMeeting.objects.filter(status='SCHEDULED').count(),
+            'completed': MorningMeeting.objects.filter(status='COMPLETED').count(),
+            'my_upcoming': MorningMeeting.objects.filter(
                 Q(organizer=request.user) | Q(attendees__user=request.user),
                 meeting_date__gte=timezone.now().date(),
                 status='SCHEDULED'
@@ -136,7 +136,7 @@ def meeting_list(request):
         context = {
             'meetings': meetings,
             'stats': stats,
-            'status_choices': Meeting.STATUS_CHOICES,
+            'status_choices': MorningMeeting.STATUS_CHOICES,
             'page_title': 'Meetings',
         }
 
@@ -157,7 +157,7 @@ def room_booking(request):
 
         # Get today's bookings
         today = timezone.now().date()
-        todays_bookings = Meeting.objects.filter(
+        todays_bookings = MorningMeeting.objects.filter(
             meeting_date=today,
             status='SCHEDULED'
         ).select_related('organizer', 'room').order_by('start_time')

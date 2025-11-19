@@ -12,8 +12,8 @@ from django.db.models import Q
 
 from floor_app.operations.gps_system.models import (
     LocationVerification,
-    Geofence,
-    GPSLog
+    GeofenceDefinition,
+    GPSTrackingLog
 )
 from floor_app.operations.gps_system.services import GPSVerificationService
 from .serializers import (
@@ -23,8 +23,8 @@ from .serializers import (
     GeofenceSerializer,
     GeofenceCreateSerializer,
     GeofenceCheckSerializer,
-    GPSLogSerializer,
-    GPSLogCreateSerializer,
+    GPSTrackingLogSerializer,
+    GPSTrackingLogCreateSerializer,
     DistanceCalculationSerializer,
     ReverseGeocodeSerializer
 )
@@ -185,7 +185,7 @@ class GeofenceViewSet(viewsets.ModelViewSet):
     destroy: Deactivate a geofence
     """
 
-    queryset = Geofence.objects.filter(is_active=True).select_related('created_by')
+    queryset = GeofenceDefinition.objects.filter(is_active=True).select_related('created_by')
     serializer_class = GeofenceSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['geofence_type', 'is_active']
@@ -231,7 +231,7 @@ class GeofenceViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
 
         # Create geofence
-        geofence = Geofence.objects.create(
+        geofence = GeofenceDefinition.objects.create(
             name=data['name'],
             description=data.get('description', ''),
             geofence_type=data['geofence_type'],
@@ -319,7 +319,7 @@ class GeofenceViewSet(viewsets.ModelViewSet):
         })
 
 
-class GPSLogViewSet(viewsets.ModelViewSet):
+class GPSTrackingLogViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing GPS logs.
 
@@ -328,8 +328,8 @@ class GPSLogViewSet(viewsets.ModelViewSet):
     create: Create a new GPS log
     """
 
-    queryset = GPSLog.objects.all().select_related('employee')
-    serializer_class = GPSLogSerializer
+    queryset = GPSTrackingLog.objects.all().select_related('employee')
+    serializer_class = GPSTrackingLogSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['log_type', 'employee']
     ordering = ['-timestamp']
@@ -339,19 +339,19 @@ class GPSLogViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if user.is_staff:
-            return GPSLog.objects.all()
+            return GPSTrackingLog.objects.all()
 
         try:
             employee = user.hremployee
-            return GPSLog.objects.filter(employee=employee).select_related('employee')
+            return GPSTrackingLog.objects.filter(employee=employee).select_related('employee')
         except Exception:
-            return GPSLog.objects.none()
+            return GPSTrackingLog.objects.none()
 
     def get_serializer_class(self):
         """Use different serializer for create action."""
         if self.action == 'create':
-            return GPSLogCreateSerializer
-        return GPSLogSerializer
+            return GPSTrackingLogCreateSerializer
+        return GPSTrackingLogSerializer
 
     def create(self, request, *args, **kwargs):
         """
@@ -383,7 +383,7 @@ class GPSLogViewSet(viewsets.ModelViewSet):
             )
 
         # Create GPS log
-        gps_log = GPSLog.objects.create(
+        gps_log = GPSTrackingLog.objects.create(
             employee=employee,
             log_type=data['log_type'],
             latitude=data['latitude'],
@@ -406,7 +406,7 @@ class GPSLogViewSet(viewsets.ModelViewSet):
         except Exception:
             pass
 
-        output_serializer = GPSLogSerializer(gps_log)
+        output_serializer = GPSTrackingLogSerializer(gps_log)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
