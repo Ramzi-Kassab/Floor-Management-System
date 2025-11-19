@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Achievements{% endblock %}
+
+{% block extra_css %}
+<style>
+    .achievements-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; }
+    .points-display { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3); }
+    .points-number { font-size: 4rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .achievement-card { background: white; border-radius: 16px; padding: 1.5rem; text-align: center; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden; border: 2px solid transparent; }
+    .achievement-card:hover { transform: translateY(-8px); box-shadow: 0 12px 32px rgba(0,0,0,0.15); }
+    .achievement-card.locked { opacity: 0.5; filter: grayscale(100%); }
+    .achievement-card.locked:hover { transform: none; }
+    .achievement-card.legendary { border-color: #667eea; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); }
+    .achievement-card.epic { border-color: #6f42c1; background: linear-gradient(135deg, rgba(111, 66, 193, 0.1) 0%, rgba(155, 89, 182, 0.1) 100%); }
+    .achievement-card.rare { border-color: #17a2b8; background: linear-gradient(135deg, rgba(23, 162, 184, 0.1) 0%, rgba(52, 152, 219, 0.1) 100%); }
+    .achievement-card.common { border-color: #28a745; background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%); }
+    .achievement-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2.5rem; position: relative; }
+    .achievement-icon.legendary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4); }
+    .achievement-icon.epic { background: linear-gradient(135deg, #6f42c1 0%, #9b59b6 100%); color: white; box-shadow: 0 8px 24px rgba(111, 66, 193, 0.4); }
+    .achievement-icon.rare { background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; box-shadow: 0 8px 24px rgba(23, 162, 184, 0.4); }
+    .achievement-icon.common { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4); }
+    .achievement-icon.locked { background: #e9ecef; color: #adb5bd; box-shadow: none; }
+    .achievement-badge { position: absolute; top: -8px; right: -8px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .achievement-badge.new { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; animation: newBadgePulse 2s infinite; }
+    @keyframes newBadgePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+    .progress-ring { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
+    .progress-ring-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease; }
+    .category-filter { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .category-btn { border: 2px solid #dee2e6; background: white; padding: 0.5rem 1.5rem; border-radius: 24px; font-weight: 600; transition: all 0.3s; cursor: pointer; }
+    .category-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #667eea; }
+    .category-btn:hover:not(.active) { border-color: #667eea; }
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline-item { position: relative; padding-bottom: 2rem; border-left: 2px solid #dee2e6; padding-left: 2rem; }
+    .timeline-item:last-child { border-left-color: transparent; }
+    .timeline-dot { position: absolute; left: -9px; width: 16px; height: 16px; border-radius: 50%; background: white; border: 3px solid #667eea; }
+    .timeline-date { color: #6c757d; font-size: 0.875rem; margin-bottom: 0.5rem; }
+    .timeline-achievement { display: flex; align-items: center; gap: 1rem; background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .timeline-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .rarity-legendary { color: #667eea; }
+    .rarity-epic { color: #6f42c1; }
+    .rarity-rare { color: #17a2b8; }
+    .rarity-common { color: #28a745; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .stat-card { background: white; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .stat-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; }
+    .level-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 24px; display: inline-block; font-weight: 700; font-size: 1.2rem; }
+    .sparkle { position: absolute; animation: sparkle 1.5s infinite; }
+    @keyframes sparkle {
+        0%, 100% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1); }
+    }
+    .milestone-marker { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #212529; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="achievements-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-award me-2"></i>My Achievements</h2>
+                <p class="mb-0 opacity-75">Unlock badges and earn points through 5S excellence</p>
+            </div>
+            <div>
+                <a href="{% url 'fives:leaderboard' %}" class="btn btn-light">
+                    <i class="bi bi-trophy me-2"></i>Leaderboard
+                </a>
+                <a href="{% url 'fives:audit_list' %}" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Audits
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- User Level & Points -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="points-display">
+                        <i class="bi bi-star-fill fs-1 mb-2" style="color: #667eea;"></i>
+                        <div class="points-number">{{ user_points.total_points|default:0 }}</div>
+                        <div class="fw-bold" style="color: #667eea;">Total Points</div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <div class="text-center mb-3">
+                                <span class="level-badge">
+                                    <i class="bi bi-trophy-fill me-2"></i>Level {{ user_level.level|default:1 }}
+                                </span>
+                            </div>
+                            <h5 class="text-center mb-3">{{ user_level.title|default:"Beginner" }}</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">Progress to Level {{ user_level.next_level|default:2 }}</small>
+                                <small class="fw-bold">{{ user_level.progress|default:0 }}%</small>
+                            </div>
+                            <div class="progress" style="height: 12px;">
+                                <div class="progress-bar" style="width: {{ user_level.progress|default:0 }}%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);"></div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">{{ user_level.points_to_next|default:100 }} points to next level</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="category-filter">
+                            <button class="category-btn active" onclick="filterCategory('all')">
+                                All <span class="badge bg-secondary ms-1">{{ achievements.count }}</span>
+                            </button>
+                            <button class="category-btn" onclick="filterCategory('legendary')">
+                                <i class="bi bi-gem me-1 rarity-legendary"></i>Legendary <span class="badge bg-secondary ms-1">{{ legendary_count }}</span>
+                            </button>
+                            <button class="category-btn" onclick="filterCategory('epic')">
+                                <i class="bi bi-star-fill me-1 rarity-epic"></i>Epic <span class="badge bg-secondary ms-1">{{ epic_count }}</span>
+                            </button>
+                            <button class="category-btn" onclick="filterCategory('rare')">
+                                <i class="bi bi-award me-1 rarity-rare"></i>Rare <span class="badge bg-secondary ms-1">{{ rare_count }}</span>
+                            </button>
+                            <button class="category-btn" onclick="filterCategory('common')">
+                                <i class="bi bi-check-circle me-1 rarity-common"></i>Common <span class="badge bg-secondary ms-1">{{ common_count }}</span>
+                            </button>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="showLocked">
+                            <label class="form-check-label" for="showLocked">Show locked</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements Grid -->
+            <div class="row g-4" id="achievementsGrid">
+                {% for achievement in achievements %}
+                <div class="col-md-4 col-sm-6 achievement-item" data-category="{{ achievement.rarity|lower }}" data-locked="{{ achievement.is_locked|yesno:'true,false' }}">
+                    <div class="achievement-card {{ achievement.rarity|lower }} {% if achievement.is_locked %}locked{% endif %}"
+                         onclick="showAchievementDetails('{{ achievement.id }}')">
+                        {% if not achievement.is_locked and achievement.is_new %}
+                        <div class="achievement-badge new">NEW</div>
+                        {% endif %}
+
+                        <div class="achievement-icon {{ achievement.rarity|lower }} {% if achievement.is_locked %}locked{% endif %}">
+                            {% if achievement.is_locked %}
+                            <i class="bi bi-lock-fill"></i>
+                            {% else %}
+                            <i class="bi bi-{{ achievement.icon }}"></i>
+                            {% endif %}
+
+                            {% if not achievement.is_locked %}
+                            <span class="sparkle" style="top: 10%; left: 10%;">✨</span>
+                            <span class="sparkle" style="top: 80%; right: 10%; animation-delay: 0.5s;">✨</span>
+                            {% endif %}
+                        </div>
+
+                        <h6 class="mb-2">{{ achievement.name }}</h6>
+                        <p class="small text-muted mb-3">{{ achievement.description }}</p>
+
+                        {% if not achievement.is_locked %}
+                        <div class="d-flex justify-content-center gap-2 mb-2">
+                            <span class="badge rarity-{{ achievement.rarity|lower }}">
+                                {{ achievement.rarity }}
+                            </span>
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-star-fill me-1"></i>{{ achievement.points }} pts
+                            </span>
+                        </div>
+                        <small class="text-muted">Earned {{ achievement.earned_date|date:"M d, Y" }}</small>
+                        {% else %}
+                        <div class="progress-ring">
+                            <div class="progress-ring-fill" style="width: {{ achievement.progress }}%;"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">{{ achievement.progress }}% complete</small>
+                        <small class="text-muted">{{ achievement.requirement }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-award fs-1 text-muted d-block mb-3"></i>
+                            <h5 class="text-muted">No achievements yet</h5>
+                            <p class="text-muted">Complete audits to unlock achievements and earn points!</p>
+                            <a href="{% url 'fives:audit_form' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Start First Audit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Stats Summary -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">
+                        <i class="bi bi-graph-up me-2"></i>Achievement Stats
+                    </h6>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <i class="bi bi-unlock-fill"></i>
+                            </div>
+                            <div class="h4 fw-bold mb-1">{{ earned_count }}</div>
+                            <div class="small text-muted">Earned</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #6c757d 0%, #adb5bd 100%); color: white;">
+                                <i class="bi bi-lock-fill"></i>
+                            </div>
+                            <div class="h4 fw-bold mb-1">{{ locked_count }}</div>
+                            <div class="small text-muted">Locked</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                                <i class="bi bi-percent"></i>
+                            </div>
+                            <div class="h4 fw-bold mb-1">{{ completion_rate|floatformat:0 }}%</div>
+                            <div class="small text-muted">Complete</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white;">
+                                <i class="bi bi-trophy-fill"></i>
+                            </div>
+                            <div class="h4 fw-bold mb-1">{{ rank|default:"-" }}</div>
+                            <div class="small text-muted">Rank</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Milestones -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">
+                        <i class="bi bi-flag-fill me-2"></i>Upcoming Milestones
+                    </h6>
+
+                    <div class="list-group list-group-flush">
+                        {% for milestone in upcoming_milestones %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="fw-bold">{{ milestone.name }}</div>
+                                {% if milestone.is_milestone %}
+                                <span class="milestone-marker">
+                                    <i class="bi bi-star-fill"></i> MILESTONE
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="small text-muted mb-2">{{ milestone.requirement }}</div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: {{ milestone.progress }}%;"></div>
+                            </div>
+                            <div class="small text-muted mt-1">{{ milestone.progress }}% complete</div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-check-circle-fill fs-3 d-block mb-2"></i>
+                            <small>All milestones achieved!</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent History -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">
+                        <i class="bi bi-clock-history me-2"></i>Recent Achievements
+                    </h6>
+
+                    <div class="timeline">
+                        {% for history in recent_history %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-date">{{ history.earned_date|date:"M d, Y" }}</div>
+                            <div class="timeline-achievement">
+                                <div class="timeline-icon {{ history.rarity|lower }}">
+                                    <i class="bi bi-{{ history.icon }}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">{{ history.name }}</div>
+                                    <small class="text-muted">+{{ history.points }} points</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            <small>No recent achievements</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Achievement Detail Modal -->
+<div class="modal fade" id="achievementModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center pb-5">
+                <div class="achievement-icon legendary mb-4" style="width: 120px; height: 120px; font-size: 3rem; margin: 0 auto;">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
+                <h3 class="mb-3" id="modalTitle">Achievement Name</h3>
+                <p class="text-muted mb-4" id="modalDescription">Achievement description</p>
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <div>
+                        <div class="text-muted small">Rarity</div>
+                        <div class="fw-bold" id="modalRarity">Legendary</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Points</div>
+                        <div class="fw-bold" id="modalPoints">100</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Earned</div>
+                        <div class="fw-bold" id="modalDate">Jan 1, 2024</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Category filtering
+function filterCategory(category) {
+    // Update active button
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.closest('.category-btn').classList.add('active');
+
+    // Filter achievements
+    applyFilters();
+}
+
+// Show/hide locked achievements
+document.getElementById('showLocked')?.addEventListener('change', applyFilters);
+
+function applyFilters() {
+    const category = document.querySelector('.category-btn.active')?.textContent.toLowerCase().trim().split(' ')[0];
+    const showLocked = document.getElementById('showLocked')?.checked;
+
+    document.querySelectorAll('.achievement-item').forEach(item => {
+        const itemCategory = item.dataset.category;
+        const isLocked = item.dataset.locked === 'true';
+
+        let show = true;
+        if (category !== 'all' && itemCategory !== category) show = false;
+        if (!showLocked && isLocked) show = false;
+
+        item.style.display = show ? '' : 'none';
+    });
+}
+
+// Show achievement details
+function showAchievementDetails(id) {
+    // In production, this would fetch achievement details via AJAX
+    const modal = new bootstrap.Modal(document.getElementById('achievementModal'));
+    modal.show();
+}
+
+// Animate progress rings on load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        document.querySelectorAll('.progress-ring-fill').forEach(fill => {
+            const width = fill.style.width;
+            fill.style.width = '0%';
+            setTimeout(() => {
+                fill.style.width = width;
+            }, 100);
+        });
+    }, 300);
+
+    // Initial filter
+    applyFilters();
+});
+
+// Confetti effect for new achievements
+document.querySelectorAll('.achievement-card:not(.locked)').forEach(card => {
+    card.addEventListener('click', function() {
+        if (this.querySelector('.achievement-badge.new')) {
+            // Trigger confetti effect
+            console.log('Show confetti!');
+        }
+    });
+});
+</script>
+{% endblock %}

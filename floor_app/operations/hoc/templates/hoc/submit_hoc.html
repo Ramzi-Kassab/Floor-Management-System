@@ -1,0 +1,655 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Submit Hazard Observation Card{% endblock %}
+
+{% block extra_css %}
+<style>
+    .severity-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    .severity-option {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .severity-option input[type="radio"] {
+        display: none;
+    }
+
+    .severity-label {
+        display: block;
+        padding: 1.5rem;
+        border: 3px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .severity-option input[type="radio"]:checked + .severity-label {
+        border-color: currentColor;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transform: scale(1.05);
+    }
+
+    .severity-critical .severity-label {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .severity-high .severity-label {
+        background-color: #fd7e14;
+        color: white;
+    }
+
+    .severity-medium .severity-label {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .severity-low .severity-label {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .severity-description {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        opacity: 0.9;
+    }
+
+    .critical-warning {
+        background-color: #dc3545;
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .critical-warning.show {
+        display: block;
+    }
+
+    .photo-preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .photo-preview {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-preview .remove-photo {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gps-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .gps-coordinates {
+        font-family: monospace;
+        background-color: #e9ecef;
+        padding: 0.5rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+
+    .people-counter {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .people-counter button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .people-counter input {
+        width: 80px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .checkbox-card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+
+    .checkbox-card input[type="checkbox"]:checked + label {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+
+    .checkbox-card:has(input:checked) {
+        border-color: #0d6efd;
+        background-color: #e7f3ff;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                Submit Hazard Observation Card
+            </h2>
+            <p class="text-muted">Report a workplace safety hazard or concern</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'operations:observation_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Card Number Display -->
+    <div class="alert alert-info" role="status">
+        <i class="bi bi-info-circle"></i>
+        <strong>Card Number:</strong>
+        <span id="cardNumber">{{ card_number|default:"HOC-2025-XXXX (Will be generated)" }}</span>
+    </div>
+
+    <!-- HOC Submission Form -->
+    <form method="post" enctype="multipart/form-data" id="hocForm">
+        {% csrf_token %}
+
+        <!-- Basic Information Section -->
+        <div class="form-section">
+            <h4 class="form-section-title">
+                <i class="bi bi-file-text"></i> Basic Information
+            </h4>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="category" class="form-label required-field">Category</label>
+                    <select class="form-select" id="category" name="category" required aria-required="true">
+                        <option value="">Select a category</option>
+                        <option value="safety">Safety - Physical hazards, unsafe conditions</option>
+                        <option value="environmental">Environmental - Spills, emissions, waste</option>
+                        <option value="quality">Quality - Process defects, non-conformance</option>
+                        <option value="ergonomic">Ergonomic - Repetitive strain, awkward postures</option>
+                        <option value="housekeeping">Housekeeping - Clutter, blocked pathways</option>
+                        <option value="ppe">PPE - Missing or damaged personal protective equipment</option>
+                        <option value="equipment">Equipment - Malfunctioning or unsafe equipment</option>
+                        <option value="other">Other - Specify in description</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="title" class="form-label required-field">Observation Title</label>
+                    <input type="text" class="form-control" id="title" name="title"
+                           placeholder="Brief description of the hazard" required
+                           maxlength="200" aria-required="true">
+                    <div class="form-text">Maximum 200 characters</div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label required-field">Detailed Description</label>
+                <textarea class="form-control" id="description" name="description" rows="5"
+                          placeholder="Provide a detailed description of the hazard observed..."
+                          required aria-required="true"></textarea>
+                <div class="form-text">Include what you saw, when it occurred, and any relevant details</div>
+            </div>
+        </div>
+
+        <!-- Severity Selection Section -->
+        <div class="form-section">
+            <h4 class="form-section-title">
+                <i class="bi bi-speedometer2"></i> Severity Assessment
+            </h4>
+
+            <div class="severity-selector">
+                <div class="severity-option severity-critical">
+                    <input type="radio" id="severity-critical" name="severity" value="critical" required>
+                    <label for="severity-critical" class="severity-label">
+                        <i class="bi bi-x-octagon-fill" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">CRITICAL</h5>
+                        <div class="severity-description">
+                            Imminent danger. Potential for death or permanent disability.
+                            Immediate action required.
+                        </div>
+                    </label>
+                </div>
+
+                <div class="severity-option severity-high">
+                    <input type="radio" id="severity-high" name="severity" value="high">
+                    <label for="severity-high" class="severity-label">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">HIGH</h5>
+                        <div class="severity-description">
+                            Serious hazard. Could result in severe injury or illness.
+                            Urgent attention needed.
+                        </div>
+                    </label>
+                </div>
+
+                <div class="severity-option severity-medium">
+                    <input type="radio" id="severity-medium" name="severity" value="medium">
+                    <label for="severity-medium" class="severity-label">
+                        <i class="bi bi-exclamation-circle-fill" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">MEDIUM</h5>
+                        <div class="severity-description">
+                            Moderate risk. May cause injury or illness.
+                            Should be addressed promptly.
+                        </div>
+                    </label>
+                </div>
+
+                <div class="severity-option severity-low">
+                    <input type="radio" id="severity-low" name="severity" value="low">
+                    <label for="severity-low" class="severity-label">
+                        <i class="bi bi-info-circle-fill" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">LOW</h5>
+                        <div class="severity-description">
+                            Minor concern. Low probability of injury.
+                            Can be addressed in routine maintenance.
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div id="criticalWarning" class="critical-warning">
+                <h5>
+                    <i class="bi bi-exclamation-octagon-fill"></i> CRITICAL SEVERITY SELECTED
+                </h5>
+                <p class="mb-0">
+                    This observation will be flagged as critical and will require immediate attention.
+                    Safety management will be notified immediately upon submission.
+                </p>
+            </div>
+        </div>
+
+        <!-- Location Information Section -->
+        <div class="form-section">
+            <h4 class="form-section-title">
+                <i class="bi bi-geo-alt-fill"></i> Location Information
+            </h4>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="location" class="form-label required-field">Specific Location</label>
+                    <input type="text" class="form-control" id="location" name="location"
+                           placeholder="e.g., Assembly Line 3, Near Emergency Exit" required aria-required="true">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="department" class="form-label required-field">Department</label>
+                    <select class="form-select" id="department" name="department" required aria-required="true">
+                        <option value="">Select department</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="building" class="form-label">Building</label>
+                    <input type="text" class="form-control" id="building" name="building"
+                           placeholder="Building name or number">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="floor_level" class="form-label">Floor Level</label>
+                    <input type="text" class="form-control" id="floor_level" name="floor_level"
+                           placeholder="e.g., Ground, 2nd Floor, Basement">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">GPS Coordinates</label>
+                    <button type="button" class="btn btn-outline-primary w-100 gps-button"
+                            id="captureGPS" aria-label="Capture GPS coordinates">
+                        <i class="bi bi-crosshair"></i> Capture Location
+                    </button>
+                    <div id="gpsDisplay" class="gps-coordinates d-none" role="status" aria-live="polite">
+                        <strong>Lat:</strong> <span id="latitude">-</span><br>
+                        <strong>Lon:</strong> <span id="longitude">-</span>
+                    </div>
+                    <input type="hidden" id="gps_latitude" name="gps_latitude">
+                    <input type="hidden" id="gps_longitude" name="gps_longitude">
+                </div>
+            </div>
+        </div>
+
+        <!-- Impact Assessment Section -->
+        <div class="form-section">
+            <h4 class="form-section-title">
+                <i class="bi bi-shield-exclamation"></i> Impact Assessment
+            </h4>
+
+            <div class="mb-3">
+                <label for="potential_consequence" class="form-label required-field">
+                    Potential Consequence
+                </label>
+                <textarea class="form-control" id="potential_consequence" name="potential_consequence"
+                          rows="3" placeholder="Describe what could happen if this hazard is not addressed..."
+                          required aria-required="true"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label required-field">Number of People at Risk</label>
+                <div class="people-counter">
+                    <button type="button" class="btn btn-outline-secondary" id="decreasePeople"
+                            aria-label="Decrease people count">
+                        <i class="bi bi-dash"></i>
+                    </button>
+                    <input type="number" class="form-control" id="people_at_risk" name="people_at_risk"
+                           value="1" min="0" max="999" required aria-required="true" aria-label="People at risk">
+                    <button type="button" class="btn btn-outline-secondary" id="increasePeople"
+                            aria-label="Increase people count">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                    <span class="text-muted">person(s)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Immediate Actions Section -->
+        <div class="form-section">
+            <h4 class="form-section-title">
+                <i class="bi bi-lightning-fill"></i> Immediate Actions
+            </h4>
+
+            <div class="mb-3">
+                <label for="immediate_action" class="form-label">
+                    Immediate Action Taken (if any)
+                </label>
+                <textarea class="form-control" id="immediate_action" name="immediate_action"
+                          rows="3" placeholder="Describe any immediate actions you took to mitigate the hazard..."></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="checkbox-card">
+                        <input type="checkbox" class="form-check-input" id="area_isolated"
+                               name="area_isolated" value="true">
+                        <label class="form-check-label ms-2" for="area_isolated">
+                            <i class="bi bi-sign-stop"></i> Area has been isolated/barricaded
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="checkbox-card">
+                        <input type="checkbox" class="form-check-input" id="work_stopped"
+                               name="work_stopped" value="true">
+                        <label class="form-check-label ms-2" for="work_stopped">
+                            <i class="bi bi-pause-circle"></i> Work has been stopped in this area
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Upload Section -->
+        <div class="form-section">
+            <h4 class="form-section-title">
+                <i class="bi bi-camera-fill"></i> Photo Documentation
+            </h4>
+
+            <div class="mb-3">
+                <label for="photos" class="form-label">Upload Photos (Before Condition)</label>
+                <input type="file" class="form-control" id="photos" name="photos"
+                       accept="image/*" multiple aria-label="Upload photos">
+                <div class="form-text">
+                    You can upload multiple photos. Accepted formats: JPG, PNG, GIF. Max 5MB per file.
+                </div>
+            </div>
+
+            <div class="photo-preview-container" id="photoPreviewContainer" role="region"
+                 aria-label="Photo previews"></div>
+        </div>
+
+        <!-- Additional Information Section -->
+        <div class="form-section">
+            <h4 class="form-section-title">
+                <i class="bi bi-info-circle-fill"></i> Additional Information
+            </h4>
+
+            <div class="mb-3">
+                <div class="checkbox-card">
+                    <input type="checkbox" class="form-check-input" id="repeat_observation"
+                           name="repeat_observation" value="true">
+                    <label class="form-check-label ms-2" for="repeat_observation">
+                        <i class="bi bi-arrow-repeat"></i> This is a repeat observation
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3" id="relatedIncidentField" style="display: none;">
+                <label for="related_incident" class="form-label">Related Incident Number</label>
+                <input type="text" class="form-control" id="related_incident" name="related_incident"
+                       placeholder="e.g., INC-2025-0123">
+                <div class="form-text">If this observation is related to a previous incident or HOC</div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+
+                    <div>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline-primary me-2">
+                            <i class="bi bi-save"></i> Save as Draft
+                        </button>
+                        <button type="submit" name="action" value="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-send-fill"></i> Submit HOC
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Severity selection with critical warning
+    document.querySelectorAll('input[name="severity"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const criticalWarning = document.getElementById('criticalWarning');
+            if (this.value === 'critical') {
+                criticalWarning.classList.add('show');
+            } else {
+                criticalWarning.classList.remove('show');
+            }
+        });
+    });
+
+    // GPS Capture
+    document.getElementById('captureGPS').addEventListener('click', function() {
+        const button = this;
+        const icon = button.querySelector('i');
+
+        if ('geolocation' in navigator) {
+            button.disabled = true;
+            icon.className = 'bi bi-arrow-repeat spinner-border spinner-border-sm';
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    document.getElementById('latitude').textContent = position.coords.latitude.toFixed(6);
+                    document.getElementById('longitude').textContent = position.coords.longitude.toFixed(6);
+                    document.getElementById('gps_latitude').value = position.coords.latitude;
+                    document.getElementById('gps_longitude').value = position.coords.longitude;
+                    document.getElementById('gpsDisplay').classList.remove('d-none');
+
+                    button.disabled = false;
+                    icon.className = 'bi bi-check-circle-fill';
+                    button.classList.remove('btn-outline-primary');
+                    button.classList.add('btn-success');
+                },
+                function(error) {
+                    alert('Unable to capture GPS coordinates: ' + error.message);
+                    button.disabled = false;
+                    icon.className = 'bi bi-crosshair';
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by your browser');
+        }
+    });
+
+    // People counter
+    document.getElementById('increasePeople').addEventListener('click', function() {
+        const input = document.getElementById('people_at_risk');
+        input.value = Math.min(parseInt(input.value) + 1, 999);
+    });
+
+    document.getElementById('decreasePeople').addEventListener('click', function() {
+        const input = document.getElementById('people_at_risk');
+        input.value = Math.max(parseInt(input.value) - 1, 0);
+    });
+
+    // Photo preview
+    document.getElementById('photos').addEventListener('change', function(e) {
+        const container = document.getElementById('photoPreviewContainer');
+        container.innerHTML = '';
+
+        Array.from(e.target.files).forEach((file, index) => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.createElement('div');
+                    preview.className = 'photo-preview';
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview ${index + 1}">
+                        <button type="button" class="remove-photo" data-index="${index}"
+                                aria-label="Remove photo ${index + 1}">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    `;
+                    container.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
+    // Remove photo
+    document.getElementById('photoPreviewContainer').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-photo')) {
+            const button = e.target.closest('.remove-photo');
+            const index = parseInt(button.dataset.index);
+            const input = document.getElementById('photos');
+            const dt = new DataTransfer();
+
+            Array.from(input.files).forEach((file, i) => {
+                if (i !== index) dt.items.add(file);
+            });
+
+            input.files = dt.files;
+            button.closest('.photo-preview').remove();
+        }
+    });
+
+    // Repeat observation checkbox
+    document.getElementById('repeat_observation').addEventListener('change', function() {
+        const field = document.getElementById('relatedIncidentField');
+        field.style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Form validation
+    document.getElementById('hocForm').addEventListener('submit', function(e) {
+        const severity = document.querySelector('input[name="severity"]:checked');
+        if (!severity) {
+            e.preventDefault();
+            alert('Please select a severity level');
+            return false;
+        }
+
+        if (severity.value === 'critical') {
+            const confirmed = confirm(
+                'You are submitting a CRITICAL hazard observation. ' +
+                'This will trigger immediate notifications to safety management. ' +
+                'Do you want to proceed?'
+            );
+            if (!confirmed) {
+                e.preventDefault();
+                return false;
+            }
+        }
+
+        return true;
+    });
+</script>
+{% endblock %}

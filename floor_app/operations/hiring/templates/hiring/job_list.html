@@ -1,0 +1,671 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Job Postings - Hiring Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-left: 4px solid;
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .stats-card.active-jobs { border-left-color: #0d6efd; }
+    .stats-card.total-applications { border-left-color: #6f42c1; }
+    .stats-card.positions-filled { border-left-color: #198754; }
+    .stats-card.avg-time { border-left-color: #fd7e14; }
+
+    .job-card {
+        border-left: 4px solid #dee2e6;
+        transition: all 0.3s;
+    }
+    .job-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-left-color: #0d6efd;
+    }
+    .job-card.draft { border-left-color: #6c757d; }
+    .job-card.published { border-left-color: #0d6efd; }
+    .job-card.closed { border-left-color: #dc3545; }
+    .job-card.filled { border-left-color: #198754; }
+    .job-card.cancelled { border-left-color: #ffc107; }
+
+    .applications-badge {
+        font-size: 1.1rem;
+        padding: 0.5rem 1rem;
+    }
+    .view-toggle .btn {
+        border-radius: 0;
+    }
+    .view-toggle .btn:first-child {
+        border-top-left-radius: 0.25rem;
+        border-bottom-left-radius: 0.25rem;
+    }
+    .view-toggle .btn:last-child {
+        border-top-right-radius: 0.25rem;
+        border-bottom-right-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Job Postings</h2>
+            <p class="text-muted">Manage and track all job openings</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createJobModal">
+            <i class="bi bi-plus-circle"></i> Create New Job
+        </button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card active-jobs">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Active Jobs</h6>
+                            <h3 class="mb-0">24</h3>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-briefcase fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-success">+3 this week</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card total-applications">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Applications</h6>
+                            <h3 class="mb-0">486</h3>
+                        </div>
+                        <div class="text-purple">
+                            <i class="bi bi-file-earmark-text fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-success">+52 this week</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card positions-filled">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Positions Filled</h6>
+                            <h3 class="mb-0">18</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">This quarter</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card avg-time">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Avg. Time to Fill</h6>
+                            <h3 class="mb-0">32d</h3>
+                        </div>
+                        <div class="text-warning">
+                            <i class="bi bi-clock-history fs-1"></i>
+                        </div>
+                    </div>
+                    <small class="text-danger">+2 days vs last month</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and View Toggle -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="closed">Closed</option>
+                        <option value="filled">Filled</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="departmentFilter">
+                        <option value="">All Departments</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="sales">Sales</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="hr">Human Resources</option>
+                        <option value="finance">Finance</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="jobTypeFilter">
+                        <option value="">All Job Types</option>
+                        <option value="full-time">Full-time</option>
+                        <option value="part-time">Part-time</option>
+                        <option value="contract">Contract</option>
+                        <option value="internship">Internship</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="experienceFilter">
+                        <option value="">All Experience Levels</option>
+                        <option value="entry">Entry Level</option>
+                        <option value="mid">Mid Level</option>
+                        <option value="senior">Senior Level</option>
+                        <option value="lead">Lead/Principal</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" placeholder="Search jobs..." id="searchJobs">
+                </div>
+                <div class="col-md-1">
+                    <div class="btn-group view-toggle" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" id="cardView">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="tableView">
+                            <i class="bi bi-list-ul"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Listings - Card View -->
+    <div id="cardViewContainer">
+        <div class="row">
+            <!-- Job Card 1 -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card job-card published h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">Senior Full Stack Developer</h5>
+                            <span class="badge bg-primary">Published</span>
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-1"><i class="bi bi-building me-2"></i>Engineering</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>New York, NY / Remote</p>
+                            <p class="mb-1"><i class="bi bi-briefcase me-2"></i>Full-time</p>
+                            <p class="mb-1"><i class="bi bi-star me-2"></i>Senior Level (5+ years)</p>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Posted: Nov 15, 2025</small> |
+                            <small class="text-muted">Closes: Dec 15, 2025</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-info applications-badge">
+                                <i class="bi bi-file-earmark-person"></i> 42 Applications
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm btn-outline-primary" title="View Applications">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Close">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Card 2 -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card job-card published h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">Product Marketing Manager</h5>
+                            <span class="badge bg-primary">Published</span>
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-1"><i class="bi bi-building me-2"></i>Marketing</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>San Francisco, CA</p>
+                            <p class="mb-1"><i class="bi bi-briefcase me-2"></i>Full-time</p>
+                            <p class="mb-1"><i class="bi bi-star me-2"></i>Mid Level (3-5 years)</p>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Posted: Nov 12, 2025</small> |
+                            <small class="text-muted">Closes: Dec 12, 2025</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-info applications-badge">
+                                <i class="bi bi-file-earmark-person"></i> 38 Applications
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm btn-outline-primary" title="View Applications">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Close">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Card 3 -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card job-card draft h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">Data Analyst</h5>
+                            <span class="badge bg-secondary">Draft</span>
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-1"><i class="bi bi-building me-2"></i>Engineering</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>Chicago, IL</p>
+                            <p class="mb-1"><i class="bi bi-briefcase me-2"></i>Full-time</p>
+                            <p class="mb-1"><i class="bi bi-star me-2"></i>Entry Level (0-2 years)</p>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Created: Nov 18, 2025</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-secondary applications-badge">
+                                <i class="bi bi-file-earmark-person"></i> 0 Applications
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm btn-outline-success" title="Publish">
+                                <i class="bi bi-send"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Card 4 -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card job-card filled h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">UX Designer</h5>
+                            <span class="badge bg-success">Filled</span>
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-1"><i class="bi bi-building me-2"></i>Engineering</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>Austin, TX</p>
+                            <p class="mb-1"><i class="bi bi-briefcase me-2"></i>Full-time</p>
+                            <p class="mb-1"><i class="bi bi-star me-2"></i>Mid Level (3-5 years)</p>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Posted: Oct 20, 2025</small> |
+                            <small class="text-muted">Filled: Nov 10, 2025</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-success applications-badge">
+                                <i class="bi bi-file-earmark-person"></i> 67 Applications
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm btn-outline-primary" title="View Applications">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" title="View Details">
+                                <i class="bi bi-info-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" title="Archive">
+                                <i class="bi bi-archive"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Card 5 -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card job-card closed h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">Sales Representative</h5>
+                            <span class="badge bg-danger">Closed</span>
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-1"><i class="bi bi-building me-2"></i>Sales</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>Boston, MA</p>
+                            <p class="mb-1"><i class="bi bi-briefcase me-2"></i>Full-time</p>
+                            <p class="mb-1"><i class="bi bi-star me-2"></i>Entry Level (0-2 years)</p>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Posted: Oct 25, 2025</small> |
+                            <small class="text-muted">Closed: Nov 18, 2025</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-danger applications-badge">
+                                <i class="bi bi-file-earmark-person"></i> 28 Applications
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm btn-outline-primary" title="View Applications">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" title="Reopen">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" title="Archive">
+                                <i class="bi bi-archive"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Card 6 -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card job-card published h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">DevOps Engineer</h5>
+                            <span class="badge bg-primary">Published</span>
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-1"><i class="bi bi-building me-2"></i>Engineering</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>Seattle, WA / Remote</p>
+                            <p class="mb-1"><i class="bi bi-briefcase me-2"></i>Full-time</p>
+                            <p class="mb-1"><i class="bi bi-star me-2"></i>Senior Level (5+ years)</p>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Posted: Nov 10, 2025</small> |
+                            <small class="text-muted">Closes: Dec 10, 2025</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-info applications-badge">
+                                <i class="bi bi-file-earmark-person"></i> 31 Applications
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm btn-outline-primary" title="View Applications">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Close">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Listings - Table View (Hidden by default) -->
+    <div id="tableViewContainer" style="display: none;">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Department</th>
+                                <th>Location</th>
+                                <th>Type</th>
+                                <th>Experience</th>
+                                <th>Posted Date</th>
+                                <th>Applications</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Senior Full Stack Developer</strong></td>
+                                <td>Engineering</td>
+                                <td>New York, NY</td>
+                                <td>Full-time</td>
+                                <td>Senior</td>
+                                <td>Nov 15, 2025</td>
+                                <td><span class="badge bg-info">42</span></td>
+                                <td><span class="badge bg-primary">Published</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-outline-danger"><i class="bi bi-x-circle"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Product Marketing Manager</strong></td>
+                                <td>Marketing</td>
+                                <td>San Francisco, CA</td>
+                                <td>Full-time</td>
+                                <td>Mid Level</td>
+                                <td>Nov 12, 2025</td>
+                                <td><span class="badge bg-info">38</span></td>
+                                <td><span class="badge bg-primary">Published</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-outline-danger"><i class="bi bi-x-circle"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Analyst</strong></td>
+                                <td>Engineering</td>
+                                <td>Chicago, IL</td>
+                                <td>Full-time</td>
+                                <td>Entry Level</td>
+                                <td>Nov 18, 2025</td>
+                                <td><span class="badge bg-secondary">0</span></td>
+                                <td><span class="badge bg-secondary">Draft</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-success"><i class="bi bi-send"></i></button>
+                                        <button class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>UX Designer</strong></td>
+                                <td>Engineering</td>
+                                <td>Austin, TX</td>
+                                <td>Full-time</td>
+                                <td>Mid Level</td>
+                                <td>Oct 20, 2025</td>
+                                <td><span class="badge bg-success">67</span></td>
+                                <td><span class="badge bg-success">Filled</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-outline-secondary"><i class="bi bi-info-circle"></i></button>
+                                        <button class="btn btn-outline-warning"><i class="bi bi-archive"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sales Representative</strong></td>
+                                <td>Sales</td>
+                                <td>Boston, MA</td>
+                                <td>Full-time</td>
+                                <td>Entry Level</td>
+                                <td>Oct 25, 2025</td>
+                                <td><span class="badge bg-danger">28</span></td>
+                                <td><span class="badge bg-danger">Closed</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-outline-success"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                        <button class="btn btn-outline-warning"><i class="bi bi-archive"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>DevOps Engineer</strong></td>
+                                <td>Engineering</td>
+                                <td>Seattle, WA</td>
+                                <td>Full-time</td>
+                                <td>Senior</td>
+                                <td>Nov 10, 2025</td>
+                                <td><span class="badge bg-info">31</span></td>
+                                <td><span class="badge bg-primary">Published</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-outline-danger"><i class="bi bi-x-circle"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Job Modal -->
+<div class="modal fade" id="createJobModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Job Posting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createJobForm">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Job Title *</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Job Code</label>
+                            <input type="text" class="form-control" placeholder="AUTO">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Department *</label>
+                            <select class="form-select" required>
+                                <option value="">Select Department</option>
+                                <option>Engineering</option>
+                                <option>Sales</option>
+                                <option>Marketing</option>
+                                <option>Human Resources</option>
+                                <option>Finance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Job Type *</label>
+                            <select class="form-select" required>
+                                <option value="">Select Type</option>
+                                <option>Full-time</option>
+                                <option>Part-time</option>
+                                <option>Contract</option>
+                                <option>Internship</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Experience Level *</label>
+                            <select class="form-select" required>
+                                <option value="">Select Level</option>
+                                <option>Entry Level</option>
+                                <option>Mid Level</option>
+                                <option>Senior Level</option>
+                                <option>Lead/Principal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Positions</label>
+                            <input type="number" class="form-control" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Closing Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Salary Range</label>
+                            <input type="text" class="form-control" placeholder="e.g., $80,000 - $120,000">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Job Description *</label>
+                        <textarea class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Requirements</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-primary">Save as Draft</button>
+                <button type="button" class="btn btn-primary">Publish Job</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // View toggle functionality
+    document.getElementById('cardView').addEventListener('click', function() {
+        document.getElementById('cardViewContainer').style.display = 'block';
+        document.getElementById('tableViewContainer').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('tableView').classList.remove('active');
+    });
+
+    document.getElementById('tableView').addEventListener('click', function() {
+        document.getElementById('cardViewContainer').style.display = 'none';
+        document.getElementById('tableViewContainer').style.display = 'block';
+        this.classList.add('active');
+        document.getElementById('cardView').classList.remove('active');
+    });
+</script>
+{% endblock %}

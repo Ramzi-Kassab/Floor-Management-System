@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Vendor Registration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .step-indicator {
+        counter-reset: step;
+    }
+    .step-indicator li {
+        list-style: none;
+        display: inline-block;
+        width: 25%;
+        position: relative;
+        text-align: center;
+        cursor: pointer;
+    }
+    .step-indicator li:before {
+        content: counter(step);
+        counter-increment: step;
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        border: 2px solid #ddd;
+        border-radius: 50%;
+        display: block;
+        text-align: center;
+        margin: 0 auto 10px;
+        background-color: white;
+    }
+    .step-indicator li.active:before {
+        border-color: #0d6efd;
+        background-color: #0d6efd;
+        color: white;
+    }
+    .step-indicator li.completed:before {
+        border-color: #198754;
+        background-color: #198754;
+        color: white;
+        content: "✓";
+    }
+    .step-indicator li:after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background-color: #ddd;
+        top: 20px;
+        left: 50%;
+        z-index: -1;
+    }
+    .step-indicator li:last-child:after {
+        display: none;
+    }
+    .step-indicator li.completed:after {
+        background-color: #198754;
+    }
+    .form-section {
+        display: none;
+    }
+    .form-section.active {
+        display: block;
+    }
+    .required-field:after {
+        content: " *";
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="registration-container">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-2">Vendor Registration</h2>
+            <p class="text-muted">Join our vendor network and access procurement opportunities</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <ul class="step-indicator p-0 mb-0">
+                    <li class="active" data-step="1">
+                        <small class="d-block mt-2">Company Info</small>
+                    </li>
+                    <li data-step="2">
+                        <small class="d-block mt-2">Contact Details</small>
+                    </li>
+                    <li data-step="3">
+                        <small class="d-block mt-2">Business Info</small>
+                    </li>
+                    <li data-step="4">
+                        <small class="d-block mt-2">Documents</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="registrationForm" method="post" enctype="multipart/form-data" action="{% url 'vendor_portal:register' %}">
+            {% csrf_token %}
+
+            <!-- Step 1: Company Information -->
+            <div class="form-section active" data-section="1">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-building"></i> Company Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="company_name" class="form-label required-field">Company Name</label>
+                                <input type="text" class="form-control" id="company_name" name="company_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="legal_name" class="form-label">Legal Name</label>
+                                <input type="text" class="form-control" id="legal_name" name="legal_name">
+                                <small class="text-muted">If different from company name</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="registration_number" class="form-label required-field">Registration Number</label>
+                                <input type="text" class="form-control" id="registration_number" name="registration_number" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tax_id" class="form-label required-field">Tax ID / VAT Number</label>
+                                <input type="text" class="form-control" id="tax_id" name="tax_id" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="website" class="form-label">Website</label>
+                                <input type="url" class="form-control" id="website" name="website" placeholder="https://">
+                            </div>
+                            <div class="col-12">
+                                <label for="specializations" class="form-label">Specializations</label>
+                                <textarea class="form-control" id="specializations" name="specializations" rows="3"
+                                          placeholder="Describe your main products/services and areas of expertise"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Contact Details -->
+            <div class="form-section" data-section="2">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-person-badge"></i> Contact Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="contact_person" class="form-label required-field">Contact Person</label>
+                                <input type="text" class="form-control" id="contact_person" name="contact_person" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contact_phone" class="form-label required-field">Phone Number</label>
+                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="contact_email" class="form-label required-field">Email Address</label>
+                                <input type="email" class="form-control" id="contact_email" name="contact_email" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="address" class="form-label required-field">Street Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="2" required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="city" class="form-label required-field">City</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="state" class="form-label">State / Province</label>
+                                <input type="text" class="form-control" id="state" name="state">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="country" class="form-label required-field">Country</label>
+                                <input type="text" class="form-control" id="country" name="country" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="postal_code" class="form-label">Postal Code</label>
+                                <input type="text" class="form-control" id="postal_code" name="postal_code">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Business Information -->
+            <div class="form-section" data-section="3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-briefcase"></i> Business & Banking Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="categories" class="form-label required-field">Product/Service Categories</label>
+                                <select class="form-select" id="categories" name="categories" multiple size="5" required>
+                                    <option value="IT_Hardware">IT Hardware & Equipment</option>
+                                    <option value="IT_Software">Software & Licenses</option>
+                                    <option value="Office_Supplies">Office Supplies</option>
+                                    <option value="Furniture">Furniture & Fixtures</option>
+                                    <option value="Facilities">Facilities Management</option>
+                                    <option value="Maintenance">Maintenance Services</option>
+                                    <option value="Cleaning">Cleaning Services</option>
+                                    <option value="Security">Security Services</option>
+                                    <option value="Catering">Catering & Food Services</option>
+                                    <option value="Construction">Construction & Renovation</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <small class="text-muted">Hold Ctrl/Cmd to select multiple categories</small>
+                            </div>
+                            <div class="col-12">
+                                <hr>
+                                <h6 class="mb-3">Banking Details</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="bank_name" class="form-label required-field">Bank Name</label>
+                                <input type="text" class="form-control" id="bank_name" name="bank_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="account_number" class="form-label required-field">Account Number</label>
+                                <input type="text" class="form-control" id="account_number" name="account_number" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="account_holder" class="form-label required-field">Account Holder Name</label>
+                                <input type="text" class="form-control" id="account_holder" name="account_holder" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="swift_code" class="form-label">SWIFT/BIC Code</label>
+                                <input type="text" class="form-control" id="swift_code" name="swift_code">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Documents -->
+            <div class="form-section" data-section="4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-up"></i> Required Documents</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="business_license" class="form-label required-field">Business License</label>
+                                <input type="file" class="form-control" id="business_license" name="business_license" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small class="text-muted">Accepted formats: PDF, JPG, PNG (Max 5MB)</small>
+                            </div>
+                            <div class="col-12">
+                                <label for="tax_certificate" class="form-label required-field">Tax Registration Certificate</label>
+                                <input type="file" class="form-control" id="tax_certificate" name="tax_certificate" accept=".pdf,.jpg,.jpeg,.png" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="bank_statement" class="form-label">Bank Statement (Last 3 months)</label>
+                                <input type="file" class="form-control" id="bank_statement" name="bank_statement" accept=".pdf">
+                            </div>
+                            <div class="col-12">
+                                <label for="insurance_certificate" class="form-label">Insurance Certificate</label>
+                                <input type="file" class="form-control" id="insurance_certificate" name="insurance_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                            </div>
+                            <div class="col-12">
+                                <label for="quality_certificates" class="form-label">Quality Certificates (ISO, etc.)</label>
+                                <input type="file" class="form-control" id="quality_certificates" name="quality_certificates" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms_accepted" name="terms_accepted" required>
+                                    <label class="form-check-label" for="terms_accepted">
+                                        I agree to the <a href="#" target="_blank">Terms and Conditions</a> and confirm that all information provided is accurate
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                            <i class="bi bi-arrow-left"></i> Previous
+                        </button>
+                        <div class="ms-auto">
+                            <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">
+                                Next <i class="bi bi-arrow-right"></i>
+                            </button>
+                            <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">
+                                <i class="bi bi-check-circle"></i> Submit Registration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Help Text -->
+        <div class="text-center mt-4">
+            <p class="text-muted">
+                Already registered? <a href="{% url 'vendor_portal:login' %}">Login to your account</a><br>
+                Need help? <a href="{% url 'vendor_portal:support' %}">Contact our support team</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+function changeStep(direction) {
+    // Validate current step before moving forward
+    if (direction === 1 && !validateStep(currentStep)) {
+        return;
+    }
+
+    // Hide current section
+    document.querySelector(`.form-section[data-section="${currentStep}"]`).classList.remove('active');
+
+    // Update step indicator
+    const currentStepLi = document.querySelector(`.step-indicator li[data-step="${currentStep}"]`);
+    if (direction === 1) {
+        currentStepLi.classList.add('completed');
+        currentStepLi.classList.remove('active');
+    }
+
+    // Update current step
+    currentStep += direction;
+
+    // Show new section
+    document.querySelector(`.form-section[data-section="${currentStep}"]`).classList.add('active');
+
+    // Update step indicator
+    document.querySelector(`.step-indicator li[data-step="${currentStep}"]`).classList.add('active');
+
+    // Update buttons
+    document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'inline-block';
+    document.getElementById('nextBtn').style.display = currentStep === totalSteps ? 'none' : 'inline-block';
+    document.getElementById('submitBtn').style.display = currentStep === totalSteps ? 'inline-block' : 'none';
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep(step) {
+    const section = document.querySelector(`.form-section[data-section="${step}"]`);
+    const requiredFields = section.querySelectorAll('[required]');
+    let isValid = true;
+
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+
+    if (!isValid) {
+        alert('Please fill in all required fields marked with *');
+    }
+
+    return isValid;
+}
+
+// Form submission
+document.getElementById('registrationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!validateStep(totalSteps)) {
+        return;
+    }
+
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+    submitBtn.disabled = true;
+
+    // Submit form
+    this.submit();
+});
+
+// Remove validation error on input
+document.querySelectorAll('[required]').forEach(field => {
+    field.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+</script>
+{% endblock %}

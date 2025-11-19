@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Company Phone Management - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .phone-card {
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+    .phone-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        transform: translateY(-4px);
+    }
+    .phone-image {
+        width: 100%;
+        height: 200px;
+        object-fit: contain;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+    }
+    .os-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .condition-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+    .condition-excellent { background: #28a745; }
+    .condition-good { background: #20c997; }
+    .condition-fair { background: #ffc107; }
+    .condition-poor { background: #dc3545; }
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    .action-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 6px;
+    }
+    .view-toggle .btn {
+        border-radius: 8px;
+        padding: 8px 16px;
+    }
+    .warranty-badge {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .table thead th {
+        background: #f8f9fa;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid mt-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="#">HR Assets</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Company Phones</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Company Phone Management</h2>
+            <p class="text-muted mb-0">Manage and track company mobile devices</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPhoneModal">
+            <i class="bi bi-plus-circle me-2"></i>Add New Phone
+        </button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Phones</p>
+                            <h3 class="fw-bold mb-0">84</h3>
+                        </div>
+                        <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-phone-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Available</p>
+                            <h3 class="fw-bold mb-0 text-success">18</h3>
+                        </div>
+                        <div class="stats-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Assigned</p>
+                            <h3 class="fw-bold mb-0 text-info">58</h3>
+                        </div>
+                        <div class="stats-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Under Repair</p>
+                            <h3 class="fw-bold mb-0 text-warning">8</h3>
+                        </div>
+                        <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-tools"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" class="form-control" placeholder="Search by IMEI, model, employee...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Operating System</label>
+                <select class="form-select">
+                    <option value="">All OS</option>
+                    <option>iOS</option>
+                    <option>Android</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Status</label>
+                <select class="form-select">
+                    <option value="">All Status</option>
+                    <option>Available</option>
+                    <option>Assigned</option>
+                    <option>Repair</option>
+                    <option>Lost</option>
+                    <option>Retired</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Condition</label>
+                <select class="form-select">
+                    <option value="">All Conditions</option>
+                    <option>Excellent</option>
+                    <option>Good</option>
+                    <option>Fair</option>
+                    <option>Poor</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary me-2 flex-grow-1">
+                    <i class="bi bi-funnel me-2"></i>Apply Filters
+                </button>
+                <button class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <span class="text-muted">Showing <strong>84</strong> phones</span>
+        </div>
+        <div class="btn-group view-toggle" role="group">
+            <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn">
+                <i class="bi bi-grid-3x3-gap me-1"></i>Grid
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="tableViewBtn">
+                <i class="bi bi-list me-1"></i>Table
+            </button>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div id="gridView" class="row g-3">
+        <!-- Phone Card 1 -->
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="card phone-card">
+                <div class="position-relative">
+                    <img src="https://via.placeholder.com/300x200/667eea/ffffff?text=iPhone+14+Pro" class="phone-image" alt="Phone">
+                    <span class="position-absolute top-0 end-0 m-2 os-badge bg-dark text-white">iOS</span>
+                    <span class="position-absolute top-0 start-0 m-2 warranty-badge bg-success text-white">
+                        <i class="bi bi-shield-check"></i> Warranty
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold mb-0">iPhone 14 Pro</h6>
+                        <span class="status-badge bg-success bg-opacity-10 text-success">Available</span>
+                    </div>
+                    <p class="text-muted mb-1 small">Apple</p>
+                    <p class="text-muted mb-1 small"><i class="bi bi-upc me-1"></i>IMEI: 123456789012345</p>
+                    <div class="mb-2">
+                        <span class="condition-indicator condition-excellent"></span>
+                        <small class="text-muted">Excellent Condition</small>
+                    </div>
+                    <p class="text-muted mb-3 small">
+                        <i class="bi bi-calendar-event me-1"></i>Warranty until Dec 2025
+                    </p>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-primary action-btn flex-grow-1" title="Assign Phone">
+                            <i class="bi bi-person-plus"></i> Assign
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View History">
+                            <i class="bi bi-clock-history"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Card 2 -->
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="card phone-card">
+                <div class="position-relative">
+                    <img src="https://via.placeholder.com/300x200/764ba2/ffffff?text=Samsung+S23" class="phone-image" alt="Phone">
+                    <span class="position-absolute top-0 end-0 m-2 os-badge bg-success text-white">Android</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold mb-0">Samsung Galaxy S23</h6>
+                        <span class="status-badge bg-info bg-opacity-10 text-info">Assigned</span>
+                    </div>
+                    <p class="text-muted mb-1 small">Samsung</p>
+                    <p class="text-muted mb-1 small"><i class="bi bi-upc me-1"></i>IMEI: 987654321098765</p>
+                    <div class="mb-1">
+                        <span class="condition-indicator condition-good"></span>
+                        <small class="text-muted">Good Condition</small>
+                    </div>
+                    <p class="text-muted mb-3 small">
+                        <i class="bi bi-person me-1"></i>Assigned to John Smith
+                    </p>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-primary action-btn flex-grow-1" title="Reassign">
+                            <i class="bi bi-arrow-left-right"></i> Reassign
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View History">
+                            <i class="bi bi-clock-history"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Card 3 -->
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="card phone-card">
+                <div class="position-relative">
+                    <img src="https://via.placeholder.com/300x200/f093fb/ffffff?text=iPhone+13" class="phone-image" alt="Phone">
+                    <span class="position-absolute top-0 end-0 m-2 os-badge bg-dark text-white">iOS</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold mb-0">iPhone 13</h6>
+                        <span class="status-badge bg-warning bg-opacity-10 text-warning">Repair</span>
+                    </div>
+                    <p class="text-muted mb-1 small">Apple</p>
+                    <p class="text-muted mb-1 small"><i class="bi bi-upc me-1"></i>IMEI: 456789123456789</p>
+                    <div class="mb-2">
+                        <span class="condition-indicator condition-fair"></span>
+                        <small class="text-muted">Fair Condition</small>
+                    </div>
+                    <p class="text-muted mb-3 small">
+                        <i class="bi bi-wrench me-1"></i>Screen Replacement
+                    </p>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-warning action-btn flex-grow-1" title="View Repair Status">
+                            <i class="bi bi-tools"></i> Repair
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View History">
+                            <i class="bi bi-clock-history"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Card 4 -->
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="card phone-card">
+                <div class="position-relative">
+                    <img src="https://via.placeholder.com/300x200/4facfe/ffffff?text=Google+Pixel+7" class="phone-image" alt="Phone">
+                    <span class="position-absolute top-0 end-0 m-2 os-badge bg-success text-white">Android</span>
+                    <span class="position-absolute top-0 start-0 m-2 warranty-badge bg-success text-white">
+                        <i class="bi bi-shield-check"></i> Warranty
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold mb-0">Google Pixel 7</h6>
+                        <span class="status-badge bg-info bg-opacity-10 text-info">Assigned</span>
+                    </div>
+                    <p class="text-muted mb-1 small">Google</p>
+                    <p class="text-muted mb-1 small"><i class="bi bi-upc me-1"></i>IMEI: 789012345678901</p>
+                    <div class="mb-1">
+                        <span class="condition-indicator condition-excellent"></span>
+                        <small class="text-muted">Excellent Condition</small>
+                    </div>
+                    <p class="text-muted mb-3 small">
+                        <i class="bi bi-person me-1"></i>Assigned to Jane Doe
+                    </p>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-primary action-btn flex-grow-1" title="Reassign">
+                            <i class="bi bi-arrow-left-right"></i> Reassign
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View History">
+                            <i class="bi bi-clock-history"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View (Hidden by default) -->
+    <div id="tableView" class="d-none">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Device</th>
+                        <th>IMEI</th>
+                        <th>Make/Model</th>
+                        <th>OS</th>
+                        <th>Status</th>
+                        <th>Condition</th>
+                        <th>Assigned To</th>
+                        <th>Warranty</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><img src="https://via.placeholder.com/50x50/667eea/ffffff" class="rounded" alt="Phone"></td>
+                        <td><small>123456789012345</small></td>
+                        <td><strong>iPhone 14 Pro</strong><br><small class="text-muted">Apple</small></td>
+                        <td><span class="os-badge bg-dark text-white">iOS</span></td>
+                        <td><span class="status-badge bg-success bg-opacity-10 text-success">Available</span></td>
+                        <td><span class="condition-indicator condition-excellent"></span>Excellent</td>
+                        <td><span class="text-muted">-</span></td>
+                        <td><span class="text-success small">Dec 2025</span></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-primary action-btn"><i class="bi bi-person-plus"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary action-btn"><i class="bi bi-clock-history"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary action-btn"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="https://via.placeholder.com/50x50/764ba2/ffffff" class="rounded" alt="Phone"></td>
+                        <td><small>987654321098765</small></td>
+                        <td><strong>Galaxy S23</strong><br><small class="text-muted">Samsung</small></td>
+                        <td><span class="os-badge bg-success text-white">Android</span></td>
+                        <td><span class="status-badge bg-info bg-opacity-10 text-info">Assigned</span></td>
+                        <td><span class="condition-indicator condition-good"></span>Good</td>
+                        <td>John Smith</td>
+                        <td><span class="text-muted small">Expired</span></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-primary action-btn"><i class="bi bi-arrow-left-right"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary action-btn"><i class="bi bi-clock-history"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary action-btn"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="https://via.placeholder.com/50x50/f093fb/ffffff" class="rounded" alt="Phone"></td>
+                        <td><small>456789123456789</small></td>
+                        <td><strong>iPhone 13</strong><br><small class="text-muted">Apple</small></td>
+                        <td><span class="os-badge bg-dark text-white">iOS</span></td>
+                        <td><span class="status-badge bg-warning bg-opacity-10 text-warning">Repair</span></td>
+                        <td><span class="condition-indicator condition-fair"></span>Fair</td>
+                        <td><span class="text-muted">-</span></td>
+                        <td><span class="text-success small">Jun 2025</span></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-warning action-btn"><i class="bi bi-tools"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary action-btn"><i class="bi bi-clock-history"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary action-btn"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Phone Modal -->
+<div class="modal fade" id="addPhoneModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Phone</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Make</label>
+                            <input type="text" class="form-control" placeholder="Apple">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Model</label>
+                            <input type="text" class="form-control" placeholder="iPhone 14 Pro">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">IMEI</label>
+                            <input type="text" class="form-control" placeholder="123456789012345">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Operating System</label>
+                            <select class="form-select">
+                                <option>iOS</option>
+                                <option>Android</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Condition</label>
+                            <select class="form-select">
+                                <option>Excellent</option>
+                                <option>Good</option>
+                                <option>Fair</option>
+                                <option>Poor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Warranty Expiry</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Device Photo</label>
+                            <input type="file" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Add Phone</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const tableViewBtn = document.getElementById('tableViewBtn');
+    const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
+
+    gridViewBtn.addEventListener('click', function() {
+        gridView.classList.remove('d-none');
+        tableView.classList.add('d-none');
+        gridViewBtn.classList.add('active');
+        tableViewBtn.classList.remove('active');
+    });
+
+    tableViewBtn.addEventListener('click', function() {
+        tableView.classList.remove('d-none');
+        gridView.classList.add('d-none');
+        tableViewBtn.classList.add('active');
+        gridViewBtn.classList.remove('active');
+    });
+});
+</script>
+{% endblock %}

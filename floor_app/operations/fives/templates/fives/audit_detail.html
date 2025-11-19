@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Audit {{ audit.audit_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .audit-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; }
+    .score-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .score-excellent { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+    .score-good { background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; }
+    .score-fair { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; }
+    .score-poor { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
+    .info-card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .info-label { color: #6c757d; font-size: 0.875rem; margin-bottom: 0.25rem; }
+    .info-value { font-weight: 600; color: #212529; }
+    .chart-container { height: 300px; position: relative; }
+    .s-breakdown-chart { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin: 2rem 0; }
+    .s-column { text-align: center; }
+    .s-bar { background: #e9ecef; border-radius: 8px; height: 200px; position: relative; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+    .s-bar-fill { width: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; transition: all 0.5s ease; }
+    .s-bar-fill.sort { background: linear-gradient(180deg, #28a745 0%, #20c997 100%); }
+    .s-bar-fill.set { background: linear-gradient(180deg, #17a2b8 0%, #3498db 100%); }
+    .s-bar-fill.shine { background: linear-gradient(180deg, #ffc107 0%, #ff9800 100%); }
+    .s-bar-fill.standardize { background: linear-gradient(180deg, #6f42c1 0%, #9b59b6 100%); }
+    .s-bar-fill.sustain { background: linear-gradient(180deg, #fd7e14 0%, #e74c3c 100%); }
+    .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .photo-item { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.3s; }
+    .photo-item:hover { transform: scale(1.05); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .photo-item img { width: 100%; height: 200px; object-fit: cover; }
+    .photo-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+    .checklist-table { width: 100%; }
+    .checklist-table th { background: #f8f9fa; border-bottom: 2px solid #dee2e6; }
+    .response-badge { padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; }
+    .response-3 { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+    .response-2 { background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%); color: white; }
+    .response-1 { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; }
+    .response-0 { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
+    .strength-item { border-left: 4px solid #28a745; background: #d4edda; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; }
+    .improvement-item { border-left: 4px solid #ffc107; background: #fff3cd; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; }
+    .action-item-card { border-left: 4px solid #17a2b8; background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; transition: all 0.3s; }
+    .action-item-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .points-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; display: inline-block; }
+    .timeline-item { position: relative; padding-left: 2rem; padding-bottom: 1.5rem; border-left: 2px solid #dee2e6; }
+    .timeline-item:last-child { border-left-color: transparent; }
+    .timeline-dot { position: absolute; left: -6px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #667eea; }
+    .print-btn { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: all 0.3s; }
+    .print-btn:hover { transform: scale(1.1); }
+    @media print {
+        .no-print { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="audit-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    <a href="{% url 'fives:audit_list' %}" class="btn btn-light btn-sm me-3 no-print">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h2 class="mb-0">{{ audit.audit_number }}</h2>
+                        <p class="mb-0 opacity-75">{{ audit.area_name }}</p>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="badge bg-light text-dark">
+                        <i class="bi bi-calendar me-1"></i>{{ audit.audit_date|date:"M d, Y" }}
+                    </span>
+                    <span class="badge bg-{% if audit.status == 'COMPLETED' %}success{% elif audit.status == 'IN_PROGRESS' %}warning text-dark{% else %}info{% endif %}">
+                        {{ audit.get_status_display }}
+                    </span>
+                    {% if audit.department %}
+                    <span class="badge bg-light text-dark">
+                        <i class="bi bi-building me-1"></i>{{ audit.department }}
+                    </span>
+                    {% endif %}
+                    {% if audit.points_awarded > 0 %}
+                    <span class="badge bg-light text-dark">
+                        <i class="bi bi-star-fill me-1"></i>{{ audit.points_awarded }} Points
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-4 text-center">
+                <div class="score-circle mx-auto
+                    {% if audit.percentage_score >= 90 %}score-excellent
+                    {% elif audit.percentage_score >= 70 %}score-good
+                    {% elif audit.percentage_score >= 50 %}score-fair
+                    {% else %}score-poor{% endif %}">
+                    {{ audit.percentage_score|floatformat:0 }}%
+                </div>
+                <div class="mt-2 opacity-75">Overall Score</div>
+            </div>
+        </div>
+
+        <div class="mt-3 no-print">
+            <div class="btn-group" role="group">
+                {% if audit.status != 'COMPLETED' %}
+                <a href="{% url 'fives:audit_form' audit.id %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+                {% endif %}
+                <button onclick="window.print()" class="btn btn-light btn-sm">
+                    <i class="bi bi-printer me-1"></i>Print
+                </button>
+                <a href="#" class="btn btn-light btn-sm">
+                    <i class="bi bi-download me-1"></i>Export PDF
+                </a>
+                <a href="#" class="btn btn-light btn-sm">
+                    <i class="bi bi-share me-1"></i>Share
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Area & Team Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-info-circle me-2"></i>Area & Team Information
+                    </h5>
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="info-label">Area/Location</div>
+                            <div class="info-value">{{ audit.area_name }}</div>
+                        </div>
+                        {% if audit.building %}
+                        <div class="col-md-4">
+                            <div class="info-label">Building</div>
+                            <div class="info-value">{{ audit.building }}</div>
+                        </div>
+                        {% endif %}
+                        {% if audit.floor %}
+                        <div class="col-md-4">
+                            <div class="info-label">Floor</div>
+                            <div class="info-value">{{ audit.floor }}</div>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-4">
+                            <div class="info-label">Audited By</div>
+                            <div class="info-value">
+                                <i class="bi bi-person-circle me-1"></i>{{ audit.audited_by.get_full_name }}
+                            </div>
+                        </div>
+                        {% if audit.responsible_person %}
+                        <div class="col-md-4">
+                            <div class="info-label">Responsible Person</div>
+                            <div class="info-value">
+                                <i class="bi bi-person-badge me-1"></i>{{ audit.responsible_person.get_full_name }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-4">
+                            <div class="info-label">Audit Date</div>
+                            <div class="info-value">{{ audit.audit_date|date:"F d, Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5S Breakdown Chart -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-bar-chart me-2"></i>5S Breakdown
+                    </h5>
+
+                    <div class="s-breakdown-chart">
+                        <div class="s-column">
+                            <div class="s-bar">
+                                <div class="s-bar-fill sort" style="height: {{ audit.sort_percentage }}%;">
+                                    {{ audit.sort_percentage|floatformat:0 }}%
+                                </div>
+                            </div>
+                            <div class="mt-2 fw-bold">Sort</div>
+                            <div class="small text-muted">{{ audit.sort_score|default:"-" }}</div>
+                        </div>
+
+                        <div class="s-column">
+                            <div class="s-bar">
+                                <div class="s-bar-fill set" style="height: {{ audit.set_percentage }}%;">
+                                    {{ audit.set_percentage|floatformat:0 }}%
+                                </div>
+                            </div>
+                            <div class="mt-2 fw-bold">Set in Order</div>
+                            <div class="small text-muted">{{ audit.set_in_order_score|default:"-" }}</div>
+                        </div>
+
+                        <div class="s-column">
+                            <div class="s-bar">
+                                <div class="s-bar-fill shine" style="height: {{ audit.shine_percentage }}%;">
+                                    {{ audit.shine_percentage|floatformat:0 }}%
+                                </div>
+                            </div>
+                            <div class="mt-2 fw-bold">Shine</div>
+                            <div class="small text-muted">{{ audit.shine_score|default:"-" }}</div>
+                        </div>
+
+                        <div class="s-column">
+                            <div class="s-bar">
+                                <div class="s-bar-fill standardize" style="height: {{ audit.standardize_percentage }}%;">
+                                    {{ audit.standardize_percentage|floatformat:0 }}%
+                                </div>
+                            </div>
+                            <div class="mt-2 fw-bold">Standardize</div>
+                            <div class="small text-muted">{{ audit.standardize_score|default:"-" }}</div>
+                        </div>
+
+                        <div class="s-column">
+                            <div class="s-bar">
+                                <div class="s-bar-fill sustain" style="height: {{ audit.sustain_percentage }}%;">
+                                    {{ audit.sustain_percentage|floatformat:0 }}%
+                                </div>
+                            </div>
+                            <div class="mt-2 fw-bold">Sustain</div>
+                            <div class="small text-muted">{{ audit.sustain_score|default:"-" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist Responses -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-list-check me-2"></i>Checklist Responses
+                    </h5>
+
+                    <div class="table-responsive">
+                        <table class="table checklist-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Question</th>
+                                    <th>Score</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for response in audit.responses.all %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ response.checklist_item.category }}</span>
+                                    </td>
+                                    <td>{{ response.checklist_item.question }}</td>
+                                    <td>
+                                        <span class="response-badge response-{{ response.score }}">
+                                            {{ response.score }} / {{ response.checklist_item.max_score }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if response.notes %}
+                                        <small class="text-muted">{{ response.notes }}</small>
+                                        {% else %}
+                                        <small class="text-muted">-</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        No responses recorded
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photos -->
+            {% if audit.photos.exists %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-camera me-2"></i>Photo Gallery
+                    </h5>
+
+                    <div class="photo-gallery">
+                        {% for photo in audit.photos.all %}
+                        <div class="photo-item" onclick="openPhotoModal('{{ photo.image.url }}', '{{ photo.photo_type }}')">
+                            <img src="{{ photo.image.url }}" alt="{{ photo.photo_type }}">
+                            <div class="photo-badge">
+                                {% if photo.photo_type == 'BEFORE' %}
+                                <i class="bi bi-arrow-left me-1"></i>Before
+                                {% else %}
+                                <i class="bi bi-arrow-right me-1"></i>After
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Observations -->
+            {% if audit.observations or audit.strengths or audit.improvements %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-clipboard-data me-2"></i>Observations
+                    </h5>
+
+                    {% if audit.observations %}
+                    <div class="mb-4">
+                        <h6>General Observations</h6>
+                        <p class="text-muted">{{ audit.observations }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if audit.strengths %}
+                    <div class="mb-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-check-circle text-success me-2"></i>Strengths
+                        </h6>
+                        {% for strength in audit.strengths|split:'\n' %}
+                        {% if strength.strip %}
+                        <div class="strength-item">
+                            {{ strength }}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if audit.improvements %}
+                    <div>
+                        <h6 class="mb-3">
+                            <i class="bi bi-exclamation-triangle text-warning me-2"></i>Areas for Improvement
+                        </h6>
+                        {% for improvement in audit.improvements|split:'\n' %}
+                        {% if improvement.strip %}
+                        <div class="improvement-item">
+                            {{ improvement }}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Items -->
+            {% if audit.action_items.exists %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-list-task me-2"></i>Action Items
+                    </h5>
+
+                    {% for action in audit.action_items.all %}
+                    <div class="action-item-card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">{{ action.title }}</h6>
+                            <span class="badge bg-{% if action.status == 'COMPLETED' %}success{% elif action.status == 'IN_PROGRESS' %}warning{% else %}secondary{% endif %}">
+                                {{ action.get_status_display }}
+                            </span>
+                        </div>
+
+                        {% if action.description %}
+                        <p class="text-muted mb-3">{{ action.description }}</p>
+                        {% endif %}
+
+                        <div class="row g-2 small">
+                            {% if action.assigned_to %}
+                            <div class="col-md-4">
+                                <i class="bi bi-person me-1"></i>{{ action.assigned_to.get_full_name }}
+                            </div>
+                            {% endif %}
+                            {% if action.due_date %}
+                            <div class="col-md-4">
+                                <i class="bi bi-calendar me-1"></i>Due: {{ action.due_date|date:"M d, Y" }}
+                            </div>
+                            {% endif %}
+                            <div class="col-md-4">
+                                <span class="badge bg-{% if action.priority == 'HIGH' %}danger{% elif action.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
+                                    {{ action.get_priority_display }} Priority
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Points Awarded -->
+            {% if audit.points_awarded > 0 %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <i class="bi bi-star-fill fs-1 mb-3" style="color: #667eea;"></i>
+                    <h6 class="text-muted mb-2">Points Awarded</h6>
+                    <div class="display-4 fw-bold" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        {{ audit.points_awarded }}
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" style="width: {{ audit.percentage_score }}%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Based on {{ audit.percentage_score|floatformat:0 }}% score</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Follow-up Tracking -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">
+                        <i class="bi bi-arrow-repeat me-2"></i>Follow-up Tracking
+                    </h6>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="small text-muted">{{ audit.audit_date|date:"M d, Y" }}</div>
+                        <div class="fw-bold">Audit Completed</div>
+                    </div>
+
+                    {% if audit.follow_up_date %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: #ffc107;"></div>
+                        <div class="small text-muted">{{ audit.follow_up_date|date:"M d, Y" }}</div>
+                        <div class="fw-bold">Follow-up Scheduled</div>
+                    </div>
+                    {% endif %}
+
+                    {% for action in audit.action_items.all %}
+                    {% if action.completed_date %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: #28a745;"></div>
+                        <div class="small text-muted">{{ action.completed_date|date:"M d, Y" }}</div>
+                        <div>{{ action.title }} completed</div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">
+                        <i class="bi bi-graph-up me-2"></i>Quick Stats
+                    </h6>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Items Checked</small>
+                            <strong>{{ audit.responses.count }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Action Items</small>
+                            <strong>{{ audit.action_items.count }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Photos Uploaded</small>
+                            <strong>{{ audit.photos.count }}</strong>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Completed Actions</small>
+                            <strong>{{ audit.action_items.filter.status='COMPLETED'|length }} / {{ audit.action_items.count }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share & Export -->
+            <div class="card border-0 shadow-sm no-print">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Share & Export</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-envelope me-2"></i>Email Report
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-file-pdf me-2"></i>Download PDF
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-file-excel me-2"></i>Export to Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoModalTitle">Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="photoModalImage" src="" alt="Photo" style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print Button -->
+<button class="print-btn no-print" onclick="window.print()">
+    <i class="bi bi-printer fs-5"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openPhotoModal(url, type) {
+    document.getElementById('photoModalImage').src = url;
+    document.getElementById('photoModalTitle').textContent = type === 'BEFORE' ? 'Before Photo' : 'After Photo';
+    new bootstrap.Modal(document.getElementById('photoModal')).show();
+}
+
+// Animate bars on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        document.querySelectorAll('.s-bar-fill').forEach(bar => {
+            bar.style.opacity = '1';
+        });
+    }, 300);
+});
+</script>
+{% endblock %}

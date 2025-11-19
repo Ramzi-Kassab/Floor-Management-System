@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Application Detail - Hiring Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 50px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 30px;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -37px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #dee2e6;
+    }
+    .timeline-marker.active {
+        border-color: #0d6efd;
+        background: #0d6efd;
+    }
+    .timeline-marker.completed {
+        border-color: #198754;
+        background: #198754;
+    }
+    .profile-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        font-weight: bold;
+    }
+    .rating-stars {
+        color: #ffc107;
+        font-size: 1.5rem;
+    }
+    .rating-stars i {
+        cursor: pointer;
+    }
+    .rating-stars i:hover,
+    .rating-stars i.active {
+        color: #ff9800;
+    }
+    .interview-card {
+        border-left: 4px solid #0d6efd;
+    }
+    .screening-score {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .score-excellent { color: #198754; }
+    .score-good { color: #0d6efd; }
+    .score-average { color: #ffc107; }
+    .score-poor { color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="#" class="text-decoration-none text-muted mb-2 d-block">
+                <i class="bi bi-arrow-left"></i> Back to Applications
+            </a>
+            <h2 class="mb-1">Application #APP-2025-0342</h2>
+            <p class="text-muted">Applied on November 12, 2025</p>
+        </div>
+        <div>
+            <span class="badge bg-warning fs-5 me-2">Interview Stage</span>
+            <div class="btn-group">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#statusChangeModal">
+                    <i class="bi bi-check-circle"></i> Change Status
+                </button>
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                    <i class="bi bi-x-circle"></i> Reject
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Candidate Profile Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Candidate Profile</h5>
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="profile-photo mx-auto mb-3">JS</div>
+                            <div class="rating-stars mb-2">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star"></i>
+                            </div>
+                            <p class="text-muted small">Overall Rating: 4.0/5</p>
+                        </div>
+                        <div class="col-md-9">
+                            <h4 class="mb-3">
+                                John Smith
+                                <a href="https://linkedin.com" target="_blank" class="text-primary ms-2">
+                                    <i class="bi bi-linkedin"></i>
+                                </a>
+                                <a href="#" class="text-secondary ms-1">
+                                    <i class="bi bi-globe"></i>
+                                </a>
+                            </h4>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <i class="bi bi-envelope me-2"></i>
+                                        <a href="mailto:john.smith@email.com">john.smith@email.com</a>
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="bi bi-telephone me-2"></i>+1 (555) 123-4567
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="bi bi-geo-alt me-2"></i>New York, NY
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <i class="bi bi-building me-2"></i>TechCorp Inc.
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="bi bi-briefcase me-2"></i>Senior Software Engineer
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="bi bi-clock-history me-2"></i>8 years experience
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <p class="mb-2"><strong>Education:</strong></p>
+                                <p class="mb-1">Master of Science in Computer Science</p>
+                                <p class="text-muted small">Stanford University, 2015</p>
+                            </div>
+                            <div class="mb-3">
+                                <p class="mb-2"><strong>Skills:</strong></p>
+                                <span class="badge bg-light text-dark me-1">JavaScript</span>
+                                <span class="badge bg-light text-dark me-1">React</span>
+                                <span class="badge bg-light text-dark me-1">Node.js</span>
+                                <span class="badge bg-light text-dark me-1">Python</span>
+                                <span class="badge bg-light text-dark me-1">AWS</span>
+                                <span class="badge bg-light text-dark me-1">Docker</span>
+                            </div>
+                            <div class="btn-group">
+                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-pdf"></i> Download Resume
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-file-text"></i> Download Cover Letter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Timeline -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Application Timeline</h5>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker completed"></div>
+                            <div>
+                                <h6 class="mb-1">Application Submitted</h6>
+                                <p class="text-muted small mb-1">November 12, 2025 at 2:30 PM</p>
+                                <p class="small">Candidate applied for Senior Full Stack Developer position</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker completed"></div>
+                            <div>
+                                <h6 class="mb-1">Initial Screening</h6>
+                                <p class="text-muted small mb-1">November 13, 2025 at 10:00 AM</p>
+                                <p class="small">Reviewed by Sarah Johnson (HR Manager)</p>
+                                <span class="badge bg-success">Score: 85/100</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker completed"></div>
+                            <div>
+                                <h6 class="mb-1">Phone Interview</h6>
+                                <p class="text-muted small mb-1">November 15, 2025 at 3:00 PM</p>
+                                <p class="small">Conducted by Mike Chen (Technical Lead)</p>
+                                <span class="badge bg-primary">Rating: 4/5</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker active"></div>
+                            <div>
+                                <h6 class="mb-1">Technical Interview Scheduled</h6>
+                                <p class="text-muted small mb-1">November 20, 2025 at 2:00 PM</p>
+                                <p class="small">Video call with Engineering Team</p>
+                                <span class="badge bg-warning">Upcoming</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div>
+                                <h6 class="mb-1 text-muted">Final Interview</h6>
+                                <p class="text-muted small">Pending previous stages</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div>
+                                <h6 class="mb-1 text-muted">Offer Decision</h6>
+                                <p class="text-muted small">Pending completion</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interview History -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Interview History</h5>
+
+                    <!-- Interview 1 -->
+                    <div class="card interview-card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Phone Screen Interview</h6>
+                                    <p class="text-muted small mb-0">November 15, 2025 at 3:00 PM - 3:30 PM</p>
+                                </div>
+                                <span class="badge bg-success">Completed</span>
+                            </div>
+                            <div class="mb-3">
+                                <p class="mb-1"><strong>Interviewer:</strong> Mike Chen (Technical Lead)</p>
+                                <p class="mb-1"><strong>Type:</strong> Phone</p>
+                                <p class="mb-1"><strong>Duration:</strong> 30 minutes</p>
+                            </div>
+                            <div class="mb-3">
+                                <p class="mb-2"><strong>Ratings:</strong></p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <small>Technical Skills:</small>
+                                        <div class="rating-stars" style="font-size: 1rem;">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small>Communication:</small>
+                                        <div class="rating-stars" style="font-size: 1rem;">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small>Cultural Fit:</small>
+                                        <div class="rating-stars" style="font-size: 1rem;">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <p class="mb-1"><strong>Feedback:</strong></p>
+                                <p class="small text-muted">Excellent communication skills. Strong technical background in full-stack development. Shows enthusiasm for the role and company mission. Recommend moving forward to technical interview.</p>
+                            </div>
+                            <div>
+                                <span class="badge bg-success me-2">
+                                    <i class="bi bi-hand-thumbs-up"></i> Recommended
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interview 2 (Upcoming) -->
+                    <div class="card interview-card mb-3" style="border-left-color: #ffc107;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Technical Interview</h6>
+                                    <p class="text-muted small mb-0">November 20, 2025 at 2:00 PM - 3:30 PM</p>
+                                </div>
+                                <span class="badge bg-warning">Scheduled</span>
+                            </div>
+                            <div class="mb-3">
+                                <p class="mb-1"><strong>Interviewers:</strong> Emily Johnson, David Lee (Engineering Team)</p>
+                                <p class="mb-1"><strong>Type:</strong> Video Call</p>
+                                <p class="mb-1"><strong>Duration:</strong> 90 minutes</p>
+                                <p class="mb-1">
+                                    <strong>Meeting Link:</strong>
+                                    <a href="#">https://meet.company.com/abc-def-ghi</a>
+                                </p>
+                            </div>
+                            <div class="alert alert-info small mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Interview includes coding assessment and system design discussion
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments & Notes -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Comments & Notes</h5>
+
+                    <!-- Existing Comments -->
+                    <div class="mb-4">
+                        <div class="d-flex mb-3">
+                            <div class="me-3">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #6f42c1; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">SJ</div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="mb-0">Sarah Johnson</h6>
+                                    <small class="text-muted">Nov 13, 2025 10:15 AM</small>
+                                </div>
+                                <p class="small text-muted mb-1">HR Manager</p>
+                                <p class="mb-0">Strong candidate with excellent background. Resume shows consistent career progression. Educational credentials are impressive. Moving to phone screen.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="me-3">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">MC</div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="mb-0">Mike Chen</h6>
+                                    <small class="text-muted">Nov 15, 2025 3:45 PM</small>
+                                </div>
+                                <p class="small text-muted mb-1">Technical Lead</p>
+                                <p class="mb-0">Had a great conversation. Candidate demonstrated strong understanding of React and Node.js. Experience with microservices architecture is a plus. Definitely recommend for technical interview.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add New Comment -->
+                    <div>
+                        <label class="form-label"><strong>Add Comment</strong></label>
+                        <textarea class="form-control mb-2" rows="3" placeholder="Write your notes or feedback..."></textarea>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-chat-left-text"></i> Add Comment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Job Details Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Job Details</h5>
+                    <h6 class="mb-3">Senior Full Stack Developer</h6>
+                    <p class="mb-2">
+                        <i class="bi bi-building me-2"></i>
+                        <strong>Department:</strong> Engineering
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-geo-alt me-2"></i>
+                        <strong>Location:</strong> New York, NY / Remote
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-briefcase me-2"></i>
+                        <strong>Type:</strong> Full-time
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-star me-2"></i>
+                        <strong>Level:</strong> Senior (5+ years)
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-cash me-2"></i>
+                        <strong>Salary:</strong> $120,000 - $160,000
+                    </p>
+                    <hr>
+                    <a href="#" class="btn btn-sm btn-outline-primary w-100">
+                        View Full Job Description
+                    </a>
+                </div>
+            </div>
+
+            <!-- Screening Score Card -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-3">Screening Score</h5>
+                    <div class="screening-score score-excellent mb-2">85/100</div>
+                    <p class="text-muted mb-3">Excellent Match</p>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 85%;">85%</div>
+                    </div>
+                    <div class="text-start">
+                        <p class="small mb-2"><strong>Criteria Breakdown:</strong></p>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>Experience Match</span>
+                                <span class="text-success">95%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 95%;"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>Skills Match</span>
+                                <span class="text-success">90%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 90%;"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>Education</span>
+                                <span class="text-primary">80%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: 80%;"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>Location Fit</span>
+                                <span class="text-warning">70%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Quick Actions</h5>
+                    <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#shortlistModal">
+                        <i class="bi bi-star"></i> Shortlist Candidate
+                    </button>
+                    <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#scheduleInterviewModal">
+                        <i class="bi bi-calendar-check"></i> Schedule Interview
+                    </button>
+                    <button class="btn btn-warning w-100 mb-2">
+                        <i class="bi bi-send"></i> Send Email
+                    </button>
+                    <button class="btn btn-info w-100 mb-2">
+                        <i class="bi bi-file-earmark-text"></i> Generate Report
+                    </button>
+                    <button class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle"></i> Reject Application
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overall Evaluation Card -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Overall Evaluation</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Your Rating</label>
+                        <div class="rating-stars">
+                            <i class="bi bi-star" data-rating="1"></i>
+                            <i class="bi bi-star" data-rating="2"></i>
+                            <i class="bi bi-star" data-rating="3"></i>
+                            <i class="bi bi-star" data-rating="4"></i>
+                            <i class="bi bi-star" data-rating="5"></i>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Recommendation</label>
+                        <select class="form-select">
+                            <option>Select recommendation</option>
+                            <option value="strong-hire">Strong Hire</option>
+                            <option value="hire">Hire</option>
+                            <option value="maybe">Maybe</option>
+                            <option value="no-hire">No Hire</option>
+                            <option value="strong-no-hire">Strong No Hire</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary w-100">Save Evaluation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Modal -->
+<div class="modal fade" id="statusChangeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Application Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">New Status</label>
+                    <select class="form-select">
+                        <option>Screening</option>
+                        <option>Shortlisted</option>
+                        <option>Interview Scheduled</option>
+                        <option>Interview Completed</option>
+                        <option>Offer Pending</option>
+                        <option>Offer Sent</option>
+                        <option>Hired</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Reject Application</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    This action cannot be undone. The candidate will be notified of the rejection.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rejection Reason *</label>
+                    <select class="form-select" required>
+                        <option value="">Select a reason</option>
+                        <option>Insufficient experience</option>
+                        <option>Skills mismatch</option>
+                        <option>Better candidates found</option>
+                        <option>Position filled</option>
+                        <option>Failed background check</option>
+                        <option>Salary expectations mismatch</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Additional Notes (Internal)</label>
+                    <textarea class="form-control" rows="3" placeholder="These notes will not be shared with the candidate"></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="sendRejectionEmail">
+                    <label class="form-check-label" for="sendRejectionEmail">
+                        Send rejection email to candidate
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="blacklistCandidate">
+                    <label class="form-check-label" for="blacklistCandidate">
+                        Blacklist candidate (prevent future applications)
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Confirm Rejection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Interview Modal -->
+<div class="modal fade" id="scheduleInterviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule Interview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Interview Type</label>
+                    <select class="form-select">
+                        <option>Phone Screen</option>
+                        <option>Video Interview</option>
+                        <option>In-Person Interview</option>
+                        <option>Technical Assessment</option>
+                        <option>Final Interview</option>
+                    </select>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Duration (minutes)</label>
+                    <input type="number" class="form-control" value="60">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Interviewers</label>
+                    <select class="form-select" multiple>
+                        <option>Mike Chen - Technical Lead</option>
+                        <option>Sarah Johnson - HR Manager</option>
+                        <option>Emily Davis - Senior Engineer</option>
+                        <option>David Lee - Engineering Manager</option>
+                    </select>
+                    <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Meeting Link/Location</label>
+                    <input type="text" class="form-control" placeholder="Video link or physical location">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Schedule Interview</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shortlist Modal -->
+<div class="modal fade" id="shortlistModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Shortlist Candidate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to shortlist <strong>John Smith</strong> for the position of <strong>Senior Full Stack Developer</strong>?</p>
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea class="form-control" rows="3" placeholder="Add any notes about why this candidate is being shortlisted"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success">Shortlist Candidate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Rating stars functionality
+    document.querySelectorAll('.rating-stars i').forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-rating');
+            const container = this.parentElement;
+            container.querySelectorAll('i').forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove('bi-star');
+                    s.classList.add('bi-star-fill', 'active');
+                } else {
+                    s.classList.remove('bi-star-fill', 'active');
+                    s.classList.add('bi-star');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

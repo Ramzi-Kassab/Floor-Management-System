@@ -1,0 +1,793 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}HOC Safety Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kpi-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .kpi-card.success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .kpi-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .kpi-card.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .kpi-card.danger {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    .kpi-value {
+        font-size: 3rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+
+    .kpi-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .kpi-trend {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .chart-container {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .chart-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+    }
+
+    .department-table {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .department-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .department-row:last-child {
+        border-bottom: none;
+    }
+
+    .department-name {
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .department-count {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #0d6efd;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .department-time {
+        font-size: 0.875rem;
+        color: #6c757d;
+        min-width: 100px;
+        text-align: right;
+    }
+
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.5s ease;
+    }
+
+    .scorecard {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .score-value {
+        font-size: 4rem;
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+
+    .score-label {
+        font-size: 1.25rem;
+        opacity: 0.9;
+    }
+
+    .score-description {
+        font-size: 0.875rem;
+        margin-top: 1rem;
+        opacity: 0.8;
+    }
+
+    .overdue-alert {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .overdue-alert.critical {
+        background-color: #f8d7da;
+        border-left-color: #dc3545;
+    }
+
+    .overdue-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background-color: white;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+
+    .hazard-category-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .category-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: white;
+        margin-right: 1rem;
+    }
+
+    .location-heatmap {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .location-item {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .location-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .location-count {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+
+    .location-name {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+
+    .filter-bar {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .indicator-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .indicator-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-left: 4px solid #0d6efd;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+
+    .indicator-item.leading {
+        border-left-color: #28a745;
+    }
+
+    .indicator-item.lagging {
+        border-left-color: #dc3545;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">
+                <i class="bi bi-graph-up-arrow"></i>
+                HOC Safety Analytics Dashboard
+            </h2>
+            <p class="text-muted">Comprehensive safety performance metrics and insights</p>
+        </div>
+        <div class="col-md-4 text-end no-print">
+            <div class="export-buttons">
+                <button onclick="exportToPDF()" class="btn btn-danger">
+                    <i class="bi bi-file-pdf"></i> Export PDF
+                </button>
+                <button onclick="exportToExcel()" class="btn btn-success">
+                    <i class="bi bi-file-excel"></i> Export Excel
+                </button>
+                <a href="{% url 'operations:observation_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar no-print">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="dateRange" class="form-label">Date Range</label>
+                <select class="form-select" id="dateRange" name="date_range">
+                    <option value="7" {% if request.GET.date_range == '7' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="30" {% if request.GET.date_range == '30' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="90" {% if request.GET.date_range == '90' %}selected{% endif %}>Last 90 Days</option>
+                    <option value="365" {% if request.GET.date_range == '365' %}selected{% endif %}>Last Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="departmentFilter" class="form-label">Department</label>
+                <select class="form-select" id="departmentFilter" name="department">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:'s' %}selected{% endif %}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="categoryFilter" class="form-label">Category</label>
+                <select class="form-select" id="categoryFilter" name="category">
+                    <option value="">All Categories</option>
+                    <option value="safety">Safety</option>
+                    <option value="environmental">Environmental</option>
+                    <option value="quality">Quality</option>
+                    <option value="ergonomic">Ergonomic</option>
+                    <option value="housekeeping">Housekeeping</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="dateFrom" class="form-label">From</label>
+                <input type="date" class="form-control" id="dateFrom" name="date_from"
+                       value="{{ request.GET.date_from }}">
+            </div>
+
+            <div class="col-md-2">
+                <label for="dateTo" class="form-label">To</label>
+                <input type="date" class="form-control" id="dateTo" name="date_to"
+                       value="{{ request.GET.date_to }}">
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Apply
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-label">Total HOCs</div>
+                <div class="kpi-value">{{ total_hocs|default:0 }}</div>
+                <div class="kpi-trend">
+                    <i class="bi bi-arrow-up"></i> {{ hocs_trend|default:"+0%" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card success">
+                <div class="kpi-label">Completion Rate</div>
+                <div class="kpi-value">{{ completion_rate|default:"0" }}%</div>
+                <div class="kpi-trend">
+                    <i class="bi bi-check-circle"></i> {{ completed_count|default:0 }} completed
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card info">
+                <div class="kpi-label">Avg Closure Time</div>
+                <div class="kpi-value">{{ avg_closure_time|default:"0" }}</div>
+                <div class="kpi-trend">
+                    <i class="bi bi-clock"></i> days
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="kpi-card warning">
+                <div class="kpi-label">Repeat Observations</div>
+                <div class="kpi-value">{{ repeat_percentage|default:"0" }}%</div>
+                <div class="kpi-trend">
+                    <i class="bi bi-arrow-repeat"></i> {{ repeat_count|default:0 }} repeat
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue HOCs Alert -->
+    {% if overdue_hocs %}
+    <div class="overdue-alert {% if critical_overdue %}critical{% endif %}">
+        <h5 class="mb-3">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Overdue HOCs ({{ overdue_hocs|length }})
+        </h5>
+        {% for hoc in overdue_hocs %}
+        <div class="overdue-item">
+            <div>
+                <strong>{{ hoc.card_number }}</strong> - {{ hoc.title|truncatewords:8 }}
+                <br>
+                <small class="text-muted">{{ hoc.location }}</small>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-danger">{{ hoc.overdue_days }} days overdue</span>
+                <br>
+                <small class="text-muted">Due: {{ hoc.due_date|date:"M d, Y" }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Charts Column -->
+        <div class="col-lg-8">
+            <!-- HOCs by Severity -->
+            <div class="chart-container">
+                <h4 class="chart-title">
+                    <i class="bi bi-pie-chart-fill"></i> HOCs by Severity
+                </h4>
+                <canvas id="severityChart" height="300"></canvas>
+            </div>
+
+            <!-- HOCs by Category -->
+            <div class="chart-container">
+                <h4 class="chart-title">
+                    <i class="bi bi-bar-chart-fill"></i> HOCs by Category
+                </h4>
+                <canvas id="categoryChart" height="300"></canvas>
+            </div>
+
+            <!-- Trend Over Time -->
+            <div class="chart-container">
+                <h4 class="chart-title">
+                    <i class="bi bi-graph-up"></i> HOC Trend Over Time
+                </h4>
+                <canvas id="trendChart" height="300"></canvas>
+            </div>
+
+            <!-- Department Comparison -->
+            <div class="department-table">
+                <h4 class="chart-title">
+                    <i class="bi bi-building"></i> Department Performance
+                </h4>
+                {% for dept in department_stats %}
+                <div class="department-row">
+                    <div class="department-name">{{ dept.name }}</div>
+                    <div class="department-count">{{ dept.hoc_count }}</div>
+                    <div class="department-time">
+                        Avg: {{ dept.avg_closure_time|floatformat:1 }} days
+                    </div>
+                </div>
+                <div class="progress-bar-custom">
+                    <div class="progress-fill" style="width: {{ dept.completion_percentage }}%"></div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Location Heatmap -->
+            <div class="chart-container">
+                <h4 class="chart-title">
+                    <i class="bi bi-geo-alt-fill"></i> Most Common Locations
+                </h4>
+                <div class="location-heatmap">
+                    {% for location in top_locations %}
+                    <div class="location-item">
+                        <div class="location-count">{{ location.count }}</div>
+                        <div class="location-name">{{ location.name }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-lg-4">
+            <!-- Safety Performance Scorecard -->
+            <div class="scorecard">
+                <div class="score-label">Safety Performance Score</div>
+                <div class="score-value">{{ safety_score|default:"0" }}/100</div>
+                <div class="score-description">
+                    Based on closure time, completion rate, and repeat observations
+                </div>
+            </div>
+
+            <!-- Top Hazard Categories -->
+            <div class="chart-container">
+                <h4 class="chart-title">
+                    <i class="bi bi-list-ol"></i> Top Hazard Categories
+                </h4>
+                {% for category in top_categories %}
+                <div class="hazard-category-item">
+                    <div class="d-flex align-items-center">
+                        <div class="category-icon">
+                            <i class="bi bi-{{ category.icon }} text-danger"></i>
+                        </div>
+                        <div>
+                            <strong>{{ category.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ category.percentage }}% of total</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <strong class="text-danger">{{ category.count }}</strong>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Leading vs Lagging Indicators -->
+            <div class="indicator-card">
+                <h4 class="chart-title">
+                    <i class="bi bi-speedometer2"></i> Safety Indicators
+                </h4>
+
+                <h6 class="text-muted mb-3">Leading Indicators</h6>
+                <div class="indicator-item leading">
+                    <div>
+                        <strong>HOCs Submitted</strong>
+                        <br>
+                        <small>Proactive reporting</small>
+                    </div>
+                    <div class="text-end">
+                        <strong class="text-success">{{ total_hocs|default:0 }}</strong>
+                    </div>
+                </div>
+
+                <div class="indicator-item leading">
+                    <div>
+                        <strong>Safety Inspections</strong>
+                        <br>
+                        <small>Preventive actions</small>
+                    </div>
+                    <div class="text-end">
+                        <strong class="text-success">{{ inspections_count|default:0 }}</strong>
+                    </div>
+                </div>
+
+                <h6 class="text-muted mb-3 mt-4">Lagging Indicators</h6>
+                <div class="indicator-item lagging">
+                    <div>
+                        <strong>Incidents</strong>
+                        <br>
+                        <small>Actual incidents</small>
+                    </div>
+                    <div class="text-end">
+                        <strong class="text-danger">{{ incidents_count|default:0 }}</strong>
+                    </div>
+                </div>
+
+                <div class="indicator-item lagging">
+                    <div>
+                        <strong>Near Misses</strong>
+                        <br>
+                        <small>Close calls</small>
+                    </div>
+                    <div class="text-end">
+                        <strong class="text-danger">{{ near_miss_count|default:0 }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="chart-container">
+                <h4 class="chart-title">
+                    <i class="bi bi-lightning-fill"></i> Quick Stats
+                </h4>
+
+                <div class="info-row mb-2">
+                    <div class="info-label">
+                        <i class="bi bi-exclamation-octagon-fill text-danger"></i> Critical
+                    </div>
+                    <div class="info-value">
+                        <span class="badge bg-danger">{{ critical_count|default:0 }}</span>
+                    </div>
+                </div>
+
+                <div class="info-row mb-2">
+                    <div class="info-label">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i> High
+                    </div>
+                    <div class="info-value">
+                        <span class="badge bg-warning text-dark">{{ high_count|default:0 }}</span>
+                    </div>
+                </div>
+
+                <div class="info-row mb-2">
+                    <div class="info-label">
+                        <i class="bi bi-exclamation-circle-fill text-info"></i> Medium
+                    </div>
+                    <div class="info-value">
+                        <span class="badge bg-info">{{ medium_count|default:0 }}</span>
+                    </div>
+                </div>
+
+                <div class="info-row mb-2">
+                    <div class="info-label">
+                        <i class="bi bi-info-circle-fill text-success"></i> Low
+                    </div>
+                    <div class="info-value">
+                        <span class="badge bg-success">{{ low_count|default:0 }}</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="info-row mb-2">
+                    <div class="info-label">Fastest Resolution</div>
+                    <div class="info-value">
+                        <strong>{{ fastest_resolution|default:"N/A" }}</strong>
+                    </div>
+                </div>
+
+                <div class="info-row mb-2">
+                    <div class="info-label">Slowest Resolution</div>
+                    <div class="info-value">
+                        <strong>{{ slowest_resolution|default:"N/A" }}</strong>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Most Active Reporter</div>
+                    <div class="info-value">
+                        <strong>{{ most_active_reporter|default:"N/A" }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Severity Chart (Pie Chart)
+    const severityCtx = document.getElementById('severityChart').getContext('2d');
+    new Chart(severityCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Critical', 'High', 'Medium', 'Low'],
+            datasets: [{
+                data: [
+                    {{ critical_count|default:0 }},
+                    {{ high_count|default:0 }},
+                    {{ medium_count|default:0 }},
+                    {{ low_count|default:0 }}
+                ],
+                backgroundColor: [
+                    '#dc3545',
+                    '#fd7e14',
+                    '#ffc107',
+                    '#28a745'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Category Chart (Bar Chart)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                label: 'Number of HOCs',
+                data: {{ category_data|safe }},
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Trend Chart (Line Chart)
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [{
+                label: 'HOCs Submitted',
+                data: {{ trend_data|safe }},
+                borderColor: 'rgba(102, 126, 234, 1)',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'HOCs Closed',
+                data: {{ trend_closed_data|safe }},
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Export Functions
+    function exportToPDF() {
+        window.print();
+    }
+
+    function exportToExcel() {
+        const params = new URLSearchParams(window.location.search);
+        window.location.href = `{% url 'operations:export_hoc_analytics' %}?${params.toString()}`;
+    }
+
+    // Date Range Handler
+    document.getElementById('dateRange').addEventListener('change', function() {
+        if (this.value !== 'custom') {
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+        }
+    });
+</script>
+{% endblock %}

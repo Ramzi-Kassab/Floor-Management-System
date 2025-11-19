@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if audit %}Edit Audit{% else %}New 5S Audit{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-wizard { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px 12px 0 0; }
+    .checklist-group { background: #f8f9fa; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .checklist-item { background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; transition: all 0.3s; }
+    .checklist-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .score-input { width: 80px; text-align: center; font-weight: 700; font-size: 1.1rem; }
+    .photo-upload-zone { border: 2px dashed #dee2e6; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .photo-upload-zone:hover { border-color: #667eea; background: #f8f9fa; }
+    .photo-preview { position: relative; display: inline-block; margin: 0.5rem; }
+    .photo-preview img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; }
+    .photo-preview .remove-btn { position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border-radius: 50%; width: 24px; height: 24px; border: none; cursor: pointer; }
+    .s-category { border-left: 4px solid #667eea; padding-left: 1rem; }
+    .s-category.sort { border-left-color: #28a745; }
+    .s-category.set { border-left-color: #17a2b8; }
+    .s-category.shine { border-left-color: #ffc107; }
+    .s-category.standardize { border-left-color: #6f42c1; }
+    .s-category.sustain { border-left-color: #fd7e14; }
+    .action-item-row { background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    .draft-badge { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; padding: 0.5rem 1rem; border-radius: 20px; }
+    .template-preview { background: #f8f9fa; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+    .sticky-action-bar { position: sticky; bottom: 0; background: white; padding: 1.5rem; border-top: 2px solid #dee2e6; margin: 0 -1.5rem -1.5rem; z-index: 100; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <form method="post" enctype="multipart/form-data" id="auditForm">
+        {% csrf_token %}
+
+        <!-- Header -->
+        <div class="form-wizard mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-clipboard-check me-2"></i>{% if audit %}Edit Audit{% else %}New 5S Audit{% endif %}</h2>
+                    <p class="mb-0 opacity-75">Sort • Set in Order • Shine • Standardize • Sustain</p>
+                </div>
+                {% if audit and audit.status == 'DRAFT' %}
+                <span class="draft-badge">
+                    <i class="bi bi-file-earmark-text me-1"></i>Draft
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Basic Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="bi bi-info-circle me-2"></i>Basic Information
+                        </h5>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Template <span class="text-danger">*</span></label>
+                                <select name="template" class="form-select" id="templateSelect" required>
+                                    <option value="">Select a template...</option>
+                                    {% for template in templates %}
+                                    <option value="{{ template.id }}" {% if audit and audit.template_id == template.id %}selected{% endif %}>
+                                        {{ template.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Choose a checklist template for this audit</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Audit Date <span class="text-danger">*</span></label>
+                                <input type="date" name="audit_date" class="form-control"
+                                       value="{% if audit %}{{ audit.audit_date|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Area/Location <span class="text-danger">*</span></label>
+                                <input type="text" name="area_name" class="form-control"
+                                       placeholder="e.g., Production Line A, Warehouse Section 3"
+                                       value="{{ audit.area_name|default:'' }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Department</label>
+                                <select name="department" class="form-select">
+                                    <option value="">Select department...</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept }}" {% if audit and audit.department == dept %}selected{% endif %}>{{ dept }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Building/Facility</label>
+                                <input type="text" name="building" class="form-control"
+                                       placeholder="Building name or code"
+                                       value="{{ audit.building|default:'' }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Floor</label>
+                                <input type="text" name="floor" class="form-control"
+                                       placeholder="e.g., 1st Floor, Mezzanine"
+                                       value="{{ audit.floor|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Responsible Persons -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="bi bi-people me-2"></i>Responsible Persons
+                        </h5>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Audited By <span class="text-danger">*</span></label>
+                                <select name="audited_by" class="form-select" required>
+                                    <option value="">Select auditor...</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}" {% if audit and audit.audited_by_id == user.id %}selected{% elif not audit and user == request.user %}selected{% endif %}>
+                                        {{ user.get_full_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Responsible Person</label>
+                                <select name="responsible_person" class="form-select">
+                                    <option value="">Select responsible person...</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}" {% if audit and audit.responsible_person_id == user.id %}selected{% endif %}>
+                                        {{ user.get_full_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Team Members</label>
+                                <select name="team_members" class="form-select" multiple size="3">
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Hold Ctrl/Cmd to select multiple team members</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5S Checklist -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="bi bi-list-check me-2"></i>5S Checklist Items
+                        </h5>
+
+                        <div id="checklistItems">
+                            {% for category, items in checklist_items.items %}
+                            <div class="checklist-group s-category {{ category|lower }}">
+                                <h6 class="mb-3">
+                                    <i class="bi bi-{{ category|get_icon }} me-2"></i>{{ category|title }}
+                                </h6>
+
+                                {% for item in items %}
+                                <div class="checklist-item">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-7">
+                                            <strong>{{ item.question }}</strong>
+                                            {% if item.description %}
+                                            <div class="small text-muted mt-1">{{ item.description }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select name="response_{{ item.id }}" class="form-select score-select" data-max="{{ item.max_score }}">
+                                                <option value="">Select...</option>
+                                                <option value="0">0 - Not Implemented</option>
+                                                <option value="1">1 - Partially Implemented</option>
+                                                <option value="2">2 - Mostly Implemented</option>
+                                                <option value="3">3 - Fully Implemented</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <span class="badge bg-secondary score-badge-{{ item.id }}">0 / {{ item.max_score }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <textarea name="notes_{{ item.id }}" class="form-control form-control-sm"
+                                                  placeholder="Add notes or observations..." rows="2"></textarea>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% empty %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Please select a template to load checklist items.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photos -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="bi bi-camera me-2"></i>Before/After Photos
+                        </h5>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Before Photos</label>
+                                <div class="photo-upload-zone" onclick="document.getElementById('beforePhotos').click()">
+                                    <i class="bi bi-cloud-upload fs-1 text-muted d-block mb-2"></i>
+                                    <div class="text-muted">Click to upload before photos</div>
+                                    <small class="text-muted">JPG, PNG up to 10MB each</small>
+                                </div>
+                                <input type="file" id="beforePhotos" name="before_photos" class="d-none"
+                                       accept="image/*" multiple onchange="previewPhotos(this, 'beforePreview')">
+                                <div id="beforePreview" class="mt-3"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">After Photos</label>
+                                <div class="photo-upload-zone" onclick="document.getElementById('afterPhotos').click()">
+                                    <i class="bi bi-cloud-upload fs-1 text-muted d-block mb-2"></i>
+                                    <div class="text-muted">Click to upload after photos</div>
+                                    <small class="text-muted">JPG, PNG up to 10MB each</small>
+                                </div>
+                                <input type="file" id="afterPhotos" name="after_photos" class="d-none"
+                                       accept="image/*" multiple onchange="previewPhotos(this, 'afterPreview')">
+                                <div id="afterPreview" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observations & Action Items -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="bi bi-clipboard-data me-2"></i>Observations & Action Items
+                        </h5>
+
+                        <div class="mb-4">
+                            <label class="form-label">General Observations</label>
+                            <textarea name="observations" class="form-control" rows="4"
+                                      placeholder="Record overall findings, notable achievements, or concerns...">{{ audit.observations|default:'' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Strengths Identified</label>
+                            <textarea name="strengths" class="form-control" rows="3"
+                                      placeholder="List areas where 5S practices excel...">{{ audit.strengths|default:'' }}</textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Areas for Improvement</label>
+                            <textarea name="improvements" class="form-control" rows="3"
+                                      placeholder="List areas needing attention or improvement...">{{ audit.improvements|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label mb-0">Action Items</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addActionItem()">
+                                <i class="bi bi-plus-circle me-1"></i>Add Action Item
+                            </button>
+                        </div>
+
+                        <div id="actionItems">
+                            <!-- Action items will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Score Summary -->
+                <div class="card border-0 shadow-sm mb-4 sticky-top" style="top: 20px;">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">Score Summary</h6>
+
+                        <div class="text-center mb-4">
+                            <div class="display-4 fw-bold" id="totalScore" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0%</div>
+                            <div class="text-muted">Overall Score</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Sort</small>
+                                <span class="badge bg-success" id="sortScore">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" id="sortProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Set in Order</small>
+                                <span class="badge bg-info" id="setScore">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" id="setProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Shine</small>
+                                <span class="badge bg-warning" id="shineScore">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" id="shineProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Standardize</small>
+                                <span class="badge bg-primary" id="standardizeScore">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" id="standardizeProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Sustain</small>
+                                <span class="badge bg-danger" id="sustainScore">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-danger" id="sustainProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Scores are calculated automatically as you complete the checklist.</small>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <div class="p-3 bg-light rounded text-center">
+                                <div class="fw-bold" style="color: #667eea;">Potential Points</div>
+                                <div class="fs-4 fw-bold" id="potentialPoints">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Tips -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <i class="bi bi-lightbulb me-2"></i>Quick Tips
+                        </h6>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Take clear photos showing the area</li>
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Be specific in your observations</li>
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Create actionable follow-up items</li>
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Save as draft to continue later</li>
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Higher scores earn more points!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Action Bar -->
+        <div class="sticky-action-bar">
+            <div class="d-flex gap-2 justify-content-end">
+                <a href="{% url 'fives:audit_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Cancel
+                </a>
+                <button type="submit" name="action" value="draft" class="btn btn-outline-primary">
+                    <i class="bi bi-file-earmark-text me-1"></i>Save as Draft
+                </button>
+                <button type="submit" name="action" value="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Submit Audit
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Photo preview
+function previewPhotos(input, previewId) {
+    const preview = document.getElementById(previewId);
+    preview.innerHTML = '';
+
+    if (input.files) {
+        Array.from(input.files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                div.className = 'photo-preview';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Photo ${index + 1}">
+                    <button type="button" class="remove-btn" onclick="removePhoto(this, '${input.id}', ${index})">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function removePhoto(btn, inputId, index) {
+    // Remove the preview
+    btn.parentElement.remove();
+    // Note: Actual file removal would need to rebuild the FileList
+}
+
+// Action items
+let actionItemCount = 0;
+function addActionItem() {
+    actionItemCount++;
+    const html = `
+        <div class="action-item-row" id="actionItem${actionItemCount}">
+            <div class="d-flex justify-content-between mb-2">
+                <strong>Action Item #${actionItemCount}</strong>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeActionItem(${actionItemCount})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-12">
+                    <input type="text" name="action_title_${actionItemCount}" class="form-control form-control-sm"
+                           placeholder="Action item title" required>
+                </div>
+                <div class="col-md-12">
+                    <textarea name="action_description_${actionItemCount}" class="form-control form-control-sm"
+                              placeholder="Description" rows="2"></textarea>
+                </div>
+                <div class="col-md-4">
+                    <select name="action_assignee_${actionItemCount}" class="form-select form-select-sm">
+                        <option value="">Assign to...</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="date" name="action_due_date_${actionItemCount}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                    <select name="action_priority_${actionItemCount}" class="form-select form-select-sm">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('actionItems').insertAdjacentHTML('beforeend', html);
+}
+
+function removeActionItem(id) {
+    document.getElementById(`actionItem${id}`).remove();
+}
+
+// Score calculation
+document.querySelectorAll('.score-select').forEach(select => {
+    select.addEventListener('change', calculateScores);
+});
+
+function calculateScores() {
+    // This is a simplified version - actual implementation would calculate based on responses
+    let totalScore = 0;
+    let maxScore = 0;
+
+    document.querySelectorAll('.score-select').forEach(select => {
+        const value = parseInt(select.value) || 0;
+        const max = parseInt(select.dataset.max) || 3;
+        totalScore += value;
+        maxScore += max;
+
+        // Update individual badge
+        const itemId = select.name.replace('response_', '');
+        const badge = document.querySelector(`.score-badge-${itemId}`);
+        if (badge) {
+            badge.textContent = `${value} / ${max}`;
+        }
+    });
+
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    document.getElementById('totalScore').textContent = percentage + '%';
+
+    // Calculate potential points
+    let points = 0;
+    if (percentage >= 90) points = 100;
+    else if (percentage >= 80) points = 75;
+    else if (percentage >= 70) points = 50;
+    else if (percentage >= 60) points = 25;
+    else points = 10;
+
+    document.getElementById('potentialPoints').textContent = points;
+
+    // Update individual category scores (simplified)
+    updateCategoryScore('sort', percentage);
+    updateCategoryScore('set', percentage);
+    updateCategoryScore('shine', percentage);
+    updateCategoryScore('standardize', percentage);
+    updateCategoryScore('sustain', percentage);
+}
+
+function updateCategoryScore(category, score) {
+    document.getElementById(`${category}Score`).textContent = score + '%';
+    document.getElementById(`${category}Progress`).style.width = score + '%';
+}
+
+// Template selection
+document.getElementById('templateSelect')?.addEventListener('change', function() {
+    if (this.value) {
+        // In a real implementation, this would load checklist items via AJAX
+        console.log('Loading template:', this.value);
+    }
+});
+
+// Form validation
+document.getElementById('auditForm')?.addEventListener('submit', function(e) {
+    const action = e.submitter.value;
+    if (action === 'submit') {
+        // Additional validation for submission
+        const answered = document.querySelectorAll('.score-select option:checked:not([value=""])').length;
+        if (answered === 0) {
+            e.preventDefault();
+            alert('Please complete at least one checklist item before submitting.');
+        }
+    }
+});
+</script>
+{% endblock %}

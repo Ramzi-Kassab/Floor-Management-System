@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Calculators - Utility Tools{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calculator-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e3e6f0;
+        height: 100%;
+    }
+
+    .calculator-card:hover {
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+    }
+
+    .calc-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .calc-result {
+        background: #f8f9fc;
+        border-left: 4px solid #4e73df;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: none;
+    }
+
+    .calc-result.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .calculator-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .btn-calculate {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 30px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-calculate:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        color: white;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #e3e6f0;
+        padding: 10px 15px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25);
+    }
+
+    .result-highlight {
+        font-size: 24px;
+        font-weight: 700;
+        color: #4e73df;
+    }
+
+    .nav-pills .nav-link {
+        border-radius: 10px;
+        padding: 12px 20px;
+        margin-right: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .history-item {
+        padding: 12px;
+        background: #f8f9fc;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .history-item:hover {
+        background: #e3e6f0;
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1"><i class="bi bi-calculator"></i> Calculators</h2>
+                    <p class="text-muted mb-0">Various calculation tools for your daily needs</p>
+                </div>
+                <a href="{% url 'utility_tools:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculator Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-pills mb-4" id="calculatorTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="date-tab" data-bs-toggle="pill" data-bs-target="#date-calc" type="button">
+                        <i class="bi bi-calendar"></i> Date Calculator
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="age-tab" data-bs-toggle="pill" data-bs-target="#age-calc" type="button">
+                        <i class="bi bi-person-badge"></i> Age Calculator
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="time-tab" data-bs-toggle="pill" data-bs-target="#time-calc" type="button">
+                        <i class="bi bi-clock"></i> Time Calculator
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="business-tab" data-bs-toggle="pill" data-bs-target="#business-calc" type="button">
+                        <i class="bi bi-briefcase"></i> Business Days
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="salary-tab" data-bs-toggle="pill" data-bs-target="#salary-calc" type="button">
+                        <i class="bi bi-cash-stack"></i> Salary Calculator
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tax-tab" data-bs-toggle="pill" data-bs-target="#tax-calc" type="button">
+                        <i class="bi bi-percent"></i> Tax Calculator
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Calculator Content -->
+        <div class="col-lg-8">
+            <div class="tab-content" id="calculatorTabContent">
+                <!-- Date Calculator -->
+                <div class="tab-pane fade show active" id="date-calc" role="tabpanel">
+                    <div class="calculator-section">
+                        <h4 class="mb-4"><i class="bi bi-calendar"></i> Date Calculator</h4>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="dateStart" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="dateEnd" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Calculation Type</label>
+                            <select class="form-select" id="dateCalcType">
+                                <option value="difference">Difference Between Dates</option>
+                                <option value="add">Add Days to Date</option>
+                                <option value="subtract">Subtract Days from Date</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="daysInput" style="display: none;">
+                            <label class="form-label">Number of Days</label>
+                            <input type="number" class="form-control" id="daysToAddSubtract" min="1">
+                        </div>
+
+                        <button class="btn btn-calculate" onclick="calculateDate()">
+                            <i class="bi bi-calculator"></i> Calculate
+                        </button>
+
+                        <div class="calc-result" id="dateResult">
+                            <h5>Result:</h5>
+                            <div id="dateResultText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Age Calculator -->
+                <div class="tab-pane fade" id="age-calc" role="tabpanel">
+                    <div class="calculator-section">
+                        <h4 class="mb-4"><i class="bi bi-person-badge"></i> Age Calculator</h4>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="birthDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Calculate Age As Of</label>
+                                <input type="date" class="form-control" id="ageAsOf" required>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-calculate" onclick="calculateAge()">
+                            <i class="bi bi-calculator"></i> Calculate Age
+                        </button>
+
+                        <div class="calc-result" id="ageResult">
+                            <h5>Age Details:</h5>
+                            <div id="ageResultText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Calculator -->
+                <div class="tab-pane fade" id="time-calc" role="tabpanel">
+                    <div class="calculator-section">
+                        <h4 class="mb-4"><i class="bi bi-clock"></i> Time Calculator</h4>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="timeStart" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="timeEnd" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeBreak">
+                                <label class="form-check-label" for="includeBreak">
+                                    Subtract Break Time
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="breakTimeDiv" style="display: none;">
+                            <label class="form-label">Break Duration (minutes)</label>
+                            <input type="number" class="form-control" id="breakMinutes" min="0" value="0">
+                        </div>
+
+                        <button class="btn btn-calculate" onclick="calculateTime()">
+                            <i class="bi bi-calculator"></i> Calculate
+                        </button>
+
+                        <div class="calc-result" id="timeResult">
+                            <h5>Duration:</h5>
+                            <div id="timeResultText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Days Calculator -->
+                <div class="tab-pane fade" id="business-calc" role="tabpanel">
+                    <div class="calculator-section">
+                        <h4 class="mb-4"><i class="bi bi-briefcase"></i> Business Days Calculator</h4>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="businessStart" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="businessEnd" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Exclude Weekends</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="excludeWeekends" checked>
+                                <label class="form-check-label" for="excludeWeekends">
+                                    Saturday and Sunday
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-calculate" onclick="calculateBusinessDays()">
+                            <i class="bi bi-calculator"></i> Calculate
+                        </button>
+
+                        <div class="calc-result" id="businessResult">
+                            <h5>Business Days:</h5>
+                            <div id="businessResultText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Salary Calculator -->
+                <div class="tab-pane fade" id="salary-calc" role="tabpanel">
+                    <div class="calculator-section">
+                        <h4 class="mb-4"><i class="bi bi-cash-stack"></i> Salary Calculator</h4>
+
+                        <div class="mb-3">
+                            <label class="form-label">Salary Amount</label>
+                            <input type="number" class="form-control" id="salaryAmount" min="0" step="0.01" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Pay Period</label>
+                            <select class="form-select" id="payPeriod">
+                                <option value="hourly">Hourly</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="biweekly">Bi-Weekly</option>
+                                <option value="monthly" selected>Monthly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Work Hours per Week (for hourly rate)</label>
+                            <input type="number" class="form-control" id="hoursPerWeek" value="40" min="1" max="168">
+                        </div>
+
+                        <button class="btn btn-calculate" onclick="calculateSalary()">
+                            <i class="bi bi-calculator"></i> Calculate
+                        </button>
+
+                        <div class="calc-result" id="salaryResult">
+                            <h5>Salary Breakdown:</h5>
+                            <div id="salaryResultText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax Calculator -->
+                <div class="tab-pane fade" id="tax-calc" role="tabpanel">
+                    <div class="calculator-section">
+                        <h4 class="mb-4"><i class="bi bi-percent"></i> Tax Calculator</h4>
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <input type="number" class="form-control" id="taxAmount" min="0" step="0.01" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tax Rate (%)</label>
+                            <input type="number" class="form-control" id="taxRate" min="0" max="100" step="0.01" value="15" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Calculation Type</label>
+                            <select class="form-select" id="taxCalcType">
+                                <option value="add">Add Tax to Amount</option>
+                                <option value="remove">Remove Tax from Amount</option>
+                                <option value="calculate">Calculate Tax Only</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-calculate" onclick="calculateTax()">
+                            <i class="bi bi-calculator"></i> Calculate
+                        </button>
+
+                        <div class="calc-result" id="taxResult">
+                            <h5>Tax Calculation:</h5>
+                            <div id="taxResultText"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Calculations</h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <div id="calculationHistory">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                            <p class="mt-2">No recent calculations</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <button class="btn btn-sm btn-outline-danger w-100" onclick="clearHistory()">
+                        <i class="bi bi-trash"></i> Clear History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Date Calculator Type Change
+    document.getElementById('dateCalcType').addEventListener('change', function() {
+        const daysInput = document.getElementById('daysInput');
+        const dateEnd = document.getElementById('dateEnd').parentElement.parentElement;
+
+        if (this.value === 'difference') {
+            daysInput.style.display = 'none';
+            dateEnd.style.display = 'block';
+        } else {
+            daysInput.style.display = 'block';
+            dateEnd.style.display = 'none';
+        }
+    });
+
+    // Break Time Checkbox
+    document.getElementById('includeBreak').addEventListener('change', function() {
+        document.getElementById('breakTimeDiv').style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Date Calculator
+    function calculateDate() {
+        const startDate = new Date(document.getElementById('dateStart').value);
+        const calcType = document.getElementById('dateCalcType').value;
+        let result = '';
+
+        if (calcType === 'difference') {
+            const endDate = new Date(document.getElementById('dateEnd').value);
+            const diffTime = Math.abs(endDate - startDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const years = Math.floor(diffDays / 365);
+            const months = Math.floor((diffDays % 365) / 30);
+            const days = Math.floor((diffDays % 365) % 30);
+
+            result = `
+                <p class="result-highlight">${diffDays} days</p>
+                <p><strong>Breakdown:</strong> ${years} years, ${months} months, ${days} days</p>
+                <p><strong>Weeks:</strong> ${Math.floor(diffDays / 7)} weeks</p>
+                <p><strong>Hours:</strong> ${(diffDays * 24).toLocaleString()}</p>
+            `;
+        } else {
+            const days = parseInt(document.getElementById('daysToAddSubtract').value);
+            const newDate = new Date(startDate);
+
+            if (calcType === 'add') {
+                newDate.setDate(newDate.getDate() + days);
+                result = `<p class="result-highlight">${newDate.toLocaleDateString()}</p>`;
+            } else {
+                newDate.setDate(newDate.getDate() - days);
+                result = `<p class="result-highlight">${newDate.toLocaleDateString()}</p>`;
+            }
+        }
+
+        showResult('dateResult', 'dateResultText', result);
+        addToHistory('Date Calculation', result);
+    }
+
+    // Age Calculator
+    function calculateAge() {
+        const birthDate = new Date(document.getElementById('birthDate').value);
+        const asOfDate = new Date(document.getElementById('ageAsOf').value);
+
+        let years = asOfDate.getFullYear() - birthDate.getFullYear();
+        let months = asOfDate.getMonth() - birthDate.getMonth();
+        let days = asOfDate.getDate() - birthDate.getDate();
+
+        if (days < 0) {
+            months--;
+            days += new Date(asOfDate.getFullYear(), asOfDate.getMonth(), 0).getDate();
+        }
+
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        const totalDays = Math.floor((asOfDate - birthDate) / (1000 * 60 * 60 * 24));
+        const totalMonths = years * 12 + months;
+
+        const result = `
+            <p class="result-highlight">${years} years, ${months} months, ${days} days</p>
+            <p><strong>Total Days:</strong> ${totalDays.toLocaleString()}</p>
+            <p><strong>Total Months:</strong> ${totalMonths}</p>
+            <p><strong>Total Weeks:</strong> ${Math.floor(totalDays / 7).toLocaleString()}</p>
+        `;
+
+        showResult('ageResult', 'ageResultText', result);
+        addToHistory('Age Calculation', `${years} years, ${months} months`);
+    }
+
+    // Time Calculator
+    function calculateTime() {
+        const startTime = document.getElementById('timeStart').value;
+        const endTime = document.getElementById('timeEnd').value;
+        const includeBreak = document.getElementById('includeBreak').checked;
+        const breakMinutes = includeBreak ? parseInt(document.getElementById('breakMinutes').value) || 0 : 0;
+
+        const [startHour, startMin] = startTime.split(':').map(Number);
+        const [endHour, endMin] = endTime.split(':').map(Number);
+
+        let totalMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+        if (totalMinutes < 0) totalMinutes += 24 * 60; // Handle overnight
+
+        totalMinutes -= breakMinutes;
+
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        const result = `
+            <p class="result-highlight">${hours}h ${minutes}m</p>
+            <p><strong>Total Minutes:</strong> ${totalMinutes}</p>
+            <p><strong>Decimal Hours:</strong> ${(totalMinutes / 60).toFixed(2)}</p>
+            ${breakMinutes > 0 ? `<p><strong>Break Time:</strong> ${breakMinutes} minutes</p>` : ''}
+        `;
+
+        showResult('timeResult', 'timeResultText', result);
+        addToHistory('Time Calculation', `${hours}h ${minutes}m`);
+    }
+
+    // Business Days Calculator
+    function calculateBusinessDays() {
+        const startDate = new Date(document.getElementById('businessStart').value);
+        const endDate = new Date(document.getElementById('businessEnd').value);
+        const excludeWeekends = document.getElementById('excludeWeekends').checked;
+
+        let count = 0;
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+            const dayOfWeek = currentDate.getDay();
+            if (!excludeWeekends || (dayOfWeek !== 0 && dayOfWeek !== 6)) {
+                count++;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        const result = `
+            <p class="result-highlight">${count} business days</p>
+            <p><strong>Total Calendar Days:</strong> ${totalDays}</p>
+            <p><strong>Weekend Days:</strong> ${totalDays - count}</p>
+        `;
+
+        showResult('businessResult', 'businessResultText', result);
+        addToHistory('Business Days', `${count} days`);
+    }
+
+    // Salary Calculator
+    function calculateSalary() {
+        const amount = parseFloat(document.getElementById('salaryAmount').value);
+        const period = document.getElementById('payPeriod').value;
+        const hoursPerWeek = parseFloat(document.getElementById('hoursPerWeek').value);
+
+        let yearlyAmount;
+
+        switch(period) {
+            case 'hourly':
+                yearlyAmount = amount * hoursPerWeek * 52;
+                break;
+            case 'daily':
+                yearlyAmount = amount * 5 * 52;
+                break;
+            case 'weekly':
+                yearlyAmount = amount * 52;
+                break;
+            case 'biweekly':
+                yearlyAmount = amount * 26;
+                break;
+            case 'monthly':
+                yearlyAmount = amount * 12;
+                break;
+            case 'yearly':
+                yearlyAmount = amount;
+                break;
+        }
+
+        const result = `
+            <p class="result-highlight">$${yearlyAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}/year</p>
+            <p><strong>Monthly:</strong> $${(yearlyAmount / 12).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <p><strong>Bi-Weekly:</strong> $${(yearlyAmount / 26).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <p><strong>Weekly:</strong> $${(yearlyAmount / 52).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <p><strong>Daily:</strong> $${(yearlyAmount / 260).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <p><strong>Hourly:</strong> $${(yearlyAmount / (hoursPerWeek * 52)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+        `;
+
+        showResult('salaryResult', 'salaryResultText', result);
+        addToHistory('Salary Calculation', `$${yearlyAmount.toLocaleString()}/year`);
+    }
+
+    // Tax Calculator
+    function calculateTax() {
+        const amount = parseFloat(document.getElementById('taxAmount').value);
+        const taxRate = parseFloat(document.getElementById('taxRate').value);
+        const calcType = document.getElementById('taxCalcType').value;
+
+        let taxAmount, finalAmount, result;
+
+        switch(calcType) {
+            case 'add':
+                taxAmount = amount * (taxRate / 100);
+                finalAmount = amount + taxAmount;
+                result = `
+                    <p><strong>Original Amount:</strong> $${amount.toFixed(2)}</p>
+                    <p><strong>Tax (${taxRate}%):</strong> $${taxAmount.toFixed(2)}</p>
+                    <p class="result-highlight">Total: $${finalAmount.toFixed(2)}</p>
+                `;
+                break;
+            case 'remove':
+                finalAmount = amount / (1 + taxRate / 100);
+                taxAmount = amount - finalAmount;
+                result = `
+                    <p><strong>Amount with Tax:</strong> $${amount.toFixed(2)}</p>
+                    <p><strong>Tax (${taxRate}%):</strong> $${taxAmount.toFixed(2)}</p>
+                    <p class="result-highlight">Amount without Tax: $${finalAmount.toFixed(2)}</p>
+                `;
+                break;
+            case 'calculate':
+                taxAmount = amount * (taxRate / 100);
+                result = `
+                    <p><strong>Amount:</strong> $${amount.toFixed(2)}</p>
+                    <p class="result-highlight">Tax (${taxRate}%): $${taxAmount.toFixed(2)}</p>
+                `;
+                break;
+        }
+
+        showResult('taxResult', 'taxResultText', result);
+        addToHistory('Tax Calculation', `${taxRate}% tax on $${amount.toFixed(2)}`);
+    }
+
+    // Helper Functions
+    function showResult(resultId, textId, content) {
+        const resultDiv = document.getElementById(resultId);
+        const textDiv = document.getElementById(textId);
+        textDiv.innerHTML = content;
+        resultDiv.classList.add('show');
+    }
+
+    function addToHistory(type, result) {
+        const history = JSON.parse(localStorage.getItem('calcHistory') || '[]');
+        history.unshift({
+            type: type,
+            result: result,
+            timestamp: new Date().toLocaleString()
+        });
+        localStorage.setItem('calcHistory', JSON.stringify(history.slice(0, 20)));
+        loadHistory();
+    }
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('calcHistory') || '[]');
+        const historyDiv = document.getElementById('calculationHistory');
+
+        if (history.length === 0) {
+            historyDiv.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                    <p class="mt-2">No recent calculations</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        history.forEach(item => {
+            html += `
+                <div class="history-item">
+                    <strong>${item.type}</strong><br>
+                    <small class="text-muted">${item.timestamp}</small><br>
+                    <span>${item.result}</span>
+                </div>
+            `;
+        });
+
+        historyDiv.innerHTML = html;
+    }
+
+    function clearHistory() {
+        if (confirm('Clear all calculation history?')) {
+            localStorage.removeItem('calcHistory');
+            loadHistory();
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadHistory();
+
+        // Set today's date as default for age calculator
+        document.getElementById('ageAsOf').valueAsDate = new Date();
+    });
+</script>
+{% endblock %}

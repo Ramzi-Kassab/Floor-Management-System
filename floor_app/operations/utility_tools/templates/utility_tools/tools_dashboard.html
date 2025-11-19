@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Utility Tools Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tool-category-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+        height: 100%;
+    }
+
+    .tool-category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .tool-category-card.image-tools {
+        border-left-color: #6f42c1;
+    }
+
+    .tool-category-card.file-tools {
+        border-left-color: #0dcaf0;
+    }
+
+    .tool-category-card.pdf-tools {
+        border-left-color: #dc3545;
+    }
+
+    .tool-category-card.text-tools {
+        border-left-color: #198754;
+    }
+
+    .tool-category-card.data-tools {
+        border-left-color: #fd7e14;
+    }
+
+    .tool-category-card.code-tools {
+        border-left-color: #0d6efd;
+    }
+
+    .tool-category-card.calculator-tools {
+        border-left-color: #ffc107;
+    }
+
+    .tool-category-card.converter-tools {
+        border-left-color: #20c997;
+    }
+
+    .category-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .tool-shortcut {
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid #dee2e6;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .tool-shortcut:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+        transform: translateX(5px);
+    }
+
+    .recent-tools {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .quick-access-btn {
+        width: 100%;
+        text-align: left;
+        padding: 12px;
+        margin-bottom: 8px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background: white;
+        transition: all 0.2s ease;
+    }
+
+    .quick-access-btn:hover {
+        background: #f8f9fa;
+        border-color: #0d6efd;
+        transform: translateX(5px);
+    }
+
+    .search-box {
+        border-radius: 50px;
+        padding: 12px 24px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .search-box:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="mb-1"><i class="bi bi-tools"></i> Utility Tools Dashboard</h2>
+                    <p class="text-muted mb-0">Comprehensive tools for your daily tasks</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#savedToolsModal">
+                        <i class="bi bi-bookmark-star"></i> Saved Tools
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Box -->
+            <div class="mb-4">
+                <div class="position-relative">
+                    <input type="text"
+                           class="form-control search-box"
+                           id="toolSearch"
+                           placeholder="Search for tools..."
+                           autocomplete="off">
+                    <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3"></i>
+                </div>
+                <div id="searchResults" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3 class="mb-2" id="totalUsage">0</h3>
+                <p class="mb-0"><i class="bi bi-activity"></i> Total Uses Today</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <h3 class="mb-2" id="favoriteCount">0</h3>
+                <p class="mb-0"><i class="bi bi-star"></i> Favorite Tools</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <h3 class="mb-2">8</h3>
+                <p class="mb-0"><i class="bi bi-grid-3x3"></i> Categories</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <h3 class="mb-2">50+</h3>
+                <p class="mb-0"><i class="bi bi-collection"></i> Total Tools</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tool Categories Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Image Tools -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card image-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-purple bg-opacity-10 text-purple mb-3">
+                        <i class="bi bi-image"></i>
+                    </div>
+                    <h5 class="card-title">Image Tools</h5>
+                    <p class="card-text text-muted small mb-3">Resize, compress, and convert images</p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="tool-shortcut" data-tool="image-resize">
+                            <i class="bi bi-arrows-angle-expand"></i> Resize Image
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="image-compress">
+                            <i class="bi bi-file-zip"></i> Compress Image
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="image-convert">
+                            <i class="bi bi-arrow-left-right"></i> Convert Format
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="image-crop">
+                            <i class="bi bi-crop"></i> Crop Image
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Conversion Tools -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card file-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-info bg-opacity-10 text-info mb-3">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    </div>
+                    <h5 class="card-title">File Conversion</h5>
+                    <p class="card-text text-muted small mb-3">Convert between different file formats</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'utility_tools:file_tools' %}" class="tool-shortcut">
+                            <i class="bi bi-file-pdf"></i> PDF Converter
+                        </a>
+                        <a href="{% url 'utility_tools:file_tools' %}" class="tool-shortcut">
+                            <i class="bi bi-file-excel"></i> Excel/CSV Tools
+                        </a>
+                        <a href="{% url 'utility_tools:file_tools' %}" class="tool-shortcut">
+                            <i class="bi bi-file-word"></i> Word Converter
+                        </a>
+                        <a href="{% url 'utility_tools:file_tools' %}" class="tool-shortcut">
+                            <i class="bi bi-images"></i> Image to PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF Tools -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card pdf-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-danger bg-opacity-10 text-danger mb-3">
+                        <i class="bi bi-file-pdf"></i>
+                    </div>
+                    <h5 class="card-title">PDF Tools</h5>
+                    <p class="card-text text-muted small mb-3">Merge, split, and edit PDFs</p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="tool-shortcut" data-tool="pdf-merge">
+                            <i class="bi bi-files"></i> Merge PDFs
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="pdf-split">
+                            <i class="bi bi-scissors"></i> Split PDF
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="pdf-compress">
+                            <i class="bi bi-file-zip"></i> Compress PDF
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="pdf-rotate">
+                            <i class="bi bi-arrow-clockwise"></i> Rotate Pages
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Tools -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card text-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-success bg-opacity-10 text-success mb-3">
+                        <i class="bi bi-fonts"></i>
+                    </div>
+                    <h5 class="card-title">Text Tools</h5>
+                    <p class="card-text text-muted small mb-3">Format and manipulate text</p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="tool-shortcut" data-tool="text-case">
+                            <i class="bi bi-type"></i> Case Converter
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="text-count">
+                            <i class="bi bi-calculator"></i> Word Counter
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="text-diff">
+                            <i class="bi bi-file-diff"></i> Text Difference
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="text-encode">
+                            <i class="bi bi-code-slash"></i> Text Encoding
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Conversion -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card data-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-warning bg-opacity-10 text-warning mb-3">
+                        <i class="bi bi-database"></i>
+                    </div>
+                    <h5 class="card-title">Data Conversion</h5>
+                    <p class="card-text text-muted small mb-3">Convert data formats</p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="tool-shortcut" data-tool="json-xml">
+                            <i class="bi bi-arrow-left-right"></i> JSON/XML
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="csv-json">
+                            <i class="bi bi-table"></i> CSV/JSON
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="yaml-json">
+                            <i class="bi bi-file-code"></i> YAML/JSON
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Generators -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card code-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-primary bg-opacity-10 text-primary mb-3">
+                        <i class="bi bi-qr-code"></i>
+                    </div>
+                    <h5 class="card-title">Code Generators</h5>
+                    <p class="card-text text-muted small mb-3">Generate QR codes, UUIDs, etc.</p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="tool-shortcut" data-tool="qr-code">
+                            <i class="bi bi-qr-code"></i> QR Code
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="barcode">
+                            <i class="bi bi-upc-scan"></i> Barcode
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="uuid">
+                            <i class="bi bi-key"></i> UUID Generator
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="password">
+                            <i class="bi bi-shield-lock"></i> Password Generator
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculators -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card calculator-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-warning bg-opacity-10 text-warning mb-3">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <h5 class="card-title">Calculators</h5>
+                    <p class="card-text text-muted small mb-3">Various calculation tools</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'utility_tools:calculators' %}" class="tool-shortcut">
+                            <i class="bi bi-calendar"></i> Date Calculator
+                        </a>
+                        <a href="{% url 'utility_tools:calculators' %}" class="tool-shortcut">
+                            <i class="bi bi-clock"></i> Time Calculator
+                        </a>
+                        <a href="{% url 'utility_tools:calculators' %}" class="tool-shortcut">
+                            <i class="bi bi-person-badge"></i> Age Calculator
+                        </a>
+                        <a href="{% url 'utility_tools:calculators' %}" class="tool-shortcut">
+                            <i class="bi bi-briefcase"></i> Business Days
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unit Converters -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card tool-category-card converter-tools">
+                <div class="card-body">
+                    <div class="category-icon bg-success bg-opacity-10 text-success mb-3">
+                        <i class="bi bi-arrows-expand"></i>
+                    </div>
+                    <h5 class="card-title">Unit Converters</h5>
+                    <p class="card-text text-muted small mb-3">Convert units and measurements</p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="tool-shortcut" data-tool="length">
+                            <i class="bi bi-rulers"></i> Length
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="weight">
+                            <i class="bi bi-boxes"></i> Weight
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="temperature">
+                            <i class="bi bi-thermometer-half"></i> Temperature
+                        </a>
+                        <a href="#" class="tool-shortcut" data-tool="currency">
+                            <i class="bi bi-currency-exchange"></i> Currency
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body recent-tools">
+                    <div id="recentActivity">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                            <p class="mt-2">No recent activity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Access</h5>
+                </div>
+                <div class="card-body">
+                    <button class="quick-access-btn" onclick="location.href='{% url 'utility_tools:file_tools' %}'">
+                        <i class="bi bi-file-earmark-pdf text-danger"></i> PDF Tools
+                    </button>
+                    <button class="quick-access-btn" onclick="location.href='{% url 'utility_tools:calculators' %}'">
+                        <i class="bi bi-calculator text-warning"></i> Calculators
+                    </button>
+                    <button class="quick-access-btn" data-tool="qr-code">
+                        <i class="bi bi-qr-code text-primary"></i> QR Code Generator
+                    </button>
+                    <button class="quick-access-btn" data-tool="image-resize">
+                        <i class="bi bi-image text-purple"></i> Image Resize
+                    </button>
+                    <button class="quick-access-btn" data-tool="text-case">
+                        <i class="bi bi-type text-success"></i> Text Case Converter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Saved Tools Modal -->
+<div class="modal fade" id="savedToolsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bookmark-star"></i> Saved Tools</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="savedToolsList">
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-bookmark" style="font-size: 48px;"></i>
+                        <p class="mt-2">No saved tools yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tool Search Functionality
+    const toolSearch = document.getElementById('toolSearch');
+    const searchResults = document.getElementById('searchResults');
+
+    const allTools = [
+        { name: 'Image Resize', category: 'Image Tools', icon: 'bi-arrows-angle-expand', url: '#' },
+        { name: 'Image Compress', category: 'Image Tools', icon: 'bi-file-zip', url: '#' },
+        { name: 'PDF to Word', category: 'File Conversion', icon: 'bi-file-word', url: '{% url "utility_tools:file_tools" %}' },
+        { name: 'Excel to CSV', category: 'File Conversion', icon: 'bi-file-excel', url: '{% url "utility_tools:file_tools" %}' },
+        { name: 'PDF Merge', category: 'PDF Tools', icon: 'bi-files', url: '#' },
+        { name: 'PDF Split', category: 'PDF Tools', icon: 'bi-scissors', url: '#' },
+        { name: 'Text Case Converter', category: 'Text Tools', icon: 'bi-type', url: '#' },
+        { name: 'Word Counter', category: 'Text Tools', icon: 'bi-calculator', url: '#' },
+        { name: 'JSON to XML', category: 'Data Conversion', icon: 'bi-arrow-left-right', url: '#' },
+        { name: 'QR Code Generator', category: 'Code Generators', icon: 'bi-qr-code', url: '#' },
+        { name: 'UUID Generator', category: 'Code Generators', icon: 'bi-key', url: '#' },
+        { name: 'Date Calculator', category: 'Calculators', icon: 'bi-calendar', url: '{% url "utility_tools:calculators" %}' },
+        { name: 'Age Calculator', category: 'Calculators', icon: 'bi-person-badge', url: '{% url "utility_tools:calculators" %}' },
+        { name: 'Length Converter', category: 'Unit Converters', icon: 'bi-rulers', url: '#' },
+        { name: 'Temperature Converter', category: 'Unit Converters', icon: 'bi-thermometer-half', url: '#' },
+    ];
+
+    toolSearch.addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase();
+
+        if (query.length < 2) {
+            searchResults.innerHTML = '';
+            return;
+        }
+
+        const filtered = allTools.filter(tool =>
+            tool.name.toLowerCase().includes(query) ||
+            tool.category.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            searchResults.innerHTML = '<div class="alert alert-info">No tools found</div>';
+            return;
+        }
+
+        let html = '<div class="card"><div class="list-group list-group-flush">';
+        filtered.forEach(tool => {
+            html += `
+                <a href="${tool.url}" class="list-group-item list-group-item-action">
+                    <i class="bi ${tool.icon}"></i>
+                    <strong>${tool.name}</strong>
+                    <span class="badge bg-secondary">${tool.category}</span>
+                </a>
+            `;
+        });
+        html += '</div></div>';
+        searchResults.innerHTML = html;
+    });
+
+    // Load Recent Activity
+    function loadRecentActivity() {
+        // Simulated data - replace with actual AJAX call
+        const recentActivity = JSON.parse(localStorage.getItem('recentTools') || '[]');
+
+        if (recentActivity.length === 0) return;
+
+        let html = '<div class="list-group list-group-flush">';
+        recentActivity.slice(0, 10).forEach(activity => {
+            html += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <i class="bi ${activity.icon}"></i>
+                            <strong>${activity.name}</strong>
+                            <br>
+                            <small class="text-muted">${activity.timestamp}</small>
+                        </div>
+                        <span class="badge bg-${activity.success ? 'success' : 'danger'}">
+                            ${activity.success ? 'Success' : 'Failed'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        document.getElementById('recentActivity').innerHTML = html;
+    }
+
+    // Track Tool Usage
+    function trackToolUsage(toolName, icon, success = true) {
+        const recentTools = JSON.parse(localStorage.getItem('recentTools') || '[]');
+        recentTools.unshift({
+            name: toolName,
+            icon: icon,
+            timestamp: new Date().toLocaleString(),
+            success: success
+        });
+        localStorage.setItem('recentTools', JSON.stringify(recentTools.slice(0, 50)));
+        loadRecentActivity();
+    }
+
+    // Update Stats
+    function updateStats() {
+        const recentTools = JSON.parse(localStorage.getItem('recentTools') || '[]');
+        const today = new Date().toDateString();
+        const todayTools = recentTools.filter(t =>
+            new Date(t.timestamp).toDateString() === today
+        );
+
+        document.getElementById('totalUsage').textContent = todayTools.length;
+
+        const favorites = JSON.parse(localStorage.getItem('favoriteTools') || '[]');
+        document.getElementById('favoriteCount').textContent = favorites.length;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRecentActivity();
+        updateStats();
+
+        // Add click tracking to tool shortcuts
+        document.querySelectorAll('.tool-shortcut, .quick-access-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const toolName = this.textContent.trim();
+                const icon = this.querySelector('i') ? this.querySelector('i').className : 'bi-tools';
+                trackToolUsage(toolName, icon);
+            });
+        });
+    });
+</script>
+{% endblock %}
