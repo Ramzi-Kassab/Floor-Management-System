@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}GPS Verification Request{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0 text-center"><i class="bi bi-geo-alt-fill me-2"></i>Location Verification</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div id="locationStatus" class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>Click button to get your location
+                        </div>
+                    </div>
+
+                    <form method="post" id="verificationForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="latitude" id="latitude">
+                        <input type="hidden" name="longitude" id="longitude">
+
+                        <div class="mb-3">
+                            <label class="form-label">Select Zone</label>
+                            <select class="form-select" name="zone" required>
+                                {% for zone in zones %}
+                                <option value="{{ zone.id }}">{{ zone.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-lg w-100 mb-3" onclick="getLocation()">
+                            <i class="bi bi-geo-alt me-2"></i>Get My Location
+                        </button>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100" id="submitBtn" disabled>
+                            <i class="bi bi-check-circle me-2"></i>Submit Verification
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getLocation() {
+    const statusDiv = document.getElementById('locationStatus');
+    statusDiv.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Getting location...';
+    statusDiv.className = 'alert alert-warning';
+
+    if (!navigator.geolocation) {
+        statusDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>Geolocation not supported';
+        statusDiv.className = 'alert alert-danger';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            document.getElementById('submitBtn').disabled = false;
+
+            statusDiv.innerHTML = `<i class="bi bi-check-circle me-2"></i>Location obtained: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            statusDiv.className = 'alert alert-success';
+        },
+        function(error) {
+            statusDiv.innerHTML = `<i class="bi bi-x-circle me-2"></i>Error: ${error.message}`;
+            statusDiv.className = 'alert alert-danger';
+        }
+    );
+}
+</script>
+{% endblock %}
