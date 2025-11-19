@@ -9,14 +9,21 @@ Includes:
 - Loss of sale tracking
 - Django core tables front-end
 - API endpoints
+- Health check endpoints
 """
 
 from django.urls import path
 from . import views
+from .views.health import health_check, readiness_check, liveness_check
 
 app_name = "core"
 
 urlpatterns = [
+    # Health Check Endpoints (for Docker, K8s, monitoring)
+    path("api/health/", health_check, name="health_check"),
+    path("api/health/ready/", readiness_check, name="readiness_check"),
+    path("api/health/live/", liveness_check, name="liveness_check"),
+
     # Main Dashboard
     path("", views.main_dashboard, name="home"),
 

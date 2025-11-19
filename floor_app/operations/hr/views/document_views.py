@@ -313,6 +313,30 @@ def hr_documents_dashboard(request):
 
 @login_required
 @user_passes_test(is_staff)
+def hr_upload_document(request):
+    """
+    HR staff upload document for any employee
+    """
+    if request.method == 'POST':
+        form = HRDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.uploaded_by = request.user
+            document.save()
+            messages.success(request, f'Document uploaded successfully for {document.employee}')
+            return redirect('hr:hr_documents_dashboard')
+    else:
+        form = HRDocumentForm()
+
+    context = {
+        'form': form,
+        'title': 'Upload Employee Document',
+    }
+    return render(request, 'hr/documents/hr/upload_document.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
 def hr_expiry_dashboard(request):
     """
     HR dashboard focused on document expiry management

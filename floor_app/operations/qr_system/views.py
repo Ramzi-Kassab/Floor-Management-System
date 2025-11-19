@@ -16,8 +16,8 @@ import base64
 
 from .models import (
     QRCode,
-    QRScan,
-    QRCodeBatch,
+    QRScanLog,
+    QRBatch,
 )
 
 
@@ -60,7 +60,7 @@ def generate(request):
                         return redirect('qr_system:qr_detail', pk=qr_code.pk)
                     else:
                         # Batch generation
-                        batch = QRCodeBatch.objects.create(
+                        batch = QRBatch.objects.create(
                             batch_name=label or f'Batch {timezone.now().strftime("%Y%m%d-%H%M")}',
                             qr_type=qr_type,
                             created_by=request.user,
@@ -146,8 +146,8 @@ def qr_list(request):
         stats = {
             'total': QRCode.objects.count(),
             'active': QRCode.objects.filter(is_active=True).count(),
-            'scanned_today': QRScan.objects.filter(scanned_at__date=timezone.now().date()).count(),
-            'total_scans': QRScan.objects.count(),
+            'scanned_today': QRScanLog.objects.filter(scanned_at__date=timezone.now().date()).count(),
+            'total_scans': QRScanLog.objects.count(),
         }
 
         context = {
@@ -264,7 +264,7 @@ def scan_history(request):
     - Filter by QR code, user, date
     """
     try:
-        scans = QRScan.objects.select_related(
+        scans = QRScanLog.objects.select_related(
             'qr_code',
             'scanned_by'
         ).order_by('-scanned_at')
@@ -293,9 +293,9 @@ def scan_history(request):
 
         # Statistics
         stats = {
-            'total_scans': QRScan.objects.count(),
-            'today': QRScan.objects.filter(scanned_at__date=timezone.now().date()).count(),
-            'this_week': QRScan.objects.filter(scanned_at__gte=timezone.now() - timezone.timedelta(days=7)).count(),
+            'total_scans': QRScanLog.objects.count(),
+            'today': QRScanLog.objects.filter(scanned_at__date=timezone.now().date()).count(),
+            'this_week': QRScanLog.objects.filter(scanned_at__gte=timezone.now() - timezone.timedelta(days=7)).count(),
         }
 
         context = {

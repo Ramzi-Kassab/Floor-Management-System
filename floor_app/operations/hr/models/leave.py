@@ -87,7 +87,7 @@ class LeavePolicy(AuditMixin, SoftDeleteMixin):
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=20, unique=True)
     leave_type = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=LeaveType.CHOICES,
         db_index=True
     )

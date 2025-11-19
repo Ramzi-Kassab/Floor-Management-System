@@ -348,6 +348,10 @@ class JobCard(PublicIdMixin, AuditMixin, SoftDeleteMixin):
             models.Index(fields=['customer_name', 'status'], name='ix_jc_cust_status'),
             models.Index(fields=['created_date'], name='ix_jc_created_date'),
             models.Index(fields=['planned_end_date'], name='ix_jc_planned_end'),
+            # Additional performance indexes
+            models.Index(fields=['qr_code', 'status'], name='ix_jc_qr_status'),
+            models.Index(fields=['mat_number', 'status'], name='ix_jc_mat_status'),
+            models.Index(fields=['actual_start_datetime', 'actual_end_datetime'], name='ix_jc_actual_times'),
         ]
 
     def __str__(self):

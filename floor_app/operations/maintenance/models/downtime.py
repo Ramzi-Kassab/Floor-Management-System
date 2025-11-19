@@ -46,7 +46,7 @@ class DowntimeEvent(AuditMixin, SoftDeleteMixin, models.Model):
         related_name='downtime_events'
     )
 
-    event_type = models.CharField(max_length=30, choices=EventType.choices)
+    event_type = models.CharField(max_length=30, choices=EventType.choices, default=EventType.OTHER)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True, blank=True)
     duration_minutes = models.PositiveIntegerField(null=True, blank=True)

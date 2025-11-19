@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from .models import (
     UserPreference,
-    UserDashboardWidget,
+    SavedView,
 )
 
 
@@ -55,7 +55,7 @@ def preferences_dashboard(request):
                 messages.error(request, f'Error updating preferences: {str(e)}')
 
         # Get dashboard widgets
-        widgets = UserDashboardWidget.objects.filter(
+        widgets = SavedView.objects.filter(
             user=user,
             is_enabled=True
         ).order_by('position')

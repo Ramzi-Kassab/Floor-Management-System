@@ -125,7 +125,7 @@ class ApprovalLevel(models.Model):
         help_text="List of role names who can approve at this level"
     )
     approver_departments = models.ManyToManyField(
-        'hr.HRDepartment',
+        'hr.Department',
         blank=True,
         help_text="Specific departments who can approve"
     )
@@ -257,7 +257,7 @@ class ApprovalRequest(AuditMixin):
         help_text="Visible to all users?"
     )
     visible_to_departments = models.ManyToManyField(
-        'hr.HRDepartment',
+        'hr.Department',
         blank=True,
         related_name='visible_approval_requests'
     )

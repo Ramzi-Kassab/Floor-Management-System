@@ -12,11 +12,10 @@ from django.utils import timezone
 from datetime import timedelta
 
 from .models import (
-    FivesAudit,
-    FivesScore,
-    FivesChecklistItem,
-    FivesPhoto,
-    FivesAchievement,
+    FiveSAudit,
+    FiveSPhoto,
+    FiveSAchievement,
+    FiveSLeaderboard,
 )
 
 
@@ -31,7 +30,7 @@ def audit_list(request):
     - Statistics
     """
     try:
-        audits = FivesAudit.objects.select_related(
+        audits = FiveSAudit.objects.select_related(
             'audited_by',
             'location',
             'department'
@@ -60,16 +59,16 @@ def audit_list(request):
 
         # Statistics
         stats = {
-            'total': FivesAudit.objects.count(),
-            'completed': FivesAudit.objects.filter(status='COMPLETED').count(),
-            'in_progress': FivesAudit.objects.filter(status='IN_PROGRESS').count(),
-            'average_score': FivesScore.objects.aggregate(avg=Avg('score'))['avg'] or 0,
+            'total': FiveSAudit.objects.count(),
+            'completed': FiveSAudit.objects.filter(status='COMPLETED').count(),
+            'in_progress': FiveSAudit.objects.filter(status='IN_PROGRESS').count(),
+            'average_score': FiveSAudit.objects.aggregate(avg=Avg('score'))['avg'] or 0,
         }
 
         context = {
             'audits': audits,
             'stats': stats,
-            'status_choices': FivesAudit.STATUS_CHOICES,
+            'status_choices': FiveSAudit.STATUS_CHOICES,
             'status_filter': status_filter,
             'page_title': '5S Audit List',
         }
@@ -98,7 +97,7 @@ def audit_form(request, pk=None):
     try:
         audit = None
         if pk:
-            audit = get_object_or_404(FivesAudit, pk=pk)
+            audit = get_object_or_404(FiveSAudit, pk=pk)
 
         if request.method == 'POST':
             try:
@@ -122,7 +121,7 @@ def audit_form(request, pk=None):
                     action = 'updated'
                 else:
                     # Create new
-                    audit = FivesAudit.objects.create(
+                    audit = FiveSAudit.objects.create(
                         audit_date=audit_date,
                         area=area,
                         notes=notes,
@@ -133,35 +132,35 @@ def audit_form(request, pk=None):
 
                 # Update scores
                 if sort_score:
-                    FivesScore.objects.update_or_create(
+                    FiveSAudit.objects.update_or_create(
                         audit=audit,
                         s_type='SORT',
                         defaults={'score': int(sort_score)}
                     )
 
                 if set_in_order_score:
-                    FivesScore.objects.update_or_create(
+                    FiveSAudit.objects.update_or_create(
                         audit=audit,
                         s_type='SET_IN_ORDER',
                         defaults={'score': int(set_in_order_score)}
                     )
 
                 if shine_score:
-                    FivesScore.objects.update_or_create(
+                    FiveSAudit.objects.update_or_create(
                         audit=audit,
                         s_type='SHINE',
                         defaults={'score': int(shine_score)}
                     )
 
                 if standardize_score:
-                    FivesScore.objects.update_or_create(
+                    FiveSAudit.objects.update_or_create(
                         audit=audit,
                         s_type='STANDARDIZE',
                         defaults={'score': int(standardize_score)}
                     )
 
                 if sustain_score:
-                    FivesScore.objects.update_or_create(
+                    FiveSAudit.objects.update_or_create(
                         audit=audit,
                         s_type='SUSTAIN',
                         defaults={'score': int(sustain_score)}
@@ -212,7 +211,7 @@ def audit_detail(request, pk):
     """
     try:
         audit = get_object_or_404(
-            FivesAudit.objects.select_related('audited_by', 'location', 'department'),
+            FiveSAudit.objects.select_related('audited_by', 'location', 'department'),
             pk=pk
         )
 
@@ -257,19 +256,19 @@ def leaderboard(request):
     """
     try:
         # Get top areas by average score
-        top_areas = FivesAudit.objects.values('area').annotate(
+        top_areas = FiveSAudit.objects.values('area').annotate(
             avg_score=Avg('scores__score'),
             audit_count=Count('id')
         ).order_by('-avg_score')[:10]
 
         # Get top auditors
-        top_auditors = FivesAudit.objects.values('audited_by__username').annotate(
+        top_auditors = FiveSAudit.objects.values('audited_by__username').annotate(
             audit_count=Count('id'),
             avg_score=Avg('scores__score')
         ).order_by('-audit_count')[:10]
 
         # Recent high scores
-        recent_high_scores = FivesAudit.objects.filter(
+        recent_high_scores = FiveSAudit.objects.filter(
             status='COMPLETED'
         ).annotate(
             avg_score=Avg('scores__score')
@@ -277,7 +276,7 @@ def leaderboard(request):
 
         # This month's stats
         this_month_start = timezone.now().replace(day=1)
-        this_month_audits = FivesAudit.objects.filter(
+        this_month_audits = FiveSAudit.objects.filter(
             audit_date__gte=this_month_start
         )
 
@@ -322,18 +321,18 @@ def achievements(request):
         user = request.user
 
         # Get user's achievements
-        user_achievements = FivesAchievement.objects.filter(
+        user_achievements = FiveSAchievement.objects.filter(
             earned_by=user
         ).order_by('-earned_at')
 
         # Get all available achievements
-        all_achievements = FivesAchievement.objects.values('achievement_type', 'title').distinct()
+        all_achievements = FiveSAchievement.objects.values('achievement_type', 'title').distinct()
 
         # User stats
         user_stats = {
-            'total_audits': FivesAudit.objects.filter(audited_by=user).count(),
-            'completed_audits': FivesAudit.objects.filter(audited_by=user, status='COMPLETED').count(),
-            'average_score': FivesAudit.objects.filter(audited_by=user).aggregate(avg=Avg('scores__score'))['avg'] or 0,
+            'total_audits': FiveSAudit.objects.filter(audited_by=user).count(),
+            'completed_audits': FiveSAudit.objects.filter(audited_by=user, status='COMPLETED').count(),
+            'average_score': FiveSAudit.objects.filter(audited_by=user).aggregate(avg=Avg('scores__score'))['avg'] or 0,
             'total_achievements': user_achievements.count(),
         }
 

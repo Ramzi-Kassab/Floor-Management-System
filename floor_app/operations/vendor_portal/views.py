@@ -12,11 +12,11 @@ from django.utils import timezone
 
 from .models import (
     Vendor,
-    VendorContact,
-    VendorOrder,
-    VendorInvoice,
-    VendorDocument,
-    VendorRating,
+    VendorCommunication,
+    PurchaseOrder,
+    VendorPerformanceReview,
+    VendorCommunication,
+    VendorPerformanceReview,
 )
 
 
@@ -39,13 +39,13 @@ def vendor_dashboard(request):
         )
 
         # Recent orders
-        recent_orders = VendorOrder.objects.select_related(
+        recent_orders = PurchaseOrder.objects.select_related(
             'vendor',
             'created_by'
         ).order_by('-order_date')[:10]
 
         # Pending invoices
-        pending_invoices = VendorInvoice.objects.filter(
+        pending_invoices = VendorPerformanceReview.objects.filter(
             status='PENDING'
         ).select_related('vendor', 'order').order_by('-invoice_date')[:10]
 
@@ -53,10 +53,10 @@ def vendor_dashboard(request):
         stats = {
             'total_vendors': Vendor.objects.count(),
             'active_vendors': Vendor.objects.filter(is_active=True).count(),
-            'total_orders': VendorOrder.objects.count(),
-            'pending_orders': VendorOrder.objects.filter(status='PENDING').count(),
-            'pending_invoices': VendorInvoice.objects.filter(status='PENDING').count(),
-            'total_orders_value': VendorOrder.objects.aggregate(
+            'total_orders': PurchaseOrder.objects.count(),
+            'pending_orders': PurchaseOrder.objects.filter(status='PENDING').count(),
+            'pending_invoices': VendorPerformanceReview.objects.filter(status='PENDING').count(),
+            'total_orders_value': PurchaseOrder.objects.aggregate(
                 total=Sum('total_amount')
             )['total'] or 0,
         }
@@ -131,7 +131,7 @@ def vendor_registration(request):
                         contact_phone = request.POST.get('contact_phone')
 
                         if contact_name:
-                            VendorContact.objects.create(
+                            VendorCommunication.objects.create(
                                 vendor=vendor,
                                 contact_name=contact_name,
                                 email=contact_email or email,
@@ -174,7 +174,7 @@ def vendor_orders(request):
     - Order details
     """
     try:
-        orders = VendorOrder.objects.select_related(
+        orders = PurchaseOrder.objects.select_related(
             'vendor',
             'created_by'
         ).order_by('-order_date')
@@ -212,10 +212,10 @@ def vendor_orders(request):
 
         # Statistics
         stats = {
-            'total_orders': VendorOrder.objects.count(),
-            'pending': VendorOrder.objects.filter(status='PENDING').count(),
-            'confirmed': VendorOrder.objects.filter(status='CONFIRMED').count(),
-            'delivered': VendorOrder.objects.filter(status='DELIVERED').count(),
+            'total_orders': PurchaseOrder.objects.count(),
+            'pending': PurchaseOrder.objects.filter(status='PENDING').count(),
+            'confirmed': PurchaseOrder.objects.filter(status='CONFIRMED').count(),
+            'delivered': PurchaseOrder.objects.filter(status='DELIVERED').count(),
             'total_value': orders.aggregate(total=Sum('total_amount'))['total'] or 0,
         }
 
@@ -223,7 +223,7 @@ def vendor_orders(request):
             'orders': orders,
             'vendors': vendors,
             'stats': stats,
-            'status_choices': VendorOrder.STATUS_CHOICES,
+            'status_choices': PurchaseOrder.STATUS_CHOICES,
             'vendor_filter': vendor_id,
             'status_filter': status_filter,
             'search_query': search_query,

@@ -178,6 +178,11 @@ class Asset(AuditMixin, SoftDeleteMixin, PublicIdMixin, models.Model):
             models.Index(fields=['location', 'status']),
             models.Index(fields=['qr_token']),
             models.Index(fields=['is_critical']),
+            # Performance indexes for common queries
+            models.Index(fields=['-last_maintenance_date'], name='idx_asset_last_maint'),
+            models.Index(fields=['next_pm_due_date'], name='idx_asset_next_pm'),
+            models.Index(fields=['manufacturer', 'model_number'], name='idx_asset_mfr_model'),
+            models.Index(fields=['is_deleted', 'status'], name='idx_asset_active'),
         ]
 
     def __str__(self):
@@ -236,7 +241,8 @@ class AssetDocument(models.Model):
 
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='documents')
     document = models.ForeignKey(
-        'knowledge.Document', on_delete=models.CASCADE, related_name='asset_usages'
+        'knowledge.Document', on_delete=models.CASCADE, related_name='asset_usages',
+        null=True, blank=True
     )
     document_type = models.CharField(max_length=20, choices=DocumentType.choices, default=DocumentType.OTHER)
     description = models.CharField(max_length=255, blank=True)

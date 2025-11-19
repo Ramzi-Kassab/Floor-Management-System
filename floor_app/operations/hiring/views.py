@@ -13,9 +13,9 @@ from django.utils import timezone
 from .models import (
     JobPosting,
     Candidate,
-    Application,
+    JobApplication,
     Interview,
-    Offer,
+    JobOffer,
 )
 
 
@@ -44,7 +44,7 @@ def job_list(request):
         stats = {
             'total': JobPosting.objects.count(),
             'active': JobPosting.objects.filter(is_active=True).count(),
-            'total_applications': Application.objects.count(),
+            'total_applications': JobApplication.objects.count(),
         }
 
         context = {
@@ -100,7 +100,7 @@ def application_detail(request, pk):
     """View application details."""
     try:
         application = get_object_or_404(
-            Application.objects.select_related(
+            JobApplication.objects.select_related(
                 'job_posting',
                 'candidate',
                 'reviewed_by'
@@ -123,7 +123,7 @@ def application_detail(request, pk):
                         application.notes = notes
                     application.save()
 
-                    messages.success(request, 'Application status updated.')
+                    messages.success(request, 'JobApplication status updated.')
                     return redirect('hiring:application_detail', pk=pk)
 
             except Exception as e:
@@ -137,8 +137,8 @@ def application_detail(request, pk):
         context = {
             'application': application,
             'interviews': interviews,
-            'status_choices': Application.STATUS_CHOICES,
-            'page_title': f'Application - {application.candidate.full_name}',
+            'status_choices': JobApplication.STATUS_CHOICES,
+            'page_title': f'JobApplication - {application.candidate.full_name}',
         }
 
     except Exception as e:
@@ -179,7 +179,7 @@ def interview_scheduler(request):
                 notes = request.POST.get('notes', '')
 
                 if application_id and scheduled_at:
-                    application = Application.objects.get(pk=application_id)
+                    application = JobApplication.objects.get(pk=application_id)
 
                     Interview.objects.create(
                         application=application,
@@ -198,7 +198,7 @@ def interview_scheduler(request):
                 messages.error(request, f'Error scheduling interview: {str(e)}')
 
         # Get pending applications for scheduling
-        pending_applications = Application.objects.filter(
+        pending_applications = JobApplication.objects.filter(
             status='UNDER_REVIEW'
         ).select_related('candidate', 'job_posting')
 
@@ -228,7 +228,7 @@ def interview_scheduler(request):
 def offer_list(request):
     """List all job offers."""
     try:
-        offers = Offer.objects.select_related(
+        offers = JobOffer.objects.select_related(
             'application__candidate',
             'application__job_posting',
             'offered_by'
@@ -239,16 +239,16 @@ def offer_list(request):
             offers = offers.filter(status=status_filter)
 
         stats = {
-            'total': Offer.objects.count(),
-            'pending': Offer.objects.filter(status='PENDING').count(),
-            'accepted': Offer.objects.filter(status='ACCEPTED').count(),
-            'rejected': Offer.objects.filter(status='REJECTED').count(),
+            'total': JobOffer.objects.count(),
+            'pending': JobOffer.objects.filter(status='PENDING').count(),
+            'accepted': JobOffer.objects.filter(status='ACCEPTED').count(),
+            'rejected': JobOffer.objects.filter(status='REJECTED').count(),
         }
 
         context = {
             'offers': offers,
             'stats': stats,
-            'status_choices': Offer.STATUS_CHOICES,
+            'status_choices': JobOffer.STATUS_CHOICES,
             'page_title': 'Job Offers',
         }
 

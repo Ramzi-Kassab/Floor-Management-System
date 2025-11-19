@@ -1,5 +1,5 @@
 """
-Journey Management System Views
+JourneyPlan Management System Views
 
 Template-rendering views for journey planning, tracking, and management.
 """
@@ -11,9 +11,9 @@ from django.db.models import Q, Count
 from django.utils import timezone
 
 from .models import (
-    Journey,
+    JourneyPlan,
     JourneyWaypoint,
-    JourneyCheckpoint,
+    JourneyCheckIn,
 )
 
 
@@ -21,7 +21,7 @@ from .models import (
 def journey_list(request):
     """List all journeys."""
     try:
-        journeys = Journey.objects.select_related(
+        journeys = JourneyPlan.objects.select_related(
             'employee',
             'vehicle'
         ).order_by('-departure_time')
@@ -47,22 +47,22 @@ def journey_list(request):
 
         # Statistics
         stats = {
-            'total': Journey.objects.count(),
-            'planned': Journey.objects.filter(status='PLANNED').count(),
-            'in_progress': Journey.objects.filter(status='IN_PROGRESS').count(),
-            'completed': Journey.objects.filter(status='COMPLETED').count(),
+            'total': JourneyPlan.objects.count(),
+            'planned': JourneyPlan.objects.filter(status='PLANNED').count(),
+            'in_progress': JourneyPlan.objects.filter(status='IN_PROGRESS').count(),
+            'completed': JourneyPlan.objects.filter(status='COMPLETED').count(),
         }
 
         context = {
             'journeys': journeys,
             'stats': stats,
-            'status_choices': Journey.STATUS_CHOICES,
-            'page_title': 'Journey List',
+            'status_choices': JourneyPlan.STATUS_CHOICES,
+            'page_title': 'JourneyPlan List',
         }
 
     except Exception as e:
         messages.error(request, f'Error loading journeys: {str(e)}')
-        context = {'journeys': [], 'stats': {}, 'page_title': 'Journey List'}
+        context = {'journeys': [], 'stats': {}, 'page_title': 'JourneyPlan List'}
 
     return render(request, 'journey_management/journey_list.html', context)
 
@@ -86,7 +86,7 @@ def journey_planner(request):
                     from floor_app.operations.hr.models import HREmployee
                     employee = HREmployee.objects.filter(user=request.user).first()
 
-                    journey = Journey.objects.create(
+                    journey = JourneyPlan.objects.create(
                         employee=employee,
                         origin=origin,
                         destination=destination,
@@ -100,7 +100,7 @@ def journey_planner(request):
                         journey.vehicle_id = vehicle_id
                         journey.save()
 
-                    messages.success(request, 'Journey planned successfully.')
+                    messages.success(request, 'JourneyPlan planned successfully.')
                     return redirect('journey_management:journey_tracking', pk=journey.pk)
 
             except Exception as e:
@@ -112,12 +112,12 @@ def journey_planner(request):
 
         context = {
             'vehicles': vehicles,
-            'page_title': 'Plan Journey',
+            'page_title': 'Plan JourneyPlan',
         }
 
     except Exception as e:
         messages.error(request, f'Error loading planner: {str(e)}')
-        context = {'vehicles': [], 'page_title': 'Plan Journey'}
+        context = {'vehicles': [], 'page_title': 'Plan JourneyPlan'}
 
     return render(request, 'journey_management/journey_planner.html', context)
 
@@ -127,7 +127,7 @@ def journey_tracking(request, pk):
     """Track journey progress."""
     try:
         journey = get_object_or_404(
-            Journey.objects.select_related('employee', 'vehicle'),
+            JourneyPlan.objects.select_related('employee', 'vehicle'),
             pk=pk
         )
 
@@ -139,13 +139,13 @@ def journey_tracking(request, pk):
                     journey.status = 'IN_PROGRESS'
                     journey.actual_departure_time = timezone.now()
                     journey.save()
-                    messages.success(request, 'Journey started.')
+                    messages.success(request, 'JourneyPlan started.')
 
                 elif action == 'complete':
                     journey.status = 'COMPLETED'
                     journey.actual_arrival_time = timezone.now()
                     journey.save()
-                    messages.success(request, 'Journey completed.')
+                    messages.success(request, 'JourneyPlan completed.')
 
                 elif action == 'checkpoint':
                     checkpoint_name = request.POST.get('checkpoint_name')
@@ -153,7 +153,7 @@ def journey_tracking(request, pk):
                     longitude = request.POST.get('longitude')
 
                     if checkpoint_name:
-                        JourneyCheckpoint.objects.create(
+                        JourneyCheckIn.objects.create(
                             journey=journey,
                             checkpoint_name=checkpoint_name,
                             checkpoint_time=timezone.now(),
@@ -175,7 +175,7 @@ def journey_tracking(request, pk):
             'journey': journey,
             'waypoints': waypoints,
             'checkpoints': checkpoints,
-            'page_title': f'Journey Tracking - {journey.origin} to {journey.destination}',
+            'page_title': f'JourneyPlan Tracking - {journey.origin} to {journey.destination}',
         }
 
     except Exception as e:

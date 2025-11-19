@@ -7,8 +7,8 @@ Serializers for GPS verification system REST API.
 from rest_framework import serializers
 from floor_app.operations.gps_system.models import (
     LocationVerification,
-    Geofence,
-    GPSLog
+    GeofenceDefinition,
+    GPSTrackingLog
 )
 
 
@@ -110,7 +110,7 @@ class GeofenceSerializer(serializers.ModelSerializer):
     area_type = serializers.SerializerMethodField()
 
     class Meta:
-        model = Geofence
+        model = GeofenceDefinition
         fields = [
             'id',
             'name',
@@ -205,7 +205,7 @@ class GeofenceCheckSerializer(serializers.Serializer):
     longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
 
 
-class GPSLogSerializer(serializers.ModelSerializer):
+class GPSTrackingLogSerializer(serializers.ModelSerializer):
     """Serializer for GPS logs."""
 
     log_type_display = serializers.CharField(
@@ -216,7 +216,7 @@ class GPSLogSerializer(serializers.ModelSerializer):
     distance_from_last = serializers.SerializerMethodField()
 
     class Meta:
-        model = GPSLog
+        model = GPSTrackingLog
         fields = [
             'id',
             'employee',
@@ -245,7 +245,7 @@ class GPSLogSerializer(serializers.ModelSerializer):
     def get_distance_from_last(self, obj):
         """Get distance from last GPS log."""
         # Get previous log for this employee
-        previous_log = GPSLog.objects.filter(
+        previous_log = GPSTrackingLog.objects.filter(
             employee=obj.employee,
             timestamp__lt=obj.timestamp
         ).order_by('-timestamp').first()
@@ -263,7 +263,7 @@ class GPSLogSerializer(serializers.ModelSerializer):
         return None
 
 
-class GPSLogCreateSerializer(serializers.Serializer):
+class GPSTrackingLogCreateSerializer(serializers.Serializer):
     """Serializer for creating GPS logs."""
 
     log_type = serializers.ChoiceField(

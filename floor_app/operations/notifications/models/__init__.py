@@ -298,7 +298,8 @@ class Notification(AuditMixin):
         ContentType,
         on_delete=models.CASCADE,
         null=True,
-        blank=True
+        blank=True,
+        related_name='floor_notifications'
     )
     object_id = models.PositiveIntegerField(null=True, blank=True)
     related_object = GenericForeignKey('content_type', 'object_id')
@@ -494,7 +495,7 @@ class Announcement(AuditMixin, SoftDeleteMixin):
         default='ALL'
     )
     target_departments = models.ManyToManyField(
-        'hr.HRDepartment',
+        'hr.Department',
         blank=True,
         related_name='announcements'
     )
