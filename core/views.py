@@ -940,5 +940,5 @@ def global_search_api(request):
 
 
 # Health check endpoints
-from .views.health import health_check, readiness_check, liveness_check
+from .health import health_check, readiness_check, liveness_check
 

@@ -13,7 +13,7 @@ from django.views.decorators.http import require_POST
 from .models import (
     Asset, AssetCategory, AssetLocation, AssetDocument,
     PMTemplate, PMSchedule, PMTask,
-    MaintenanceRequest, MaintenanceWorkOrder, WorkOrderNote, WorkOrderPart,
+    MaintenanceRequest, WorkOrder, WorkOrderNote, WorkOrderPart,
     DowntimeEvent, ProductionImpact, LostSalesRecord
 )
 from .forms import (
@@ -277,7 +277,7 @@ def workorder_list(request):
     status_filter = request.GET.get('status', '')
     type_filter = request.GET.get('type', '')
 
-    work_orders = MaintenanceWorkOrder.objects.filter(
+    work_orders = WorkOrder.objects.filter(
         is_deleted=False
     ).select_related('asset', 'assigned_to').order_by('-created_at')
 
@@ -302,7 +302,7 @@ def workorder_list(request):
 def workorder_detail(request, wo_number):
     """View work order details."""
     work_order = get_object_or_404(
-        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+        WorkOrder, work_order_number=wo_number, is_deleted=False
     )
 
     notes = work_order.notes.all().order_by('-created_at')
@@ -347,7 +347,7 @@ def workorder_create(request):
 def workorder_edit(request, wo_number):
     """Edit work order."""
     work_order = get_object_or_404(
-        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+        WorkOrder, work_order_number=wo_number, is_deleted=False
     )
 
     if request.method == 'POST':
@@ -373,7 +373,7 @@ def workorder_edit(request, wo_number):
 def workorder_assign(request, wo_number):
     """Assign work order to technician."""
     work_order = get_object_or_404(
-        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+        WorkOrder, work_order_number=wo_number, is_deleted=False
     )
 
     if request.method == 'POST':
@@ -400,7 +400,7 @@ def workorder_assign(request, wo_number):
 def workorder_complete(request, wo_number):
     """Complete work order."""
     work_order = get_object_or_404(
-        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+        WorkOrder, work_order_number=wo_number, is_deleted=False
     )
 
     if request.method == 'POST':
@@ -427,7 +427,7 @@ def workorder_complete(request, wo_number):
 def workorder_add_note(request, wo_number):
     """Add note to work order."""
     work_order = get_object_or_404(
-        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+        WorkOrder, work_order_number=wo_number, is_deleted=False
     )
 
     form = WorkOrderNoteForm(request.POST)
@@ -448,7 +448,7 @@ def workorder_add_note(request, wo_number):
 def workorder_add_part(request, wo_number):
     """Add part to work order."""
     work_order = get_object_or_404(
-        MaintenanceWorkOrder, work_order_number=wo_number, is_deleted=False
+        WorkOrder, work_order_number=wo_number, is_deleted=False
     )
 
     form = WorkOrderPartForm(request.POST)
@@ -578,7 +578,7 @@ def pm_task_complete(request, pk):
 
             # Create follow-up work order if needed
             if form.cleaned_data.get('create_work_order') and task.findings:
-                wo = MaintenanceWorkOrder.objects.create(
+                wo = WorkOrder.objects.create(
                     asset=task.schedule.asset,
                     title=f'Follow-up from PM: {task.schedule.pm_template.name}',
                     description=f'Issues found during PM:\n{task.findings}',

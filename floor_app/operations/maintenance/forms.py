@@ -6,7 +6,7 @@ from django.utils import timezone
 from .models import (
     Asset, AssetCategory, AssetLocation, AssetDocument,
     PMTemplate, PMSchedule, PMTask,
-    MaintenanceRequest, MaintenanceWorkOrder, WorkOrderNote, WorkOrderPart,
+    MaintenanceRequest, WorkOrder, WorkOrderNote, WorkOrderPart,
     DowntimeEvent, ProductionImpact, LostSalesRecord
 )
 
@@ -70,7 +70,7 @@ class MaintenanceRequestForm(forms.ModelForm):
 
     class Meta:
         model = MaintenanceRequest
-        fields = ['asset', 'title', 'description', 'priority', 'department']
+        fields = ['asset', 'title', 'description', 'priority']
         widgets = {
             'description': forms.Textarea(attrs={
                 'rows': 5,
@@ -124,21 +124,18 @@ class WorkOrderForm(forms.ModelForm):
     """Form for creating/editing work orders."""
 
     class Meta:
-        model = MaintenanceWorkOrder
+        model = WorkOrder
         fields = [
-            'asset', 'title', 'description', 'work_order_type', 'priority', 'status',
+            'asset', 'title', 'problem_description', 'wo_type', 'priority', 'status',
             'planned_start', 'planned_end', 'assigned_to',
-            'problem_description', 'failure_mode', 'root_cause_category', 'root_cause_detail',
-            'solution_summary', 'work_performed', 'recommendations',
-            'labor_hours', 'labor_cost', 'parts_cost', 'external_cost',
-            'requires_shutdown', 'safety_permit_required', 'contractor_involved'
+            'root_cause_category', 'root_cause_detail',
+            'solution_summary', 'actions_taken',
+            'labor_cost', 'parts_cost', 'external_cost'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
-            'problem_description': forms.Textarea(attrs={'rows': 3}),
+            'problem_description': forms.Textarea(attrs={'rows': 4}),
             'solution_summary': forms.Textarea(attrs={'rows': 3}),
-            'work_performed': forms.Textarea(attrs={'rows': 4}),
-            'recommendations': forms.Textarea(attrs={'rows': 3}),
+            'actions_taken': forms.Textarea(attrs={'rows': 4}),
             'root_cause_detail': forms.Textarea(attrs={'rows': 3}),
             'planned_start': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'planned_end': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
@@ -149,7 +146,7 @@ class WorkOrderAssignForm(forms.ModelForm):
     """Form for assigning work orders."""
 
     class Meta:
-        model = MaintenanceWorkOrder
+        model = WorkOrder
         fields = ['assigned_to', 'planned_start', 'planned_end']
         widgets = {
             'planned_start': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
@@ -161,19 +158,19 @@ class WorkOrderCompleteForm(forms.ModelForm):
     """Form for completing work orders."""
 
     class Meta:
-        model = MaintenanceWorkOrder
+        model = WorkOrder
         fields = [
-            'actual_start', 'actual_end', 'work_performed', 'solution_summary',
-            'root_cause_category', 'root_cause_detail', 'recommendations',
-            'labor_hours', 'labor_cost', 'parts_cost', 'external_cost'
+            'actual_start', 'actual_end', 'actions_taken', 'solution_summary',
+            'root_cause_category', 'root_cause_detail', 'follow_up_notes',
+            'labor_cost', 'parts_cost', 'external_cost'
         ]
         widgets = {
             'actual_start': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'actual_end': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'work_performed': forms.Textarea(attrs={'rows': 4}),
+            'actions_taken': forms.Textarea(attrs={'rows': 4}),
             'solution_summary': forms.Textarea(attrs={'rows': 3}),
             'root_cause_detail': forms.Textarea(attrs={'rows': 3}),
-            'recommendations': forms.Textarea(attrs={'rows': 3}),
+            'follow_up_notes': forms.Textarea(attrs={'rows': 3}),
         }
 
 

@@ -4,7 +4,7 @@ Admin configuration for Corrective Maintenance models.
 from django.contrib import admin
 from floor_app.operations.maintenance.models import (
     MaintenanceRequest,
-    MaintenanceWorkOrder,
+    WorkOrder,
     WorkOrderNote,
     WorkOrderPart,
 )

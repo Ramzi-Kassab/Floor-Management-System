@@ -10,7 +10,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
                     <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'inventory:serialunits_list' %}">Serial Units</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory:serialunit_list' %}">Serial Units</a></li>
                     <li class="breadcrumb-item active">Detail</li>
                 </ol>
             </nav>
@@ -20,10 +20,10 @@
             </h1>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'inventory:serialunits_edit' object.pk %}" class="btn btn-primary">
+            <a href="{% url 'inventory:serialunit_edit' object.pk %}" class="btn btn-primary">
                 <i class="bi bi-pencil me-2"></i>Edit
             </a>
-            <a href="{% url 'inventory:serialunits_list' %}" class="btn btn-outline-secondary">
+            <a href="{% url 'inventory:serialunit_list' %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-2"></i>Back to List
             </a>
         </div>
@@ -80,7 +80,7 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'inventory:serialunits_edit' object.pk %}" class="btn btn-sm btn-outline-primary">
+                        <a href="{% url 'inventory:serialunit_edit' object.pk %}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-pencil me-2"></i>Edit Serial Unit
                         </a>
                         <button type="button" class="btn btn-sm btn-outline-danger">

@@ -14,7 +14,7 @@
             <p class="text-muted mb-0">Manage and view all batches</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'production:batches_create' %}" class="btn btn-primary">
+            <a href="{% url 'production:batch_create' %}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-2"></i>New Batch
             </a>
             <a href="{% url 'production:dashboard' %}" class="btn btn-outline-secondary">
@@ -57,7 +57,7 @@
                             <tr>
                                 <td>#{{ obj.pk }}</td>
                                 <td>
-                                    <a href="{% url 'production:batches_detail' obj.pk %}" class="text-decoration-none fw-bold">
+                                    <a href="{% url 'production:batch_detail' obj.pk %}" class="text-decoration-none fw-bold">
                                         {{ obj }}
                                     </a>
                                 </td>
@@ -67,10 +67,10 @@
                                 <td>{{ obj.created_at|date:"M d, Y" }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'production:batches_detail' obj.pk %}" class="btn btn-outline-primary">
+                                        <a href="{% url 'production:batch_detail' obj.pk %}" class="btn btn-outline-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{% url 'production:batches_edit' obj.pk %}" class="btn btn-outline-secondary">
+                                        <a href="{% url 'production:batch_edit' obj.pk %}" class="btn btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                     </div>
@@ -82,7 +82,7 @@
                                 <td colspan="5" class="text-center py-5">
                                     <i class="bi-boxes fs-1 text-muted mb-3 d-block"></i>
                                     <p class="text-muted mb-0">No batches found</p>
-                                    <a href="{% url 'production:batches_create' %}" class="btn btn-primary mt-3">
+                                    <a href="{% url 'production:batch_create' %}" class="btn btn-primary mt-3">
                                         <i class="bi bi-plus-circle me-2"></i>Create First Batch
                                     </a>
                                 </td>

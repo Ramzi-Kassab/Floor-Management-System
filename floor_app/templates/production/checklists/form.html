@@ -10,7 +10,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
                     <li class="breadcrumb-item"><a href="{% url 'production:dashboard' %}">Production</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'production:checklists_list' %}">Checklists</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'production:jobcard_list' %}">Checklists</a></li>
                     <li class="breadcrumb-item active">{% if object %}Edit{% else %}Create{% endif %}</li>
                 </ol>
             </nav>
@@ -20,7 +20,7 @@
             </h1>
         </div>
         <div>
-            <a href="{% url 'production:checklists_list' %}" class="btn btn-outline-secondary">
+            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-2"></i>Back to List
             </a>
         </div>
@@ -65,7 +65,7 @@
                         {% endfor %}
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="{% url 'production:checklists_list' %}" class="btn btn-outline-secondary">
+                            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">

@@ -48,12 +48,11 @@ def attendance_dashboard(request):
 
     # Today's attendance statistics
     today_attendance = AttendanceRecord.objects.filter(
-        date=today,
-        is_deleted=False
+        date=today
     )
 
     stats = {
-        'total_employees': HREmployee.objects.filter(is_deleted=False, status='ACTIVE').count(),
+        'total_employees': HREmployee.objects.filter(status='ACTIVE').count(),
         'present_today': today_attendance.filter(
             status__in=[AttendanceStatus.PRESENT, AttendanceStatus.LATE]
         ).count(),
@@ -65,8 +64,7 @@ def attendance_dashboard(request):
     # This month's statistics
     month_stats = AttendanceRecord.objects.filter(
         date__gte=this_month,
-        date__lte=today,
-        is_deleted=False
+        date__lte=today
     ).aggregate(
         total_late=Count('id', filter=Q(status=AttendanceStatus.LATE)),
         total_absent=Count('id', filter=Q(status=AttendanceStatus.ABSENT)),
@@ -76,14 +74,12 @@ def attendance_dashboard(request):
 
     # Recent delays
     recent_delays = DelayIncident.objects.filter(
-        is_deleted=False,
         date__gte=today - timedelta(days=7)
     ).select_related('employee').order_by('-date')[:10]
 
     # Pending overtime requests
     pending_overtime = OvertimeRequest.objects.filter(
-        status=OvertimeStatus.PENDING,
-        is_deleted=False
+        status=OvertimeStatus.PENDING
     ).select_related('employee').order_by('-date')[:10]
 
     # Configuration info
@@ -113,9 +109,9 @@ def attendance_list(request):
     List and search attendance records
     """
     form = AttendanceSearchForm(request.GET)
-    attendance_records = AttendanceRecord.objects.filter(
-        is_deleted=False
-    ).select_related('employee').order_by('-date', 'employee__employee_no')
+    attendance_records = AttendanceRecord.objects.select_related(
+        'employee'
+    ).order_by('-date', 'employee__employee_no')
 
     # Apply filters
     if form.is_valid():
@@ -240,16 +236,15 @@ def overtime_request_list(request):
     """
     if request.user.is_staff:
         # HR/Staff see all requests
-        overtime_requests = OvertimeRequest.objects.filter(
-            is_deleted=False
-        ).select_related('employee').order_by('-date')
+        overtime_requests = OvertimeRequest.objects.select_related(
+            'employee'
+        ).order_by('-date')
     else:
         # Employees see only their own
         try:
-            employee = HREmployee.objects.get(user=request.user, is_deleted=False)
+            employee = HREmployee.objects.get(user=request.user)
             overtime_requests = OvertimeRequest.objects.filter(
-                employee=employee,
-                is_deleted=False
+                employee=employee
             ).order_by('-date')
         except HREmployee.DoesNotExist:
             overtime_requests = OvertimeRequest.objects.none()
@@ -317,7 +312,7 @@ def overtime_request_detail(request, pk):
     """
     View overtime request details
     """
-    overtime = get_object_or_404(OvertimeRequest, pk=pk, is_deleted=False)
+    overtime = get_object_or_404(OvertimeRequest, pk=pk)
 
     # Check permissions
     is_manager = request.user.is_staff
@@ -343,7 +338,7 @@ def overtime_request_approve(request, pk):
     """
     Approve or reject overtime request
     """
-    overtime = get_object_or_404(OvertimeRequest, pk=pk, is_deleted=False)
+    overtime = get_object_or_404(OvertimeRequest, pk=pk)
 
     if overtime.status != OvertimeStatus.PENDING:
         messages.error(request, 'This overtime request has already been processed.')
@@ -401,9 +396,9 @@ def delay_incident_list(request):
     """
     List all delay incidents with filtering
     """
-    delays = DelayIncident.objects.filter(
-        is_deleted=False
-    ).select_related('employee').order_by('-date')
+    delays = DelayIncident.objects.select_related(
+        'employee'
+    ).order_by('-date')
 
     # Filter by severity
     severity_filter = request.GET.get('severity')
@@ -478,7 +473,7 @@ def delay_incident_review(request, pk):
     """
     Manager reviews and approves/rejects delay excuse
     """
-    delay = get_object_or_404(DelayIncident, pk=pk, is_deleted=False)
+    delay = get_object_or_404(DelayIncident, pk=pk)
 
     if request.method == 'POST':
         has_valid_excuse = request.POST.get('has_valid_excuse') == 'on'
@@ -545,9 +540,9 @@ def export_attendance_csv(request):
     ])
 
     # Apply filters from GET parameters
-    attendance = AttendanceRecord.objects.filter(
-        is_deleted=False
-    ).select_related('employee').order_by('-date')
+    attendance = AttendanceRecord.objects.select_related(
+        'employee'
+    ).order_by('-date')
 
     for record in attendance:
         writer.writerow([

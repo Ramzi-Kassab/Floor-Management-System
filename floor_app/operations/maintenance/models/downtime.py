@@ -42,7 +42,7 @@ class DowntimeEvent(AuditMixin, SoftDeleteMixin, models.Model):
         'maintenance.Asset', on_delete=models.PROTECT, related_name='downtime_events'
     )
     work_order = models.ForeignKey(
-        'maintenance.MaintenanceWorkOrder', on_delete=models.SET_NULL, null=True, blank=True,
+        'maintenance.WorkOrder', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='downtime_events'
     )
 

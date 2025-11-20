@@ -15,10 +15,16 @@ from .preventive import (
     PMTask,
 )
 from .workorder import (
-    MaintenanceRequest,
-    MaintenanceWorkOrder,
     WorkOrderNote,
     WorkOrderPart,
+)
+from .corrective import (
+    MaintenanceRequest,
+    WorkOrder,
+    WorkOrderAttachment,
+)
+from .parts import (
+    PartsUsage,
 )
 from .downtime import (
     DowntimeEvent,
@@ -39,9 +45,11 @@ __all__ = [
     'PMTask',
     # Work Orders
     'MaintenanceRequest',
-    'MaintenanceWorkOrder',
+    'WorkOrder',
     'WorkOrderNote',
     'WorkOrderPart',
+    'WorkOrderAttachment',
+    'PartsUsage',
     # Downtime & Impact
     'DowntimeEvent',
     'ProductionImpact',

@@ -190,9 +190,15 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:employee_wizard_start' %}">
+                                    <i class="bi bi-person-plus"></i>
+                                    <span>New Employee</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link nav-sub-item" href="{% url 'hr:people_list' %}">
                                     <i class="bi bi-person-lines-fill"></i>
-                                    <span>People</span>
+                                    <span>People Directory</span>
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -211,6 +217,112 @@
                                 <a class="nav-link nav-sub-item" href="{% url 'hr:position_list' %}">
                                     <i class="bi bi-person-workspace"></i>
                                     <span>Positions</span>
+                                </a>
+                            </li>
+                            <!-- Leave Management -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Leave Management</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:my_leave_dashboard' %}">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span>My Leave</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:leave_request_list' %}">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Leave Requests</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:leave_calendar' %}">
+                                    <i class="bi bi-calendar3"></i>
+                                    <span>Leave Calendar</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:leave_balance_dashboard' %}">
+                                    <i class="bi bi-cash-stack"></i>
+                                    <span>Leave Balances</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:leave_policy_list' %}">
+                                    <i class="bi bi-shield-check"></i>
+                                    <span>Leave Policies</span>
+                                </a>
+                            </li>
+                            <!-- Attendance & Overtime -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Attendance & Overtime</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:attendance_dashboard' %}">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Attendance Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:attendance_list' %}">
+                                    <i class="bi bi-list-check"></i>
+                                    <span>Attendance Records</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:overtime_request_list' %}">
+                                    <i class="bi bi-clock"></i>
+                                    <span>Overtime Requests</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:delay_incident_list' %}">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>Delay Incidents</span>
+                                </a>
+                            </li>
+                            <!-- Document Management -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Documents</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:my_documents_dashboard' %}">
+                                    <i class="bi bi-folder-fill"></i>
+                                    <span>My Documents</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:hr_documents_dashboard' %}">
+                                    <i class="bi bi-files"></i>
+                                    <span>HR Documents</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:hr_expiry_dashboard' %}">
+                                    <i class="bi bi-calendar-x"></i>
+                                    <span>Expiring Documents</span>
+                                </a>
+                            </li>
+                            <!-- Training & Development -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Training</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:my_training_dashboard' %}">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                    <span>My Training</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:training_program_list' %}">
+                                    <i class="bi bi-book"></i>
+                                    <span>Training Programs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="{% url 'hr:training_session_list' %}">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Training Sessions</span>
                                 </a>
                             </li>
                         </ul>
@@ -537,13 +649,13 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:work_order_list' %}">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:workorder_list' %}">
                                     <i class="bi bi-clipboard-check"></i>
                                     <span>Work Orders</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:pm_plan_list' %}">
+                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:pm_template_list' %}">
                                     <i class="bi bi-calendar-check"></i>
                                     <span>PM Plans</span>
                                 </a>
@@ -561,7 +673,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-sub-item" href="{% url 'maintenance:settings' %}">
+                                <a class="nav-link nav-sub-item" href="{% url 'core:user_preferences' %}">
                                     <i class="bi bi-gear"></i>
                                     <span>Settings</span>
                                 </a>

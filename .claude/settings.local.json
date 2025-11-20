@@ -10,7 +10,14 @@
       "Bash(.venv/Scripts/python.exe manage.py showmigrations floor_app hr)",
       "Bash(venv/Scripts/python.exe:*)",
       "Bash(nul)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(echo:*)",
+      "Bash(python:*)",
+      "Bash(del \"floor_app\\operations\\maintenance\\migrations\\0002_assetmeterreading_lostsalesrecord_and_more.py\")",
+      "Bash(taskkill:*)",
+      "Bash(if exist \"floor_app\\**\\__pycache__\" rmdir /s /q \"floor_app\\**\\__pycache__\")",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

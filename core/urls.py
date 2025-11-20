@@ -14,7 +14,7 @@ Includes:
 
 from django.urls import path
 from . import views
-from .views.health import health_check, readiness_check, liveness_check
+from .health import health_check, readiness_check, liveness_check
 
 app_name = "core"
 

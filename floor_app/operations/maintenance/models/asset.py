@@ -179,8 +179,8 @@ class Asset(AuditMixin, SoftDeleteMixin, PublicIdMixin, models.Model):
             models.Index(fields=['qr_token']),
             models.Index(fields=['is_critical']),
             # Performance indexes for common queries
-            models.Index(fields=['-last_maintenance_date'], name='idx_asset_last_maint'),
-            models.Index(fields=['next_pm_due_date'], name='idx_asset_next_pm'),
+            models.Index(fields=['-last_pm_date'], name='idx_asset_last_maint'),
+            models.Index(fields=['next_pm_date'], name='idx_asset_next_pm'),
             models.Index(fields=['manufacturer', 'model_number'], name='idx_asset_mfr_model'),
             models.Index(fields=['is_deleted', 'status'], name='idx_asset_active'),
         ]

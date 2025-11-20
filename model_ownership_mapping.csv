@@ -1,0 +1,141 @@
+App,Model,Likely Owner Department,Current Location,Should Move To,Priority,Issues
+core,UserPreference,IT/UX,core,core,OK,None
+core,CostCenter,Finance,core,core,OK,None
+core,ERPDocumentType,IT/Integration,core,core,OK,None
+core,ERPReference,IT/Integration,core,core,OK,None
+core,LossOfSaleCause,Finance,core,core,OK,None
+core,LossOfSaleEvent,Finance,core,core,OK,None
+core,ApprovalType,IT/Workflow,core,core,OK,None
+core,ApprovalAuthority,IT/Workflow,core,core,OK,None
+core,Currency,Finance,core,core,OK,Possible duplicate with purchasing.Currency
+core,ExchangeRate,Finance,core,core,OK,None
+core,Notification,IT/Communication,core,core,OK,None
+core,ActivityLog,IT/Audit,core,core,OK,None
+operations,Address,Shared/HR,operations,operations,OK,Used by HR and others
+inventory,ConditionType,Inventory,inventory,inventory,OK,None
+inventory,OwnershipType,Inventory,inventory,inventory,OK,None
+inventory,UnitOfMeasure,Inventory,inventory,inventory,OK,None
+inventory,ItemCategory,Inventory,inventory,inventory,OK,None
+inventory,BitDesignLevel,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+inventory,BitDesignType,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+inventory,BitDesign,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+inventory,BitDesignRevision,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain + has cost fields
+inventory,Item,Inventory,inventory,inventory,OK,Cost fields acceptable for inventory valuation
+inventory,Location,Inventory,inventory,inventory,OK,None
+inventory,SerialUnit,Inventory,inventory,inventory,OK,None
+inventory,SerialUnitMATHistory,Inventory,inventory,inventory,OK,Audit trail for retrofits
+inventory,InventoryStock,Inventory,inventory,inventory,OK,None
+inventory,AttributeDefinition,Inventory,inventory,inventory,OK,None
+inventory,CategoryAttributeMap,Inventory,inventory,inventory,OK,None
+inventory,ItemAttributeValue,Inventory,inventory,inventory,OK,None
+inventory,BOMHeader,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain + has cost fields
+inventory,BOMLine,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain + has cost field
+inventory,CutterOwnershipCategory,Inventory,inventory,inventory,OK,Cutter-specific ownership
+inventory,CutterDetail,Inventory,inventory,inventory,OK,Cutter-specific attributes
+inventory,CutterPriceHistory,Finance/Inventory,inventory,inventory,OK,Time-based pricing
+inventory,CutterInventorySummary,Inventory,inventory,inventory,OK,Computed inventory levels
+inventory,CutterBOMGridHeader,Engineering,inventory,engineering,MEDIUM,BOM-related
+inventory,CutterBOMGridCell,Engineering,inventory,engineering,MEDIUM,BOM-related
+inventory,CutterBOMSummary,Engineering,inventory,engineering,MEDIUM,BOM-related
+inventory,CutterMapHeader,Engineering,inventory,engineering,MEDIUM,Layout mapping
+inventory,CutterMapCell,Engineering,inventory,engineering,MEDIUM,Layout mapping
+inventory,BOMUsageTracking,Engineering,inventory,engineering,MEDIUM,BOM usage history
+inventory,RollerConeBitType,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+inventory,RollerConeBearing,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+inventory,RollerConeSeal,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+inventory,RollerConeDesign,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+inventory,RollerConeComponent,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain + has cost field
+inventory,RollerConeBOM,Engineering,inventory,engineering,HIGH,MISPLACED - Engineering domain
+production,OperationDefinition,Production,production,production,OK,None
+production,CutterSymbol,Production,production,production,OK,None
+production,ChecklistTemplate,Quality/Production,production,production,OK,None
+production,ChecklistItemTemplate,Quality/Production,production,production,OK,None
+production,BatchOrder,Production,production,production,OK,None
+production,JobCard,Production,production,production,OK,Cost fields acceptable - production owns job costing
+production,JobRoute,Production,production,production,OK,None
+production,JobRouteStep,Production,production,production,OK,None
+production,CutterLayout,Engineering,production,engineering,MEDIUM,Design-related layout
+production,CutterLocation,Engineering,production,engineering,MEDIUM,Design-related layout
+production,JobCutterEvaluationHeader,Production,production,production,OK,None
+production,JobCutterEvaluationDetail,Production,production,production,OK,None
+production,JobCutterEvaluationOverride,Production,production,production,OK,None
+production,ApiThreadInspection,Quality/Production,production,production,OK,None
+production,NdtReport,Quality/Production,production,production,OK,None
+production,JobChecklistInstance,Production,production,production,OK,None
+production,JobChecklistItem,Production,production,production,OK,None
+production,Quotation,Sales/Production,production,sales,MEDIUM,Could move to sales
+production,QuotationLine,Sales/Production,production,sales,MEDIUM,Could move to sales
+quality,DefectCategory,Quality,quality,quality,OK,None
+quality,RootCauseCategory,Quality,quality,quality,OK,None
+quality,NonconformanceReport,Quality,quality,quality,HIGH,REMOVE FINANCIAL FIELDS - Violates SOD
+quality,NCRRootCauseAnalysis,Quality,quality,quality,OK,None
+quality,NCRCorrectiveAction,Quality,quality,quality,OK,None
+quality,CalibrationSchedule,Quality,quality,quality,OK,None
+quality,CalibrationRecord,Quality,quality,quality,OK,None
+quality,DispositionAction,Quality,quality,quality,OK,None
+hr,Department,HR,hr,hr,OK,None
+hr,Position,HR,hr,hr,OK,None
+hr,HRPeople,HR,hr,hr,OK,None
+hr,Employee,HR,hr,hr,OK,None
+hr,Qualification,HR,hr,hr,OK,None
+hr,Training,HR,hr,hr,OK,None
+hr,Leave,HR,hr,hr,OK,None
+hr,Attendance,HR,hr,hr,OK,None
+hr,Document,HR,hr,hr,OK,None
+hr,Email,HR,hr,hr,OK,None
+hr,Phone,HR,hr,hr,OK,None
+hr,AuditLog,HR,hr,hr,OK,None
+hr,Configuration,HR,hr,hr,OK,None
+purchasing,Supplier,Purchasing,purchasing,purchasing,OK,None
+purchasing,Currency,Finance,purchasing,core,LOW,Duplicate of core.Currency?
+purchasing,Incoterms,Purchasing,purchasing,purchasing,OK,None
+purchasing,PaymentTerms,Purchasing,purchasing,purchasing,OK,None
+purchasing,PurchaseOrder,Purchasing,purchasing,purchasing,OK,None
+purchasing,PurchaseOrderLine,Purchasing,purchasing,purchasing,OK,None
+purchasing,Requisition,Purchasing,purchasing,purchasing,OK,None
+purchasing,RFQ,Purchasing,purchasing,purchasing,OK,None
+purchasing,Receipt,Purchasing,purchasing,purchasing,OK,None
+purchasing,Returns,Purchasing,purchasing,purchasing,OK,None
+purchasing,Invoice,Purchasing/Finance,purchasing,purchasing,OK,None
+purchasing,Shipment,Logistics,purchasing,purchasing,OK,None
+purchasing,Transfer,Inventory,purchasing,inventory,MEDIUM,Inter-warehouse transfers - inventory domain
+planning,Schedule,Planning,planning,planning,OK,None
+planning,Resource,Planning,planning,planning,OK,None
+planning,Requirements,Planning,planning,planning,OK,None
+planning,KPI,Planning/Analytics,planning,planning,OK,None
+planning,Metrics,Planning/Analytics,planning,planning,OK,None
+planning,VisualPlanning,Planning,planning,planning,OK,None
+sales,Customer,Sales,sales,sales,OK,None
+sales,Sales,Sales,sales,sales,OK,None
+sales,Drilling,Sales/Field Service,sales,sales,OK,None
+sales,DullGrade,Sales/Field Service,sales,sales,OK,None
+sales,Lifecycle,Sales/Field Service,sales,sales,OK,None
+maintenance,Asset,Maintenance,maintenance,maintenance,OK,None
+maintenance,MaintenanceRequest,Maintenance,maintenance,maintenance,OK,None
+maintenance,WorkOrder,Maintenance,maintenance,maintenance,OK,Cost fields acceptable
+maintenance,PreventiveMaintenance,Maintenance,maintenance,maintenance,OK,None
+maintenance,DowntimeEvent,Maintenance,maintenance,maintenance,OK,None
+maintenance,PartsUsage,Maintenance,maintenance,maintenance,OK,None
+analytics,Event,Analytics,analytics,analytics,OK,None
+analytics,AutomationRule,Analytics,analytics,analytics,OK,None
+analytics,InformationRequest,Analytics,analytics,analytics,OK,None
+analytics,Tracking,Analytics,analytics,analytics,OK,None
+evaluation,Session,Evaluation/Quality,evaluation,evaluation,OK,None
+evaluation,Cell,Evaluation/Quality,evaluation,evaluation,OK,None
+evaluation,Inspection,Evaluation/Quality,evaluation,evaluation,OK,None
+evaluation,Instructions,Evaluation/Quality,evaluation,evaluation,OK,None
+evaluation,Reference,Evaluation/Quality,evaluation,evaluation,OK,None
+evaluation,Audit,Evaluation/Quality,evaluation,evaluation,OK,None
+evaluation,Instances,Evaluation/Quality,evaluation,evaluation,OK,None
+qrcodes,QCode,Operations/IT,qrcodes,qrcodes,OK,None
+qrcodes,ScanLog,Operations/IT,qrcodes,qrcodes,OK,None
+qrcodes,Movement,Operations/Inventory,qrcodes,qrcodes,OK,None
+qrcodes,ProcessExecution,Operations/Production,qrcodes,qrcodes,OK,None
+qrcodes,Maintenance,Operations/Maintenance,qrcodes,qrcodes,OK,None
+knowledge,Article,Knowledge Management,knowledge,knowledge,OK,None
+knowledge,Category,Knowledge Management,knowledge,knowledge,OK,None
+knowledge,Document,Knowledge Management,knowledge,knowledge,OK,None
+knowledge,FAQ,Knowledge Management,knowledge,knowledge,OK,None
+knowledge,Instruction,Knowledge Management,knowledge,knowledge,OK,None
+knowledge,Tag,Knowledge Management,knowledge,knowledge,OK,None
+knowledge,Training,Knowledge Management,knowledge,knowledge,OK,None

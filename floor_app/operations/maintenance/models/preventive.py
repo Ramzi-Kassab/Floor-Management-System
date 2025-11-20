@@ -179,7 +179,7 @@ class PMTask(AuditMixin, models.Model):
 
     # Link to generated work order
     work_order = models.OneToOneField(
-        'maintenance.MaintenanceWorkOrder', on_delete=models.SET_NULL, null=True, blank=True,
+        'maintenance.WorkOrder', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='source_pm_task'
     )
 

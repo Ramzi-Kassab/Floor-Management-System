@@ -13,7 +13,7 @@ class MaintenanceService:
     @staticmethod
     def get_dashboard_stats():
         """Get key metrics for maintenance dashboard."""
-        from .models import Asset, MaintenanceWorkOrder, PMSchedule, DowntimeEvent
+        from .models import Asset, WorkOrder, PMSchedule, DowntimeEvent
 
         today = timezone.now().date()
 
@@ -27,12 +27,12 @@ class MaintenanceService:
         ).count()
 
         # Work order stats
-        open_work_orders = MaintenanceWorkOrder.objects.filter(
+        open_work_orders = WorkOrder.objects.filter(
             is_deleted=False,
             status__in=['PLANNED', 'ASSIGNED', 'IN_PROGRESS', 'WAITING_PARTS']
         ).count()
 
-        overdue_work_orders = MaintenanceWorkOrder.objects.filter(
+        overdue_work_orders = WorkOrder.objects.filter(
             is_deleted=False,
             status__in=['PLANNED', 'ASSIGNED', 'IN_PROGRESS'],
             planned_end__lt=today
@@ -82,28 +82,28 @@ class MaintenanceService:
     @staticmethod
     def get_work_orders_by_type():
         """Get work order count by type for chart."""
-        from .models import MaintenanceWorkOrder
-        return MaintenanceWorkOrder.objects.filter(
+        from .models import WorkOrder
+        return WorkOrder.objects.filter(
             is_deleted=False
         ).values('work_order_type').annotate(count=Count('id'))
 
     @staticmethod
     def get_recent_work_orders(limit=10):
         """Get most recent work orders."""
-        from .models import MaintenanceWorkOrder
-        return MaintenanceWorkOrder.objects.filter(
+        from .models import WorkOrder
+        return WorkOrder.objects.filter(
             is_deleted=False
         ).select_related('asset', 'assigned_to').order_by('-created_at')[:limit]
 
     @staticmethod
     def convert_request_to_work_order(request_obj, user=None):
         """Convert approved maintenance request to work order."""
-        from .models import MaintenanceWorkOrder
+        from .models import WorkOrder
 
         if request_obj.status != 'APPROVED':
             raise ValueError("Only approved requests can be converted to work orders")
 
-        work_order = MaintenanceWorkOrder.objects.create(
+        work_order = WorkOrder.objects.create(
             asset=request_obj.asset,
             title=request_obj.title,
             description=request_obj.description,
@@ -264,7 +264,7 @@ class AssetService:
     @staticmethod
     def get_asset_health_score(asset):
         """Calculate health score based on maintenance history."""
-        from .models import MaintenanceWorkOrder, PMTask
+        from .models import WorkOrder, PMTask
 
         score = 100
 

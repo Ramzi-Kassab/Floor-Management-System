@@ -129,7 +129,7 @@
                                 <h5 class="card-title mb-0">Work Orders</h5>
                             </div>
                             <p class="card-text text-muted">Manage corrective maintenance work orders</p>
-                            <a href="{% url 'maintenance:work_order_list' %}" class="btn btn-outline-warning w-100">
+                            <a href="{% url 'maintenance:workorder_list' %}" class="btn btn-outline-warning w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Work Orders
                             </a>
                         </div>
@@ -165,7 +165,7 @@
                                 <h5 class="card-title mb-0">Preventive Maintenance</h5>
                             </div>
                             <p class="card-text text-muted">Schedule and track PM tasks</p>
-                            <a href="{% url 'maintenance:pm_plan_list' %}" class="btn btn-outline-success w-100">
+                            <a href="{% url 'maintenance:pm_template_list' %}" class="btn btn-outline-success w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View PM Plans
                             </a>
                         </div>
@@ -249,7 +249,7 @@
                     {% if open_work_orders %}
                         <div class="list-group list-group-flush">
                             {% for wo in open_work_orders %}
-                            <a href="{% url 'maintenance:work_order_detail' wo.pk %}" class="list-group-item list-group-item-action border-0 px-0">
+                            <a href="{% url 'maintenance:workorder_detail' wo.work_order_number %}" class="list-group-item list-group-item-action border-0 px-0">
                                 <div class="d-flex justify-content-between">
                                     <span class="fw-bold">{{ wo.number }}</span>
                                     <span class="badge bg-warning">{{ wo.priority }}</span>
@@ -276,13 +276,13 @@
                         <a href="{% url 'maintenance:request_create' %}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-plus-circle me-2"></i>New Maintenance Request
                         </a>
-                        <a href="{% url 'maintenance:work_order_create' %}" class="btn btn-sm btn-outline-warning">
+                        <a href="{% url 'maintenance:workorder_create' %}" class="btn btn-sm btn-outline-warning">
                             <i class="bi bi-tools me-2"></i>Create Work Order
                         </a>
                         <a href="{% url 'maintenance:downtime_create' %}" class="btn btn-sm btn-outline-danger">
                             <i class="bi bi-clock me-2"></i>Record Downtime
                         </a>
-                        <a href="{% url 'maintenance:settings' %}" class="btn btn-sm btn-outline-secondary">
+                        <a href="{% url 'core:user_preferences' %}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-gear me-2"></i>Settings
                         </a>
                     </div>

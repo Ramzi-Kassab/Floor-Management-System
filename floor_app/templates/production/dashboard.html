@@ -148,7 +148,7 @@
                                 <h5 class="card-title mb-0">Evaluations</h5>
                             </div>
                             <p class="card-text text-muted">Production quality evaluations and inspections</p>
-                            <a href="{% url 'production:evaluation_list' %}" class="btn btn-outline-warning w-100">
+                            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-warning w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Evaluations
                             </a>
                         </div>
@@ -166,7 +166,7 @@
                                 <h5 class="card-title mb-0">NDT Inspections</h5>
                             </div>
                             <p class="card-text text-muted">Non-destructive testing records</p>
-                            <a href="{% url 'production:ndt_list' %}" class="btn btn-outline-primary w-100">
+                            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-primary w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View NDT Records
                             </a>
                         </div>
@@ -184,7 +184,7 @@
                                 <h5 class="card-title mb-0">Thread Inspections</h5>
                             </div>
                             <p class="card-text text-muted">Thread measurement and inspection records</p>
-                            <a href="{% url 'production:thread_inspection_list' %}" class="btn btn-outline-danger w-100">
+                            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-danger w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Inspections
                             </a>
                         </div>
@@ -202,7 +202,7 @@
                                 <h5 class="card-title mb-0">Checklists</h5>
                             </div>
                             <p class="card-text text-muted">Production checklists and verification</p>
-                            <a href="{% url 'production:checklist_list' %}" class="btn btn-outline-secondary w-100">
+                            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-secondary w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Checklists
                             </a>
                         </div>
@@ -279,9 +279,7 @@
                         <a href="{% url 'production:jobcard_create' %}" class="btn btn-sm btn-outline-success">
                             <i class="bi bi-card-checklist me-2"></i>New Job Card
                         </a>
-                        <a href="{% url 'production:evaluation_create' %}" class="btn btn-sm btn-outline-warning">
-                            <i class="bi bi-clipboard-check me-2"></i>New Evaluation
-                        </a>
+
                         <a href="{% url 'production:settings' %}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-gear me-2"></i>Settings
                         </a>

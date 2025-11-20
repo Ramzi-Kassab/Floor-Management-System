@@ -171,8 +171,8 @@ class MaintenanceRequestAdmin(admin.ModelAdmin):
     status_badge.short_description = 'Status'
 
 
-@admin.register(MaintenanceWorkOrder)
-class MaintenanceWorkOrderAdmin(admin.ModelAdmin):
+@admin.register(WorkOrder)
+class WorkOrderAdmin(admin.ModelAdmin):
     list_display = [
         'work_order_number', 'title', 'asset', 'work_order_type', 'priority_badge',
         'status_badge', 'assigned_to', 'planned_start', 'actual_end', 'total_cost'

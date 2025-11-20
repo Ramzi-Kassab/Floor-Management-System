@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 
-@receiver(post_save, sender='maintenance.MaintenanceWorkOrder')
+@receiver(post_save, sender='maintenance.WorkOrder')
 def update_asset_status_on_work_order(sender, instance, **kwargs):
     """Update asset status based on work order status changes."""
     from .models import Asset
@@ -58,7 +58,7 @@ def update_asset_downtime_stats(sender, instance, **kwargs):
         pass
 
 
-@receiver(pre_save, sender='maintenance.MaintenanceWorkOrder')
+@receiver(pre_save, sender='maintenance.WorkOrder')
 def calculate_total_cost(sender, instance, **kwargs):
     """Calculate total cost before saving work order."""
     labor_cost = instance.labor_cost or 0
