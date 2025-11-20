@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'floor_app.apps.FloorAppConfig',
     'floor_app.operations.hr.apps.HRConfig',
     'floor_app.operations.inventory.apps.InventoryConfig',
+    'floor_app.operations.engineering.apps.EngineeringConfig',  # NEW: Engineering - Design & BOM
     'floor_app.operations.production.apps.ProductionConfig',
     'floor_app.operations.evaluation.apps.EvaluationConfig',
     'floor_app.operations.qrcodes.apps.QRCodesConfig',

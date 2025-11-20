@@ -17,7 +17,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from floor_app.mixins import AuditMixin, SoftDeleteMixin, PublicIdMixin
 from .reference import ItemCategory, UnitOfMeasure
-from .bit_design import BitDesignRevision
+# BitDesignRevision moved to engineering app - use string reference
 
 
 class Item(PublicIdMixin, AuditMixin, SoftDeleteMixin):
@@ -65,7 +65,7 @@ class Item(PublicIdMixin, AuditMixin, SoftDeleteMixin):
 
     # Optional link to bit design (only for bit-related items)
     bit_design_revision = models.ForeignKey(
-        BitDesignRevision,
+        'engineering.BitDesignRevision',  # ⚠️ String reference - model moved to engineering app
         on_delete=models.PROTECT,
         null=True,
         blank=True,
