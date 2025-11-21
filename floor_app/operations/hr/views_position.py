@@ -58,7 +58,7 @@ class PositionListView(LoginRequiredMixin, ListView):
         if sort_by in ['name', '-name', 'department__name', '-department__name', 'position_level', '-position_level', 'created_at', '-created_at']:
             queryset = queryset.order_by(sort_by, 'name')
 
-        return queryset.annotate(employee_count=Count('employees', filter=Q(employees__is_deleted=False)))
+        return queryset.annotate(num_employees=Count('employees', filter=Q(employees__is_deleted=False)))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -242,7 +242,7 @@ def position_list(request):
     if sort_by in ['name', '-name', 'department__name', '-department__name', 'position_level', 'created_at']:
         positions = positions.order_by(sort_by, 'name')
 
-    positions = positions.annotate(employee_count=Count('employees', filter=Q(employees__is_deleted=False)))
+    positions = positions.annotate(num_employees=Count('employees', filter=Q(employees__is_deleted=False)))
 
     context = {
         'positions': positions,

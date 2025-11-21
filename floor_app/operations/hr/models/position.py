@@ -100,7 +100,6 @@ class Position(HRAuditMixin, HRSoftDeleteMixin):
     def __str__(self):
         return f"{self.name} ({self.department.name})"
 
-    @property
-    def employee_count(self):
+    def get_employee_count(self):
         """Count how many employees have this position."""
         return self.employees.filter(is_deleted=False).count()

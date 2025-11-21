@@ -71,8 +71,8 @@ def hr_dashboard(request):
     ).order_by('start_date')[:4]
 
     open_positions = positions.annotate(
-        employee_count=Count('employees', filter=Q(employees__is_deleted=False))
-    ).filter(employee_count=0).select_related('department')
+        num_employees=Count('employees', filter=Q(employees__is_deleted=False))
+    ).filter(num_employees=0).select_related('department')
 
     context = {
         'summary': {
