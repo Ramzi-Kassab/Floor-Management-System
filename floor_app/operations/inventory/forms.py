@@ -1,8 +1,12 @@
 from django import forms
 from .models import (
-    Item, SerialUnit, BOMHeader, BOMLine, InventoryTransaction,
+    Item, SerialUnit, InventoryTransaction,
     ItemCategory, ConditionType, OwnershipType, Location, UnitOfMeasure,
-    BitDesign, BitDesignRevision, BitDesignLevel, BitDesignType
+)
+# Models moved to engineering app:
+from floor_app.operations.engineering.models import (
+    BitDesign, BitDesignRevision, BitDesignLevel, BitDesignType,
+    BOMHeader, BOMLine,
 )
 
 
@@ -11,7 +15,7 @@ class ItemForm(forms.ModelForm):
         model = Item
         fields = [
             'sku', 'name', 'short_name', 'category', 'uom',
-            'bit_design_revision', 'min_stock_qty', 'reorder_point',
+            'bit_design_revision', 'reorder_point',  # Removed min_stock_qty - redundant
             'reorder_qty', 'safety_stock', 'lead_time_days',
             'standard_cost', 'currency', 'is_active', 'is_purchasable',
             'is_producible', 'is_sellable', 'is_stockable',
@@ -25,7 +29,7 @@ class ItemForm(forms.ModelForm):
             'category': forms.Select(attrs={'class': 'form-select'}),
             'uom': forms.Select(attrs={'class': 'form-select'}),
             'bit_design_revision': forms.Select(attrs={'class': 'form-select'}),
-            'min_stock_qty': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            # Removed min_stock_qty widget - field is redundant with reorder_point
             'reorder_point': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'reorder_qty': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'safety_stock': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),

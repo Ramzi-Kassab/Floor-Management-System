@@ -74,17 +74,12 @@ class Item(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     )
 
     # Inventory planning
-    min_stock_qty = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        help_text="Minimum quantity to maintain in stock"
-    )
+    # NOTE: Removed min_stock_qty - redundant with reorder_point (see FIELD_DUPLICATION_ANALYSIS.md)
     reorder_point = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0,
-        help_text="Quantity at which to reorder"
+        help_text="Quantity at which to reorder (trigger point for new purchase/production order)"
     )
     reorder_qty = models.DecimalField(
         max_digits=10,
