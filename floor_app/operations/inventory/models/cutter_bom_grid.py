@@ -39,7 +39,7 @@ class CutterBOMGridHeader(AuditMixin):
 
     # Link to traditional BOM
     bom_header = models.OneToOneField(
-        'BOMHeader',
+        'engineering.BOMHeader',
         on_delete=models.CASCADE,
         related_name='cutter_grid',
         help_text="Parent BOM header"
@@ -920,7 +920,7 @@ class BOMUsageTracking(models.Model):
     """
 
     bom_header = models.ForeignKey(
-        'BOMHeader',
+        'engineering.BOMHeader',
         on_delete=models.PROTECT,
         related_name='usage_records'
     )

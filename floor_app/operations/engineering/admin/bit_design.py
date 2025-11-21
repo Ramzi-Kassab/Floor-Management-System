@@ -45,9 +45,9 @@ class BitDesignRevisionInline(admin.TabularInline):
 class BitDesignAdmin(admin.ModelAdmin):
     list_display = [
         'design_code', 'name', 'level', 'bit_category',
-        'size_inches', 'blade_count', 'is_active', 'created_at'
+        'size_inches', 'blade_count', 'created_at'
     ]
-    list_filter = ['bit_category', 'level', 'is_active', 'is_deleted']
+    list_filter = ['bit_category', 'level', 'is_deleted']
     search_fields = ['design_code', 'name']
     ordering = ['-created_at']
     readonly_fields = ['public_id', 'created_at', 'updated_at', 'created_by', 'updated_by']

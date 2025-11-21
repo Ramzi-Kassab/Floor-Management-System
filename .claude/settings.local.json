@@ -1,23 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python manage.py migrate:*)",
-      "Bash(cmd /c:*)",
-      "Bash(node -c:*)",
-      "Bash(.venvScriptsactivate)",
-      "Bash(python manage.py showmigrations:*)",
-      "Bash(.venvScriptspython.exe manage.py showmigrations floor_app hr)",
-      "Bash(.venv/Scripts/python.exe manage.py showmigrations floor_app hr)",
-      "Bash(venv/Scripts/python.exe:*)",
-      "Bash(nul)",
-      "Bash(dir:*)",
-      "Bash(find:*)",
-      "Bash(echo:*)",
-      "Bash(python:*)",
-      "Bash(del \"floor_app\\operations\\maintenance\\migrations\\0002_assetmeterreading_lostsalesrecord_and_more.py\")",
-      "Bash(taskkill:*)",
-      "Bash(if exist \"floor_app\\**\\__pycache__\" rmdir /s /q \"floor_app\\**\\__pycache__\")",
-      "Bash(git add:*)"
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(if [ -d \".venv\" ])",
+      "Bash(then echo \"Virtual environment found at .venv\")",
+      "Bash(else echo \"No .venv directory found\")",
+      "Bash(fi)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

@@ -184,7 +184,7 @@ class InventoryTransaction(PostingMixin):
 
     # For RETROFIT: MAT change tracking
     from_mat = models.ForeignKey(
-        'BitDesignRevision',
+        'engineering.BitDesignRevision',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -192,7 +192,7 @@ class InventoryTransaction(PostingMixin):
         help_text="Source MAT (for retrofit)"
     )
     to_mat = models.ForeignKey(
-        'BitDesignRevision',
+        'engineering.BitDesignRevision',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

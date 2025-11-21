@@ -48,7 +48,7 @@ class EvaluationSession(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     )
 
     mat_revision = models.ForeignKey(
-        'inventory.BitDesignRevision',
+        'engineering.BitDesignRevision',
         on_delete=models.PROTECT,
         related_name='evaluation_sessions',
         help_text="MAT/design revision used as reference for this evaluation"
