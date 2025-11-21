@@ -132,24 +132,27 @@ class NonconformanceReport(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     )
     disposition_at = models.DateTimeField(null=True, blank=True)
 
-    # Cost impact
+    # ⚠️ DEPRECATED - Financial fields moving to finance.NCRFinancialImpact
+    # These fields will be removed after data migration is complete
+    # See: NCR_FINANCIAL_MIGRATION_GUIDE.md
+    # TODO: Remove these fields after data migration (Part 1.3 completion)
     estimated_cost_impact = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=0,
-        help_text="Estimated cost of the nonconformance"
+        help_text="DEPRECATED: Use finance.NCRFinancialImpact instead"
     )
     actual_cost_impact = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=0,
-        help_text="Actual cost after resolution"
+        help_text="DEPRECATED: Use finance.NCRFinancialImpact instead"
     )
     lost_revenue = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=0,
-        help_text="Lost revenue due to this NCR"
+        help_text="DEPRECATED: Use finance.NCRFinancialImpact instead"
     )
 
     # Workflow management

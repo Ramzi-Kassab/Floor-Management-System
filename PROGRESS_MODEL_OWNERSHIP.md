@@ -1,6 +1,6 @@
 # Model Ownership Refactoring - Progress Report
 
-## Current Status: PART 1.2 COMPLETE (75% Overall)
+## Current Status: PART 1.3 SETUP COMPLETE (80% Overall)
 
 **Branch:** `claude/model-ownership-setup-01KFU2rmpStGzLjpNspZop1U`
 **Last Updated:** 2025-11-21
@@ -89,6 +89,49 @@
 - ✅ All string references now point to correct engineering app
 - ✅ Production maintains clear ownership of routing/operations
 
+### Part 1.3: Finance App Creation & NCR Financial Separation ✅
+
+#### 1. Created Finance App Structure
+- ✅ Created `floor_app/operations/finance/` directory structure
+- ✅ Created `apps.py` with FinanceConfig
+- ✅ Created models, admin, migrations directories
+- ✅ Added `floor_app.operations.finance.apps.FinanceConfig` to `INSTALLED_APPS`
+
+#### 2. Created NCRFinancialImpact Model
+- ✅ Created `finance/models/ncr_financial.py` with NCRFinancialImpact model
+- ✅ Model contains 3 financial fields migrated from NCR:
+  - `estimated_cost_impact` - Estimated cost of nonconformance
+  - `actual_cost_impact` - Actual cost after resolution
+  - `lost_revenue` - Lost revenue due to NCR
+- ✅ Added computed properties: `total_financial_impact`, `cost_variance`, `has_financial_impact`
+- ✅ Uses loose coupling via ncr_number field (one-to-one relationship)
+
+#### 3. Created Admin Interface
+- ✅ Created `finance/admin/__init__.py` with NCRFinancialImpactAdmin
+- ✅ Admin displays all financial metrics
+- ✅ Proper fieldsets for cost tracking
+
+#### 4. Marked NCR Fields as Deprecated
+- ✅ Updated `quality/models/ncr.py` with deprecation warnings
+- ✅ Added clear TODO comments for field removal
+- ✅ Updated help_text to direct users to finance.NCRFinancialImpact
+
+#### 5. Created Migration Guide
+- ✅ Created comprehensive `NCR_FINANCIAL_MIGRATION_GUIDE.md`
+- ✅ Documents complete migration process (7 phases)
+- ✅ Includes data migration script template
+- ✅ Provides rollback procedures
+- ✅ Lists verification checklist
+
+#### 6. Domain Separation Achieved
+- ✅ Quality app owns process/compliance data
+- ✅ Finance app owns cost/impact data
+- ✅ Clear domain boundaries established
+- ✅ Independent financial reporting capability
+
+**Note:** Actual field removal pending Python environment for migration execution.
+See NCR_FINANCIAL_MIGRATION_GUIDE.md for complete migration steps.
+
 ---
 
 ## 🚧 IN PROGRESS / NEXT STEPS
@@ -131,14 +174,18 @@ Searched for old imports in:
 
 ## 📋 REMAINING TASKS
 
-### Part 1.3: Remove Financial Fields from Quality NCR (10%)
-- [ ] Create Finance app (if doesn't exist): `floor_app/operations/finance/`
-- [ ] Create `NCRFinancialImpact` model in Finance
-- [ ] Create data migration to copy financial data from NCR to NCRFinancialImpact
-- [ ] Remove financial fields from `quality/models/ncr.py`
-- [ ] Update NCR forms and admin
-- [ ] Create Finance admin for NCRFinancialImpact
-- [ ] Test data integrity
+### Part 1.3: Complete NCR Financial Migration (BLOCKED - Needs Python Env)
+**Setup Complete - Awaiting Migration Execution**
+- [x] Finance app created
+- [x] NCRFinancialImpact model defined
+- [x] Migration guide documented
+- [ ] Generate Django migrations (BLOCKED)
+- [ ] Execute data migration (BLOCKED)
+- [ ] Remove deprecated fields from NCR (BLOCKED)
+- [ ] Update NCR forms and admin (BLOCKED)
+- [ ] Verification testing (BLOCKED)
+
+See `NCR_FINANCIAL_MIGRATION_GUIDE.md` for execution steps.
 
 ### Part 2: Normalize Departments & Positions (QAS-105)
 
@@ -266,9 +313,16 @@ Part 1.1 is complete when:
 
 2. **b634960** - docs: update progress report - Part 1.1 at 85% complete
 
-3. **[PENDING]** - refactor: update production models to reference engineering app
+3. **d720cc8** - refactor: update production models to reference engineering app
    - Updated job_card.py to use engineering.BitDesignRevision and engineering.BOMHeader
    - Updated evaluation.py to use engineering.BitDesignRevision
    - Completed Part 1.2 verification
+
+4. **[PENDING]** - feat: create Finance app and NCRFinancialImpact model (Part 1.3)
+   - Created complete Finance app structure
+   - Created NCRFinancialImpact model with 3 financial fields
+   - Created admin interface for financial tracking
+   - Marked NCR financial fields as deprecated
+   - Created comprehensive migration guide
 
 Previous commits from earlier session documented in SESSION_SUMMARY_2025-11-21.md
