@@ -7,6 +7,8 @@ from django.db.models import Q, Count
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
 from floor_app.operations.hr.models import HREmployee, HRPeople, Department
 from floor_app.operations.production.models import JobCard, BatchOrder
@@ -14,6 +16,7 @@ from floor_app.operations.quality.models import NonconformanceReport
 from django.contrib.auth.models import User
 
 
+@method_decorator(ratelimit(key='ip', rate='5/m', method='POST'), name='dispatch')
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
     redirect_authenticated_user = True
@@ -43,6 +46,7 @@ class CustomLogoutView(LogoutView):
         return self.post(request, *args, **kwargs)
 
 
+@method_decorator(ratelimit(key='ip', rate='3/h', method='POST'), name='dispatch')
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'registration/password_reset.html'
     email_template_name = 'registration/password_reset_email.html'
@@ -55,6 +59,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     success_url = reverse_lazy('password_reset_complete')
 
 
+@ratelimit(key='ip', rate='3/h', method='POST')
 def signup(request):
     if request.user.is_authenticated:
         return redirect('home')

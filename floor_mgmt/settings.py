@@ -218,6 +218,16 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
+# Session Security
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 3600  # 1 hour default, extended if "remember me" checked
+
+# Password Reset Token Expiration
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
