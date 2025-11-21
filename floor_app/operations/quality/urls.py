@@ -46,5 +46,5 @@ urlpatterns = [
     path('reports/calibration-status/', views.calibration_status_report, name='calibration_status_report'),
 
     # Settings
-    path('settings/', views.settings_dashboard, name='settings_dashboard'),
+    path('settings/', views.settings_dashboard, name='settings'),
 ]

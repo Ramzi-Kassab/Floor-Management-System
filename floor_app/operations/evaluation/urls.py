@@ -47,10 +47,9 @@ urlpatterns = [
     path('sessions/<int:pk>/history/', views.history_view, name='history_view'),
 
     # Settings
-    path('settings/', views.settings_dashboard, name='settings_dashboard'),
+    path('settings/', views.settings_dashboard, name='settings'),
     path('settings/codes/', views.CodeListView.as_view(), name='code_list'),
     path('settings/features/', views.FeatureListView.as_view(), name='feature_list'),
-    path('settings/features/', views.FeatureListView.as_view(), name='features_list'),  # Alias
     path('settings/sections/', views.SectionListView.as_view(), name='section_list'),
     path('settings/types/', views.TypeListView.as_view(), name='type_list'),
     path('settings/instruction-templates/', views.InstructionTemplateListView.as_view(), name='instruction_template_list'),

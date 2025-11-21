@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.utils import timezone
 
 from floor_app.operations.hr.models import HREmployee, HRPeople, Department
+from floor_app.operations.production.models import JobCard, BatchOrder
+from floor_app.operations.quality.models import NonconformanceReport
 from django.contrib.auth.models import User
 
 
@@ -100,6 +102,7 @@ def signup(request):
 
 @login_required
 def home(request):
+    # HR Metrics
     total_employees = HREmployee.objects.count()
     active_employees = HREmployee.objects.filter(status='ACTIVE').count()
 
@@ -113,7 +116,27 @@ def home(request):
     # Get all departments for the Departments Hub
     departments = Department.objects.all().prefetch_related('employees', 'positions')
 
+    # Production Metrics
+    active_batches = BatchOrder.objects.filter(
+        status__in=['PLANNED', 'IN_PROGRESS', 'PARTIAL_COMPLETE']
+    ).count()
+
+    open_job_cards = JobCard.objects.exclude(
+        status__in=['COMPLETE', 'SCRAPPED', 'CANCELLED']
+    ).count()
+
+    jobs_in_production = JobCard.objects.filter(status='IN_PRODUCTION').count()
+
+    completed_jobs_today = JobCard.objects.filter(
+        status='COMPLETE',
+        completed_at__date=timezone.now().date()
+    ).count()
+
+    # Quality Metrics
+    open_ncrs = NonconformanceReport.objects.filter(status='OPEN').count()
+
     return render(request, "home.html", {
+        # HR
         'total_employees': total_employees,
         'active_employees': active_employees,
         'inactive_employees': inactive_employees,
@@ -121,6 +144,13 @@ def home(request):
         'recent_employees': recent_employees,
         'team_stats': team_stats,
         'departments': departments,
+        # Production
+        'active_batches': active_batches,
+        'open_job_cards': open_job_cards,
+        'jobs_in_production': jobs_in_production,
+        'completed_jobs_today': completed_jobs_today,
+        # Quality
+        'open_ncrs': open_ncrs,
     })
 
 

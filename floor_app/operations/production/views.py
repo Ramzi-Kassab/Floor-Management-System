@@ -805,6 +805,116 @@ def checklist_item_complete(request, item_pk):
     return redirect('production:checklist_detail', checklist_pk=item.checklist.pk)
 
 
+# ========== Global List Views (for Dashboard Cards) ==========
+
+class EvaluationListAllView(LoginRequiredMixin, ListView):
+    """Global list of all cutter evaluations across all job cards."""
+    model = JobCutterEvaluationHeader
+    template_name = 'production/evaluation/list.html'
+    context_object_name = 'evaluations'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = JobCutterEvaluationHeader.objects.select_related(
+            'job_card', 'evaluator'
+        ).order_by('-evaluation_date', '-created_at')
+
+        # Optional filtering
+        status = self.request.GET.get('status')
+        if status == 'complete':
+            qs = qs.filter(is_complete=True)
+        elif status == 'incomplete':
+            qs = qs.filter(is_complete=False)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'All Cutter Evaluations'
+        context['job_card'] = None  # Signal global view to template
+        return context
+
+
+class NdtListAllView(LoginRequiredMixin, ListView):
+    """Global list of all NDT reports across all job cards."""
+    model = NdtReport
+    template_name = 'production/ndt/list.html'
+    context_object_name = 'ndt_reports'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = NdtReport.objects.select_related(
+            'job_card', 'inspector', 'created_by'
+        ).order_by('-inspection_date', '-created_at')
+
+        # Optional filtering
+        result = self.request.GET.get('result')
+        if result:
+            qs = qs.filter(result=result)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'All NDT Reports'
+        context['job_card'] = None  # Signal global view to template
+        return context
+
+
+class ThreadInspectionListAllView(LoginRequiredMixin, ListView):
+    """Global list of all thread inspections across all job cards."""
+    model = ApiThreadInspection
+    template_name = 'production/thread_inspection/list.html'
+    context_object_name = 'thread_inspections'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = ApiThreadInspection.objects.select_related(
+            'job_card', 'inspector', 'created_by'
+        ).order_by('-inspection_date', '-created_at')
+
+        # Optional filtering
+        result = self.request.GET.get('result')
+        if result:
+            qs = qs.filter(result=result)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'All Thread Inspections'
+        context['job_card'] = None  # Signal global view to template
+        return context
+
+
+class ChecklistListAllView(LoginRequiredMixin, ListView):
+    """Global list of all checklists across all job cards."""
+    model = JobChecklistInstance
+    template_name = 'production/checklists/list.html'
+    context_object_name = 'checklists'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = JobChecklistInstance.objects.select_related(
+            'job_card', 'template', 'completed_by'
+        ).prefetch_related('items').order_by('-created_at')
+
+        # Optional filtering
+        status = self.request.GET.get('status')
+        if status == 'complete':
+            qs = qs.filter(is_complete=True)
+        elif status == 'incomplete':
+            qs = qs.filter(is_complete=False)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'All Checklists'
+        context['job_card'] = None  # Signal global view to template
+        return context
+
+
 # ========== Settings ==========
 
 @login_required

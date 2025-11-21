@@ -7,6 +7,12 @@ urlpatterns = [
     # Dashboard
     path('', views.dashboard, name='dashboard'),
 
+    # Global List Views (for Dashboard Cards)
+    path('evaluations/', views.EvaluationListAllView.as_view(), name='evaluation_list_all'),
+    path('ndt-reports/', views.NdtListAllView.as_view(), name='ndt_list_all'),
+    path('thread-inspections/', views.ThreadInspectionListAllView.as_view(), name='thread_inspection_list_all'),
+    path('checklists-all/', views.ChecklistListAllView.as_view(), name='checklist_list_all'),
+
     # Batch Orders
     path('batches/', views.BatchListView.as_view(), name='batch_list'),
     path('batches/create/', views.BatchCreateView.as_view(), name='batch_create'),

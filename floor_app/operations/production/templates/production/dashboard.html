@@ -1,9 +1,961 @@
-{% extends "base.html" %}
-{% load static %}
 
-{% block title %}Production Dashboard - Floor Management System{% endblock %}
 
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <title>Production Dashboard - Floor Management System</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18'>🏢</text></svg>">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/app.css">
+
+    <!-- Theme System CSS -->
+    <link rel="stylesheet" href="/static/core/css/themes.css">
+
+    
+</head>
+<body class="theme-light ui-font-normal table-density-normal">
+    <!-- Skip to Content (Accessibility) -->
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
+
+    <!-- Top Navbar with Glassmorphism -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid">
+            <!-- Mobile Menu Toggle -->
+			<a class="navbar-brand fw-bold d-flex align-items-center" href="/">
+				<i class="bi bi-building-fill me-2"></i>
+				<span class="d-none d-md-inline">Floor Management</span>
+				<span class="d-inline d-md-none">FMS</span>
+			</a>
+            
+            <!-- Center Search Bar (Desktop) -->
+            <div class="mx-auto d-none d-lg-block">
+                <form action="/search/" method="get" class="search-box">
+                    <input type="search" name="q" class="search-input" placeholder="Search employees, items, locations..." id="globalSearchInput" autocomplete="off">
+                    <button type="submit" class="search-btn">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Right Side Actions -->
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <!-- Dark Mode Toggle -->
+                <button class="btn btn-link text-dark p-0" id="darkModeToggle" type="button" title="Toggle theme">
+                    <i class="bi bi-moon-stars fs-5"></i>
+                </button>
+                
+                <!-- Notifications -->
+                <div class="notification-bell">
+                    <i class="bi bi-bell bell-icon"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                
+                <!-- User Menu -->
+                
+                    <div class="dropdown">
+                        <button class="btn btn-link text-decoration-none text-dark dropdown-toggle d-flex align-items-center p-0" 
+                                type="button" 
+                                id="userMenuDropdown" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false">
+                            <div class="user-avatar">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <span class="d-none d-md-inline ms-2 fw-medium">Ramzi</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
+                            <li class="px-3 py-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-3">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">Ramzi</div>
+                                        <small class="text-muted">ramzikassab1982@gmail.com</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-person-circle me-2"></i>My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/settings/">
+                                    <i class="bi bi-gear me-2"></i>Settings
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-question-circle me-2"></i>Help & Support
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/accounts/logout/">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Backdrop for Mobile -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="d-flex">
+        <!-- Enhanced Sidebar -->
+        <div class="sidebar glassmorphism" id="sidebar">
+            <div class="sidebar-sticky">
+                <!-- Mobile Search -->
+                <div class="d-lg-none px-3 mb-3">
+                    <form action="/search/" method="get" class="search-box">
+                        <input type="search" name="q" class="search-input" placeholder="Search..." autocomplete="off">
+                        <button type="submit" class="search-btn">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="sidebar-header">
+                    <h6 class="sidebar-heading">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        Main Menu
+                    </h6>
+                </div>
+
+                <ul class="nav flex-column">
+                    <!-- Main Dashboard Link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house-door-fill"></i>
+                            <span>Main Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+
+                    <!-- Departments Section Header -->
+                    <li class="nav-item mt-3">
+                        <div class="sidebar-section-title" style="padding: 0.5rem 1rem; color: #6c757d; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Departments
+                        </div>
+                    </li>
+
+                    <!-- HR & Administration Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="hr-section">
+                            <i class="bi bi-people-fill"></i>
+                            <span>HR & Administration</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="hr-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>HR Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/employee/wizard/">
+                                    <i class="bi bi-person-plus"></i>
+                                    <span>New Employee</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/people/">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                    <span>People Directory</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/employees/">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>Employees</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/departments/">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                    <span>Departments</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/positions/">
+                                    <i class="bi bi-person-workspace"></i>
+                                    <span>Positions</span>
+                                </a>
+                            </li>
+                            <!-- Leave Management -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Leave Management</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/leave/my-dashboard/">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span>My Leave</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/leave/requests/">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Leave Requests</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/leave/calendar/">
+                                    <i class="bi bi-calendar3"></i>
+                                    <span>Leave Calendar</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/leave/balances/">
+                                    <i class="bi bi-cash-stack"></i>
+                                    <span>Leave Balances</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/leave/policies/">
+                                    <i class="bi bi-shield-check"></i>
+                                    <span>Leave Policies</span>
+                                </a>
+                            </li>
+                            <!-- Attendance & Overtime -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Attendance & Overtime</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/attendance/">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Attendance Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/attendance/list/">
+                                    <i class="bi bi-list-check"></i>
+                                    <span>Attendance Records</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/overtime/">
+                                    <i class="bi bi-clock"></i>
+                                    <span>Overtime Requests</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/delays/">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>Delay Incidents</span>
+                                </a>
+                            </li>
+                            <!-- Document Management -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Documents</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/documents/my-documents/">
+                                    <i class="bi bi-folder-fill"></i>
+                                    <span>My Documents</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/documents/hr/">
+                                    <i class="bi bi-files"></i>
+                                    <span>HR Documents</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/documents/hr/expiry/">
+                                    <i class="bi bi-calendar-x"></i>
+                                    <span>Expiring Documents</span>
+                                </a>
+                            </li>
+                            <!-- Training & Development -->
+                            <li class="nav-item mt-2">
+                                <div class="nav-sub-header">Training</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/training/my-training/">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                    <span>My Training</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/training/programs/">
+                                    <i class="bi bi-book"></i>
+                                    <span>Training Programs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/hr/training/sessions/">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Training Sessions</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Inventory & Materials Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="inventory-section">
+                            <i class="bi bi-box-seam-fill"></i>
+                            <span>Inventory & Materials</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="inventory-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Inventory Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/items/">
+                                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                                    <span>Item Master</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/bit-designs/">
+                                    <i class="bi bi-bullseye"></i>
+                                    <span>Bit Designs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/mats/">
+                                    <i class="bi bi-file-earmark-code"></i>
+                                    <span>MAT Revisions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/serial-units/">
+                                    <i class="bi bi-upc-scan"></i>
+                                    <span>Serial Units</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/stock/">
+                                    <i class="bi bi-boxes"></i>
+                                    <span>Stock Overview</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/boms/">
+                                    <i class="bi bi-list-nested"></i>
+                                    <span>Bill of Materials</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/transactions/">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                    <span>Transactions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/inventory/settings/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Production & Evaluation Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="production-section">
+                            <i class="bi bi-gear-fill"></i>
+                            <span>Production & Evaluation</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="production-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/production/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Production Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/production/batches/">
+                                    <i class="bi bi-stack"></i>
+                                    <span>Batch Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/production/jobcards/">
+                                    <i class="bi bi-card-checklist"></i>
+                                    <span>Job Cards</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/production/settings/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Evaluation & Tech Instructions Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="evaluation-section">
+                            <i class="bi bi-clipboard-check-fill"></i>
+                            <span>Evaluation & Tech Instructions</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="evaluation-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/evaluation/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Evaluation Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/evaluation/sessions/">
+                                    <i class="bi bi-table"></i>
+                                    <span>Evaluation Sessions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/evaluation/settings/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- QR Codes & Scanning Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="qrcodes-section">
+                            <i class="bi bi-qr-code"></i>
+                            <span>QR Codes & Scanning</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="qrcodes-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/qrcodes/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>QR Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/qrcodes/codes/">
+                                    <i class="bi bi-qr-code-scan"></i>
+                                    <span>All QR Codes</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/qrcodes/equipment/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Equipment</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/qrcodes/maintenance/">
+                                    <i class="bi bi-tools"></i>
+                                    <span>Maintenance</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/qrcodes/containers/">
+                                    <i class="bi bi-box"></i>
+                                    <span>Containers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/qrcodes/logs/">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Scan Logs</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Purchasing & Logistics Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="purchasing-section">
+                            <i class="bi bi-cart-check-fill"></i>
+                            <span>Purchasing & Logistics</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="purchasing-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/suppliers/">
+                                    <i class="bi bi-building"></i>
+                                    <span>Suppliers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/pr/">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Purchase Requisitions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/po/">
+                                    <i class="bi bi-receipt"></i>
+                                    <span>Purchase Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/grn/">
+                                    <i class="bi bi-box-arrow-in-down"></i>
+                                    <span>Goods Receipt</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/invoices/">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                                    <span>Supplier Invoices</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/transfers/">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                    <span>Internal Transfers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/shipments/">
+                                    <i class="bi bi-truck"></i>
+                                    <span>Outbound Shipments</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/purchasing/customer-returns/">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    <span>Customer Returns</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Knowledge & Learning Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="knowledge-section">
+                            <i class="bi bi-book-fill"></i>
+                            <span>Knowledge & Learning</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="knowledge-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/knowledge/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Knowledge Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/knowledge/articles/">
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Articles & Procedures</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/knowledge/instructions/">
+                                    <i class="bi bi-lightning-fill"></i>
+                                    <span>Business Instructions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/knowledge/documents/">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    <span>Document Library</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/knowledge/training/">
+                                    <i class="bi bi-mortarboard"></i>
+                                    <span>Training Center</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/knowledge/faq/">
+                                    <i class="bi bi-question-circle"></i>
+                                    <span>FAQ</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/knowledge/search/">
+                                    <i class="bi bi-search"></i>
+                                    <span>Global Search</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Maintenance & Asset Management Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="maintenance-section">
+                            <i class="bi bi-tools"></i>
+                            <span>Maintenance & Assets</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="maintenance-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/maintenance/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Maintenance Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/maintenance/assets/">
+                                    <i class="bi bi-hdd-rack"></i>
+                                    <span>Assets</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/maintenance/requests/">
+                                    <i class="bi bi-envelope-exclamation"></i>
+                                    <span>Maintenance Requests</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/maintenance/workorders/">
+                                    <i class="bi bi-clipboard-check"></i>
+                                    <span>Work Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/maintenance/pm/templates/">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span>PM Plans</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/maintenance/pm/tasks/">
+                                    <i class="bi bi-list-task"></i>
+                                    <span>PM Tasks</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/maintenance/downtime/">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Downtime Events</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/settings/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Quality Management Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="quality-section">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Quality Management</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="quality-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/quality/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Quality Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/quality/ncrs/">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>NCRs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/quality/dispositions/">
+                                    <i class="bi bi-check2-square"></i>
+                                    <span>Dispositions</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/quality/calibration/">
+                                    <i class="bi bi-rulers"></i>
+                                    <span>Calibration</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/quality/criteria/">
+                                    <i class="bi bi-card-checklist"></i>
+                                    <span>Acceptance Criteria</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/quality/settings/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Planning & KPI Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="planning-section">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span>Planning & KPI</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="planning-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/planning/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Planning Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/planning/schedules/">
+                                    <i class="bi bi-calendar-week"></i>
+                                    <span>Schedules</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/planning/resources/">
+                                    <i class="bi bi-cpu"></i>
+                                    <span>Resources</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/planning/kpis/">
+                                    <i class="bi bi-bar-chart-line"></i>
+                                    <span>KPI Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/planning/wip/">
+                                    <i class="bi bi-kanban"></i>
+                                    <span>WIP Board</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/planning/forecasts/">
+                                    <i class="bi bi-graph-down"></i>
+                                    <span>Forecasts</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/planning/settings/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Sales & Lifecycle Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="sales-section">
+                            <i class="bi bi-currency-dollar"></i>
+                            <span>Sales & Lifecycle</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="sales-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Sales Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/customers/">
+                                    <i class="bi bi-building"></i>
+                                    <span>Customers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/opportunities/">
+                                    <i class="bi bi-funnel"></i>
+                                    <span>Opportunities</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/orders/">
+                                    <i class="bi bi-cart-check"></i>
+                                    <span>Orders</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/rigs/">
+                                    <i class="bi bi-building-gear"></i>
+                                    <span>Rigs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/wells/">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span>Wells</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/drilling/">
+                                    <i class="bi bi-gear-wide-connected"></i>
+                                    <span>Drilling Runs</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/dullgrades/">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    <span>Dull Grades</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/lifecycle/timeline/">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Bit Lifecycle</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/sales/shipments/">
+                                    <i class="bi bi-truck"></i>
+                                    <span>Shipments</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Finance & ERP Section (Collapsible) -->
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="finance-section">
+                            <i class="bi bi-cash-stack"></i>
+                            <span>Finance & ERP</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="finance-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/finance/">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Finance Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/cost-centers/">
+                                    <i class="bi bi-diagram-3"></i>
+                                    <span>Cost Centers</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/erp-references/">
+                                    <i class="bi bi-link-45deg"></i>
+                                    <span>ERP References</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/loss-of-sale/">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>Loss of Sale</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/settings/">
+                                    <i class="bi bi-gear"></i>
+                                    <span>User Preferences</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- System Administration Section -->
+                    
+                    <li class="nav-item mt-3">
+                        <div class="sidebar-section-title" style="padding: 0.5rem 1rem; color: #6c757d; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            System
+                        </div>
+                    </li>
+
+                    <li class="nav-item nav-section">
+                        <button class="nav-link nav-section-toggle" data-section="admin-section">
+                            <i class="bi bi-shield-lock-fill"></i>
+                            <span>Administration</span>
+                            <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                        </button>
+                        <ul class="nav flex-column nav-section-items" id="admin-section" style="display: none;">
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="/admin/">
+                                    <i class="bi bi-gear-fill"></i>
+                                    <span>Admin Panel</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-person-lock"></i>
+                                    <span>User Management</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-sub-item" href="#">
+                                    <i class="bi bi-database-fill"></i>
+                                    <span>System Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                </ul>
+                
+                <!-- Sidebar Footer -->
+                <div class="sidebar-footer mt-auto p-3 border-top">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 14px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <div class="small fw-semibold">Ramzi</div>
+                            <div class="small text-muted">Online</div>
+                        </div>
+                        <button class="btn btn-sm btn-link text-muted p-0">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content" id="main-content">
+            
+            
+            
+            
+            
+            
 <div class="container-fluid py-4">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -15,10 +967,10 @@
             <p class="text-muted mb-0">Manage batches, job cards, routing, and production operations</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'production:batch_create' %}" class="btn btn-primary">
+            <a href="/production/batches/create/" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-2"></i>New Batch
             </a>
-            <a href="{% url 'production:jobcard_create' %}" class="btn btn-outline-primary">
+            <a href="/production/jobcards/create/" class="btn btn-outline-primary">
                 <i class="bi bi-card-checklist me-2"></i>New Job Card
             </a>
         </div>
@@ -37,7 +989,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="text-muted mb-1">Active Batches</h6>
-                            <h3 class="mb-0">{{ stats.active_batches|default:"0" }}</h3>
+                            <h3 class="mb-0">0</h3>
                         </div>
                     </div>
                 </div>
@@ -54,7 +1006,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="text-muted mb-1">Open Job Cards</h6>
-                            <h3 class="mb-0">{{ stats.open_jobcards|default:"0" }}</h3>
+                            <h3 class="mb-0">0</h3>
                         </div>
                     </div>
                 </div>
@@ -71,7 +1023,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="text-muted mb-1">In Production</h6>
-                            <h3 class="mb-0">{{ stats.in_production|default:"0" }}</h3>
+                            <h3 class="mb-0">0</h3>
                         </div>
                     </div>
                 </div>
@@ -88,7 +1040,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="text-muted mb-1">Completed Today</h6>
-                            <h3 class="mb-0">{{ stats.completed_today|default:"0" }}</h3>
+                            <h3 class="mb-0">0</h3>
                         </div>
                     </div>
                 </div>
@@ -112,7 +1064,7 @@
                                 <h5 class="card-title mb-0">Production Batches</h5>
                             </div>
                             <p class="card-text text-muted">Manage production batches and their status</p>
-                            <a href="{% url 'production:batch_list' %}" class="btn btn-outline-primary w-100">
+                            <a href="/production/batches/" class="btn btn-outline-primary w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Batches
                             </a>
                         </div>
@@ -130,7 +1082,7 @@
                                 <h5 class="card-title mb-0">Job Cards</h5>
                             </div>
                             <p class="card-text text-muted">Track work orders and production tasks</p>
-                            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-primary w-100">
+                            <a href="/production/jobcards/" class="btn btn-outline-primary w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Job Cards
                             </a>
                         </div>
@@ -148,7 +1100,7 @@
                                 <h5 class="card-title mb-0">Evaluations</h5>
                             </div>
                             <p class="card-text text-muted">Production quality evaluations and inspections</p>
-                            <a href="{% url 'evaluation:session_list' %}" class="btn btn-outline-warning w-100">
+                            <a href="{% url 'production:evaluation_list_all' %}" class="btn btn-outline-warning w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Evaluations
                             </a>
                         </div>
@@ -166,7 +1118,7 @@
                                 <h5 class="card-title mb-0">NDT Inspections</h5>
                             </div>
                             <p class="card-text text-muted">Non-destructive testing records</p>
-                            <a href="{% url 'evaluation:session_list' %}" class="btn btn-outline-primary w-100">
+                            <a href="{% url 'production:ndt_list_all' %}" class="btn btn-outline-primary w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View NDT Records
                             </a>
                         </div>
@@ -184,7 +1136,7 @@
                                 <h5 class="card-title mb-0">Thread Inspections</h5>
                             </div>
                             <p class="card-text text-muted">Thread measurement and inspection records</p>
-                            <a href="{% url 'evaluation:session_list' %}" class="btn btn-outline-danger w-100">
+                            <a href="{% url 'production:thread_inspection_list_all' %}" class="btn btn-outline-danger w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Thread Inspections
                             </a>
                         </div>
@@ -202,7 +1154,7 @@
                                 <h5 class="card-title mb-0">Checklists</h5>
                             </div>
                             <p class="card-text text-muted">Production checklists and verification</p>
-                            <a href="{% url 'production:jobcard_list' %}" class="btn btn-outline-secondary w-100">
+                            <a href="{% url 'production:checklist_list_all' %}" class="btn btn-outline-secondary w-100">
                                 <i class="bi bi-arrow-right me-2"></i>View Checklists
                             </a>
                         </div>
@@ -221,21 +1173,9 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    {% if active_jobs %}
-                        <div class="list-group list-group-flush">
-                            {% for job in active_jobs %}
-                            <a href="{% url 'production:jobcard_detail' job.pk %}" class="list-group-item list-group-item-action border-0 px-0">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ job.number }}</h6>
-                                    <span class="badge bg-info">{{ job.get_status_display }}</span>
-                                </div>
-                                <small class="text-muted">{{ job.description|truncatechars:40 }}</small>
-                            </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
+                    
                         <p class="text-muted text-center mb-0">No active jobs</p>
-                    {% endif %}
+                    
                 </div>
             </div>
 
@@ -247,20 +1187,9 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    {% if recent_completions %}
-                        <div class="list-group list-group-flush">
-                            {% for job in recent_completions %}
-                            <div class="list-group-item border-0 px-0">
-                                <div class="d-flex justify-content-between">
-                                    <span class="fw-bold">{{ job.number }}</span>
-                                    <small class="text-muted">{{ job.completed_at|timesince }} ago</small>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
+                    
                         <p class="text-muted text-center mb-0">No recent completions</p>
-                    {% endif %}
+                    
                 </div>
             </div>
 
@@ -273,14 +1202,14 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'production:batch_create' %}" class="btn btn-sm btn-outline-primary">
+                        <a href="/production/batches/create/" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-plus-circle me-2"></i>New Batch
                         </a>
-                        <a href="{% url 'production:jobcard_create' %}" class="btn btn-sm btn-outline-success">
+                        <a href="/production/jobcards/create/" class="btn btn-sm btn-outline-success">
                             <i class="bi bi-card-checklist me-2"></i>New Job Card
                         </a>
 
-                        <a href="{% url 'production:settings' %}" class="btn btn-sm btn-outline-secondary">
+                        <a href="/production/settings/" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-gear me-2"></i>Settings
                         </a>
                     </div>
@@ -289,4 +1218,192 @@
         </div>
     </div>
 </div>
-{% endblock %}
+
+            
+            <!-- Footer -->
+            <footer class="mt-auto py-3 border-top bg-white">
+                <div class="container-fluid">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-0">© 2025 Floor Management System. All rights reserved.</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="#" class="text-muted text-decoration-none me-3">Privacy</a>
+                            <a href="#" class="text-muted text-decoration-none me-3">Terms</a>
+                            <a href="#" class="text-muted text-decoration-none">Contact</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+    
+    <!-- Chart.js for Dashboard Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- ApexCharts for Advanced Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- Data Table Component JS -->
+    <script src="/static/core/js/data-table.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                    sidebarBackdrop.classList.toggle('show');
+                });
+            }
+            
+            // Close sidebar on backdrop click (mobile)
+            if (sidebarBackdrop) {
+                sidebarBackdrop.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarBackdrop.classList.remove('show');
+                });
+            }
+            
+            // Close sidebar on mobile when clicking outside
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 992) {
+                    if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                        sidebar.classList.remove('show');
+                        sidebarBackdrop.classList.remove('show');
+                    }
+                }
+            });
+            
+            // Highlight active nav link (currentPath defined later for section navigation)
+
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const darkModeIcon = darkModeToggle.querySelector('i');
+            
+            // Check for saved dark mode preference
+            const darkMode = localStorage.getItem('darkMode');
+            if (darkMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeIcon.classList.remove('bi-moon-stars');
+                darkModeIcon.classList.add('bi-sun-fill');
+            }
+            
+            darkModeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('darkMode', 'enabled');
+                    darkModeIcon.classList.remove('bi-moon-stars');
+                    darkModeIcon.classList.add('bi-sun-fill');
+                } else {
+                    localStorage.setItem('darkMode', null);
+                    darkModeIcon.classList.remove('bi-sun-fill');
+                    darkModeIcon.classList.add('bi-moon-stars');
+                }
+            });
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Add smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+            
+            // Collapsible section navigation
+            const sectionToggles = document.querySelectorAll('.nav-section-toggle');
+            const currentPath = window.location.pathname;
+
+            sectionToggles.forEach(toggle => {
+                const sectionId = toggle.getAttribute('data-section');
+                const sectionContent = document.getElementById(sectionId);
+                const toggleIcon = toggle.querySelector('.toggle-icon');
+
+                // Check if current page is within this section
+                const sectionLinks = sectionContent.querySelectorAll('a.nav-sub-item');
+                let isCurrentSection = false;
+                sectionLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && currentPath.startsWith(href.split('?')[0])) {
+                        isCurrentSection = true;
+                        link.classList.add('active');
+                    }
+                });
+
+                // Load saved state from localStorage OR auto-expand if current section
+                const savedState = localStorage.getItem(`nav-section-${sectionId}`);
+                if (isCurrentSection || savedState === 'expanded') {
+                    sectionContent.style.display = 'flex';
+                    toggleIcon.style.transform = 'rotate(180deg)';
+                    // Save expanded state if it's the current section
+                    if (isCurrentSection) {
+                        localStorage.setItem(`nav-section-${sectionId}`, 'expanded');
+                    }
+                }
+
+                // Toggle section on click - only toggle, don't auto-collapse
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent event bubbling
+                    const isVisible = sectionContent.style.display !== 'none';
+
+                    if (isVisible) {
+                        sectionContent.style.display = 'none';
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                        localStorage.setItem(`nav-section-${sectionId}`, 'collapsed');
+                    } else {
+                        sectionContent.style.display = 'flex';
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                        localStorage.setItem(`nav-section-${sectionId}`, 'expanded');
+                    }
+                });
+            });
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+
+            // Global Search keyboard shortcut (Ctrl+K or Cmd+K)
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('globalSearchInput') || document.querySelector('.search-input');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+            });
+        });
+    </script>
+    
+    
+</body>
+</html>

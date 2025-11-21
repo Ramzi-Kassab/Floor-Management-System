@@ -63,5 +63,5 @@ urlpatterns = [
     path('reports/utilization/', views.utilization_report, name='utilization_report'),
 
     # Settings
-    path('settings/', views.settings_dashboard, name='settings_dashboard'),
+    path('settings/', views.settings_dashboard, name='settings'),
 ]

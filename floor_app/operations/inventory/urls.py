@@ -57,7 +57,6 @@ urlpatterns = [
 
     # Settings / Reference Data
     path('settings/', views.settings_dashboard, name='settings'),
-    path('settings/', views.settings_dashboard, name='settings_dashboard'),  # Alias
     path('settings/conditions/', views.ConditionTypeListView.as_view(), name='condition_list'),
     path('settings/ownership/', views.OwnershipTypeListView.as_view(), name='ownership_list'),
     path('settings/categories/', views.ItemCategoryListView.as_view(), name='category_list'),
