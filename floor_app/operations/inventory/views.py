@@ -9,14 +9,21 @@ from django.core.paginator import Paginator
 
 from .models import (
     Item, ItemCategory, ConditionType, OwnershipType, UnitOfMeasure,
-    BitDesign, BitDesignRevision, BitDesignLevel, BitDesignType,
     SerialUnit, InventoryStock, Location,
-    BOMHeader, BOMLine,
     InventoryTransaction,
 )
+# Models moved to engineering app:
+from floor_app.operations.engineering.models import (
+    BitDesign, BitDesignRevision, BitDesignLevel, BitDesignType,
+    BOMHeader, BOMLine,
+)
 from .forms import (
-    ItemForm, SerialUnitForm, BOMHeaderForm, TransactionForm, StockAdjustmentForm,
-    BitDesignForm, BitDesignRevisionForm, LocationForm
+    ItemForm, SerialUnitForm, TransactionForm, StockAdjustmentForm,
+    LocationForm,
+)
+# Forms moved to engineering app:
+from floor_app.operations.engineering.forms import (
+    BOMHeaderForm, BitDesignForm, BitDesignRevisionForm
 )
 
 
