@@ -126,6 +126,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
+# Available languages
+LANGUAGES = [
+    ('en', 'English'),
+    ('ar', 'Arabic'),
+]
+
+# Force English as default
+LANGUAGE_CODE = 'en'
+
 TIME_ZONE = 'Asia/Riyadh'
 
 USE_I18N = True
