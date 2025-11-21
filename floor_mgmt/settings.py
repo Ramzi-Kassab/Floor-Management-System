@@ -10,13 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import sys
 from pathlib import Path
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+RUNNING_TESTS = any(arg in sys.argv for arg in ("test", "pytest"))
 
 # Change this line:
-SECRET_KEY = config('SECRET_KEY')
+# Provide a safe fallback for local development and tests
+SECRET_KEY = config('SECRET_KEY', default='insecure-secret-key')
 
 # Change this line:
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -65,6 +68,18 @@ MIDDLEWARE = [
     'floor_app.operations.analytics.middleware.AnalyticsMiddleware',
 ]
 
+if RUNNING_TESTS:
+    MIDDLEWARE = [
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'floor_app.middleware.CurrentRequestMiddleware',
+    ]
+
 ROOT_URLCONF = 'floor_mgmt.urls'
 
 TEMPLATES = [
@@ -90,16 +105,61 @@ WSGI_APPLICATION = 'floor_mgmt.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5433'),
+db_name = config('DB_NAME', default=None)
+
+if db_name:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': db_name,
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5433'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+if RUNNING_TESTS:
+    class DisableMigrations(dict):
+        def __contains__(self, item):
+            return True
+
+        def __getitem__(self, item):
+            return None
+
+    MIGRATION_MODULES = DisableMigrations()
+
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'rest_framework',
+        'floor_app.apps.FloorAppConfig',
+        'core',
+        'floor_app.operations.hr',
+        'floor_app.operations.hr_assets',
+        'floor_app.operations.inventory',
+        'floor_app.operations.evaluation',
+        'floor_app.operations.production',
+        'floor_app.operations.qrcodes',
+        'floor_app.operations.purchasing',
+        'floor_app.operations.knowledge',
+        'floor_app.operations.maintenance',
+        'floor_app.operations.quality',
+        'widget_tweaks',
+    ]
+
+    ROOT_URLCONF = 'floor_app.operations.hr.test_urls'
 
 
 # Password validation
@@ -138,6 +198,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+FIXTURE_DIRS = [BASE_DIR / "fixtures"]
 
 MEDIA_URL  = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

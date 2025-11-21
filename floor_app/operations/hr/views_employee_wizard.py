@@ -9,16 +9,23 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.contrib import messages
+from django.utils import timezone
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from floor_app.operations.hr.models import (
     HRPeople, HREmployee, HRPhone, HREmail,
-    Department, Position, Address
+    Department, Position, Address, EmployeeDocument,
+    LeaveRequest, LeaveRequestStatus, TrainingSession,
+    AttendanceRecord, AttendanceSummary, OvertimeRequest,
+    OvertimeStatus
 )
 from floor_app.operations.hr.forms import (
     HRPeopleForm, HREmployeeForm, HRPhoneFormSet,
     HREmailFormSet, AddressFormSet, AddressForm
+)
+from floor_app.operations.hr_assets.models import (
+    VehicleAssignment, ParkingAssignment, SIMAssignment
 )
 
 
@@ -26,33 +33,157 @@ from floor_app.operations.hr.forms import (
 @login_required
 def hr_dashboard(request):
     """Main HR & Administration dashboard"""
+    today = timezone.now().date()
+    upcoming_window = today + timedelta(days=30)
+
+    employees = HREmployee.objects.filter(is_deleted=False)
+    positions = Position.objects.filter(is_deleted=False, is_active=True)
+    documents = EmployeeDocument.objects.filter(is_deleted=False)
+
+    expiring_documents = documents.filter(
+        expiry_date__isnull=False,
+        expiry_date__lte=upcoming_window
+    ).order_by('expiry_date')[:6]
+
+    pending_leave_requests = LeaveRequest.objects.filter(
+        is_deleted=False,
+        status__in=[
+            LeaveRequestStatus.SUBMITTED,
+            LeaveRequestStatus.PENDING_APPROVAL,
+        ]
+    ).select_related('employee', 'employee__person', 'leave_policy').order_by('start_date')[:6]
+
+    pending_overtime_requests = OvertimeRequest.objects.filter(
+        status=OvertimeStatus.PENDING,
+        employee__is_deleted=False,
+    ).select_related('employee__person').order_by('-created_at')[:5]
+
+    contracts_due_soon = employees.filter(
+        contract_end_date__isnull=False,
+        contract_end_date__lte=upcoming_window,
+    ).select_related('person', 'department').order_by('contract_end_date')[:5]
+
+    upcoming_trainings = TrainingSession.objects.filter(
+        is_deleted=False,
+        start_date__gte=today
+    ).select_related('program').annotate(
+        participant_count=Count('participants', distinct=True)
+    ).order_by('start_date')[:4]
+
+    open_positions = positions.annotate(
+        employee_count=Count('employees', filter=Q(employees__is_deleted=False))
+    ).filter(employee_count=0).select_related('department')
+
     context = {
-        # Employees – these models have is_deleted
-        'total_employees': HREmployee.objects.filter(is_deleted=False).count(),
-        'active_employees': HREmployee.objects.filter(
-            is_deleted=False,
-            status='ACTIVE'
-        ).count(),
-
-        # Departments – no soft delete / is_active fields yet
-        'departments_count': Department.objects.count(),
-        'active_departments': Department.objects.count(),  # treat all as active for now
-
-        # Positions – uses HRSoftDeleteMixin, so is_deleted is OK
-        'positions_count': Position.objects.filter(is_deleted=False).count(),
-        'filled_positions': Position.objects.filter(
-            is_deleted=False
-        ).exclude(employees=None).count(),
-
-        # People & contacts – all have is_deleted
-        'people_count': HRPeople.objects.filter(is_deleted=False).count(),
-        'phones_count': HRPhone.objects.filter(is_deleted=False).count(),
-        'emails_count': HREmail.objects.filter(is_deleted=False).count(),
-
-        # Addresses – NO content_type anymore, just count non-deleted
-        'addresses_count': Address.objects.filter(is_deleted=False).count(),
+        'summary': {
+            'total_employees': employees.count(),
+            'active_employees': employees.filter(status='ACTIVE').count(),
+            'on_leave': employees.filter(status='ON_LEAVE').count(),
+            'new_hires_30': employees.filter(hire_date__gte=today - timedelta(days=30)).count(),
+        },
+        'org': {
+            'departments': Department.objects.count(),
+            'positions': positions.count(),
+            'open_positions': open_positions.count(),
+            'unassigned': employees.filter(position__isnull=True).count(),
+        },
+        'compliance': {
+            'expiring_documents_count': documents.filter(
+                expiry_date__isnull=False,
+                expiry_date__lte=upcoming_window
+            ).count(),
+            'expired_documents_count': documents.filter(
+                expiry_date__isnull=False,
+                expiry_date__lt=today
+            ).count(),
+            'contracts_due_soon': employees.filter(
+                contract_end_date__isnull=False,
+                contract_end_date__lte=upcoming_window
+            ).count(),
+        },
+        'attendance': {
+            'today_records': AttendanceRecord.objects.filter(date=today).count(),
+            'overtime_pending': OvertimeRequest.objects.filter(
+                status=OvertimeStatus.PENDING
+            ).count(),
+        },
+        'people': {
+            'people_count': HRPeople.objects.filter(is_deleted=False).count(),
+            'contacts_count': HRPhone.objects.filter(is_deleted=False).count() + HREmail.objects.filter(is_deleted=False).count(),
+            'addresses_count': Address.objects.filter(is_deleted=False).count(),
+        },
+        'pending_leave_requests': pending_leave_requests,
+        'expiring_documents': expiring_documents,
+        'upcoming_trainings': upcoming_trainings,
+        'open_positions': open_positions[:6],
+        'pending_overtime_requests': pending_overtime_requests,
+        'contracts_due_soon': contracts_due_soon,
     }
     return render(request, 'hr/hr_dashboard.html', context)
+
+
+@login_required
+def employee_portal(request):
+    """Employee self-service portal showing profile, balances, and assignments."""
+    employee = get_object_or_404(
+        HREmployee.objects.select_related('person', 'department', 'position'),
+        user=request.user,
+        is_deleted=False,
+    )
+
+    today = timezone.now().date()
+    upcoming_window = today + timedelta(days=30)
+
+    person = employee.person
+    leave_balances = employee.leave_balances.select_related('leave_policy').order_by('-year')
+    active_leave_requests = employee.leave_requests.filter(
+        is_deleted=False,
+        status__in=[
+            LeaveRequestStatus.SUBMITTED,
+            LeaveRequestStatus.PENDING_APPROVAL,
+            LeaveRequestStatus.APPROVED,
+        ]
+    ).order_by('-start_date')[:6]
+    upcoming_training = employee.training_records.select_related('training_session__program').filter(
+        training_session__start_date__gte=today
+    ).order_by('training_session__start_date')[:5]
+    expiring_documents = employee.documents.filter(
+        is_deleted=False,
+        expiry_date__isnull=False,
+        expiry_date__lte=upcoming_window
+    ).order_by('expiry_date')[:5]
+    latest_attendance_summary = employee.attendance_summaries.order_by('-year', '-month').first()
+
+    active_vehicle_assignment = VehicleAssignment.objects.filter(
+        assigned_to=request.user,
+        is_active=True,
+    ).select_related('vehicle').order_by('-start_date').first()
+    active_parking_assignment = ParkingAssignment.objects.filter(
+        assigned_to=request.user,
+        is_active=True,
+    ).select_related('spot__zone', 'vehicle').order_by('-start_date').first()
+    active_sim_assignment = SIMAssignment.objects.filter(
+        assigned_to=request.user,
+        is_active=True,
+    ).select_related('sim').order_by('-start_date').first()
+
+    context = {
+        'employee': employee,
+        'person': person,
+        'phones': person.phones.filter(is_deleted=False),
+        'emails': person.emails.filter(is_deleted=False),
+        'addresses': Address.objects.filter(is_deleted=False, hr_person=person).order_by('-created_at'),
+        'leave_balances': leave_balances,
+        'active_leave_requests': active_leave_requests,
+        'upcoming_training': upcoming_training,
+        'expiring_documents': expiring_documents,
+        'latest_attendance_summary': latest_attendance_summary,
+        'active_vehicle_assignment': active_vehicle_assignment,
+        'active_parking_assignment': active_parking_assignment,
+        'active_sim_assignment': active_sim_assignment,
+    }
+
+    return render(request, 'hr/employee_portal.html', context)
 
 
 @login_required
@@ -812,7 +943,7 @@ def employee_export(request):
             'National ID': emp.person.national_id,
             'Iqama': emp.person.iqama_number,
             'Department': emp.department.name if emp.department else '',
-            'Position': emp.position.title if emp.position else '',
+            'Position': emp.position.name if emp.position else '',
             'Status': emp.status,
             'Contract Type': emp.contract_type,
             'Hire Date': emp.hire_date,

@@ -6,20 +6,21 @@
 {% block extra_css %}
 <style>
     .dashboard-card {
-        transition: all 0.3s ease;
-        border: 2px solid #e9ecef;
+        transition: all 0.25s ease;
+        border: 1px solid #e9ecef;
         background: white;
         min-height: 180px;
         border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
     }
 
     .dashboard-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
         border-color: #0d6efd;
     }
 
-    .dashboard-card .card-icon {
+    .card-icon {
         width: 50px;
         height: 50px;
         border-radius: 10px;
@@ -34,39 +35,39 @@
         background: white;
         border: 1px solid #dee2e6;
         border-radius: 12px;
-        padding: 1.25rem;
-        transition: all 0.3s ease;
+        padding: 1rem 1.25rem;
+        transition: all 0.25s ease;
+        height: 100%;
     }
 
     .stat-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
         transform: translateY(-2px);
     }
 
     .stat-number {
-        font-size: 1.75rem;
+        font-size: 1.8rem;
         font-weight: 700;
         color: #212529;
     }
 
     .stat-label {
-        font-size: 0.813rem;
+        font-size: 0.9rem;
         color: #495057;
-        font-weight: 500;
         margin-top: 0.25rem;
-    }
-
-    .section-header {
-        border-left: 4px solid #0d6efd;
-        padding-left: 1rem;
-        margin-bottom: 1.5rem;
     }
 
     .section-title {
         color: #212529;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
         font-size: 1.25rem;
+    }
+
+    .pill-badge {
+        font-size: 0.8rem;
+        border-radius: 50px;
+        padding: 0.25rem 0.6rem;
     }
 </style>
 {% endblock %}
@@ -91,14 +92,17 @@
                 <div>
                     <h2 class="mb-2" style="color: #212529; font-weight: 700;">
                         <i class="bi bi-people-fill text-primary me-2"></i>
-                        HR & Administration
+                        HR & Administration Control Center
                     </h2>
                     <p class="mb-0" style="color: #495057;">
-                        Comprehensive Human Resources Management
+                        Clear, actionable overview of employees, services, and compliance for HR teams.
                     </p>
                 </div>
-                <div>
-                    <a href="{% url 'hr:employee_wizard_start' %}" class="btn btn-primary btn-lg">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'hr:employee_portal' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-person-lines-fill me-2"></i>Employee Portal
+                    </a>
+                    <a href="{% url 'hr:employee_wizard_start' %}" class="btn btn-primary">
                         <i class="bi bi-person-plus me-2"></i>New Employee
                     </a>
                 </div>
@@ -108,420 +112,283 @@
 
     <!-- Summary Statistics -->
     <div class="row g-3 mb-4">
-        <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="col-lg-3 col-md-6">
             <div class="stat-card">
-                <div class="stat-number text-primary">{{ total_employees|default:"0" }}</div>
-                <div class="stat-label">Total Employees</div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number text-primary">{{ summary.total_employees|default:"0" }}</div>
+                        <div class="stat-label">Total Employees</div>
+                    </div>
+                    <i class="bi bi-people-fill text-primary fs-3"></i>
+                </div>
+                <div class="mt-3 text-success fw-semibold">
+                    Active: {{ summary.active_employees|default:"0" }} | On Leave: {{ summary.on_leave|default:"0" }}
+                </div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="col-lg-3 col-md-6">
             <div class="stat-card">
-                <div class="stat-number text-success">{{ active_employees|default:"0" }}</div>
-                <div class="stat-label">Active</div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number text-success">{{ org.departments|default:"0" }}</div>
+                        <div class="stat-label">Departments</div>
+                    </div>
+                    <i class="bi bi-diagram-3 text-success fs-3"></i>
+                </div>
+                <div class="mt-3 text-muted">Positions: {{ org.positions|default:"0" }} | Open: {{ org.open_positions|default:"0" }}</div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="col-lg-3 col-md-6">
             <div class="stat-card">
-                <div class="stat-number text-info">{{ departments_count|default:"0" }}</div>
-                <div class="stat-label">Departments</div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number text-warning">{{ compliance.expiring_documents_count|default:"0" }}</div>
+                        <div class="stat-label">Expiring Docs (30 days)</div>
+                    </div>
+                    <i class="bi bi-file-earmark-text text-warning fs-3"></i>
+                </div>
+                <div class="mt-3 text-danger fw-semibold">Expired: {{ compliance.expired_documents_count|default:"0" }}</div>
             </div>
         </div>
-        <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="col-lg-3 col-md-6">
             <div class="stat-card">
-                <div class="stat-number text-warning">{{ positions_count|default:"0" }}</div>
-                <div class="stat-label">Positions</div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-sm-6">
-            <div class="stat-card">
-                <div class="stat-number" style="color: #6610f2;">{{ people_count|default:"0" }}</div>
-                <div class="stat-label">People Records</div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-sm-6">
-            <div class="stat-card">
-                <div class="stat-number" style="color: #fd7e14;">{{ phones_count|default:"0" }}</div>
-                <div class="stat-label">Contacts</div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number text-info">{{ attendance.today_records|default:"0" }}</div>
+                        <div class="stat-label">Today's Attendance</div>
+                    </div>
+                    <i class="bi bi-calendar-check text-info fs-3"></i>
+                </div>
+                <div class="mt-3 text-primary">Pending OT Approvals: {{ attendance.overtime_pending|default:"0" }}</div>
             </div>
         </div>
     </div>
 
-    <!-- Core Employee Management -->
-    <div class="section-header">
-        <h4 class="section-title">Employee Management</h4>
-    </div>
+    <!-- HR Service Cards -->
     <div class="row g-3 mb-4">
         <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
+            <div class="card dashboard-card h-100">
                 <div class="card-body p-3">
-                    <div class="card-icon bg-primary text-white">
-                        <i class="bi bi-person-plus-fill"></i>
+                    <div class="card-icon bg-primary text-white"><i class="bi bi-person-plus-fill"></i></div>
+                    <h6 class="card-title mb-2">People & Onboarding</h6>
+                    <p class="text-muted small mb-3">Create and manage people records, onboarding, and assignments.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:employee_wizard_start' %}" class="btn btn-primary btn-sm">Start Onboarding</a>
+                        <a href="{% url 'hr:people_list' %}" class="btn btn-outline-primary btn-sm">People Directory</a>
                     </div>
-                    <h6 class="card-title mb-2">New Employee Wizard</h6>
-                    <p class="text-muted small mb-3">Step-by-step onboarding</p>
-                    <a href="{% url 'hr:employee_wizard_start' %}" class="btn btn-sm btn-primary w-100">Start Wizard</a>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
+            <div class="card dashboard-card h-100">
                 <div class="card-body p-3">
-                    <div class="card-icon bg-success text-white">
-                        <i class="bi bi-person-badge"></i>
+                    <div class="card-icon bg-success text-white"><i class="bi bi-people"></i></div>
+                    <h6 class="card-title mb-2">Employees & Teams</h6>
+                    <p class="text-muted small mb-3">Monitor headcount, organization charts, departments, and roles.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:employee_list' %}" class="btn btn-outline-success btn-sm">Employee List</a>
+                        <a href="{% url 'hr:department_list' %}" class="btn btn-outline-success btn-sm">Departments & Positions</a>
                     </div>
-                    <h6 class="card-title mb-2">Employees</h6>
-                    <p class="text-muted small mb-3">View all employee records</p>
-                    <a href="{% url 'hr:employee_list' %}" class="btn btn-sm btn-outline-success w-100">View List</a>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
+            <div class="card dashboard-card h-100">
                 <div class="card-body p-3">
-                    <div class="card-icon bg-info text-white">
-                        <i class="bi bi-people"></i>
+                    <div class="card-icon bg-warning text-white"><i class="bi bi-calendar2-week"></i></div>
+                    <h6 class="card-title mb-2">Attendance & Leave</h6>
+                    <p class="text-muted small mb-3">Track attendance, overtime approvals, and leave calendars.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-outline-warning btn-sm">Attendance</a>
+                        <a href="{% url 'hr:leave_calendar' %}" class="btn btn-outline-warning btn-sm">Leave Calendar</a>
                     </div>
-                    <h6 class="card-title mb-2">People Directory</h6>
-                    <p class="text-muted small mb-3">Manage person records</p>
-                    <a href="{% url 'hr:people_list' %}" class="btn btn-sm btn-outline-info w-100">View Directory</a>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
+            <div class="card dashboard-card h-100">
                 <div class="card-body p-3">
-                    <div class="card-icon bg-warning text-white">
-                        <i class="bi bi-diagram-3-fill"></i>
+                    <div class="card-icon bg-info text-white"><i class="bi bi-file-earmark-check"></i></div>
+                    <h6 class="card-title mb-2">Compliance & Documents</h6>
+                    <p class="text-muted small mb-3">Renew expiring documents, verify uploads, and print records.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:hr_documents_dashboard' %}" class="btn btn-outline-info btn-sm">HR Documents</a>
+                        <a href="{% url 'hr:hr_expiry_dashboard' %}" class="btn btn-outline-info btn-sm">Expiry Monitor</a>
                     </div>
-                    <h6 class="card-title mb-2">Departments</h6>
-                    <p class="text-muted small mb-3">Organizational structure</p>
-                    <a href="{% url 'hr:department_list' %}" class="btn btn-sm btn-outline-warning w-100">Manage</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Leave Management -->
-    <div class="section-header" style="border-left-color: #198754;">
-        <h4 class="section-title" style="color: #198754;">Leave Management</h4>
-    </div>
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon bg-success text-white">
-                        <i class="bi bi-calendar-check"></i>
+    <!-- Analytics & Alerts -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="section-title mb-0">HR Signals</h5>
+                        <span class="badge bg-light text-dark pill-badge">Live tasks</span>
                     </div>
-                    <h6 class="card-title mb-2">My Leave</h6>
-                    <p class="text-muted small mb-3">Personal leave dashboard</p>
-                    <a href="{% url 'hr:my_leave_dashboard' %}" class="btn btn-sm btn-success w-100">View Dashboard</a>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-number text-danger">{{ pending_leave_requests|length }}</div>
+                                <div class="stat-label">Leave Requests pending decision</div>
+                                <p class="mt-2 mb-0 text-muted small">Review submissions awaiting approval or scheduling.</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-number text-warning">{{ compliance.contracts_due_soon|default:"0" }}</div>
+                                <div class="stat-label">Contracts expiring in 30 days</div>
+                                <p class="mt-2 mb-0 text-muted small">Coordinate renewals or offboarding early.</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-number text-primary">{{ summary.new_hires_30|default:"0" }}</div>
+                                <div class="stat-label">New hires this month</div>
+                                <p class="mt-2 mb-0 text-muted small">Ensure equipment, ID cards, and induction are ready.</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-number text-success">{{ org.unassigned|default:"0" }}</div>
+                                <div class="stat-label">Employees without positions</div>
+                                <p class="mt-2 mb-0 text-muted small">Assign roles to close gaps and clarify reporting lines.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #20c997; color: white;">
-                        <i class="bi bi-file-earmark-text"></i>
+        <div class="col-xl-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="section-title mb-0">Notifications & Deadlines</h5>
+                        <span class="badge bg-danger pill-badge">Action required</span>
                     </div>
-                    <h6 class="card-title mb-2">Leave Requests</h6>
-                    <p class="text-muted small mb-3">Manage leave applications</p>
-                    <a href="{% url 'hr:leave_request_list' %}" class="btn btn-sm btn-outline-success w-100">View Requests</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #0dcaf0; color: white;">
-                        <i class="bi bi-calendar3"></i>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item bg-light fw-semibold">Expiring documents</div>
+                        {% if expiring_documents %}
+                            {% for doc in expiring_documents %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">{{ doc.title }}</div>
+                                        <small class="text-muted">{{ doc.get_document_type_display }} • Expires {{ doc.expiry_date }}</small>
+                                    </div>
+                                    <span class="badge bg-warning text-dark pill-badge">Renew</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item text-muted">No upcoming document expiries.</div>
+                        {% endif %}
+
+                        <div class="list-group-item bg-light fw-semibold">Pending leave decisions</div>
+                        {% if pending_leave_requests %}
+                            {% for leave in pending_leave_requests %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">{{ leave.employee.person.get_full_name_en|default:leave.employee.employee_no }}</div>
+                                        <small class="text-muted">{{ leave.leave_policy.name }} • {{ leave.start_date }} to {{ leave.end_date }}</small>
+                                    </div>
+                                    <span class="badge bg-primary pill-badge">Review</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item text-muted">No leave approvals waiting.</div>
+                        {% endif %}
+
+                        <div class="list-group-item bg-light fw-semibold">Overtime approvals</div>
+                        {% if pending_overtime_requests %}
+                            {% for overtime in pending_overtime_requests %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">{{ overtime.employee.person.get_full_name_en|default:overtime.employee.employee_no }}</div>
+                                        <small class="text-muted">Requested {{ overtime.created_at|date:"Y-m-d" }} • {{ overtime.planned_hours }} hours</small>
+                                    </div>
+                                    <span class="badge bg-danger pill-badge">Approve</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item text-muted">No overtime requests pending.</div>
+                        {% endif %}
+
+                        <div class="list-group-item bg-light fw-semibold">Contracts ending soon</div>
+                        {% if contracts_due_soon %}
+                            {% for contract in contracts_due_soon %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">{{ contract.person.get_full_name_en|default:contract.employee_no }}</div>
+                                        <small class="text-muted">{{ contract.department.name|default:"No department" }} • Ends {{ contract.contract_end_date }}</small>
+                                    </div>
+                                    <span class="badge bg-light text-secondary pill-badge border">Renewal check</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item text-muted">No contracts ending in the next 30 days.</div>
+                        {% endif %}
                     </div>
-                    <h6 class="card-title mb-2">Leave Calendar</h6>
-                    <p class="text-muted small mb-3">View team calendar</p>
-                    <a href="{% url 'hr:leave_calendar' %}" class="btn btn-sm btn-outline-info w-100">Open Calendar</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #198754; color: white;">
-                        <i class="bi bi-cash-stack"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Leave Balances</h6>
-                    <p class="text-muted small mb-3">Manage leave balances</p>
-                    <a href="{% url 'hr:leave_balance_dashboard' %}" class="btn btn-sm btn-outline-success w-100">View Balances</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #0d6efd; color: white;">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Leave Policies</h6>
-                    <p class="text-muted small mb-3">Configure leave types</p>
-                    <a href="{% url 'hr:leave_policy_list' %}" class="btn btn-sm btn-outline-primary w-100">Manage Policies</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Attendance & Overtime -->
-    <div class="section-header" style="border-left-color: #fd7e14;">
-        <h4 class="section-title" style="color: #fd7e14;">Attendance & Overtime</h4>
-    </div>
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #fd7e14; color: white;">
-                        <i class="bi bi-clock-history"></i>
+    <!-- Talent & Assets -->
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="section-title mb-0">Training & Capability</h5>
+                        <a href="{% url 'hr:training_program_list' %}" class="btn btn-sm btn-outline-primary">Training Catalog</a>
                     </div>
-                    <h6 class="card-title mb-2">Attendance Dashboard</h6>
-                    <p class="text-muted small mb-3">Overview & statistics</p>
-                    <a href="{% url 'hr:attendance_dashboard' %}" class="btn btn-sm btn-warning w-100">View Dashboard</a>
+                    <div class="row g-3">
+                        {% if upcoming_trainings %}
+                            {% for session in upcoming_trainings %}
+                                <div class="col-md-6">
+                                    <div class="stat-card h-100">
+                                        <div class="fw-semibold">{{ session.program.name }}</div>
+                                        <div class="text-muted small">Session starts {{ session.start_date }}</div>
+                                        <div class="mt-2 text-primary">{{ session.location|default:"TBD" }}</div>
+                                        <div class="mt-3 d-flex gap-2">
+                                            <span class="badge bg-light text-dark pill-badge">Registered: {{ session.participant_count }}</span>
+                                            <span class="badge bg-primary pill-badge">{{ session.program.get_training_type_display }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12 text-muted">No upcoming training sessions scheduled.</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #ffc107; color: #212529;">
-                        <i class="bi bi-list-check"></i>
+        <div class="col-xl-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="section-title mb-0">Open Positions</h5>
+                        <span class="badge bg-light text-dark pill-badge">{{ org.open_positions|default:"0" }} roles</span>
                     </div>
-                    <h6 class="card-title mb-2">Attendance Records</h6>
-                    <p class="text-muted small mb-3">View & manage records</p>
-                    <a href="{% url 'hr:attendance_list' %}" class="btn btn-sm btn-outline-warning w-100">View Records</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #dc3545; color: white;">
-                        <i class="bi bi-clock"></i>
+                    <div class="list-group list-group-flush">
+                        {% if open_positions %}
+                            {% for position in open_positions %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">{{ position.name }}</div>
+                                        <small class="text-muted">{{ position.department.name|default:"No department" }}</small>
+                                    </div>
+                                    <a href="{% url 'hr:position_detail' position.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item text-muted">All positions are filled.</div>
+                        {% endif %}
                     </div>
-                    <h6 class="card-title mb-2">Overtime Requests</h6>
-                    <p class="text-muted small mb-3">Manage overtime</p>
-                    <a href="{% url 'hr:overtime_request_list' %}" class="btn btn-sm btn-outline-danger w-100">View Requests</a>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #6c757d; color: white;">
-                        <i class="bi bi-exclamation-triangle"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Delay Incidents</h6>
-                    <p class="text-muted small mb-3">Late arrivals tracking</p>
-                    <a href="{% url 'hr:delay_incident_list' %}" class="btn btn-sm btn-outline-secondary w-100">View Delays</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #0dcaf0; color: white;">
-                        <i class="bi bi-file-earmark-bar-graph"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Attendance Reports</h6>
-                    <p class="text-muted small mb-3">Generate reports</p>
-                    <a href="{% url 'hr:attendance_report' %}" class="btn btn-sm btn-outline-info w-100">View Reports</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #198754; color: white;">
-                        <i class="bi bi-download"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Import Attendance</h6>
-                    <p class="text-muted small mb-3">Punch machine data</p>
-                    <a href="{% url 'hr:punch_machine_import' %}" class="btn btn-sm btn-outline-success w-100">Import Data</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Document Management -->
-    <div class="section-header" style="border-left-color: #6610f2;">
-        <h4 class="section-title" style="color: #6610f2;">Document Management</h4>
-    </div>
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #6610f2; color: white;">
-                        <i class="bi bi-folder-fill"></i>
-                    </div>
-                    <h6 class="card-title mb-2">My Documents</h6>
-                    <p class="text-muted small mb-3">Employee self-service</p>
-                    <a href="{% url 'hr:my_documents_dashboard' %}" class="btn btn-sm btn-outline-primary w-100" style="border-color: #6610f2; color: #6610f2;">View My Docs</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #d63384; color: white;">
-                        <i class="bi bi-files"></i>
-                    </div>
-                    <h6 class="card-title mb-2">HR Documents</h6>
-                    <p class="text-muted small mb-3">Administrative portal</p>
-                    <a href="{% url 'hr:hr_documents_dashboard' %}" class="btn btn-sm btn-outline-danger w-100" style="border-color: #d63384; color: #d63384;">HR Portal</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #dc3545; color: white;">
-                        <i class="bi bi-calendar-x"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Expiring Documents</h6>
-                    <p class="text-muted small mb-3">Track renewals</p>
-                    <a href="{% url 'hr:hr_expiry_dashboard' %}" class="btn btn-sm btn-outline-danger w-100">View Expiries</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #0d6efd; color: white;">
-                        <i class="bi bi-upload"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Upload Document</h6>
-                    <p class="text-muted small mb-3">Add employee docs</p>
-                    <a href="{% url 'hr:hr_upload_document' %}" class="btn btn-sm btn-outline-primary w-100">Upload</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Training & Development -->
-    <div class="section-header" style="border-left-color: #0dcaf0;">
-        <h4 class="section-title" style="color: #0dcaf0;">Training & Development</h4>
-    </div>
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #0dcaf0; color: white;">
-                        <i class="bi bi-mortarboard-fill"></i>
-                    </div>
-                    <h6 class="card-title mb-2">My Training</h6>
-                    <p class="text-muted small mb-3">Personal dashboard</p>
-                    <a href="{% url 'hr:my_training_dashboard' %}" class="btn btn-sm btn-info text-white w-100">View Dashboard</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #17a2b8; color: white;">
-                        <i class="bi bi-book"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Training Programs</h6>
-                    <p class="text-muted small mb-3">Manage programs</p>
-                    <a href="{% url 'hr:training_program_list' %}" class="btn btn-sm btn-outline-info w-100">View Programs</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #20c997; color: white;">
-                        <i class="bi bi-calendar-event"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Training Sessions</h6>
-                    <p class="text-muted small mb-3">Schedule & manage</p>
-                    <a href="{% url 'hr:training_session_list' %}" class="btn btn-sm btn-outline-success w-100" style="border-color: #20c997; color: #20c997;">View Sessions</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Organization & Contact Management -->
-    <div class="section-header" style="border-left-color: #6c757d;">
-        <h4 class="section-title" style="color: #6c757d;">Organization & Contacts</h4>
-    </div>
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #6c757d; color: white;">
-                        <i class="bi bi-person-workspace"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Positions</h6>
-                    <p class="text-muted small mb-3">Job titles & roles</p>
-                    <a href="{% url 'hr:position_list' %}" class="btn btn-sm btn-outline-secondary w-100">Manage</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #ffc107; color: #212529;">
-                        <i class="bi bi-telephone-fill"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Phone Numbers</h6>
-                    <p class="text-muted small mb-3">Contact phones</p>
-                    <a href="{% url 'hr:phone_list' %}" class="btn btn-sm btn-outline-warning w-100">View Phones</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #dc3545; color: white;">
-                        <i class="bi bi-envelope-fill"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Email Addresses</h6>
-                    <p class="text-muted small mb-3">Email contacts</p>
-                    <a href="{% url 'hr:email_list' %}" class="btn btn-sm btn-outline-danger w-100">View Emails</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-body p-3">
-                    <div class="card-icon" style="background: #198754; color: white;">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </div>
-                    <h6 class="card-title mb-2">Addresses</h6>
-                    <p class="text-muted small mb-3">Physical locations</p>
-                    <a href="{% url 'hr:address_list' %}" class="btn btn-sm btn-outline-success w-100">View Addresses</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="card border-0 shadow-sm" style="background: #f8f9fa;">
-        <div class="card-body p-3">
-            <h6 class="mb-3" style="font-weight: 600;">
-                <i class="bi bi-lightning-fill text-warning me-2"></i>Quick Actions
-            </h6>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{% url 'hr:employee_wizard_start' %}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-person-plus me-1"></i>New Employee
-                </a>
-                <a href="{% url 'hr:leave_request_create' %}" class="btn btn-sm btn-success">
-                    <i class="bi bi-calendar-plus me-1"></i>Request Leave
-                </a>
-                <a href="{% url 'hr:attendance_entry' %}" class="btn btn-sm btn-warning">
-                    <i class="bi bi-clock me-1"></i>Mark Attendance
-                </a>
-                <a href="{% url 'hr:employee_import' %}" class="btn btn-sm btn-info text-white">
-                    <i class="bi bi-upload me-1"></i>Import Data
-                </a>
-                <a href="{% url 'hr:reports' %}" class="btn btn-sm btn-secondary">
-                    <i class="bi bi-file-bar-graph me-1"></i>Reports
-                </a>
             </div>
         </div>
     </div>

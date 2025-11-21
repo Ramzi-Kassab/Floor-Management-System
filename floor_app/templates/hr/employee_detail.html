@@ -154,7 +154,7 @@
                     {% if employee.position %}
                     <span>
                         <i class="bi bi-briefcase me-2"></i>
-                        {{ employee.position.title }}
+                        {{ employee.position.name }}
                     </span>
                     {% endif %}
                     {% if employee.department %}
@@ -441,7 +441,7 @@
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Position:</span>
-                    <span class="detail-value">{{ employee.position.title|default:"-" }}</span>
+                    <span class="detail-value">{{ employee.position.name|default:"-" }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Reports To:</span>

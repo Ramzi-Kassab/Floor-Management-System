@@ -11,6 +11,7 @@ urlpatterns = [
     # ========== HR Dashboard ==========
     path("", views.hr_dashboard, name="dashboard"),
     path("api/stats/", views.dashboard_stats, name="dashboard_stats"),
+    path("portal/", views.employee_portal, name="employee_portal"),
     
     # ========== Employee Creation Wizard ==========
     path("employee/wizard/", views.employee_wizard_start, name="employee_wizard_start"),
