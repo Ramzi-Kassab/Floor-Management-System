@@ -1,0 +1,11 @@
+{
+  "name": "Floor Management System",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "Django App",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    }
+  }
+}
