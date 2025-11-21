@@ -1,6 +1,6 @@
 # Model Ownership Refactoring - Progress Report
 
-## Current Status: PART 1.1 - 85% COMPLETE (70% Overall)
+## Current Status: PART 1.2 COMPLETE (75% Overall)
 
 **Branch:** `claude/model-ownership-setup-01KFU2rmpStGzLjpNspZop1U`
 **Last Updated:** 2025-11-21
@@ -70,6 +70,25 @@
 - ✅ `core/tests/test_global_search.py` - Updated imports to engineering
 - ✅ `floor_app/operations/inventory/tests/test_bitdesign_crud.py` - Updated imports
 
+### Part 1.2: Verify Production Ownership ✅
+
+#### 1. Verified Production App Structure
+- ✅ Confirmed `production/models/routing.py` exists with JobRoute and JobRouteStep models
+- ✅ Confirmed `production/models/reference.py` contains OperationDefinition model
+- ✅ Production app correctly owns routing and operation models
+
+#### 2. Updated Production Model References
+- ✅ Updated `production/models/job_card.py`:
+  - Changed `'inventory.BitDesignRevision'` → `'engineering.BitDesignRevision'` (2 fields)
+  - Changed `'inventory.BOMHeader'` → `'engineering.BOMHeader'` (1 field)
+- ✅ Updated `production/models/evaluation.py`:
+  - Changed `'inventory.BitDesignRevision'` → `'engineering.BitDesignRevision'` (1 field)
+
+#### 3. Verification Complete
+- ✅ No ownership issues found in production app
+- ✅ All string references now point to correct engineering app
+- ✅ Production maintains clear ownership of routing/operations
+
 ---
 
 ## 🚧 IN PROGRESS / NEXT STEPS
@@ -112,12 +131,7 @@ Searched for old imports in:
 
 ## 📋 REMAINING TASKS
 
-### Part 1.2: Verify Production Ownership
-- [ ] Confirm `production/models/routing.py` exists and is correct
-- [ ] Confirm `production/models/operations.py` exists and is correct
-- [ ] No changes needed - just verification
-
-### Part 1.3: Remove Financial Fields from Quality NCR
+### Part 1.3: Remove Financial Fields from Quality NCR (10%)
 - [ ] Create Finance app (if doesn't exist): `floor_app/operations/finance/`
 - [ ] Create `NCRFinancialImpact` model in Finance
 - [ ] Create data migration to copy financial data from NCR to NCRFinancialImpact
@@ -249,5 +263,12 @@ Part 1.1 is complete when:
    - Created engineering/forms/__init__.py with BitDesignForm, BitDesignRevisionForm, BOMHeaderForm
    - Deprecated old form definitions in inventory/forms.py
    - Updated inventory/views.py to import forms from engineering
+
+2. **b634960** - docs: update progress report - Part 1.1 at 85% complete
+
+3. **[PENDING]** - refactor: update production models to reference engineering app
+   - Updated job_card.py to use engineering.BitDesignRevision and engineering.BOMHeader
+   - Updated evaluation.py to use engineering.BitDesignRevision
+   - Completed Part 1.2 verification
 
 Previous commits from earlier session documented in SESSION_SUMMARY_2025-11-21.md
