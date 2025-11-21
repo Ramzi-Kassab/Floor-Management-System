@@ -17,7 +17,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from floor_app.mixins import AuditMixin, SoftDeleteMixin, PublicIdMixin
 from .reference import ItemCategory, UnitOfMeasure
-from .bit_design import BitDesignRevision
+# BitDesignRevision moved to engineering app - use string reference
 
 
 class Item(PublicIdMixin, AuditMixin, SoftDeleteMixin):
@@ -65,7 +65,7 @@ class Item(PublicIdMixin, AuditMixin, SoftDeleteMixin):
 
     # Optional link to bit design (only for bit-related items)
     bit_design_revision = models.ForeignKey(
-        BitDesignRevision,
+        'engineering.BitDesignRevision',  # ⚠️ String reference - model moved to engineering app
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -74,17 +74,12 @@ class Item(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     )
 
     # Inventory planning
-    min_stock_qty = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        help_text="Minimum quantity to maintain in stock"
-    )
+    # NOTE: Removed min_stock_qty - redundant with reorder_point (see FIELD_DUPLICATION_ANALYSIS.md)
     reorder_point = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0,
-        help_text="Quantity at which to reorder"
+        help_text="Quantity at which to reorder (trigger point for new purchase/production order)"
     )
     reorder_qty = models.DecimalField(
         max_digits=10,

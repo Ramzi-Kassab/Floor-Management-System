@@ -32,7 +32,8 @@ class ItemAdmin(admin.ModelAdmin):
             'fields': ('category', 'uom', 'bit_design_revision')
         }),
         ('Inventory Planning', {
-            'fields': ('min_stock_qty', 'reorder_point', 'reorder_qty', 'safety_stock', 'lead_time_days')
+            'fields': ('reorder_point', 'reorder_qty', 'safety_stock', 'lead_time_days')
+            # NOTE: Removed 'min_stock_qty' - redundant with reorder_point (see FIELD_DUPLICATION_ANALYSIS.md)
         }),
         ('Cost', {
             'fields': ('standard_cost', 'last_purchase_cost', 'currency')

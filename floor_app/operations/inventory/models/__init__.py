@@ -1,18 +1,19 @@
 # Inventory Models - PDC Bit Manufacturing & Repair
 # Import all models here for easy access
 
+# ⚠️ MOVED TO ENGINEERING APP - Use these imports instead:
+# from floor_app.operations.engineering.models import (
+#     BitDesignLevel, BitDesignType, BitDesign, BitDesignRevision,
+#     BOMHeader, BOMLine,
+#     RollerConeBitType, RollerConeBearing, RollerConeSeal,
+#     RollerConeDesign, RollerConeComponent, RollerConeBOM,
+# )
+
 from .reference import (
     ConditionType,
     OwnershipType,
     UnitOfMeasure,
     ItemCategory,
-)
-
-from .bit_design import (
-    BitDesignLevel,
-    BitDesignType,
-    BitDesign,
-    BitDesignRevision,
 )
 
 from .item import Item
@@ -28,11 +29,6 @@ from .attributes import (
     AttributeDefinition,
     CategoryAttributeMap,
     ItemAttributeValue,
-)
-
-from .bom import (
-    BOMHeader,
-    BOMLine,
 )
 
 from .transactions import (
@@ -55,26 +51,12 @@ from .cutter_bom_grid import (
     BOMUsageTracking,
 )
 
-from .roller_cone import (
-    RollerConeBitType,
-    RollerConeBearing,
-    RollerConeSeal,
-    RollerConeDesign,
-    RollerConeComponent,
-    RollerConeBOM,
-)
-
 __all__ = [
     # Reference tables
     'ConditionType',
     'OwnershipType',
     'UnitOfMeasure',
     'ItemCategory',
-    # Bit design
-    'BitDesignLevel',
-    'BitDesignType',
-    'BitDesign',
-    'BitDesignRevision',
     # Item master
     'Item',
     # Physical stock
@@ -86,9 +68,6 @@ __all__ = [
     'AttributeDefinition',
     'CategoryAttributeMap',
     'ItemAttributeValue',
-    # BOM
-    'BOMHeader',
-    'BOMLine',
     # Transactions
     'InventoryTransaction',
     # Cutter-specific
@@ -103,11 +82,11 @@ __all__ = [
     'CutterMapHeader',
     'CutterMapCell',
     'BOMUsageTracking',
-    # Roller Cone
-    'RollerConeBitType',
-    'RollerConeBearing',
-    'RollerConeSeal',
-    'RollerConeDesign',
-    'RollerConeComponent',
-    'RollerConeBOM',
 ]
+
+# ⚠️ MOVED TO ENGINEERING APP
+# The following models have been moved to floor_app.operations.engineering:
+# - BitDesignLevel, BitDesignType, BitDesign, BitDesignRevision (bit_design.py)
+# - BOMHeader, BOMLine (bom.py)
+# - RollerConeBitType, RollerConeBearing, RollerConeSeal (roller_cone.py)
+# - RollerConeDesign, RollerConeComponent, RollerConeBOM (roller_cone.py)

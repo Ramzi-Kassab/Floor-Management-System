@@ -19,7 +19,8 @@ from django.contrib.auth import get_user_model
 from core.models import UserPreference, CostCenter
 from core.search_utils import GlobalSearch, SearchHistory, SavedFilter, AdvancedFilter
 from floor_app.operations.hr.models import HRPeople, HREmployee, Department, Position
-from floor_app.operations.inventory.models import Item, Location, BitDesign, BitDesignRevision
+from floor_app.operations.inventory.models import Item, Location
+from floor_app.operations.engineering.models import BitDesign, BitDesignRevision
 
 User = get_user_model()
 
