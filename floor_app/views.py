@@ -23,7 +23,7 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         next_url = self.request.GET.get('next')
-        return next_url if next_url else reverse_lazy('home')
+        return next_url if next_url else reverse_lazy('core:home')
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -62,7 +62,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 @ratelimit(key='ip', rate='3/h', method='POST')
 def signup(request):
     if request.user.is_authenticated:
-        return redirect('home')
+        return redirect('core:home')
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
@@ -100,7 +100,7 @@ def signup(request):
         auth_user = authenticate(request, username=username, password=password1)
         login(request, auth_user)
         messages.success(request, 'Account created successfully!')
-        return redirect('home')
+        return redirect('core:home')
 
     return render(request, 'registration/signup.html')
 
