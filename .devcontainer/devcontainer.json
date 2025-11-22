@@ -1,0 +1,65 @@
+{
+  "name": "Floor Management System",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bullseye",
+
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers-contrib/features/postgres-asdf:1": {
+      "version": "latest"
+    }
+  },
+
+  "forwardPorts": [8000, 5432],
+
+  "portsAttributes": {
+    "8000": {
+      "label": "Django Dev Server",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt && python manage.py migrate",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "batisteo.vscode-django",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.python",
+          "editor.tabSize": 4
+        }
+      }
+    }
+  },
+
+  "remoteUser": "vscode",
+
+  "remoteEnv": {
+    "DEBUG": "True",
+    "SECRET_KEY": "dev-secret-key-for-codespaces-only",
+    "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/floor_management",
+    "ALLOWED_HOSTS": "localhost,127.0.0.1,.githubpreview.dev,.app.github.dev"
+  }
+}
