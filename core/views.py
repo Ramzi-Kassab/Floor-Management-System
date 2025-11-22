@@ -45,6 +45,13 @@ from .forms import (
 from .search_utils import GlobalSearch, SearchHistory
 
 
+def home(request):
+    """Public home page - landing page for unauthenticated users."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return render(request, 'core/home.html')
+
+
 @login_required
 def main_dashboard(request):
     """Main application dashboard."""

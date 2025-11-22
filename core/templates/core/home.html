@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center min-vh-50 py-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">Floor Management System</h1>
+            <p class="lead mb-4">
+                Comprehensive ERP solution for manufacturing operations, inventory management,
+                HR, production planning, and quality control.
+            </p>
+            <div class="d-flex gap-3">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </a>
+                <a href="#features" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-info-circle"></i> Learn More
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 text-center">
+            <i class="fas fa-industry" style="font-size: 15rem; color: var(--primary-color); opacity: 0.1;"></i>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="row g-4 py-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">Key Modules</h2>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Human Resources</h5>
+                    <p class="card-text">Employee management, attendance tracking, leave requests, and training programs.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-boxes fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Inventory Management</h5>
+                    <p class="card-text">Track stock levels, movements, warehouses, and supplier relationships.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-cogs fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Production</h5>
+                    <p class="card-text">Job cards, production batches, work orders, and shop floor control.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-drafting-compass fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Engineering</h5>
+                    <p class="card-text">Design management, bill of materials (BOM), and engineering changes.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-clipboard-check fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Quality Control</h5>
+                    <p class="card-text">Non-conformance reports, quality dispositions, and inspection tracking.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Analytics</h5>
+                    <p class="card-text">Real-time dashboards, KPIs, and comprehensive reporting.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row py-5 mb-5">
+        <div class="col-12 text-center">
+            <div class="card bg-light">
+                <div class="card-body py-5">
+                    <h3 class="mb-3">Ready to get started?</h3>
+                    <p class="lead mb-4">Sign in to access your dashboard and manage your operations.</p>
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Sign In Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

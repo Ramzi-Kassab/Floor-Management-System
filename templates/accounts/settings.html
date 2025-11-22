@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-cog"></i> Account Settings</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">Security</h5>
+                <div class="list-group">
+                    <a href="{% url 'account_change_password' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-key text-warning"></i>
+                                <strong class="ms-2">Change Password</strong>
+                                <p class="text-muted small mb-0 ms-4">Update your password regularly for security</p>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <h5 class="mt-4 mb-3">Profile</h5>
+                <div class="list-group">
+                    <a href="{% url 'account_profile' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-user text-primary"></i>
+                                <strong class="ms-2">View Profile</strong>
+                                <p class="text-muted small mb-0 ms-4">View your profile information</p>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                    <a href="{% url 'account_profile_edit' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-edit text-success"></i>
+                                <strong class="ms-2">Edit Profile</strong>
+                                <p class="text-muted small mb-0 ms-4">Update your personal information</p>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <h5 class="mt-4 mb-3">Preferences</h5>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Notification preferences and other settings coming soon!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Account Info</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <strong>Username:</strong><br>
+                    {{ user.username }}
+                </p>
+                <p class="small text-muted mb-2">
+                    <strong>Account Type:</strong><br>
+                    {% if user.is_superuser %}
+                        Superuser
+                    {% elif user.is_staff %}
+                        Staff
+                    {% else %}
+                        User
+                    {% endif %}
+                </p>
+                <p class="small text-muted mb-0">
+                    <strong>Member Since:</strong><br>
+                    {{ user.date_joined|date:"F Y" }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base_auth.html" %}
+
+{% block title %}Login - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h3 class="fw-bold">Welcome Back</h3>
+    <p class="text-muted">Please login to your account</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Username -->
+    <div class="mb-3">
+        <label for="id_username" class="form-label">
+            <i class="fas fa-user"></i> Username
+        </label>
+        <input type="text"
+               name="username"
+               class="form-control form-control-lg"
+               id="id_username"
+               placeholder="Enter your username"
+               required
+               autofocus>
+    </div>
+
+    <!-- Password -->
+    <div class="mb-3">
+        <label for="id_password" class="form-label">
+            <i class="fas fa-lock"></i> Password
+        </label>
+        <input type="password"
+               name="password"
+               class="form-control form-control-lg"
+               id="id_password"
+               placeholder="Enter your password"
+               required>
+    </div>
+
+    <!-- Remember Me -->
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+        <label class="form-check-label" for="remember_me">
+            Remember me
+        </label>
+    </div>
+
+    <!-- Errors -->
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i>
+        Invalid username or password. Please try again.
+    </div>
+    {% endif %}
+
+    <!-- Submit Button -->
+    <div class="d-grid mb-3">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+    </div>
+
+    <!-- Links -->
+    <div class="text-center">
+        <a href="{% url 'password_reset' %}" class="text-decoration-none small">
+            <i class="fas fa-question-circle"></i> Forgot password?
+        </a>
+    </div>
+</form>
+{% endblock %}

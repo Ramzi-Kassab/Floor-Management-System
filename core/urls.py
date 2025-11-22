@@ -24,8 +24,11 @@ urlpatterns = [
     path("api/health/ready/", readiness_check, name="readiness_check"),
     path("api/health/live/", liveness_check, name="liveness_check"),
 
-    # Main Dashboard
-    path("", views.main_dashboard, name="home"),
+    # Home Page (public)
+    path("", views.home, name="home"),
+
+    # Main Dashboard (authenticated)
+    path("dashboard/", views.main_dashboard, name="dashboard"),
 
     # User Preferences
     path("settings/", views.user_preferences, name="user_preferences"),

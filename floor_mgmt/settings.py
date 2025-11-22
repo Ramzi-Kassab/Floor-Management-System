@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'floor_app.operations.sales.apps.SalesConfig',
     'floor_app.operations.analytics.apps.AnalyticsConfig',
     "core",
+    "accounts",
     "widget_tweaks",
 ]
 
@@ -87,7 +88,7 @@ ROOT_URLCONF = 'floor_mgmt.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -200,11 +201,17 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 FIXTURE_DIRS = [BASE_DIR / "fixtures"]
 
 MEDIA_URL  = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Authentication Settings
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Security Settings for Production
 if not DEBUG:
