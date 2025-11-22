@@ -39,7 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    # Core foundation & skeleton
+    'core',  # Foundation models (renamed concept as core_foundation)
+    'skeleton.apps.SkeletonConfig',  # Global auth, templates, dashboard
+    # Main app
     'floor_app.apps.FloorAppConfig',
+    # Operations apps
     'floor_app.operations.hr.apps.HRConfig',
     'floor_app.operations.inventory.apps.InventoryConfig',
     'floor_app.operations.engineering.apps.EngineeringConfig',  # Engineering - Design & BOM
@@ -54,8 +59,8 @@ INSTALLED_APPS = [
     'floor_app.operations.planning.apps.PlanningConfig',
     'floor_app.operations.sales.apps.SalesConfig',
     'floor_app.operations.analytics.apps.AnalyticsConfig',
-    "core",
-    "widget_tweaks",
+    # Third-party
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
