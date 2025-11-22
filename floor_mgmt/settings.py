@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'floor_app.apps.FloorAppConfig',
     'floor_app.operations.hr.apps.HRConfig',
     'floor_app.operations.inventory.apps.InventoryConfig',
-    'floor_app.operations.engineering.apps.EngineeringConfig',  # Engineering - Design & BOM
+    # 'floor_app.operations.engineering.apps.EngineeringConfig',  # DISABLED - Models in inventory for now
     'floor_app.operations.finance.apps.FinanceConfig',  # Finance - Cost & Impact Tracking
     'floor_app.operations.production.apps.ProductionConfig',
     'floor_app.operations.evaluation.apps.EvaluationConfig',

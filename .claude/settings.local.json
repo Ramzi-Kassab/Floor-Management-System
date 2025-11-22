@@ -30,7 +30,13 @@
       "Bash(then echo \"venv found\")",
       "Bash(elif [ -d \".venv\" ])",
       "Bash(then echo \".venv found\")",
-      "Bash(else echo \"No venv found\")"
+      "Bash(else echo \"No venv found\")",
+      "Bash(.venv/Scripts/python.exe manage.py:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git restore:*)",
+      "Bash(python:*)",
+      "Bash(D:/PycharmProjects/floor_management_system-B/floor_app/operations/inventory/models/bit_design.py)",
+      "Bash(D:/PycharmProjects/floor_management_system-B/floor_app/operations/inventory/models/bom.py)"
     ],
     "deny": [],
     "ask": []

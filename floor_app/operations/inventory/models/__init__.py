@@ -1,13 +1,17 @@
 # Inventory Models - PDC Bit Manufacturing & Repair
 # Import all models here for easy access
 
-# ⚠️ MOVED TO ENGINEERING APP - Use these imports instead:
-# from floor_app.operations.engineering.models import (
-#     BitDesignLevel, BitDesignType, BitDesign, BitDesignRevision,
-#     BOMHeader, BOMLine,
-#     RollerConeBitType, RollerConeBearing, RollerConeSeal,
-#     RollerConeDesign, RollerConeComponent, RollerConeBOM,
-# )
+from .bit_design import (
+    BitDesignLevel,
+    BitDesignType,
+    BitDesign,
+    BitDesignRevision,
+)
+
+from .bom import (
+    BOMHeader,
+    BOMLine,
+)
 
 from .reference import (
     ConditionType,
@@ -52,6 +56,13 @@ from .cutter_bom_grid import (
 )
 
 __all__ = [
+    # Bit Design & BOM
+    'BitDesignLevel',
+    'BitDesignType',
+    'BitDesign',
+    'BitDesignRevision',
+    'BOMHeader',
+    'BOMLine',
     # Reference tables
     'ConditionType',
     'OwnershipType',

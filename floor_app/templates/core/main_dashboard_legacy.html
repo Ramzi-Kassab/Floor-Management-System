@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .department-card {
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        background: white;
+        min-height: 280px;
+        border-radius: 12px;
+    }
+
+    .department-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        border-color: #0d6efd;
+    }
+
+    .department-card.active:hover {
+        border-color: #198754;
+    }
+
+    .department-card.coming-soon {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .department-card.coming-soon:hover {
+        transform: none;
+        border-color: #e9ecef;
+    }
+
+    .department-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .coming-soon-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #6c757d;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid pt-3 pb-2 border-bottom bg-light">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-house-door-fill me-1"></i>Main Dashboard
+            </li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header text-center">
+        <h1 class="page-title">
+            <i class="bi bi-building text-primary me-3"></i>
+            Floor Management System
+        </h1>
+        <p class="page-subtitle">
+            Select a department workbench to manage operations
+        </p>
+    </div>
+
+    <!-- Department Workbenches -->
+    <div class="row g-4">
+        <!-- HR & Administration -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'hr:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-primary bg-gradient text-white">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            HR & Administration
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Manage employees, departments, and organizational structure
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-primary">
+                                    {{ hr_summary.employees|default:"0" }}
+                                </div>
+                                <div class="stat-label">Employees</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ hr_summary.departments|default:"0" }}
+                                </div>
+                                <div class="stat-label">Departments</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Inventory -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'inventory:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-info bg-gradient text-white">
+                            <i class="bi bi-box-seam-fill"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Inventory
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Manage items, serial units, stock levels, and BOMs
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-info">
+                                    {{ inventory_summary.items|default:"0" }}
+                                </div>
+                                <div class="stat-label">Items</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ inventory_summary.serial_units|default:"0" }}
+                                </div>
+                                <div class="stat-label">Serial Units</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Production -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'production:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-warning bg-gradient text-white">
+                            <i class="bi bi-gear-fill"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Production
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Manage job cards, batches, and manufacturing processes
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-warning">
+                                    {{ production_summary.job_cards|default:"0" }}
+                                </div>
+                                <div class="stat-label">Job Cards</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ production_summary.batches|default:"0" }}
+                                </div>
+                                <div class="stat-label">Batches</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Evaluation -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'evaluation:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-danger bg-gradient text-white">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Evaluation
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            PDC bit assessment and technical instructions
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-danger">
+                                    {{ evaluation_summary.sessions|default:"0" }}
+                                </div>
+                                <div class="stat-label">Sessions</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ evaluation_summary.bit_types|default:"0" }}
+                                </div>
+                                <div class="stat-label">Bit Types</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Purchasing -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'purchasing:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-success bg-gradient text-white">
+                            <i class="bi bi-cart-fill"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Purchasing
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Manage suppliers, purchase orders, and logistics
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-success">
+                                    {{ purchasing_summary.suppliers|default:"0" }}
+                                </div>
+                                <div class="stat-label">Suppliers</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-primary">
+                                    {{ purchasing_summary.pos|default:"0" }}
+                                </div>
+                                <div class="stat-label">POs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- QR Codes -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'qrcodes:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-dark bg-gradient text-white">
+                            <i class="bi bi-qr-code-scan"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            QR Codes
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Central QR/barcode service for equipment tracking
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-dark">
+                                    {{ qrcodes_summary.codes|default:"0" }}
+                                </div>
+                                <div class="stat-label">QR Codes</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ qrcodes_summary.equipment|default:"0" }}
+                                </div>
+                                <div class="stat-label">Equipment</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Knowledge -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'knowledge:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-purple text-white" style="background: #6f42c1 !important;">
+                            <i class="bi bi-book-fill"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Knowledge
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Articles, FAQs, instructions, and training/LMS
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number" style="color: #6f42c1;">
+                                    {{ knowledge_summary.articles|default:"0" }}
+                                </div>
+                                <div class="stat-label">Articles</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ knowledge_summary.courses|default:"0" }}
+                                </div>
+                                <div class="stat-label">Courses</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Maintenance -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'maintenance:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-secondary bg-gradient text-white">
+                            <i class="bi bi-tools"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Maintenance
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Asset management, work orders, and preventive maintenance
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-secondary">
+                                    {{ maintenance_summary.assets|default:"0" }}
+                                </div>
+                                <div class="stat-label">Assets</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-warning">
+                                    {{ maintenance_summary.work_orders|default:"0" }}
+                                </div>
+                                <div class="stat-label">Open WOs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Quality -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'quality:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon bg-danger bg-gradient text-white">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Quality
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            NCRs, calibration, dispositions, and quality control
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number text-danger">
+                                    {{ quality_summary.open_ncrs|default:"0" }}
+                                </div>
+                                <div class="stat-label">Open NCRs</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ quality_summary.dispositions|default:"0" }}
+                                </div>
+                                <div class="stat-label">Dispositions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Planning -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'planning:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon text-white" style="background: #fd7e14 !important;">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Planning & KPI
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Production schedules, KPIs, and performance metrics
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number" style="color: #fd7e14;">
+                                    {{ planning_summary.schedules|default:"0" }}
+                                </div>
+                                <div class="stat-label">Schedules</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-success">
+                                    {{ planning_summary.kpis|default:"0" }}
+                                </div>
+                                <div class="stat-label">Active KPIs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Sales & Lifecycle -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'sales:dashboard' %}" class="text-decoration-none">
+                <div class="card department-card active h-100">
+                    <div class="card-body p-4">
+                        <div class="department-icon text-white" style="background: #20c997 !important;">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+
+                        <h3 class="card-title text-center mb-3" style="color: #212529; font-weight: 600;">
+                            Sales & Lifecycle
+                        </h3>
+
+                        <p class="text-center mb-4" style="color: #495057;">
+                            Customer management, drilling operations, and bit lifecycle
+                        </p>
+
+                        <!-- Stats -->
+                        <div class="row text-center border-top pt-3">
+                            <div class="col-6 border-end">
+                                <div class="stat-number" style="color: #20c997;">
+                                    {{ sales_summary.customers|default:"0" }}
+                                </div>
+                                <div class="stat-label">Customers</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-primary">
+                                    {{ sales_summary.orders|default:"0" }}
+                                </div>
+                                <div class="stat-label">Orders</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Access Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0" style="background: #f8f9fa;">
+                <div class="card-body p-4">
+                    <h4 class="mb-3" style="color: #212529; font-weight: 600;">
+                        <i class="bi bi-lightning-fill text-warning me-2"></i>
+                        Quick Access
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'hr:employee_list' %}" class="btn btn-outline-dark w-100 py-3">
+                                <i class="bi bi-people d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">All Employees</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'hr:department_list' %}" class="btn btn-outline-dark w-100 py-3">
+                                <i class="bi bi-diagram-3 d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">Departments</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <button class="btn btn-outline-secondary w-100 py-3" disabled>
+                                <i class="bi bi-graph-up d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">Analytics</span>
+                            </button>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <button class="btn btn-outline-secondary w-100 py-3" disabled>
+                                <i class="bi bi-file-text d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <span style="font-weight: 500;">Reports</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
