@@ -103,11 +103,19 @@ class Position(HRAuditMixin, HRSoftDeleteMixin):
     @property
     def employee_count(self):
         """Count how many employees have this position."""
+        # Check if cached value exists (from queryset annotation or setter)
+        if hasattr(self, '_employee_count_cache'):
+            return self._employee_count_cache
         # Check if annotated value exists (from queryset annotation)
         if hasattr(self, 'num_employees'):
             return self.num_employees
         # Otherwise, perform database query
         return self.employees.filter(is_deleted=False).count()
+
+    @employee_count.setter
+    def employee_count(self, value):
+        """Allow Django ORM to set employee_count from annotations."""
+        self._employee_count_cache = value
 
     def get_employee_count(self):
         """Count how many employees have this position."""
