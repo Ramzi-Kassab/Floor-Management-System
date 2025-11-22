@@ -172,7 +172,7 @@ class RollerConeDesign(AuditMixin, SoftDeleteMixin):
 
     # Link to main bit design
     bit_design = models.OneToOneField(
-        'BitDesign',
+        'inventory.BitDesign',
         on_delete=models.CASCADE,
         related_name='roller_cone_design',
         help_text="Parent bit design (must be roller cone type)"
@@ -453,7 +453,7 @@ class RollerConeBOM(AuditMixin):
     """
 
     bit_design_revision = models.ForeignKey(
-        'BitDesignRevision',
+        'inventory.BitDesignRevision',
         on_delete=models.CASCADE,
         related_name='roller_cone_bom_lines',
         help_text="MAT number this BOM applies to"

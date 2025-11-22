@@ -20,7 +20,7 @@ class BitDesignForm(forms.ModelForm):
     class Meta:
         model = BitDesign
         fields = [
-            'design_code', 'name', 'level', 'bit_category', 'size_inches', 'connection_type',
+            'design_code', 'name', 'level', 'size_inches', 'connection_type',
             'blade_count', 'total_cutter_count', 'nozzle_count', 'tfa_range',
             'description'
         ]
@@ -28,7 +28,6 @@ class BitDesignForm(forms.ModelForm):
             'design_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., HP-X123'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'level': forms.Select(attrs={'class': 'form-select'}),
-            'bit_category': forms.Select(attrs={'class': 'form-select'}),
             'size_inches': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g., 8.50'}),
             'connection_type': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 4-1/2 API REG'}),
             'blade_count': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -51,8 +50,7 @@ class BitDesignRevisionForm(forms.ModelForm):
         fields = [
             'mat_number', 'bit_design', 'revision_code', 'design_type',
             'is_temporary', 'is_active', 'effective_date', 'obsolete_date',
-            'superseded_by', 'change_reason', 'notes', 'erp_item_number',
-            'erp_bom_number', 'standard_cost', 'last_purchase_cost'
+            'superseded_by', 'change_reason', 'notes'
         ]
         widgets = {
             'mat_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., HP-X123-M2'}),
@@ -66,10 +64,6 @@ class BitDesignRevisionForm(forms.ModelForm):
             'superseded_by': forms.Select(attrs={'class': 'form-select'}),
             'change_reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'erp_item_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'erp_bom_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'standard_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'last_purchase_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
     def __init__(self, *args, **kwargs):

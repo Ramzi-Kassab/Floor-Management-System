@@ -136,6 +136,7 @@ class BOMHeader(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     notes = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'inventory'
         db_table = "inventory_bom_header"
         verbose_name = "BOM Header"
         verbose_name_plural = "BOM Headers"
@@ -321,6 +322,7 @@ class BOMLine(AuditMixin, SoftDeleteMixin):
     notes = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'inventory'
         db_table = "inventory_bom_line"
         verbose_name = "BOM Line"
         verbose_name_plural = "BOM Lines"

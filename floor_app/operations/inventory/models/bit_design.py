@@ -36,6 +36,7 @@ class BitDesignLevel(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        app_label = 'inventory'
         db_table = "inventory_bit_design_level"
         verbose_name = "Bit Design Level"
         verbose_name_plural = "Bit Design Levels"
@@ -63,6 +64,7 @@ class BitDesignType(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        app_label = 'inventory'
         db_table = "inventory_bit_design_type"
         verbose_name = "Bit Design Type"
         verbose_name_plural = "Bit Design Types"
@@ -138,6 +140,7 @@ class BitDesign(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     description = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'inventory'
         db_table = "inventory_bit_design"
         verbose_name = "Bit Design"
         verbose_name_plural = "Bit Designs"
@@ -243,6 +246,7 @@ class BitDesignRevision(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     notes = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'inventory'
         db_table = "inventory_bit_design_revision"
         verbose_name = "Bit Design Revision (MAT)"
         verbose_name_plural = "Bit Design Revisions (MATs)"

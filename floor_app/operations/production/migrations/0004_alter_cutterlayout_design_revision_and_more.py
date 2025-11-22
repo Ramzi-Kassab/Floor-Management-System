@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('core', '0002_activitylog_notification'),
-        ('engineering', '0001_initial'),
+        # ('engineering', '0001_initial'),  # REMOVED - engineering app disabled, models moved to inventory
         ('inventory', '0005_remove_bitdesign_created_by_remove_bitdesign_level_and_more'),
         ('production', '0003_quotation_quotationline_quotation_ix_quot_number_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

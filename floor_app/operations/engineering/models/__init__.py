@@ -1,14 +1,13 @@
-# Engineering Models
-# Moved from inventory app - Engineering owns design and BOM definitions
+# Engineering Models - DEPRECATED
+# BitDesign and BOM models have been moved to inventory app
+# This module now only re-exports from inventory for backward compatibility
 
-from .bit_design import (
+# Re-export from inventory app for backward compatibility
+from floor_app.operations.inventory.models import (
     BitDesignLevel,
     BitDesignType,
     BitDesign,
     BitDesignRevision,
-)
-
-from .bom import (
     BOMHeader,
     BOMLine,
 )
@@ -23,12 +22,12 @@ from .roller_cone import (
 )
 
 __all__ = [
-    # Bit Design
+    # Bit Design (re-exported from inventory)
     'BitDesignLevel',
     'BitDesignType',
     'BitDesign',
     'BitDesignRevision',
-    # BOM
+    # BOM (re-exported from inventory)
     'BOMHeader',
     'BOMLine',
     # Roller Cone

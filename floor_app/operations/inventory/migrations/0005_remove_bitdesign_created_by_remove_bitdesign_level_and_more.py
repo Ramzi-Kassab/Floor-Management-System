@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('engineering', '0001_initial'),
+        # ('engineering', '0001_initial'),  # REMOVED - engineering app disabled
         ('inventory', '0004_rollerconebearing_rollerconebittype_rollerconeseal_and_more'),
     ]
 

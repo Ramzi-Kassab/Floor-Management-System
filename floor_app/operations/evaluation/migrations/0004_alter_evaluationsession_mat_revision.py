@@ -7,7 +7,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('engineering', '0001_initial'),
+        # ('engineering', '0001_initial'),  # REMOVED - engineering app disabled, models moved to inventory
+        ('inventory', '0001_initial'),  # BitDesignRevision is now in inventory
         ('evaluation', '0003_alter_requirementinstance_waived_by'),
     ]
 
