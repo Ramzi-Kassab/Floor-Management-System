@@ -85,7 +85,7 @@ class JobCard(PublicIdMixin, AuditMixin, SoftDeleteMixin):
 
     # MAT/Design tracking
     initial_mat = models.ForeignKey(
-        'engineering.BitDesignRevision',
+        'inventory.BitDesignRevision',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -93,7 +93,7 @@ class JobCard(PublicIdMixin, AuditMixin, SoftDeleteMixin):
         help_text="Initial MAT used for BOM and expectations"
     )
     current_mat = models.ForeignKey(
-        'engineering.BitDesignRevision',
+        'inventory.BitDesignRevision',
         on_delete=models.PROTECT,
         null=True,
         blank=True,

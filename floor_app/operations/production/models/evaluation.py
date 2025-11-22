@@ -21,7 +21,7 @@ class CutterLayout(AuditMixin):
     """
 
     design_revision = models.ForeignKey(
-        'engineering.BitDesignRevision',
+        'inventory.BitDesignRevision',
         on_delete=models.CASCADE,
         related_name='cutter_layouts',
         help_text="Bit design revision this layout belongs to"

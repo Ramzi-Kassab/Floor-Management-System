@@ -148,7 +148,7 @@ class SerialUnit(PublicIdMixin, AuditMixin, SoftDeleteMixin):
 
     # Current MAT version (can differ from item's design after retrofit)
     current_mat = models.ForeignKey(
-        'engineering.BitDesignRevision',  # ⚠️ Model moved to engineering app
+        'inventory.BitDesignRevision',  # ⚠️ Model moved to engineering app
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -352,7 +352,7 @@ class SerialUnitMATHistory(models.Model):
         help_text="Serial unit that was modified"
     )
     old_mat = models.ForeignKey(
-        'engineering.BitDesignRevision',  # ⚠️ Model moved to engineering app
+        'inventory.BitDesignRevision',  # ⚠️ Model moved to engineering app
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -360,7 +360,7 @@ class SerialUnitMATHistory(models.Model):
         help_text="Previous MAT revision (null if first assignment)"
     )
     new_mat = models.ForeignKey(
-        'engineering.BitDesignRevision',  # ⚠️ Model moved to engineering app
+        'inventory.BitDesignRevision',  # ⚠️ Model moved to engineering app
         on_delete=models.PROTECT,
         related_name='history_as_new',
         help_text="New MAT revision"

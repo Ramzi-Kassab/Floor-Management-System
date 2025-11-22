@@ -65,7 +65,7 @@ class Item(PublicIdMixin, AuditMixin, SoftDeleteMixin):
 
     # Optional link to bit design (only for bit-related items)
     bit_design_revision = models.ForeignKey(
-        'engineering.BitDesignRevision',  # ⚠️ String reference - model moved to engineering app
+        'inventory.BitDesignRevision',  # ⚠️ String reference - model moved to engineering app
         on_delete=models.PROTECT,
         null=True,
         blank=True,
