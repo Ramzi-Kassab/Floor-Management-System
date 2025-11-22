@@ -103,7 +103,7 @@ class JobCard(PublicIdMixin, AuditMixin, SoftDeleteMixin):
 
     # BOM reference (optional: specific BOM for this job)
     bom_header = models.ForeignKey(
-        'engineering.BOMHeader',
+        'inventory.BOMHeader',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
