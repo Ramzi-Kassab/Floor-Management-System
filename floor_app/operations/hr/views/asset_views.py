@@ -13,9 +13,12 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ValidationError
 import csv
+import base64
+from io import BytesIO
 
 from ..models import AssetType, HRAsset, AssetAssignment, HREmployee
 from ..decorators import hr_manager_required
+from ..utils.qr_utils import generate_asset_qr_image
 
 
 # ============================================================================
@@ -203,6 +206,19 @@ class AssetDetailView(DetailView):
             )
         except AssetAssignment.DoesNotExist:
             context['current_assignment'] = None
+
+        # Generate QR code for asset
+        asset_qr_code = None
+        try:
+            qr_image = generate_asset_qr_image(asset)
+            buffer = BytesIO()
+            qr_image.save(buffer, format='PNG')
+            asset_qr_code = base64.b64encode(buffer.getvalue()).decode()
+        except Exception as e:
+            # Log error but don't fail the view
+            print(f"Error generating asset QR code: {e}")
+
+        context['asset_qr_code'] = asset_qr_code
 
         return context
 

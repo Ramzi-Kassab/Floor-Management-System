@@ -114,6 +114,38 @@
     </div>
 
     <div class="col-lg-4">
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-qr-code me-2"></i>Asset QR Code
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if asset_qr_code %}
+                <div class="mb-3">
+                    <img src="data:image/png;base64,{{ asset_qr_code }}"
+                         alt="Asset QR Code"
+                         class="img-fluid"
+                         style="max-width: 250px; border: 1px solid #ddd; padding: 10px; background: white;">
+                </div>
+                <p class="small text-muted mb-2">Scan to view asset details</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadAssetQR('{{ asset.asset_tag }}')">
+                        <i class="bi bi-download me-2"></i>Download QR Code
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="printAssetQR()">
+                        <i class="bi bi-printer me-2"></i>Print QR Code
+                    </button>
+                </div>
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <small>QR code will be generated automatically</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
         <div class="card border-0">
             <div class="card-header bg-white">
                 <h5 class="mb-0 fw-bold">Actions</h5>
@@ -133,4 +165,42 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Asset QR Code download functionality
+function downloadAssetQR(assetTag) {
+    const qrImage = document.querySelector('img[alt="Asset QR Code"]');
+    if (qrImage) {
+        const link = document.createElement('a');
+        link.href = qrImage.src;
+        link.download = `asset_qr_${assetTag}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+// Asset QR Code print functionality
+function printAssetQR() {
+    const qrImage = document.querySelector('img[alt="Asset QR Code"]');
+    if (qrImage) {
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Asset QR Code</title>');
+        printWindow.document.write('<style>body{text-align:center;padding:50px;}img{max-width:400px;}</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<h2>Asset QR Code - {{ asset.asset_tag }}</h2>');
+        printWindow.document.write('<p>{{ asset.name }}</p>');
+        printWindow.document.write('<img src="' + qrImage.src + '" />');
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    }
+}
+</script>
 {% endblock %}

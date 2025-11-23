@@ -19,7 +19,8 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
 
-from .models import HREmployee, HREmail, HRAuditLog
+from .models import HREmployee, HREmail, HRAuditLog, LeaveRequest
+from django.contrib.contenttypes.models import ContentType
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -389,4 +390,108 @@ def handle_employee_save(sender, instance, created, **kwargs):
 
     except Exception as e:
         logger.error(f"Error handling employee save signal: {e}", exc_info=True)
+        # Don't raise - allow the save to complete but log the error
+
+
+# ============================================================================
+# LEAVE REQUEST NOTIFICATION SIGNALS
+# ============================================================================
+
+@receiver(pre_save, sender=LeaveRequest)
+def track_leave_status_change(sender, instance, **kwargs):
+    """
+    Track status changes in leave requests to avoid duplicate notifications.
+    We store the previous status on the instance for comparison in post_save.
+    """
+    if instance.pk:
+        try:
+            previous = LeaveRequest.objects.get(pk=instance.pk)
+            instance._previous_status = previous.status
+        except LeaveRequest.DoesNotExist:
+            instance._previous_status = None
+    else:
+        instance._previous_status = None
+
+
+@receiver(post_save, sender=LeaveRequest)
+def create_leave_request_notifications(sender, instance, created, **kwargs):
+    """
+    Create notifications when leave requests are created or status changes.
+
+    - When created: Notify manager about new leave request
+    - When approved: Notify employee that request was approved
+    - When rejected: Notify employee that request was rejected
+    """
+    try:
+        # Import here to avoid circular import
+        from floor_app.operations.notifications.models import Notification
+
+        content_type = ContentType.objects.get_for_model(LeaveRequest)
+
+        if created:
+            # New leave request - notify the manager
+            if instance.employee.report_to and instance.employee.report_to.user:
+                Notification.objects.create(
+                    recipient=instance.employee.report_to.user,
+                    notification_type='leave_request',
+                    title='New Leave Request',
+                    message=f'{instance.employee.person.full_name} has submitted a leave request for {instance.leave_type.name} from {instance.start_date} to {instance.end_date}.',
+                    content_type=content_type,
+                    object_id=instance.pk,
+                    priority='normal'
+                )
+                logger.info(f"Created leave request notification for manager of {instance.employee.employee_no}")
+        else:
+            # Check if status changed
+            if hasattr(instance, '_previous_status'):
+                previous_status = instance._previous_status
+                current_status = instance.status
+
+                # Only create notification if status changed
+                if previous_status != current_status:
+                    if current_status == 'approved' and instance.employee.user:
+                        # Avoid duplicate notifications
+                        existing = Notification.objects.filter(
+                            recipient=instance.employee.user,
+                            notification_type='leave_approved',
+                            object_id=instance.pk,
+                            content_type=content_type
+                        ).exists()
+
+                        if not existing:
+                            Notification.objects.create(
+                                recipient=instance.employee.user,
+                                notification_type='leave_approved',
+                                title='Leave Request Approved',
+                                message=f'Your leave request for {instance.leave_type.name} from {instance.start_date} to {instance.end_date} has been approved.',
+                                content_type=content_type,
+                                object_id=instance.pk,
+                                priority='normal'
+                            )
+                            logger.info(f"Created leave approval notification for {instance.employee.employee_no}")
+
+                    elif current_status == 'rejected' and instance.employee.user:
+                        # Avoid duplicate notifications
+                        existing = Notification.objects.filter(
+                            recipient=instance.employee.user,
+                            notification_type='leave_rejected',
+                            object_id=instance.pk,
+                            content_type=content_type
+                        ).exists()
+
+                        if not existing:
+                            reject_reason = f' Reason: {instance.rejection_reason}' if instance.rejection_reason else ''
+                            Notification.objects.create(
+                                recipient=instance.employee.user,
+                                notification_type='leave_rejected',
+                                title='Leave Request Rejected',
+                                message=f'Your leave request for {instance.leave_type.name} from {instance.start_date} to {instance.end_date} has been rejected.{reject_reason}',
+                                content_type=content_type,
+                                object_id=instance.pk,
+                                priority='high'
+                            )
+                            logger.info(f"Created leave rejection notification for {instance.employee.employee_no}")
+
+    except Exception as e:
+        logger.error(f"Error creating leave request notification: {e}", exc_info=True)
         # Don't raise - allow the save to complete but log the error

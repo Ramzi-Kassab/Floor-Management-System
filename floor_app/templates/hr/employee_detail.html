@@ -590,6 +590,38 @@
                 </div>
             </div>
 
+            <!-- QR Code -->
+            <div class="info-card">
+                <h5>
+                    <i class="bi bi-qr-code me-2"></i>
+                    Employee QR Code
+                </h5>
+                <div class="text-center">
+                    {% if employee_qr_code %}
+                    <div class="mb-3">
+                        <img src="data:image/png;base64,{{ employee_qr_code }}"
+                             alt="Employee QR Code"
+                             class="img-fluid"
+                             style="max-width: 250px; border: 1px solid #ddd; padding: 10px; background: white;">
+                    </div>
+                    <p class="small text-muted mb-2">Scan to view employee profile</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="downloadQRCode('{{ employee.employee_no }}')">
+                            <i class="bi bi-download me-2"></i>Download QR Code
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="printQRCode()">
+                            <i class="bi bi-printer me-2"></i>Print QR Code
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>QR code will be generated automatically</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Quick Actions -->
             <div class="info-card">
                 <h5>
@@ -618,6 +650,38 @@
 
 {% block extra_js %}
 <script>
-// Add any employee-specific JavaScript here
+// QR Code download functionality
+function downloadQRCode(employeeNo) {
+    const qrImage = document.querySelector('img[alt="Employee QR Code"]');
+    if (qrImage) {
+        const link = document.createElement('a');
+        link.href = qrImage.src;
+        link.download = `employee_qr_${employeeNo}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+// QR Code print functionality
+function printQRCode() {
+    const qrImage = document.querySelector('img[alt="Employee QR Code"]');
+    if (qrImage) {
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Employee QR Code</title>');
+        printWindow.document.write('<style>body{text-align:center;padding:50px;}img{max-width:400px;}</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<h2>Employee QR Code - {{ employee.employee_no }}</h2>');
+        printWindow.document.write('<p>{{ employee.person.get_full_name_en }}</p>');
+        printWindow.document.write('<img src="' + qrImage.src + '" />');
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    }
+}
 </script>
 {% endblock %}

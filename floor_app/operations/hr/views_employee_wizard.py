@@ -27,6 +27,9 @@ from floor_app.operations.hr.forms import (
 from floor_app.operations.hr_assets.models import (
     VehicleAssignment, ParkingAssignment, SIMAssignment
 )
+from floor_app.operations.hr.utils.qr_utils import generate_employee_qr_image
+import base64
+from io import BytesIO
 
 
 # ========== HR Dashboard ==========
@@ -727,6 +730,17 @@ def employee_detail(request, pk):
         is_deleted=False
     )
 
+    # Generate QR code for employee
+    employee_qr_code = None
+    try:
+        qr_image = generate_employee_qr_image(employee)
+        buffer = BytesIO()
+        qr_image.save(buffer, format='PNG')
+        employee_qr_code = base64.b64encode(buffer.getvalue()).decode()
+    except Exception as e:
+        # Log error but don't fail the view
+        print(f"Error generating QR code: {e}")
+
     context = {
         'employee': employee,
         'person': employee.person,
@@ -737,6 +751,7 @@ def employee_detail(request, pk):
             object_id=employee.person.id,
             is_deleted=False
         ),
+        'employee_qr_code': employee_qr_code,
     }
     return render(request, 'hr/employee_detail.html', context)
 
