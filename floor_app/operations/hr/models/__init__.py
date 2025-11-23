@@ -46,6 +46,9 @@ from .configuration import (
     DelayIncident,
     DelayReason,
 )
+from .contract import HRContract
+from .shift import HRShiftTemplate, ShiftAssignment
+from .asset import AssetType, HRAsset, AssetAssignment
 
 # Import generic Address model (unified address table for entire system)
 from floor_app.operations.models import Address
