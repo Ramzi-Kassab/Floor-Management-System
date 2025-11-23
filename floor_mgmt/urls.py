@@ -9,6 +9,10 @@ urlpatterns = [
     # "/" serves public home page, "/dashboard/" serves authenticated dashboard
     path("", include(("core.urls", "core"), namespace="core")),
 
+    # === Floor App - System-wide Templates ===
+    # User-facing features, help system, admin tools, API management
+    path("app/", include(("floor_app.urls", "floor_app"), namespace="floor_app")),
+
     # === Authentication (New Accounts App) ===
     path("accounts/", include("accounts.urls")),
 
