@@ -16,6 +16,10 @@ class Migration(migrations.Migration):
             model_name='bitdesign',
             name='ix_bd_level_size',
         ),
+        migrations.RemoveIndex(
+            model_name='bitdesignrevision',
+            name='ix_bdr_design_active',
+        ),
         migrations.RemoveConstraint(
             model_name='bitdesignrevision',
             name='uq_bdr_design_revision',
