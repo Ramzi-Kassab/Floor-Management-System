@@ -438,8 +438,10 @@ class UserThemePreference(models.Model):
     high_contrast = models.BooleanField(default=False, help_text='Enable high contrast mode for accessibility')
 
     # Custom colors (for custom theme)
-    primary_color = models.CharField(max_length=7, default='#2563eb', help_text='Hex color code')
-    accent_color = models.CharField(max_length=7, default='#10b981', help_text='Hex color code')
+    primary_color = models.CharField(max_length=7, default='#2563eb', help_text='Primary brand color (hex)')
+    accent_color = models.CharField(max_length=7, default='#10b981', help_text='Accent/highlight color (hex)')
+    background_color = models.CharField(max_length=7, default='#ffffff', help_text='Main background color (hex)')
+    text_color = models.CharField(max_length=7, default='#1f2937', help_text='Primary text color (hex)')
 
     # Text preferences
     font_size = models.CharField(max_length=20, choices=FONT_SIZE_CHOICES, default='medium')
@@ -478,6 +480,8 @@ class UserThemePreference(models.Model):
         return {
             '--primary-color': self.primary_color,
             '--accent-color': self.accent_color,
+            '--color-bg-primary': self.background_color,
+            '--color-text-primary': self.text_color,
             '--font-size-base': self.get_font_size_px(),
             '--line-height': str(self.line_height),
             '--spacing-multiplier': self.get_density_multiplier(),

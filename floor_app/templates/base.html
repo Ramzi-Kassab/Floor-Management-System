@@ -148,6 +148,70 @@
 
                         <div class="dropdown-divider"></div>
 
+                        <!-- Custom Colors -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-2">
+                                <i class="bi bi-palette-fill me-1"></i>Custom Colors
+                            </label>
+
+                            <!-- Primary Color -->
+                            <div class="mb-2">
+                                <label for="primaryColorPicker" class="form-label small">Primary Color</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="color" class="form-control form-control-color" id="primaryColorPicker" value="#2563eb" title="Choose primary color">
+                                    <input type="text" class="form-control" id="primaryColorText" value="#2563eb" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#2563eb">
+                                </div>
+                            </div>
+
+                            <!-- Accent Color -->
+                            <div class="mb-2">
+                                <label for="accentColorPicker" class="form-label small">Accent Color</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="color" class="form-control form-control-color" id="accentColorPicker" value="#10b981" title="Choose accent color">
+                                    <input type="text" class="form-control" id="accentColorText" value="#10b981" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#10b981">
+                                </div>
+                            </div>
+
+                            <!-- Background Color -->
+                            <div class="mb-2">
+                                <label for="backgroundColorPicker" class="form-label small">Background Color</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="color" class="form-control form-control-color" id="backgroundColorPicker" value="#ffffff" title="Choose background color">
+                                    <input type="text" class="form-control" id="backgroundColorText" value="#ffffff" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#ffffff">
+                                </div>
+                            </div>
+
+                            <!-- Text Color -->
+                            <div class="mb-2">
+                                <label for="textColorPicker" class="form-label small">Text Color</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="color" class="form-control form-control-color" id="textColorPicker" value="#1f2937" title="Choose text color">
+                                    <input type="text" class="form-control" id="textColorText" value="#1f2937" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#1f2937">
+                                </div>
+                            </div>
+
+                            <!-- Color Preset Buttons -->
+                            <div class="d-flex gap-1 mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-preset="light" title="Light theme colors">
+                                    <i class="bi bi-sun"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-preset="dark" title="Dark theme colors">
+                                    <i class="bi bi-moon"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-preset="blue" title="Blue theme">
+                                    <i class="bi bi-droplet-fill text-primary"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-preset="green" title="Green theme">
+                                    <i class="bi bi-droplet-fill text-success"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-preset="purple" title="Purple theme">
+                                    <i class="bi bi-droplet-fill text-info"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
                         {% if user.is_authenticated %}
                         <div class="d-grid">
                             <button type="button" class="btn btn-primary btn-sm" id="saveThemeBtn">
@@ -1142,13 +1206,22 @@
             // ========== ENHANCED THEME SYSTEM ==========
 
             // Get current theme preferences from context or defaults
-            const getCurrentTheme = () => ({
-                theme: document.documentElement.dataset.theme || 'light',
-                fontSize: document.documentElement.dataset.fontSize || 'medium',
-                density: document.documentElement.dataset.density || 'comfortable',
-                highContrast: document.documentElement.dataset.highContrast === 'true',
-                reduceMotion: document.documentElement.dataset.reduceMotion === 'true'
-            });
+            const getCurrentTheme = () => {
+                const root = document.documentElement;
+                const style = getComputedStyle(root);
+
+                return {
+                    theme: root.dataset.theme || 'light',
+                    fontSize: root.dataset.fontSize || 'medium',
+                    density: root.dataset.density || 'comfortable',
+                    highContrast: root.dataset.highContrast === 'true',
+                    reduceMotion: root.dataset.reduceMotion === 'true',
+                    primaryColor: document.getElementById('primaryColorPicker')?.value || '#2563eb',
+                    accentColor: document.getElementById('accentColorPicker')?.value || '#10b981',
+                    backgroundColor: document.getElementById('backgroundColorPicker')?.value || '#ffffff',
+                    textColor: document.getElementById('textColorPicker')?.value || '#1f2937'
+                };
+            };
 
             // Apply theme to page
             const applyTheme = (preferences) => {
@@ -1160,6 +1233,22 @@
                 html.dataset.density = preferences.density;
                 html.dataset.highContrast = preferences.highContrast;
                 html.dataset.reduceMotion = preferences.reduceMotion;
+
+                // Apply custom colors as CSS variables
+                if (preferences.primaryColor) {
+                    html.style.setProperty('--primary-color', preferences.primaryColor);
+                }
+                if (preferences.accentColor) {
+                    html.style.setProperty('--accent-color', preferences.accentColor);
+                }
+                if (preferences.backgroundColor) {
+                    html.style.setProperty('--color-bg-primary', preferences.backgroundColor);
+                    document.body.style.backgroundColor = preferences.backgroundColor;
+                }
+                if (preferences.textColor) {
+                    html.style.setProperty('--color-text-primary', preferences.textColor);
+                    document.body.style.color = preferences.textColor;
+                }
 
                 // Save to localStorage for non-authenticated users
                 localStorage.setItem('themePreferences', JSON.stringify(preferences));
@@ -1187,6 +1276,33 @@
 
                 const reduceMotionToggle = document.getElementById('reduceMotionToggle');
                 if (reduceMotionToggle) reduceMotionToggle.checked = current.reduceMotion;
+
+                // Initialize color pickers from user preferences or CSS variables
+                {% if user_theme_preference %}
+                const userPrimaryColor = '{{ user_theme_preference.primary_color }}';
+                const userAccentColor = '{{ user_theme_preference.accent_color }}';
+                const userBackgroundColor = '{{ user_theme_preference.background_color }}';
+                const userTextColor = '{{ user_theme_preference.text_color }}';
+                {% else %}
+                const userPrimaryColor = '#2563eb';
+                const userAccentColor = '#10b981';
+                const userBackgroundColor = '#ffffff';
+                const userTextColor = '#1f2937';
+                {% endif %}
+
+                // Set color pickers and text inputs
+                setColorInput('primaryColor', userPrimaryColor);
+                setColorInput('accentColor', userAccentColor);
+                setColorInput('backgroundColor', userBackgroundColor);
+                setColorInput('textColor', userTextColor);
+            };
+
+            // Helper function to set both color picker and text input
+            const setColorInput = (name, value) => {
+                const picker = document.getElementById(`${name}Picker`);
+                const text = document.getElementById(`${name}Text`);
+                if (picker) picker.value = value;
+                if (text) text.value = value;
             };
 
             // Save theme preferences to server
@@ -1294,6 +1410,88 @@
                     applyTheme(preferences);
                 });
             }
+
+            // Color picker change handlers
+            const setupColorPicker = (name) => {
+                const picker = document.getElementById(`${name}Picker`);
+                const text = document.getElementById(`${name}Text`);
+
+                if (picker) {
+                    picker.addEventListener('input', (e) => {
+                        if (text) text.value = e.target.value;
+                        const preferences = getCurrentTheme();
+                        applyTheme(preferences);
+                    });
+                }
+
+                if (text) {
+                    text.addEventListener('input', (e) => {
+                        const value = e.target.value;
+                        if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                            if (picker) picker.value = value;
+                            const preferences = getCurrentTheme();
+                            applyTheme(preferences);
+                        }
+                    });
+                }
+            };
+
+            // Setup all color pickers
+            setupColorPicker('primaryColor');
+            setupColorPicker('accentColor');
+            setupColorPicker('backgroundColor');
+            setupColorPicker('textColor');
+
+            // Color preset buttons
+            const colorPresets = {
+                light: {
+                    primaryColor: '#2563eb',
+                    accentColor: '#10b981',
+                    backgroundColor: '#ffffff',
+                    textColor: '#1f2937'
+                },
+                dark: {
+                    primaryColor: '#60a5fa',
+                    accentColor: '#34d399',
+                    backgroundColor: '#111827',
+                    textColor: '#f9fafb'
+                },
+                blue: {
+                    primaryColor: '#3b82f6',
+                    accentColor: '#06b6d4',
+                    backgroundColor: '#eff6ff',
+                    textColor: '#1e3a8a'
+                },
+                green: {
+                    primaryColor: '#10b981',
+                    accentColor: '#84cc16',
+                    backgroundColor: '#f0fdf4',
+                    textColor: '#14532d'
+                },
+                purple: {
+                    primaryColor: '#8b5cf6',
+                    accentColor: '#d946ef',
+                    backgroundColor: '#faf5ff',
+                    textColor: '#581c87'
+                }
+            };
+
+            document.querySelectorAll('[data-preset]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const presetName = e.currentTarget.dataset.preset;
+                    const preset = colorPresets[presetName];
+
+                    if (preset) {
+                        setColorInput('primaryColor', preset.primaryColor);
+                        setColorInput('accentColor', preset.accentColor);
+                        setColorInput('backgroundColor', preset.backgroundColor);
+                        setColorInput('textColor', preset.textColor);
+
+                        const preferences = getCurrentTheme();
+                        applyTheme(preferences);
+                    }
+                });
+            });
 
             // Save button click
             const saveThemeBtn = document.getElementById('saveThemeBtn');

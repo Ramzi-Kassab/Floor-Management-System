@@ -1016,6 +1016,16 @@ def api_user_save_theme(request):
         if 'reduceMotion' in data:
             theme_pref.reduce_motion = data['reduceMotion']
 
+        # Update color fields
+        if 'primaryColor' in data:
+            theme_pref.primary_color = data['primaryColor']
+        if 'accentColor' in data:
+            theme_pref.accent_color = data['accentColor']
+        if 'backgroundColor' in data:
+            theme_pref.background_color = data['backgroundColor']
+        if 'textColor' in data:
+            theme_pref.text_color = data['textColor']
+
         theme_pref.save()
 
         return JsonResponse({
@@ -1027,6 +1037,10 @@ def api_user_save_theme(request):
                 'density': theme_pref.density,
                 'highContrast': theme_pref.high_contrast,
                 'reduceMotion': theme_pref.reduce_motion,
+                'primaryColor': theme_pref.primary_color,
+                'accentColor': theme_pref.accent_color,
+                'backgroundColor': theme_pref.background_color,
+                'textColor': theme_pref.text_color,
             }
         })
 
