@@ -1,0 +1,625 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Workforce Analytics - HR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .trend-indicator {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+        margin-top: 1rem;
+    }
+    .department-badge {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        margin-right: 1rem;
+    }
+    .diversity-bar {
+        height: 35px;
+        border-radius: 5px;
+        overflow: hidden;
+        display: flex;
+        margin-bottom: 0.5rem;
+    }
+    .diversity-segment {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+    .skill-pill {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin: 0.25rem;
+    }
+    .training-progress {
+        height: 25px;
+        border-radius: 5px;
+        background: #e9ecef;
+        overflow: hidden;
+        position: relative;
+    }
+    .training-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+        display: flex;
+        align-items: center;
+        padding-left: 0.5rem;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="analytics-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1><i class="fas fa-users"></i> Workforce Analytics Dashboard</h1>
+                <p class="mb-0">Comprehensive employee metrics and organizational insights</p>
+            </div>
+            <div>
+                <select class="form-select bg-white" style="width: auto;">
+                    <option>Last 7 Days</option>
+                    <option selected>Last 30 Days</option>
+                    <option>Last Quarter</option>
+                    <option>Last Year</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Total Headcount</div>
+                <div class="metric-value">{{ total_employees|default:487 }}</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +12 vs last month
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Turnover Rate</div>
+                <div class="metric-value">{{ turnover_rate|default:8.2 }}%</div>
+                <small class="text-muted d-block">annual</small>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -1.5% improvement
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Avg. Tenure</div>
+                <div class="metric-value">{{ avg_tenure|default:4.7 }}</div>
+                <small class="text-muted d-block">years</small>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +0.3 years
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Training Completion</div>
+                <div class="metric-value">{{ training_completion|default:92 }}%</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +8% vs target
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">New Hires (30 days)</div>
+                <div class="metric-value text-success">{{ new_hires|default:18 }}</div>
+                <small class="text-muted">{{ onboarding|default:5 }} in onboarding</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Terminations (30 days)</div>
+                <div class="metric-value text-danger">{{ terminations|default:6 }}</div>
+                <small class="text-muted">{{ voluntary|default:4 }} voluntary, {{ involuntary|default:2 }} involuntary</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Open Positions</div>
+                <div class="metric-value text-warning">{{ open_positions|default:23 }}</div>
+                <small class="text-muted">{{ time_to_fill|default:28 }} avg. days to fill</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Absenteeism Rate</div>
+                <div class="metric-value">{{ absenteeism|default:2.8 }}%</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -0.5% vs average
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Headcount Trend -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-chart-line"></i> Headcount Trend</h5>
+                <div class="chart-container">
+                    <canvas id="headcountTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Department Distribution -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-sitemap"></i> Department Headcount</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="departmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Age Distribution -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-user-clock"></i> Age Distribution</h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="ageDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tenure Distribution -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-calendar-alt"></i> Tenure Distribution</h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="tenureChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diversity & Inclusion -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-hands-helping"></i> Diversity & Inclusion Metrics</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Gender Distribution</h6>
+                        <div class="diversity-bar">
+                            <div class="diversity-segment" style="width: 58%; background: #667eea;">
+                                Male 58%
+                            </div>
+                            <div class="diversity-segment" style="width: 40%; background: #764ba2;">
+                                Female 40%
+                            </div>
+                            <div class="diversity-segment" style="width: 2%; background: #20c997;">
+                                Other 2%
+                            </div>
+                        </div>
+                        <small class="text-muted">Target: 50/50 by 2026</small>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Leadership Diversity</h6>
+                        <div class="diversity-bar">
+                            <div class="diversity-segment" style="width: 65%; background: #667eea;">
+                                Male 65%
+                            </div>
+                            <div class="diversity-segment" style="width: 33%; background: #764ba2;">
+                                Female 33%
+                            </div>
+                            <div class="diversity-segment" style="width: 2%; background: #20c997;">
+                                Other 2%
+                            </div>
+                        </div>
+                        <small class="text-muted">Improving: +5% female leadership vs last year</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training & Development -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-graduation-cap"></i> Training Completion by Department</h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>IT & Technology</strong></small>
+                        <small>98%</small>
+                    </div>
+                    <div class="training-progress">
+                        <div class="training-fill" style="width: 98%;">98%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Operations</strong></small>
+                        <small>94%</small>
+                    </div>
+                    <div class="training-progress">
+                        <div class="training-fill" style="width: 94%;">94%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Sales & Marketing</strong></small>
+                        <small>91%</small>
+                    </div>
+                    <div class="training-progress">
+                        <div class="training-fill" style="width: 91%;">91%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Finance</strong></small>
+                        <small>89%</small>
+                    </div>
+                    <div class="training-progress">
+                        <div class="training-fill" style="width: 89%; background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%);">89%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>HR</strong></small>
+                        <small>96%</small>
+                    </div>
+                    <div class="training-progress">
+                        <div class="training-fill" style="width: 96%;">96%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-trophy"></i> Top Skills in Organization</h5>
+                <div class="mb-4">
+                    <h6 class="mb-2">Technical Skills</h6>
+                    <span class="skill-pill">Python (142)</span>
+                    <span class="skill-pill">SQL (128)</span>
+                    <span class="skill-pill">JavaScript (98)</span>
+                    <span class="skill-pill">CNC Programming (87)</span>
+                    <span class="skill-pill">CAD/CAM (76)</span>
+                    <span class="skill-pill">Data Analysis (64)</span>
+                    <span class="skill-pill">Project Management (58)</span>
+                </div>
+                <div class="mb-4">
+                    <h6 class="mb-2">Certifications</h6>
+                    <span class="skill-pill">PMP (42)</span>
+                    <span class="skill-pill">Six Sigma (38)</span>
+                    <span class="skill-pill">AWS Certified (31)</span>
+                    <span class="skill-pill">OSHA Safety (127)</span>
+                    <span class="skill-pill">Forklift Operator (94)</span>
+                </div>
+                <div>
+                    <h6 class="mb-2">Soft Skills</h6>
+                    <span class="skill-pill">Leadership (89)</span>
+                    <span class="skill-pill">Communication (156)</span>
+                    <span class="skill-pill">Problem Solving (134)</span>
+                    <span class="skill-pill">Teamwork (178)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Turnover Analysis -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-exchange-alt"></i> Turnover Analysis by Department</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Headcount</th>
+                                <th>New Hires</th>
+                                <th>Terminations</th>
+                                <th>Turnover Rate</th>
+                                <th>Avg. Tenure</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in departments %}
+                            <tr>
+                                <td><strong>{{ dept.name }}</strong></td>
+                                <td><span class="badge bg-primary">{{ dept.headcount }}</span></td>
+                                <td><span class="badge bg-success">{{ dept.new_hires }}</span></td>
+                                <td><span class="badge bg-danger">{{ dept.terminations }}</span></td>
+                                <td>
+                                    <span class="{% if dept.turnover > 15 %}text-danger{% elif dept.turnover > 10 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ dept.turnover }}%
+                                    </span>
+                                </td>
+                                <td>{{ dept.avg_tenure }} years</td>
+                                <td>
+                                    <span class="badge {% if dept.turnover > 15 %}bg-danger{% elif dept.turnover > 10 %}bg-warning{% else %}bg-success{% endif %}">
+                                        {% if dept.turnover > 15 %}High Risk{% elif dept.turnover > 10 %}Monitor{% else %}Healthy{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No department data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Distribution -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-star"></i> Performance Rating Distribution</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-chart-bar"></i> Compensation Analysis</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="compensationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights & Recommendations -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-brain"></i> AI-Powered Workforce Insights</h5>
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb"></i> Strategic HR Recommendations</h6>
+                    <ul class="mb-0">
+                        <li><strong>Retention Alert:</strong> Sales department showing 16% turnover. Exit interview analysis suggests compensation concerns. Recommend market benchmarking review.</li>
+                        <li><strong>Skills Gap:</strong> 23% of operations staff lack updated CNC programming training. Recommend certification program for Q3.</li>
+                        <li><strong>Succession Planning:</strong> 12 senior leadership roles have no identified successors. Critical risk for institutional knowledge retention.</li>
+                        <li><strong>Diversity Opportunity:</strong> Female representation in technical roles is 28%. Targeted recruitment could improve to 35% within 12 months.</li>
+                        <li><strong>Training ROI:</strong> Employees with recent training show 18% higher performance ratings. Expand training budget by 15% for maximum impact.</li>
+                        <li><strong>Engagement Indicator:</strong> Departments with 90%+ training completion show 40% lower turnover. Use as leading indicator for retention.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Headcount Trend Chart
+const headcountCtx = document.getElementById('headcountTrendChart').getContext('2d');
+new Chart(headcountCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Total Headcount',
+            data: [465, 470, 475, 478, 482, 487],
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'New Hires',
+            data: [12, 15, 18, 14, 16, 18],
+            borderColor: 'rgb(40, 167, 69)',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Terminations',
+            data: [8, 10, 7, 9, 8, 6],
+            borderColor: 'rgb(220, 53, 69)',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Department Chart
+const deptCtx = document.getElementById('departmentChart').getContext('2d');
+new Chart(deptCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Operations', 'IT & Tech', 'Sales & Marketing', 'Finance', 'HR', 'Quality', 'Maintenance'],
+        datasets: [{
+            label: 'Headcount',
+            data: [142, 87, 68, 45, 38, 52, 55],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(220, 53, 69, 0.8)',
+                'rgba(23, 162, 184, 0.8)',
+                'rgba(111, 66, 193, 0.8)',
+                'rgba(253, 126, 20, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Age Distribution Chart
+const ageCtx = document.getElementById('ageDistributionChart').getContext('2d');
+new Chart(ageCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['18-25', '26-35', '36-45', '46-55', '56+'],
+        datasets: [{
+            data: [12, 35, 28, 18, 7],
+            backgroundColor: [
+                'rgb(102, 126, 234)',
+                'rgb(40, 167, 69)',
+                'rgb(255, 193, 7)',
+                'rgb(220, 53, 69)',
+                'rgb(108, 117, 125)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Tenure Chart
+const tenureCtx = document.getElementById('tenureChart').getContext('2d');
+new Chart(tenureCtx, {
+    type: 'pie',
+    data: {
+        labels: ['<1 year', '1-2 years', '3-5 years', '6-10 years', '10+ years'],
+        datasets: [{
+            data: [18, 22, 28, 20, 12],
+            backgroundColor: [
+                'rgb(220, 53, 69)',
+                'rgb(255, 193, 7)',
+                'rgb(102, 126, 234)',
+                'rgb(40, 167, 69)',
+                'rgb(111, 66, 193)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Performance Chart
+const perfCtx = document.getElementById('performanceChart').getContext('2d');
+new Chart(perfCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Exceeds Expectations', 'Meets Expectations', 'Needs Improvement', 'Unsatisfactory'],
+        datasets: [{
+            label: 'Employees',
+            data: [87, 342, 48, 10],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(220, 53, 69, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Compensation Chart
+const compCtx = document.getElementById('compensationChart').getContext('2d');
+new Chart(compCtx, {
+    type: 'line',
+    data: {
+        labels: ['Entry Level', 'Junior', 'Mid-Level', 'Senior', 'Lead', 'Manager', 'Director'],
+        datasets: [{
+            label: 'Avg. Salary ($K)',
+            data: [45, 58, 72, 95, 115, 135, 165],
+            borderColor: 'rgb(40, 167, 69)',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Market Rate ($K)',
+            data: [48, 60, 75, 98, 120, 140, 170],
+            borderColor: 'rgb(255, 193, 7)',
+            borderDash: [5, 5],
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

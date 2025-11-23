@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Production Performance Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .metric-value {
+        font-size: 3rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .trend-up {
+        color: #28a745;
+    }
+    .trend-down {
+        color: #dc3545;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    .performance-gauge {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+    .kpi-widget {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        text-align: center;
+        height: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-tachometer-alt"></i> Production Performance Dashboard</h1>
+            <p class="text-muted mb-0">Real-time production metrics and KPIs</p>
+        </div>
+        <div>
+            <select class="form-select" style="width: auto; display: inline-block;">
+                <option>Today</option>
+                <option>This Week</option>
+                <option selected>This Month</option>
+                <option>This Quarter</option>
+                <option>This Year</option>
+            </select>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row 1 -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <small class="text-muted">Total Production Output</small>
+                <div class="metric-value">{{ total_output|default:0 }}</div>
+                <small class="trend-up">
+                    <i class="fas fa-arrow-up"></i> +12.5% vs last month
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <small class="text-muted">On-Time Delivery %</small>
+                <div class="metric-value">{{ otd_percentage|default:92 }}%</div>
+                <small class="trend-up">
+                    <i class="fas fa-arrow-up"></i> +3.2% improvement
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <small class="text-muted">Quality Pass Rate</small>
+                <div class="metric-value">{{ quality_rate|default:96 }}%</div>
+                <small class="trend-down">
+                    <i class="fas fa-arrow-down"></i> -1.1% vs target
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <small class="text-muted">Overall Equipment Effectiveness</small>
+                <div class="metric-value">{{ oee|default:85 }}%</div>
+                <small class="trend-up">
+                    <i class="fas fa-arrow-up"></i> +5.7% improvement
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-chart-line"></i> Production Trend (Last 30 Days)</h5>
+                <div class="chart-container">
+                    <canvas id="productionTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-industry"></i> Work Center Utilization</h5>
+                <div class="chart-container">
+                    <canvas id="utilizationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- OEE Gauge -->
+            <div class="kpi-widget mb-3">
+                <h5>Overall Equipment Effectiveness</h5>
+                <div class="performance-gauge">
+                    <canvas id="oeeGauge"></canvas>
+                </div>
+                <h2 class="mt-3">{{ oee|default:85 }}%</h2>
+                <p class="mb-0">Target: 90%</p>
+            </div>
+
+            <!-- Top Performing Work Centers -->
+            <div class="metric-card">
+                <h6 class="mb-3"><i class="fas fa-award"></i> Top Performers</h6>
+                <div class="list-group list-group-flush">
+                    {% for wc in top_work_centers %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <strong>{{ wc.name }}</strong>
+                            <br><small class="text-muted">{{ wc.output }} units</small>
+                        </div>
+                        <span class="badge bg-success">{{ wc.efficiency }}%</span>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item px-0">
+                        <small class="text-muted">No data available</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Metrics -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-tasks"></i> Job Status Breakdown</h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="jobStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle"></i> Quality Issues by Category</h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="qualityIssuesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottleneck Analysis -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-hourglass-half"></i> Current Bottlenecks</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Work Center</th>
+                                <th>Queue Size</th>
+                                <th>Avg Wait Time</th>
+                                <th>Utilization</th>
+                                <th>Impact</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bottleneck in bottlenecks %}
+                            <tr>
+                                <td><strong>{{ bottleneck.work_center }}</strong></td>
+                                <td><span class="badge bg-warning">{{ bottleneck.queue_size }} jobs</span></td>
+                                <td>{{ bottleneck.avg_wait }} hours</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if bottleneck.utilization > 95 %}bg-danger{% elif bottleneck.utilization > 85 %}bg-warning{% else %}bg-success{% endif %}"
+                                             style="width: {{ bottleneck.utilization }}%">
+                                            {{ bottleneck.utilization }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {% if bottleneck.impact == 'HIGH' %}bg-danger{% elif bottleneck.impact == 'MEDIUM' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ bottleneck.impact }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Analyze</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="fas fa-check-circle text-success"></i> No bottlenecks detected
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-bell"></i> Recent Alerts & Notifications</h5>
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1"><i class="fas fa-exclamation-circle text-warning"></i> Work Center A3 approaching capacity</h6>
+                            <small>5 mins ago</small>
+                        </div>
+                        <p class="mb-1">Current utilization at 94%. Consider load balancing.</p>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1"><i class="fas fa-check-circle text-success"></i> Job #12345 completed ahead of schedule</h6>
+                            <small>15 mins ago</small>
+                        </div>
+                        <p class="mb-1">Completed 2 hours early with 100% quality pass rate.</p>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1"><i class="fas fa-times-circle text-danger"></i> Quality issue detected - Job #12344</h6>
+                            <small>1 hour ago</small>
+                        </div>
+                        <p class="mb-1">Failed inspection at final QC. NCR #789 created.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Production Trend Chart
+const trendCtx = document.getElementById('productionTrendChart').getContext('2d');
+new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: {{ trend_labels|safe|default:"['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5']" }},
+        datasets: [{
+            label: 'Actual Output',
+            data: {{ trend_actual|safe|default:"[120, 135, 145, 138, 152]" }},
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Target Output',
+            data: {{ trend_target|safe|default:"[140, 140, 140, 140, 140]" }},
+            borderColor: 'rgb(40, 167, 69)',
+            borderDash: [5, 5],
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Utilization Chart
+const utilizationCtx = document.getElementById('utilizationChart').getContext('2d');
+new Chart(utilizationCtx, {
+    type: 'bar',
+    data: {
+        labels: ['WC-A1', 'WC-A2', 'WC-A3', 'WC-B1', 'WC-B2', 'WC-C1'],
+        datasets: [{
+            label: 'Utilization %',
+            data: [85, 92, 94, 78, 88, 82],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(102, 126, 234, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, max: 100 } }
+    }
+});
+
+// OEE Gauge
+const oeeCtx = document.getElementById('oeeGauge').getContext('2d');
+new Chart(oeeCtx, {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            data: [{{ oee|default:85 }}, {{ 100|add:"-85" }}],
+            backgroundColor: ['rgba(40, 167, 69, 0.8)', 'rgba(220, 53, 69, 0.3)'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        circumference: 180,
+        rotation: -90,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }
+    }
+});
+
+// Job Status Chart
+const jobStatusCtx = document.getElementById('jobStatusChart').getContext('2d');
+new Chart(jobStatusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Completed', 'In Progress', 'Queued', 'On Hold'],
+        datasets: [{
+            data: [45, 32, 18, 5],
+            backgroundColor: [
+                'rgb(40, 167, 69)',
+                'rgb(102, 126, 234)',
+                'rgb(255, 193, 7)',
+                'rgb(220, 53, 69)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Quality Issues Chart
+const qualityCtx = document.getElementById('qualityIssuesChart').getContext('2d');
+new Chart(qualityCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Dimensional', 'Surface Finish', 'Threading', 'Material', 'Other'],
+        datasets: [{
+            label: 'Issue Count',
+            data: [12, 8, 5, 3, 2],
+            backgroundColor: 'rgba(220, 53, 69, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

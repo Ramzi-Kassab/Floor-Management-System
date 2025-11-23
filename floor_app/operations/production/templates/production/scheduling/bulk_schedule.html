@@ -1,0 +1,649 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulk Job Scheduling - Production{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .schedule-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .import-zone {
+        border: 3px dashed #667eea;
+        border-radius: 10px;
+        padding: 3rem;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 2rem;
+    }
+    .import-zone:hover {
+        background: #e9ecef;
+        border-color: #764ba2;
+    }
+    .import-zone.dragover {
+        background: #667eea;
+        color: white;
+        transform: scale(1.02);
+    }
+    .job-row {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+    .job-row:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transform: translateX(5px);
+    }
+    .job-row.invalid {
+        border-left: 4px solid #dc3545;
+        background: #fff5f5;
+    }
+    .job-row.valid {
+        border-left: 4px solid #28a745;
+    }
+    .remove-btn {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .job-row:hover .remove-btn {
+        opacity: 1;
+    }
+    .summary-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .summary-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .gantt-preview {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .gantt-bar {
+        height: 30px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        padding: 0 0.5rem;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        position: relative;
+    }
+    .conflict-warning {
+        background: #dc3545;
+    }
+    .work-center-label {
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-calendar-alt"></i> Bulk Job Scheduling</h1>
+                <p class="mb-0">Schedule multiple production jobs simultaneously with conflict detection</p>
+            </div>
+            <div>
+                <a href="#" class="btn btn-light me-2">
+                    <i class="fas fa-download"></i> Download Template
+                </a>
+                <a href="{% url 'production:job_list' %}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left"></i> Back to Jobs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Import Section -->
+            <div class="schedule-card">
+                <h5 class="mb-3"><i class="fas fa-file-upload"></i> Import Jobs</h5>
+                <div class="import-zone" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt fa-4x mb-3"></i>
+                    <h5>Drag & Drop CSV File Here</h5>
+                    <p class="text-muted mb-3">or click to browse</p>
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open"></i> Browse Files
+                    </button>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong><i class="fas fa-info-circle"></i> CSV Format:</strong>
+                    job_number, part_number, quantity, work_center, priority, due_date, estimated_hours
+                    <br><small class="text-muted">Example: JOB-12345, PN-001, 100, WC-A1, HIGH, 2025-12-01, 8.5</small>
+                </div>
+            </div>
+
+            <!-- Manual Entry Section -->
+            <div class="schedule-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Manual Entry</h5>
+                    <button class="btn btn-sm btn-primary" onclick="addJobRow()">
+                        <i class="fas fa-plus"></i> Add Row
+                    </button>
+                </div>
+
+                <div id="jobList">
+                    <!-- Job rows will be added here dynamically -->
+                    <div class="job-row" data-job-id="1">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-2">
+                                <input type="text" class="form-control form-control-sm" placeholder="Job #" name="job_number">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control form-control-sm" placeholder="Part #" name="part_number">
+                            </div>
+                            <div class="col-md-1">
+                                <input type="number" class="form-control form-control-sm" placeholder="Qty" name="quantity">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" name="work_center">
+                                    <option value="">Work Center</option>
+                                    <option value="WC-A1">WC-A1</option>
+                                    <option value="WC-A2">WC-A2</option>
+                                    <option value="WC-A3">WC-A3</option>
+                                    <option value="WC-B1">WC-B1</option>
+                                    <option value="WC-B2">WC-B2</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <select class="form-select form-select-sm" name="priority">
+                                    <option value="">Priority</option>
+                                    <option value="LOW">Low</option>
+                                    <option value="MEDIUM">Medium</option>
+                                    <option value="HIGH">High</option>
+                                    <option value="URGENT">Urgent</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control form-control-sm" name="due_date">
+                            </div>
+                            <div class="col-md-1">
+                                <input type="number" class="form-control form-control-sm" placeholder="Hrs" step="0.5" name="estimated_hours">
+                            </div>
+                            <div class="col-md-1 text-end">
+                                <button class="btn btn-sm btn-outline-danger remove-btn" onclick="removeJobRow(1)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview & Validation -->
+            <div class="schedule-card">
+                <h5 class="mb-3"><i class="fas fa-check-circle"></i> Validation & Preview</h5>
+                <div id="validationResults">
+                    <p class="text-muted">Add jobs to see validation results...</p>
+                </div>
+
+                <!-- Gantt Chart Preview -->
+                <div class="mt-4">
+                    <h6 class="mb-3">Schedule Timeline Preview</h6>
+                    <div class="gantt-preview" id="ganttPreview">
+                        <p class="text-muted text-center">Schedule visualization will appear here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="schedule-card">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button class="btn btn-outline-secondary" onclick="clearAll()">
+                            <i class="fas fa-eraser"></i> Clear All
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="validateSchedule()">
+                            <i class="fas fa-check"></i> Validate Schedule
+                        </button>
+                    </div>
+                    <div>
+                        <button class="btn btn-success" onclick="submitSchedule()">
+                            <i class="fas fa-save"></i> Create Schedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Summary & Settings -->
+        <div class="col-md-4">
+            <!-- Summary -->
+            <div class="schedule-card">
+                <h5 class="mb-3"><i class="fas fa-chart-bar"></i> Schedule Summary</h5>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="summary-box">
+                            <div class="summary-value" id="totalJobs">0</div>
+                            <small>Total Jobs</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="summary-box">
+                            <div class="summary-value" id="totalHours">0</div>
+                            <small>Total Hours</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="summary-box" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                            <div class="summary-value" id="validJobs">0</div>
+                            <small>Valid</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="summary-box" style="background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);">
+                            <div class="summary-value" id="invalidJobs">0</div>
+                            <small>Invalid</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scheduling Options -->
+            <div class="schedule-card">
+                <h5 class="mb-3"><i class="fas fa-cog"></i> Scheduling Options</h5>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Scheduling Strategy</strong></label>
+                    <select class="form-select" id="schedulingStrategy">
+                        <option value="priority">Priority-Based</option>
+                        <option value="due_date">Due Date First</option>
+                        <option value="shortest_job">Shortest Job First</option>
+                        <option value="load_balancing">Load Balancing</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Start Date</strong></label>
+                    <input type="date" class="form-control" id="startDate" value="{{ today|date:'Y-m-d' }}">
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoResolveConflicts" checked>
+                        <label class="form-check-label" for="autoResolveConflicts">
+                            Auto-resolve conflicts
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="respectWorkingHours" checked>
+                        <label class="form-check-label" for="respectWorkingHours">
+                            Respect working hours (8am-5pm)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="allowOvertime">
+                        <label class="form-check-label" for="allowOvertime">
+                            Allow overtime scheduling
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Center Capacity -->
+            <div class="schedule-card">
+                <h5 class="mb-3"><i class="fas fa-industry"></i> Work Center Capacity</h5>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>WC-A1</strong></small>
+                        <small>85%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" style="width: 85%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>WC-A2</strong></small>
+                        <small>62%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 62%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>WC-A3</strong></small>
+                        <small>94%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-danger" style="width: 94%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>WC-B1</strong></small>
+                        <small>48%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 48%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>WC-B2</strong></small>
+                        <small>71%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: 71%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Schedules -->
+            <div class="schedule-card">
+                <h5 class="mb-3"><i class="fas fa-history"></i> Recent Bulk Schedules</h5>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>42 jobs scheduled</strong>
+                            <small class="text-muted">2 hours ago</small>
+                        </div>
+                        <small class="text-muted">Week 48 Production</small>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>28 jobs scheduled</strong>
+                            <small class="text-muted">Yesterday</small>
+                        </div>
+                        <small class="text-muted">Rush Orders Batch</small>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>65 jobs scheduled</strong>
+                            <small class="text-muted">3 days ago</small>
+                        </div>
+                        <small class="text-muted">Monthly Planning</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let jobCounter = 1;
+
+// Drag and drop handlers
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+});
+
+dropZone.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+});
+
+function handleFile(file) {
+    if (!file.name.endsWith('.csv')) {
+        alert('Please upload a CSV file');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        parseCSV(e.target.result);
+    };
+    reader.readAsText(file);
+}
+
+function parseCSV(content) {
+    const lines = content.split('\n');
+    // Skip header row
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const fields = line.split(',');
+        if (fields.length >= 7) {
+            addJobRow({
+                job_number: fields[0].trim(),
+                part_number: fields[1].trim(),
+                quantity: fields[2].trim(),
+                work_center: fields[3].trim(),
+                priority: fields[4].trim(),
+                due_date: fields[5].trim(),
+                estimated_hours: fields[6].trim()
+            });
+        }
+    }
+    updateSummary();
+}
+
+function addJobRow(data = {}) {
+    jobCounter++;
+    const jobList = document.getElementById('jobList');
+    const newRow = document.createElement('div');
+    newRow.className = 'job-row';
+    newRow.dataset.jobId = jobCounter;
+
+    newRow.innerHTML = `
+        <div class="row g-2 align-items-center">
+            <div class="col-md-2">
+                <input type="text" class="form-control form-control-sm" placeholder="Job #" name="job_number" value="${data.job_number || ''}">
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control form-control-sm" placeholder="Part #" name="part_number" value="${data.part_number || ''}">
+            </div>
+            <div class="col-md-1">
+                <input type="number" class="form-control form-control-sm" placeholder="Qty" name="quantity" value="${data.quantity || ''}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" name="work_center">
+                    <option value="">Work Center</option>
+                    <option value="WC-A1" ${data.work_center === 'WC-A1' ? 'selected' : ''}>WC-A1</option>
+                    <option value="WC-A2" ${data.work_center === 'WC-A2' ? 'selected' : ''}>WC-A2</option>
+                    <option value="WC-A3" ${data.work_center === 'WC-A3' ? 'selected' : ''}>WC-A3</option>
+                    <option value="WC-B1" ${data.work_center === 'WC-B1' ? 'selected' : ''}>WC-B1</option>
+                    <option value="WC-B2" ${data.work_center === 'WC-B2' ? 'selected' : ''}>WC-B2</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <select class="form-select form-select-sm" name="priority">
+                    <option value="">Priority</option>
+                    <option value="LOW" ${data.priority === 'LOW' ? 'selected' : ''}>Low</option>
+                    <option value="MEDIUM" ${data.priority === 'MEDIUM' ? 'selected' : ''}>Medium</option>
+                    <option value="HIGH" ${data.priority === 'HIGH' ? 'selected' : ''}>High</option>
+                    <option value="URGENT" ${data.priority === 'URGENT' ? 'selected' : ''}>Urgent</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control form-control-sm" name="due_date" value="${data.due_date || ''}">
+            </div>
+            <div class="col-md-1">
+                <input type="number" class="form-control form-control-sm" placeholder="Hrs" step="0.5" name="estimated_hours" value="${data.estimated_hours || ''}">
+            </div>
+            <div class="col-md-1 text-end">
+                <button class="btn btn-sm btn-outline-danger remove-btn" onclick="removeJobRow(${jobCounter})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    jobList.appendChild(newRow);
+}
+
+function removeJobRow(jobId) {
+    const row = document.querySelector(`[data-job-id="${jobId}"]`);
+    if (row) {
+        row.remove();
+        updateSummary();
+    }
+}
+
+function clearAll() {
+    if (confirm('Are you sure you want to clear all jobs?')) {
+        document.getElementById('jobList').innerHTML = '';
+        updateSummary();
+    }
+}
+
+function updateSummary() {
+    const rows = document.querySelectorAll('.job-row');
+    let totalHours = 0;
+    let validCount = 0;
+    let invalidCount = 0;
+
+    rows.forEach(row => {
+        const hours = parseFloat(row.querySelector('[name="estimated_hours"]').value) || 0;
+        totalHours += hours;
+
+        // Simple validation
+        const jobNumber = row.querySelector('[name="job_number"]').value;
+        const partNumber = row.querySelector('[name="part_number"]').value;
+        const workCenter = row.querySelector('[name="work_center"]').value;
+
+        if (jobNumber && partNumber && workCenter) {
+            row.classList.add('valid');
+            row.classList.remove('invalid');
+            validCount++;
+        } else {
+            row.classList.add('invalid');
+            row.classList.remove('valid');
+            invalidCount++;
+        }
+    });
+
+    document.getElementById('totalJobs').textContent = rows.length;
+    document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+    document.getElementById('validJobs').textContent = validCount;
+    document.getElementById('invalidJobs').textContent = invalidCount;
+}
+
+function validateSchedule() {
+    updateSummary();
+    alert('Schedule validated! Check the summary for details.');
+}
+
+function submitSchedule() {
+    const rows = document.querySelectorAll('.job-row');
+    if (rows.length === 0) {
+        alert('Please add at least one job to schedule.');
+        return;
+    }
+
+    const invalidCount = document.querySelectorAll('.job-row.invalid').length;
+    if (invalidCount > 0) {
+        alert(`Cannot submit schedule. ${invalidCount} job(s) are invalid.`);
+        return;
+    }
+
+    // Collect all job data
+    const jobs = [];
+    rows.forEach(row => {
+        jobs.push({
+            job_number: row.querySelector('[name="job_number"]').value,
+            part_number: row.querySelector('[name="part_number"]').value,
+            quantity: row.querySelector('[name="quantity"]').value,
+            work_center: row.querySelector('[name="work_center"]').value,
+            priority: row.querySelector('[name="priority"]').value,
+            due_date: row.querySelector('[name="due_date"]').value,
+            estimated_hours: row.querySelector('[name="estimated_hours"]').value
+        });
+    });
+
+    // Submit via AJAX
+    fetch('{% url "production:bulk_schedule_create" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            jobs: jobs,
+            strategy: document.getElementById('schedulingStrategy').value,
+            start_date: document.getElementById('startDate').value,
+            auto_resolve: document.getElementById('autoResolveConflicts').checked,
+            respect_hours: document.getElementById('respectWorkingHours').checked,
+            allow_overtime: document.getElementById('allowOvertime').checked
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Successfully scheduled ${data.scheduled_count} jobs!`);
+            window.location.href = '{% url "production:job_list" %}';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error submitting schedule: ' + error);
+    });
+}
+
+// Update summary on any input change
+document.addEventListener('input', (e) => {
+    if (e.target.closest('.job-row')) {
+        updateSummary();
+    }
+});
+
+// Initial summary update
+updateSummary();
+</script>
+{% endblock %}

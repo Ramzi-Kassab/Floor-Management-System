@@ -1,0 +1,635 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Capacity Planning - Planning{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .planning-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .capacity-gauge {
+        position: relative;
+        height: 200px;
+        margin: 1rem 0;
+    }
+    .capacity-bar {
+        height: 40px;
+        background: #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    .capacity-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        transition: width 0.3s;
+    }
+    .capacity-fill.over {
+        background: #dc3545;
+    }
+    .capacity-fill.optimal {
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    }
+    .capacity-fill.warning {
+        background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%);
+    }
+    .timeline-row {
+        border-left: 3px solid #667eea;
+        padding-left: 1rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -8px;
+        top: 0;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #667eea;
+    }
+    .work-center-card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+    .work-center-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .work-center-card.critical {
+        border-left: 5px solid #dc3545;
+        background: #fff5f5;
+    }
+    .work-center-card.warning {
+        border-left: 5px solid #ffc107;
+        background: #fffbf0;
+    }
+    .work-center-card.optimal {
+        border-left: 5px solid #28a745;
+        background: #f0fff4;
+    }
+    .scenario-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        border: 2px solid #667eea;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin: 0.25rem;
+        display: inline-block;
+    }
+    .scenario-badge.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .scenario-badge:hover {
+        transform: scale(1.05);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: 1rem;
+    }
+    .resource-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    .shift-indicator {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        margin: 0.2rem;
+    }
+    .shift-1 { background: #667eea; color: white; }
+    .shift-2 { background: #28a745; color: white; }
+    .shift-3 { background: #ffc107; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-chart-gantt"></i> Capacity Planning & Resource Optimization</h1>
+                <p class="mb-0">Analyze and optimize production capacity across work centers and time periods</p>
+            </div>
+            <div>
+                <select class="form-select bg-white" style="width: auto; display: inline-block;">
+                    <option>Next 7 Days</option>
+                    <option selected>Next 30 Days</option>
+                    <option>Next Quarter</option>
+                    <option>Next 6 Months</option>
+                </select>
+                <button class="btn btn-light" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Capacity Overview -->
+    <div class="row">
+        <div class="col-12">
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-tachometer-alt"></i> Overall Capacity Utilization</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h2 class="text-primary">{{ overall_capacity|default:78 }}%</h2>
+                            <p class="text-muted">Current Utilization</p>
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up"></i> +5% vs last period
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="capacity-bar">
+                            <div class="capacity-fill warning" style="width: 78%;">
+                                78% Utilized
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="fas fa-circle text-success"></i> Optimal: 70-85%</span>
+                            <span><i class="fas fa-circle text-warning"></i> Warning: 85-95%</span>
+                            <span><i class="fas fa-circle text-danger"></i> Critical: >95%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario Planning -->
+    <div class="row">
+        <div class="col-12">
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-lightbulb"></i> Scenario Planning</h5>
+                <div class="mb-3">
+                    <span class="scenario-badge active" onclick="loadScenario('current')">
+                        <i class="fas fa-check-circle"></i> Current Plan
+                    </span>
+                    <span class="scenario-badge" onclick="loadScenario('optimized')">
+                        <i class="fas fa-magic"></i> AI-Optimized
+                    </span>
+                    <span class="scenario-badge" onclick="loadScenario('growth')">
+                        <i class="fas fa-chart-line"></i> 20% Growth
+                    </span>
+                    <span class="scenario-badge" onclick="loadScenario('overtime')">
+                        <i class="fas fa-clock"></i> With Overtime
+                    </span>
+                    <span class="scenario-badge" onclick="loadScenario('third_shift')">
+                        <i class="fas fa-moon"></i> Add 3rd Shift
+                    </span>
+                    <span class="scenario-badge" onclick="loadScenario('custom')">
+                        <i class="fas fa-cog"></i> Custom
+                    </span>
+                </div>
+                <div id="scenarioDetails" class="alert alert-info">
+                    <strong>Current Plan:</strong> Based on existing schedules and resource allocation.
+                    Capacity utilization: 78% | Available capacity: 1,840 hours/week
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Center Capacity -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-industry"></i> Work Center Capacity Analysis</h5>
+
+                <!-- Work Center Cards -->
+                <div class="work-center-card critical">
+                    <div class="d-flex align-items-start">
+                        <div class="resource-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Work Center A1 - CNC Machining</h6>
+                                <span class="badge bg-danger">97% Capacity</span>
+                            </div>
+                            <div class="capacity-bar" style="height: 30px;">
+                                <div class="capacity-fill over" style="width: 97%;">97%</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <small><strong>Available:</strong> 160 hrs/week</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Scheduled:</strong> 155 hrs</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Remaining:</strong> <span class="text-danger">5 hrs</span></small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Queue:</strong> 23 jobs</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="shift-indicator shift-1">Shift 1: 100%</span>
+                                <span class="shift-indicator shift-2">Shift 2: 94%</span>
+                            </div>
+                            <div class="alert alert-danger mt-2 mb-0">
+                                <small><i class="fas fa-exclamation-triangle"></i> <strong>Bottleneck Alert:</strong> Consider overtime or load balancing to WC-B1</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="work-center-card warning">
+                    <div class="d-flex align-items-start">
+                        <div class="resource-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Work Center A2 - CNC Turning</h6>
+                                <span class="badge bg-warning">88% Capacity</span>
+                            </div>
+                            <div class="capacity-bar" style="height: 30px;">
+                                <div class="capacity-fill warning" style="width: 88%;">88%</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <small><strong>Available:</strong> 160 hrs/week</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Scheduled:</strong> 141 hrs</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Remaining:</strong> <span class="text-warning">19 hrs</span></small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Queue:</strong> 12 jobs</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="shift-indicator shift-1">Shift 1: 92%</span>
+                                <span class="shift-indicator shift-2">Shift 2: 84%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="work-center-card optimal">
+                    <div class="d-flex align-items-start">
+                        <div class="resource-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Work Center B1 - Assembly</h6>
+                                <span class="badge bg-success">72% Capacity</span>
+                            </div>
+                            <div class="capacity-bar" style="height: 30px;">
+                                <div class="capacity-fill optimal" style="width: 72%;">72%</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <small><strong>Available:</strong> 160 hrs/week</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Scheduled:</strong> 115 hrs</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Remaining:</strong> <span class="text-success">45 hrs</span></small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Queue:</strong> 8 jobs</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="shift-indicator shift-1">Shift 1: 75%</span>
+                                <span class="shift-indicator shift-2">Shift 2: 69%</span>
+                            </div>
+                            <div class="alert alert-success mt-2 mb-0">
+                                <small><i class="fas fa-check-circle"></i> <strong>Opportunity:</strong> Available for overflow from WC-A1</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="work-center-card optimal">
+                    <div class="d-flex align-items-start">
+                        <div class="resource-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Work Center C1 - Quality Inspection</h6>
+                                <span class="badge bg-success">65% Capacity</span>
+                            </div>
+                            <div class="capacity-bar" style="height: 30px;">
+                                <div class="capacity-fill optimal" style="width: 65%;">65%</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <small><strong>Available:</strong> 160 hrs/week</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Scheduled:</strong> 104 hrs</small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Remaining:</strong> <span class="text-success">56 hrs</span></small>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Queue:</strong> 5 jobs</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="shift-indicator shift-1">Shift 1: 68%</span>
+                                <span class="shift-indicator shift-2">Shift 2: 62%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capacity Timeline -->
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-calendar-alt"></i> Capacity Timeline (Next 4 Weeks)</h5>
+                <div class="chart-container">
+                    <canvas id="capacityTimelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-4">
+            <!-- Key Metrics -->
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-chart-bar"></i> Key Metrics</h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Total Available Capacity</strong></small>
+                    </div>
+                    <h4 class="text-primary">2,400 hrs/week</h4>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Total Scheduled</strong></small>
+                    </div>
+                    <h4 class="text-success">1,872 hrs/week</h4>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Available Capacity</strong></small>
+                    </div>
+                    <h4 class="text-info">528 hrs/week</h4>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Bottleneck Impact</strong></small>
+                    </div>
+                    <h4 class="text-danger">-12% throughput</h4>
+                </div>
+            </div>
+
+            <!-- Resource Constraints -->
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle text-warning"></i> Constraints</h5>
+                <div class="timeline-row">
+                    <div class="timeline-dot" style="background: #dc3545;"></div>
+                    <strong>WC-A1 Overloaded</strong>
+                    <p class="text-muted mb-0 small">97% capacity - blocking 18 jobs</p>
+                </div>
+                <div class="timeline-row">
+                    <div class="timeline-dot" style="background: #ffc107;"></div>
+                    <strong>Operator Shortage</strong>
+                    <p class="text-muted mb-0 small">3 certified operators on leave next week</p>
+                </div>
+                <div class="timeline-row">
+                    <div class="timeline-dot" style="background: #17a2b8;"></div>
+                    <strong>Planned Maintenance</strong>
+                    <p class="text-muted mb-0 small">WC-A2 down Friday 8am-12pm</p>
+                </div>
+                <div class="timeline-row">
+                    <div class="timeline-dot" style="background: #28a745;"></div>
+                    <strong>New Equipment</strong>
+                    <p class="text-muted mb-0 small">WC-D1 coming online in 2 weeks (+200 hrs)</p>
+                </div>
+            </div>
+
+            <!-- Optimization Recommendations -->
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-brain"></i> AI Recommendations</h5>
+                <div class="alert alert-success">
+                    <small><strong><i class="fas fa-lightbulb"></i> Load Balancing:</strong> Move 8 jobs from WC-A1 to WC-B1. Estimated savings: 2 days lead time.</small>
+                </div>
+                <div class="alert alert-warning">
+                    <small><strong><i class="fas fa-clock"></i> Overtime Option:</strong> 10 hours overtime on WC-A1 eliminates bottleneck. Cost: $450.</small>
+                </div>
+                <div class="alert alert-info">
+                    <small><strong><i class="fas fa-calendar-plus"></i> Schedule Shift:</strong> Move 5 low-priority jobs to next week increases on-time delivery by 8%.</small>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                <button class="btn btn-primary w-100 mb-2" onclick="applyOptimization()">
+                    <i class="fas fa-magic"></i> Apply AI Optimization
+                </button>
+                <button class="btn btn-outline-primary w-100 mb-2" onclick="scheduleOvertime()">
+                    <i class="fas fa-clock"></i> Schedule Overtime
+                </button>
+                <button class="btn btn-outline-secondary w-100 mb-2" onclick="rebalanceLoad()">
+                    <i class="fas fa-balance-scale"></i> Rebalance Workload
+                </button>
+                <button class="btn btn-outline-info w-100" onclick="exportPlan()">
+                    <i class="fas fa-download"></i> Export Capacity Plan
+                </button>
+            </div>
+
+            <!-- Historical Trends -->
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-chart-line"></i> Capacity Trends</h5>
+                <div class="chart-container" style="height: 200px;">
+                    <canvas id="capacityTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- What-If Analysis -->
+    <div class="row">
+        <div class="col-12">
+            <div class="planning-card">
+                <h5 class="mb-3"><i class="fas fa-flask"></i> What-If Analysis</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Scenario:</strong></label>
+                            <select class="form-select" id="whatIfScenario">
+                                <option>Add 10% more orders</option>
+                                <option>Remove WC-A1 for 3 days (maintenance)</option>
+                                <option>Add 3rd shift</option>
+                                <option>Reduce setup times by 20%</option>
+                                <option>Custom scenario...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="runWhatIf()">
+                            <i class="fas fa-play"></i> Run Analysis
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="whatIfResults" class="alert alert-secondary">
+                            <strong>Select a scenario and click "Run Analysis" to see projected impact on capacity, lead times, and bottlenecks.</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Capacity Timeline Chart
+const timelineCtx = document.getElementById('capacityTimelineChart').getContext('2d');
+new Chart(timelineCtx, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'WC-A1',
+            data: [97, 95, 98, 94],
+            borderColor: 'rgb(220, 53, 69)',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'WC-A2',
+            data: [88, 86, 82, 85],
+            borderColor: 'rgb(255, 193, 7)',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'WC-B1',
+            data: [72, 75, 70, 74],
+            borderColor: 'rgb(40, 167, 69)',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Target (85%)',
+            data: [85, 85, 85, 85],
+            borderColor: 'rgb(102, 126, 234)',
+            borderDash: [5, 5],
+            tension: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+    }
+});
+
+// Capacity Trend Chart
+const trendCtx = document.getElementById('capacityTrendChart').getContext('2d');
+new Chart(trendCtx, {
+    type: 'bar',
+    data: {
+        labels: ['4 weeks ago', '3 weeks ago', '2 weeks ago', 'Last week', 'This week'],
+        datasets: [{
+            label: 'Avg. Utilization',
+            data: [68, 72, 75, 76, 78],
+            backgroundColor: 'rgba(102, 126, 234, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+    }
+});
+
+function loadScenario(scenario) {
+    // Update active badge
+    document.querySelectorAll('.scenario-badge').forEach(badge => {
+        badge.classList.remove('active');
+    });
+    event.target.closest('.scenario-badge').classList.add('active');
+
+    // Update scenario details
+    const details = {
+        'current': 'Based on existing schedules and resource allocation. Capacity utilization: 78% | Available capacity: 1,840 hours/week',
+        'optimized': 'AI-optimized load balancing and schedule. Capacity utilization: 82% | Lead time reduced by 15% | Eliminates WC-A1 bottleneck',
+        'growth': 'Simulates 20% increase in orders. Capacity utilization: 94% | Requires overtime or additional shift',
+        'overtime': 'Adds 10 hours overtime per work center. Capacity utilization: 85% | Cost increase: $2,200/week',
+        'third_shift': 'Adds 3rd shift (6pm-2am). Capacity utilization: 52% | Requires 8 additional operators',
+        'custom': 'Define custom parameters for scenario analysis'
+    };
+
+    document.getElementById('scenarioDetails').innerHTML = `<strong>${event.target.textContent}:</strong> ${details[scenario]}`;
+}
+
+function applyOptimization() {
+    if (confirm('Apply AI-recommended optimization? This will rebalance 8 jobs from WC-A1 to WC-B1.')) {
+        alert('Optimization applied! Recalculating schedules...');
+    }
+}
+
+function scheduleOvertime() {
+    alert('Opening overtime scheduling interface...');
+}
+
+function rebalanceLoad() {
+    alert('Running load balancing algorithm...');
+}
+
+function exportPlan() {
+    alert('Exporting capacity plan to Excel...');
+}
+
+function runWhatIf() {
+    const scenario = document.getElementById('whatIfScenario').value;
+    document.getElementById('whatIfResults').innerHTML = `
+        <strong>Analysis Results:</strong><br>
+        <ul class="mb-0">
+            <li>Overall capacity impact: +15%</li>
+            <li>Bottleneck moved to WC-A2</li>
+            <li>Average lead time: +2 days</li>
+            <li>On-time delivery: 87% (down from 92%)</li>
+        </ul>
+    `;
+    document.getElementById('whatIfResults').className = 'alert alert-warning';
+}
+</script>
+{% endblock %}

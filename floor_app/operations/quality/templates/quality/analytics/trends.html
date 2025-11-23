@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quality Analytics & Trends - Quality{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .stat-widget {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    .stat-value-large {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .chart-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+    }
+    .trend-indicator {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    .pareto-bar {
+        height: 30px;
+        background: linear-gradient(90deg, #dc3545 0%, #ffc107 100%);
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="analytics-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1><i class="fas fa-chart-line"></i> Quality Analytics & Trends</h1>
+                <p class="mb-0">Comprehensive quality metrics and predictive analytics</p>
+            </div>
+            <div>
+                <select class="form-select bg-white">
+                    <option>Last 7 Days</option>
+                    <option selected>Last 30 Days</option>
+                    <option>Last Quarter</option>
+                    <option>Last Year</option>
+                    <option>Custom Range</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-widget">
+                <small class="text-muted d-block mb-2">Overall Quality Rate</small>
+                <div class="stat-value-large">{{ quality_rate|default:96.5 }}%</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +2.3% vs last period
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-widget">
+                <small class="text-muted d-block mb-2">Total NCRs</small>
+                <div class="stat-value-large">{{ total_ncrs|default:42 }}</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -15% reduction
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-widget">
+                <small class="text-muted d-block mb-2">Avg Resolution Time</small>
+                <div class="stat-value-large">{{ avg_resolution|default:3.2 }}</div>
+                <small class="text-muted d-block">days</small>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -18% faster
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-widget">
+                <small class="text-muted d-block mb-2">Cost of Quality</small>
+                <div class="stat-value-large">${{ coq|default:"24.5K" }}</div>
+                <small class="trend-indicator text-danger">
+                    <i class="fas fa-arrow-up"></i> +8% vs last period
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Charts -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Quality Trend -->
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-chart-area"></i> Quality Performance Trend</h5>
+                <div class="chart-container">
+                    <canvas id="qualityTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- NCR by Category (Pareto) -->
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-chart-bar"></i> NCR Pareto Analysis</h5>
+                <p class="text-muted small">Top defect categories accounting for 80% of quality issues</p>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="paretoChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- NCR Status Distribution -->
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-tasks"></i> NCR Status</h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="ncrStatusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Root Cause Breakdown -->
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-search"></i> Root Causes</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Cause</th>
+                                <th>Count</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cause in root_causes %}
+                            <tr>
+                                <td><small>{{ cause.name }}</small></td>
+                                <td><span class="badge bg-danger">{{ cause.count }}</span></td>
+                                <td><small>{{ cause.percentage }}%</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center text-muted"><small>No data</small></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Analysis -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-industry"></i> NCRs by Work Center</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="workCenterChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-calendar-alt"></i> NCRs by Day of Week</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="dayOfWeekChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Issues Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-list-ol"></i> Top 10 Recurring Issues</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Issue Description</th>
+                                <th>Occurrences</th>
+                                <th>Last 30 Days</th>
+                                <th>Trend</th>
+                                <th>Primary Cause</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in top_issues %}
+                            <tr>
+                                <td><strong>{{ forloop.counter }}</strong></td>
+                                <td>{{ issue.description|truncatechars:60 }}</td>
+                                <td><span class="badge bg-primary">{{ issue.total_count }}</span></td>
+                                <td><span class="badge bg-warning">{{ issue.recent_count }}</span></td>
+                                <td>
+                                    {% if issue.trend == 'up' %}
+                                    <span class="text-danger"><i class="fas fa-arrow-up"></i> +{{ issue.trend_pct }}%</span>
+                                    {% else %}
+                                    <span class="text-success"><i class="fas fa-arrow-down"></i> -{{ issue.trend_pct }}%</span>
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ issue.root_cause }}</small></td>
+                                <td>
+                                    <span class="badge bg-{% if issue.action_plan %}success{% else %}secondary{% endif %}">
+                                        {% if issue.action_plan %}Action Plan{% else %}Pending{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Analyze</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="8" class="text-center text-muted">No recurring issues identified</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predictive Analytics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-card">
+                <h5 class="mb-3"><i class="fas fa-brain"></i> Predictive Analytics & Insights</h5>
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb"></i> AI-Powered Insights</h6>
+                    <ul class="mb-0">
+                        <li>Based on current trends, expect <strong>15% reduction</strong> in NCRs next month if corrective actions continue.</li>
+                        <li>Work Center A3 shows 23% higher defect rate on Mondays - recommend process review.</li>
+                        <li>Dimensional defects spike during shift changes - consider enhanced handoff procedures.</li>
+                        <li>Quality rate correlation with operator training: 94% for recent training vs 87% for overdue training.</li>
+                    </ul>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Quality Trend Chart
+const trendCtx = document.getElementById('qualityTrendChart').getContext('2d');
+new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Quality Rate %',
+            data: [94.2, 95.5, 96.1, 96.5],
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Target',
+            data: [97, 97, 97, 97],
+            borderColor: 'rgb(40, 167, 69)',
+            borderDash: [5, 5],
+            tension: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 90, max: 100 } }
+    }
+});
+
+// Pareto Chart
+const paretoCtx = document.getElementById('paretoChart').getContext('2d');
+new Chart(paretoCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Dimensional', 'Surface Finish', 'Threading', 'Material', 'Other'],
+        datasets: [{
+            label: 'Defect Count',
+            data: [28, 15, 10, 6, 3],
+            backgroundColor: 'rgba(220, 53, 69, 0.8)',
+            yAxisID: 'y'
+        }, {
+            label: 'Cumulative %',
+            data: [45, 69, 85, 94, 100],
+            type: 'line',
+            borderColor: 'rgb(255, 193, 7)',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            yAxisID: 'y1',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+            y: { type: 'linear', position: 'left', beginAtZero: true },
+            y1: { type: 'linear', position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false } }
+        }
+    }
+});
+
+// NCR Status Chart
+const statusCtx = document.getElementById('ncrStatusChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Open', 'In Review', 'Closed', 'On Hold'],
+        datasets: [{
+            data: [18, 12, 45, 7],
+            backgroundColor: [
+                'rgb(220, 53, 69)',
+                'rgb(255, 193, 7)',
+                'rgb(40, 167, 69)',
+                'rgb(108, 117, 125)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Work Center Chart
+const wcCtx = document.getElementById('workCenterChart').getContext('2d');
+new Chart(wcCtx, {
+    type: 'bar',
+    data: {
+        labels: ['WC-A1', 'WC-A2', 'WC-A3', 'WC-B1', 'WC-B2'],
+        datasets: [{
+            label: 'NCR Count',
+            data: [8, 5, 12, 6, 4],
+            backgroundColor: 'rgba(220, 53, 69, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true } }
+    }
+});
+
+// Day of Week Chart
+const dowCtx = document.getElementById('dayOfWeekChart').getContext('2d');
+new Chart(dowCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        datasets: [{
+            label: 'NCRs',
+            data: [9, 6, 7, 5, 8],
+            backgroundColor: 'rgba(102, 126, 234, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Prediction Chart
+const predCtx = document.getElementById('predictionChart').getContext('2d');
+new Chart(predCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun (Forecast)'],
+        datasets: [{
+            label: 'Actual NCRs',
+            data: [52, 48, 45, 42, 38, null],
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)'
+        }, {
+            label: 'Predicted NCRs',
+            data: [null, null, null, null, 38, 32],
+            borderColor: 'rgb(255, 193, 7)',
+            borderDash: [5, 5],
+            backgroundColor: 'rgba(255, 193, 7, 0.1)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

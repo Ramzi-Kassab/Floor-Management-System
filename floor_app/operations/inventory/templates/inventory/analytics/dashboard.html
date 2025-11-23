@@ -1,0 +1,561 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory Analytics Dashboard - Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .trend-indicator {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+        margin-top: 1rem;
+    }
+    .abc-badge {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+        margin-right: 1rem;
+    }
+    .abc-a { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+    .abc-b { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); }
+    .abc-c { background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%); }
+    .stock-alert {
+        border-left: 4px solid #dc3545;
+        padding: 1rem;
+        background: #fff5f5;
+        margin-bottom: 0.5rem;
+        border-radius: 5px;
+    }
+    .turnover-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .turnover-high { background: #28a745; }
+    .turnover-medium { background: #ffc107; }
+    .turnover-low { background: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="analytics-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1><i class="fas fa-chart-line"></i> Inventory Analytics Dashboard</h1>
+                <p class="mb-0">Real-time inventory insights and optimization metrics</p>
+            </div>
+            <div>
+                <select class="form-select bg-white" style="width: auto;">
+                    <option>Last 7 Days</option>
+                    <option selected>Last 30 Days</option>
+                    <option>Last Quarter</option>
+                    <option>Last Year</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Total Inventory Value</div>
+                <div class="metric-value">${{ total_value|default:"2.4M" }}</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +3.2% vs last month
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Inventory Turnover Ratio</div>
+                <div class="metric-value">{{ turnover_ratio|default:8.5 }}</div>
+                <small class="text-muted d-block">times/year</small>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +12% improvement
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Stock Accuracy</div>
+                <div class="metric-value">{{ stock_accuracy|default:97.8 }}%</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +1.3% vs target
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Days of Inventory</div>
+                <div class="metric-value">{{ days_inventory|default:43 }}</div>
+                <small class="text-muted d-block">days</small>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -5 days optimized
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Stock Items</div>
+                <div class="metric-value">{{ total_items|default:1247 }}</div>
+                <small class="text-muted">{{ active_items|default:1198 }} active</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Out of Stock Items</div>
+                <div class="metric-value text-danger">{{ oos_items|default:12 }}</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -8 vs last week
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Below Reorder Point</div>
+                <div class="metric-value text-warning">{{ below_rop|default:28 }}</div>
+                <small class="text-muted">Requires attention</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Excess Stock Value</div>
+                <div class="metric-value text-info">${{ excess_value|default:"124K" }}</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -15% reduction
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Inventory Value Trend -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-chart-area"></i> Inventory Value Trend</h5>
+                <div class="chart-container">
+                    <canvas id="valueTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ABC Analysis -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-layer-group"></i> ABC Analysis</h5>
+                <p class="text-muted small">Inventory classification by value contribution</p>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="abc-badge abc-a">A</div>
+                            <div>
+                                <h4 class="mb-0">20%</h4>
+                                <small class="text-muted">of items</small>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-success" style="width: 80%;">
+                                <strong>80% of value</strong>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2">249 high-value items</small>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="abc-badge abc-b">B</div>
+                            <div>
+                                <h4 class="mb-0">30%</h4>
+                                <small class="text-muted">of items</small>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-warning" style="width: 15%;">
+                                <strong>15% of value</strong>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2">374 medium-value items</small>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="abc-badge abc-c">C</div>
+                            <div>
+                                <h4 class="mb-0">50%</h4>
+                                <small class="text-muted">of items</small>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-info" style="width: 5%;">
+                                <strong>5% of value</strong>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2">624 low-value items</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Stock Status Distribution -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-chart-pie"></i> Stock Status</h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="stockStatusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Critical Stock Alerts -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle text-danger"></i> Critical Alerts</h5>
+                <div class="stock-alert">
+                    <strong>BEARING-SKF-6205</strong>
+                    <br><small class="text-danger">Out of stock - High demand</small>
+                </div>
+                <div class="stock-alert" style="border-left-color: #ffc107; background: #fffbf0;">
+                    <strong>HYDRAULIC-OIL-32</strong>
+                    <br><small class="text-warning">Below reorder point (5 units)</small>
+                </div>
+                <div class="stock-alert" style="border-left-color: #ffc107; background: #fffbf0;">
+                    <strong>BELT-V-A42</strong>
+                    <br><small class="text-warning">Below reorder point (8 units)</small>
+                </div>
+                <div class="stock-alert" style="border-left-color: #17a2b8; background: #f0f9ff;">
+                    <strong>LUBRICANT-GREASE</strong>
+                    <br><small class="text-info">Approaching reorder point</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Turnover Analysis -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-sync-alt"></i> Turnover by Category</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="turnoverChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-warehouse"></i> Stock by Location</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="locationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slow-Moving & Obsolete Inventory -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-turtle"></i> Slow-Moving Inventory (No movement >90 days)</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>Qty on Hand</th>
+                                <th>Value</th>
+                                <th>Last Movement</th>
+                                <th>Turnover</th>
+                                <th>Recommendation</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in slow_moving %}
+                            <tr>
+                                <td><code>{{ item.part_number }}</code></td>
+                                <td>{{ item.description|truncatechars:40 }}</td>
+                                <td><span class="badge bg-secondary">{{ item.quantity }}</span></td>
+                                <td>${{ item.value|floatformat:2 }}</td>
+                                <td>{{ item.last_movement }} days ago</td>
+                                <td>
+                                    <span class="turnover-indicator turnover-low"></span>
+                                    {{ item.turnover|floatformat:1 }}x
+                                </td>
+                                <td>
+                                    {% if item.last_movement > 180 %}
+                                    <span class="badge bg-danger">Consider disposal</span>
+                                    {% elif item.last_movement > 120 %}
+                                    <span class="badge bg-warning">Reduce stock</span>
+                                    {% else %}
+                                    <span class="badge bg-info">Monitor</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Review</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-success">
+                                    <i class="fas fa-check-circle"></i> No slow-moving inventory detected
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Moving Items -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-fire"></i> Fast-Moving Items (Top 10)</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>Current Stock</th>
+                                <th>Avg. Daily Usage</th>
+                                <th>Turnover Rate</th>
+                                <th>Last 30 Days</th>
+                                <th>Reorder Point</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in fast_moving %}
+                            <tr>
+                                <td><strong>{{ forloop.counter }}</strong></td>
+                                <td><code>{{ item.part_number }}</code></td>
+                                <td>{{ item.description|truncatechars:50 }}</td>
+                                <td><span class="badge bg-primary">{{ item.current_stock }}</span></td>
+                                <td>{{ item.daily_usage|floatformat:1 }}</td>
+                                <td>
+                                    <span class="turnover-indicator turnover-high"></span>
+                                    {{ item.turnover_rate|floatformat:1 }}x
+                                </td>
+                                <td><span class="badge bg-success">{{ item.units_moved }} units</span></td>
+                                <td>
+                                    {% if item.current_stock < item.reorder_point %}
+                                    <span class="badge bg-danger">{{ item.reorder_point }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ item.reorder_point }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-brain"></i> AI-Powered Optimization Recommendations</h5>
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb"></i> Inventory Optimization Insights</h6>
+                    <ul class="mb-0">
+                        <li><strong>Reduce carrying costs by 8%:</strong> 47 items in category C have excessive stock. Consider reducing order quantities.</li>
+                        <li><strong>Prevent stockouts:</strong> 12 items show seasonal demand spikes. Adjust reorder points for items BEARING-SKF-6205, HYDRAULIC-OIL-32 before peak season.</li>
+                        <li><strong>Improve turnover:</strong> Consolidate suppliers for 23 low-volume items to reduce ordering costs by $2,400/month.</li>
+                        <li><strong>Free up capital:</strong> $124K in slow-moving inventory. Consider promotional pricing or return to vendor for 18 items.</li>
+                        <li><strong>Optimize reorder points:</strong> Safety stock analysis suggests reducing ROP for 34 items while increasing for 12 critical items.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Inventory Value Trend Chart
+const valueTrendCtx = document.getElementById('valueTrendChart').getContext('2d');
+new Chart(valueTrendCtx, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Total Inventory Value',
+            data: [2.35, 2.38, 2.41, 2.43],
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Target Value',
+            data: [2.5, 2.5, 2.5, 2.5],
+            borderColor: 'rgb(40, 167, 69)',
+            borderDash: [5, 5],
+            tension: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': $' + context.parsed.y + 'M';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value + 'M';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Stock Status Chart
+const stockStatusCtx = document.getElementById('stockStatusChart').getContext('2d');
+new Chart(stockStatusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['In Stock', 'Below ROP', 'Out of Stock', 'Excess'],
+        datasets: [{
+            data: [1198, 28, 12, 9],
+            backgroundColor: [
+                'rgb(40, 167, 69)',
+                'rgb(255, 193, 7)',
+                'rgb(220, 53, 69)',
+                'rgb(23, 162, 184)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Turnover by Category Chart
+const turnoverCtx = document.getElementById('turnoverChart').getContext('2d');
+new Chart(turnoverCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Raw Materials', 'Components', 'Finished Goods', 'MRO Supplies', 'Consumables'],
+        datasets: [{
+            label: 'Turnover Rate (times/year)',
+            data: [12.5, 8.2, 6.8, 4.5, 15.3],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(220, 53, 69, 0.8)',
+                'rgba(23, 162, 184, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Stock by Location Chart
+const locationCtx = document.getElementById('locationChart').getContext('2d');
+new Chart(locationCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Main Warehouse', 'Shop Floor', 'Receiving', 'Quarantine', 'Returns'],
+        datasets: [{
+            data: [68, 22, 5, 3, 2],
+            backgroundColor: [
+                'rgb(102, 126, 234)',
+                'rgb(40, 167, 69)',
+                'rgb(255, 193, 7)',
+                'rgb(220, 53, 69)',
+                'rgb(108, 117, 125)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.label + ': ' + context.parsed + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

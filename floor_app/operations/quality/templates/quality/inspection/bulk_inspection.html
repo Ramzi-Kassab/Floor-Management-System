@@ -1,0 +1,656 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulk Quality Inspection - Quality{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .inspection-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .scan-zone {
+        border: 3px dashed #667eea;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        background: #f8f9fa;
+        margin-bottom: 2rem;
+    }
+    .scan-zone.active {
+        background: #667eea;
+        color: white;
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    .part-card {
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    .part-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .part-card.pass {
+        border-left: 5px solid #28a745;
+        background: #f0fff4;
+    }
+    .part-card.fail {
+        border-left: 5px solid #dc3545;
+        background: #fff5f5;
+    }
+    .part-card.pending {
+        border-left: 5px solid #ffc107;
+        background: #fffbf0;
+    }
+    .measurement-row {
+        background: #f8f9fa;
+        border-radius: 5px;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .measurement-input {
+        max-width: 100px;
+    }
+    .tolerance-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-left: 0.5rem;
+    }
+    .in-tolerance { background: #28a745; }
+    .out-tolerance { background: #dc3545; }
+    .warning-tolerance { background: #ffc107; }
+    .quick-action-btn {
+        min-width: 80px;
+    }
+    .summary-stat {
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+    }
+    .summary-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .defect-tag {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        background: #dc3545;
+        color: white;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        margin: 0.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-clipboard-check"></i> Bulk Quality Inspection</h1>
+                <p class="mb-0">Rapid inspection and quality verification for multiple parts</p>
+            </div>
+            <div>
+                <a href="{% url 'quality:inspection_list' %}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left"></i> Back to Inspections
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Barcode Scanning -->
+            <div class="inspection-card">
+                <h5 class="mb-3"><i class="fas fa-barcode"></i> Scan Parts for Inspection</h5>
+                <div class="scan-zone" id="scanZone">
+                    <i class="fas fa-qrcode fa-4x mb-3"></i>
+                    <h5>Ready to Scan</h5>
+                    <p class="text-muted mb-3">Scan barcode or enter part number manually</p>
+                    <div class="input-group" style="max-width: 400px; margin: 0 auto;">
+                        <input type="text" class="form-control" id="scanInput" placeholder="Scan or type part number..." autofocus>
+                        <button class="btn btn-primary" onclick="addPart()">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong><i class="fas fa-info-circle"></i> Keyboard Shortcuts:</strong>
+                    Press <kbd>Enter</kbd> to add part | <kbd>P</kbd> for Pass | <kbd>F</kbd> for Fail | <kbd>N</kbd> for Next Part
+                </div>
+            </div>
+
+            <!-- Parts Queue -->
+            <div class="inspection-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Inspection Queue (<span id="queueCount">0</span>)</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-success" onclick="passAll()">
+                            <i class="fas fa-check-double"></i> Pass All
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearQueue()">
+                            <i class="fas fa-trash"></i> Clear Queue
+                        </button>
+                    </div>
+                </div>
+
+                <div id="partsQueue">
+                    <!-- Parts will be added here dynamically -->
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-2"></i>
+                        <p>No parts in queue. Scan parts to begin inspection.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Actions -->
+            <div class="inspection-card">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button class="btn btn-outline-secondary" onclick="exportResults()">
+                            <i class="fas fa-download"></i> Export Results
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="printLabels()">
+                            <i class="fas fa-print"></i> Print Labels
+                        </button>
+                    </div>
+                    <div>
+                        <button class="btn btn-success" onclick="submitInspections()">
+                            <i class="fas fa-save"></i> Submit All Inspections
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Summary & Tools -->
+        <div class="col-md-4">
+            <!-- Summary Stats -->
+            <div class="inspection-card">
+                <h5 class="mb-3"><i class="fas fa-chart-bar"></i> Inspection Summary</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="summary-stat">
+                            <div class="summary-value" id="totalParts">0</div>
+                            <small>Total Parts</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="summary-stat">
+                            <div class="summary-value" id="inspectedParts">0</div>
+                            <small>Inspected</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="summary-stat" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                            <div class="summary-value" id="passedParts">0</div>
+                            <small>Passed</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="summary-stat" style="background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);">
+                            <div class="summary-value" id="failedParts">0</div>
+                            <small>Failed</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Pass Rate</strong></small>
+                        <small id="passRate">0%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" id="passRateBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspector Info -->
+            <div class="inspection-card">
+                <h5 class="mb-3"><i class="fas fa-user"></i> Inspector Information</h5>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Inspector</strong></label>
+                    <select class="form-select" id="inspectorSelect">
+                        <option value="">Select Inspector...</option>
+                        {% for inspector in inspectors %}
+                        <option value="{{ inspector.id }}">{{ inspector.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Inspection Type</strong></label>
+                    <select class="form-select" id="inspectionType">
+                        <option value="RECEIVING">Receiving Inspection</option>
+                        <option value="IN_PROCESS">In-Process Inspection</option>
+                        <option value="FINAL">Final Inspection</option>
+                        <option value="AUDIT">Quality Audit</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Lot/Batch Number</strong></label>
+                    <input type="text" class="form-control" id="lotNumber" placeholder="Optional">
+                </div>
+            </div>
+
+            <!-- Quick Defect Selection -->
+            <div class="inspection-card">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle"></i> Common Defects</h5>
+                <div id="defectButtons">
+                    <button class="btn btn-sm btn-outline-danger mb-2 w-100" onclick="addDefect('Dimensional')">
+                        Dimensional
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger mb-2 w-100" onclick="addDefect('Surface Finish')">
+                        Surface Finish
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger mb-2 w-100" onclick="addDefect('Threading')">
+                        Threading
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger mb-2 w-100" onclick="addDefect('Material Defect')">
+                        Material Defect
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger mb-2 w-100" onclick="addDefect('Cosmetic')">
+                        Cosmetic
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary mb-2 w-100" onclick="addDefect('Other')">
+                        Other...
+                    </button>
+                </div>
+            </div>
+
+            <!-- Inspection Standards -->
+            <div class="inspection-card">
+                <h5 class="mb-3"><i class="fas fa-book"></i> Standards & Procedures</h5>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-file-pdf text-danger"></i> Dimensional Inspection SOP
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-file-pdf text-danger"></i> Visual Inspection Criteria
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-file-pdf text-danger"></i> Measurement Procedures
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-file-pdf text-danger"></i> Acceptance Criteria
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="inspection-card">
+                <h5 class="mb-3"><i class="fas fa-history"></i> Recent Inspections</h5>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>Batch #2453</strong>
+                            <small class="text-muted">1 hour ago</small>
+                        </div>
+                        <small class="text-muted">142 parts | 98.6% pass rate</small>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>Batch #2452</strong>
+                            <small class="text-muted">3 hours ago</small>
+                        </div>
+                        <small class="text-muted">87 parts | 95.4% pass rate</small>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>Batch #2451</strong>
+                            <small class="text-muted">Yesterday</small>
+                        </div>
+                        <small class="text-muted">203 parts | 99.0% pass rate</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Inspection Modal -->
+<div class="modal fade" id="inspectionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detailed Inspection: <span id="modalPartNumber"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label"><strong>Visual Inspection</strong></label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="visualCheck">
+                        <label class="form-check-label">No visible defects</label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Dimensional Measurements</strong></label>
+                    <div class="measurement-row">
+                        <div class="row align-items-center">
+                            <div class="col-4">
+                                <small>Overall Length</small>
+                            </div>
+                            <div class="col-3">
+                                <input type="number" class="form-control form-control-sm measurement-input" step="0.001" placeholder="Actual">
+                            </div>
+                            <div class="col-3">
+                                <small class="text-muted">50.000 ± 0.005</small>
+                            </div>
+                            <div class="col-2">
+                                <span class="tolerance-indicator in-tolerance"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="measurement-row">
+                        <div class="row align-items-center">
+                            <div class="col-4">
+                                <small>Diameter</small>
+                            </div>
+                            <div class="col-3">
+                                <input type="number" class="form-control form-control-sm measurement-input" step="0.001" placeholder="Actual">
+                            </div>
+                            <div class="col-3">
+                                <small class="text-muted">25.400 ± 0.010</small>
+                            </div>
+                            <div class="col-2">
+                                <span class="tolerance-indicator in-tolerance"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Notes</strong></label>
+                    <textarea class="form-control" rows="3" placeholder="Add inspection notes..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Photos</strong></label>
+                    <input type="file" class="form-control" accept="image/*" multiple>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="failPart()">
+                    <i class="fas fa-times"></i> Fail
+                </button>
+                <button type="button" class="btn btn-success" onclick="passPart()">
+                    <i class="fas fa-check"></i> Pass
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let parts = [];
+let currentPartIndex = null;
+
+// Scan input handler
+document.getElementById('scanInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        addPart();
+    }
+});
+
+function addPart() {
+    const input = document.getElementById('scanInput');
+    const partNumber = input.value.trim();
+
+    if (!partNumber) return;
+
+    // Simulate part lookup
+    const part = {
+        id: Date.now(),
+        partNumber: partNumber,
+        status: 'pending',
+        defects: [],
+        measurements: []
+    };
+
+    parts.push(part);
+    renderQueue();
+    updateSummary();
+
+    input.value = '';
+    input.focus();
+}
+
+function renderQueue() {
+    const queue = document.getElementById('partsQueue');
+
+    if (parts.length === 0) {
+        queue.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-inbox fa-3x mb-2"></i>
+                <p>No parts in queue. Scan parts to begin inspection.</p>
+            </div>
+        `;
+        return;
+    }
+
+    queue.innerHTML = '';
+    parts.forEach((part, index) => {
+        const card = document.createElement('div');
+        card.className = `part-card ${part.status}`;
+        card.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">
+                        <i class="fas fa-box"></i> ${part.partNumber}
+                        ${part.status === 'pass' ? '<span class="badge bg-success ms-2">PASS</span>' : ''}
+                        ${part.status === 'fail' ? '<span class="badge bg-danger ms-2">FAIL</span>' : ''}
+                    </h6>
+                    ${part.defects.length > 0 ? `
+                        <div class="mt-2">
+                            ${part.defects.map(d => `<span class="defect-tag">${d}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-sm btn-outline-primary quick-action-btn mb-1" onclick="inspectPart(${index})">
+                        <i class="fas fa-search"></i> Inspect
+                    </button>
+                    <br>
+                    ${part.status === 'pending' ? `
+                        <button class="btn btn-sm btn-success quick-action-btn mb-1" onclick="quickPass(${index})">
+                            <i class="fas fa-check"></i> Pass
+                        </button>
+                        <br>
+                        <button class="btn btn-sm btn-danger quick-action-btn" onclick="quickFail(${index})">
+                            <i class="fas fa-times"></i> Fail
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-sm btn-outline-secondary quick-action-btn mt-1" onclick="removePart(${index})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            </div>
+        `;
+        queue.appendChild(card);
+    });
+}
+
+function inspectPart(index) {
+    currentPartIndex = index;
+    const part = parts[index];
+    document.getElementById('modalPartNumber').textContent = part.partNumber;
+
+    const modal = new bootstrap.Modal(document.getElementById('inspectionModal'));
+    modal.show();
+}
+
+function quickPass(index) {
+    parts[index].status = 'pass';
+    renderQueue();
+    updateSummary();
+}
+
+function quickFail(index) {
+    parts[index].status = 'fail';
+    renderQueue();
+    updateSummary();
+}
+
+function passPart() {
+    if (currentPartIndex !== null) {
+        parts[currentPartIndex].status = 'pass';
+        renderQueue();
+        updateSummary();
+        bootstrap.Modal.getInstance(document.getElementById('inspectionModal')).hide();
+    }
+}
+
+function failPart() {
+    if (currentPartIndex !== null) {
+        parts[currentPartIndex].status = 'fail';
+        renderQueue();
+        updateSummary();
+        bootstrap.Modal.getInstance(document.getElementById('inspectionModal')).hide();
+    }
+}
+
+function addDefect(defectType) {
+    if (currentPartIndex !== null) {
+        const defect = defectType === 'Other' ? prompt('Enter defect description:') : defectType;
+        if (defect) {
+            parts[currentPartIndex].defects.push(defect);
+            parts[currentPartIndex].status = 'fail';
+            renderQueue();
+            updateSummary();
+        }
+    }
+}
+
+function removePart(index) {
+    parts.splice(index, 1);
+    renderQueue();
+    updateSummary();
+}
+
+function passAll() {
+    if (confirm('Mark all pending parts as PASS?')) {
+        parts.forEach(part => {
+            if (part.status === 'pending') {
+                part.status = 'pass';
+            }
+        });
+        renderQueue();
+        updateSummary();
+    }
+}
+
+function clearQueue() {
+    if (confirm('Clear all parts from queue?')) {
+        parts = [];
+        renderQueue();
+        updateSummary();
+    }
+}
+
+function updateSummary() {
+    const total = parts.length;
+    const inspected = parts.filter(p => p.status !== 'pending').length;
+    const passed = parts.filter(p => p.status === 'pass').length;
+    const failed = parts.filter(p => p.status === 'fail').length;
+    const passRate = inspected > 0 ? ((passed / inspected) * 100).toFixed(1) : 0;
+
+    document.getElementById('totalParts').textContent = total;
+    document.getElementById('queueCount').textContent = total;
+    document.getElementById('inspectedParts').textContent = inspected;
+    document.getElementById('passedParts').textContent = passed;
+    document.getElementById('failedParts').textContent = failed;
+    document.getElementById('passRate').textContent = passRate + '%';
+    document.getElementById('passRateBar').style.width = passRate + '%';
+}
+
+function exportResults() {
+    alert('Exporting inspection results...');
+}
+
+function printLabels() {
+    alert('Printing labels for inspected parts...');
+}
+
+function submitInspections() {
+    const inspector = document.getElementById('inspectorSelect').value;
+    if (!inspector) {
+        alert('Please select an inspector');
+        return;
+    }
+
+    if (parts.length === 0) {
+        alert('No parts to submit');
+        return;
+    }
+
+    const pending = parts.filter(p => p.status === 'pending').length;
+    if (pending > 0) {
+        if (!confirm(`${pending} part(s) are still pending. Submit anyway?`)) {
+            return;
+        }
+    }
+
+    // Submit via AJAX
+    fetch('{% url "quality:bulk_inspection_submit" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            inspector: inspector,
+            inspection_type: document.getElementById('inspectionType').value,
+            lot_number: document.getElementById('lotNumber').value,
+            parts: parts
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Successfully submitted ${data.count} inspections!`);
+            window.location.href = '{% url "quality:inspection_list" %}';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error submitting inspections: ' + error);
+    });
+}
+
+// Initialize
+updateSummary();
+</script>
+{% endblock %}

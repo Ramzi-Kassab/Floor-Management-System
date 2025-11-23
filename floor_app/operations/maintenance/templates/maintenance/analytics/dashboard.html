@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Maintenance Analytics Dashboard - Maintenance{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .trend-indicator {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+        margin-top: 1rem;
+    }
+    .health-score {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        margin: 0 auto;
+    }
+    .health-excellent { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+    .health-good { background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%); }
+    .health-fair { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); }
+    .health-poor { background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%); }
+    .asset-row {
+        border-left: 4px solid #667eea;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+    }
+    .compliance-bar {
+        height: 30px;
+        background: #e9ecef;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+    }
+    .compliance-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="analytics-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1><i class="fas fa-chart-bar"></i> Maintenance Analytics Dashboard</h1>
+                <p class="mb-0">Real-time maintenance metrics and asset health monitoring</p>
+            </div>
+            <div>
+                <select class="form-select bg-white" style="width: auto;">
+                    <option>Last 7 Days</option>
+                    <option selected>Last 30 Days</option>
+                    <option>Last Quarter</option>
+                    <option>Last Year</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card text-center">
+                <div class="metric-label">Overall Asset Health</div>
+                <div class="health-score health-good mt-3">{{ overall_health|default:87 }}%</div>
+                <small class="trend-indicator text-success mt-2 d-block">
+                    <i class="fas fa-arrow-up"></i> +3% vs last month
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">PM Compliance</div>
+                <div class="metric-value">{{ pm_compliance|default:94 }}%</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +2.5% improvement
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Mean Time Between Failures</div>
+                <div class="metric-value">{{ mtbf|default:156 }}</div>
+                <small class="text-muted d-block">days</small>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +12% vs target
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Mean Time To Repair</div>
+                <div class="metric-value">{{ mttr|default:4.2 }}</div>
+                <small class="text-muted d-block">hours</small>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -18% faster
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Open Work Orders</div>
+                <div class="metric-value text-warning">{{ open_wo|default:42 }}</div>
+                <small class="text-muted">{{ overdue_wo|default:5 }} overdue</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Completed This Month</div>
+                <div class="metric-value text-success">{{ completed_wo|default:187 }}</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> +8% vs last month
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Maintenance Cost</div>
+                <div class="metric-value">${{ maint_cost|default:"45.2K" }}</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-down"></i> -5% under budget
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Asset Availability</div>
+                <div class="metric-value text-success">{{ availability|default:96.8 }}%</div>
+                <small class="trend-indicator text-success">
+                    <i class="fas fa-arrow-up"></i> Above target (95%)
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Work Order Trends -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-chart-line"></i> Work Order Trends</h5>
+                <div class="chart-container">
+                    <canvas id="woTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Maintenance Types Breakdown -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-chart-pie"></i> Maintenance Type Distribution</h5>
+                <p class="text-muted small">Breakdown of preventive vs. corrective maintenance</p>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="maintTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- PM Compliance by Asset Category -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-clipboard-check"></i> PM Compliance by Category</h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>CNC Machines</strong></small>
+                        <small>96%</small>
+                    </div>
+                    <div class="compliance-bar">
+                        <div class="compliance-fill" style="width: 96%;">96%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Conveyors</strong></small>
+                        <small>92%</small>
+                    </div>
+                    <div class="compliance-bar">
+                        <div class="compliance-fill" style="width: 92%;">92%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Forklifts</strong></small>
+                        <small>88%</small>
+                    </div>
+                    <div class="compliance-bar">
+                        <div class="compliance-fill" style="width: 88%; background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%);">88%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>HVAC Systems</strong></small>
+                        <small>94%</small>
+                    </div>
+                    <div class="compliance-bar">
+                        <div class="compliance-fill" style="width: 94%;">94%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small><strong>Compressors</strong></small>
+                        <small>90%</small>
+                    </div>
+                    <div class="compliance-bar">
+                        <div class="compliance-fill" style="width: 90%;">90%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Critical Assets Requiring Attention -->
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle text-warning"></i> Attention Required</h5>
+                <div class="asset-row" style="border-left-color: #dc3545;">
+                    <div class="d-flex justify-content-between">
+                        <strong>CNC-A-001</strong>
+                        <span class="badge bg-danger">Critical</span>
+                    </div>
+                    <small class="text-muted">PM overdue 15 days</small>
+                </div>
+                <div class="asset-row" style="border-left-color: #ffc107;">
+                    <div class="d-flex justify-content-between">
+                        <strong>FORKLIFT-007</strong>
+                        <span class="badge bg-warning">Warning</span>
+                    </div>
+                    <small class="text-muted">Health score: 72%</small>
+                </div>
+                <div class="asset-row" style="border-left-color: #ffc107;">
+                    <div class="d-flex justify-content-between">
+                        <strong>COMP-B-003</strong>
+                        <span class="badge bg-warning">Warning</span>
+                    </div>
+                    <small class="text-muted">3 failures last month</small>
+                </div>
+                <div class="asset-row" style="border-left-color: #17a2b8;">
+                    <div class="d-flex justify-content-between">
+                        <strong>HVAC-MAIN-01</strong>
+                        <span class="badge bg-info">Info</span>
+                    </div>
+                    <small class="text-muted">PM due in 3 days</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Analysis -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-wrench"></i> Top Failure Modes</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="failureModeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-dollar-sign"></i> Maintenance Cost Breakdown</h5>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="costBreakdownChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technician Performance -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-user-hard-hat"></i> Technician Performance</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Technician</th>
+                                <th>Assigned WOs</th>
+                                <th>Completed</th>
+                                <th>Avg. Completion Time</th>
+                                <th>Quality Score</th>
+                                <th>Efficiency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tech in technicians %}
+                            <tr>
+                                <td><strong>{{ tech.name }}</strong></td>
+                                <td><span class="badge bg-primary">{{ tech.assigned }}</span></td>
+                                <td><span class="badge bg-success">{{ tech.completed }}</span></td>
+                                <td>{{ tech.avg_time }} hrs</td>
+                                <td>
+                                    <div class="progress" style="height: 20px; min-width: 80px;">
+                                        <div class="progress-bar {% if tech.quality >= 90 %}bg-success{% elif tech.quality >= 75 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ tech.quality }}%">
+                                            {{ tech.quality }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {% if tech.efficiency >= 95 %}bg-success{% elif tech.efficiency >= 85 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ tech.efficiency }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No technician data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predictive Insights -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3"><i class="fas fa-brain"></i> Predictive Maintenance Insights</h5>
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb"></i> AI-Powered Recommendations</h6>
+                    <ul class="mb-0">
+                        <li>CNC-A-001 predicted to fail within 7-10 days based on vibration analysis. Schedule immediate inspection.</li>
+                        <li>Forklift fleet showing 23% increase in battery replacements. Consider bulk procurement.</li>
+                        <li>HVAC-MAIN-01 filter replacement pattern suggests switching to higher-quality filters for 15% cost savings.</li>
+                        <li>Compressor failures correlate with ambient temperature >85°F. Consider preventive cooling measures for summer.</li>
+                        <li>PM schedule optimization could reduce downtime by 12% while maintaining 95%+ compliance.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Work Order Trend Chart
+const woTrendCtx = document.getElementById('woTrendChart').getContext('2d');
+new Chart(woTrendCtx, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Preventive Maintenance',
+            data: [28, 32, 30, 35],
+            borderColor: 'rgb(40, 167, 69)',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Corrective Maintenance',
+            data: [15, 12, 10, 8],
+            borderColor: 'rgb(220, 53, 69)',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Inspections',
+            data: [45, 48, 50, 52],
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Maintenance Type Chart
+const maintTypeCtx = document.getElementById('maintTypeChart').getContext('2d');
+new Chart(maintTypeCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Preventive', 'Corrective', 'Predictive', 'Inspections'],
+        datasets: [{
+            data: [45, 20, 10, 25],
+            backgroundColor: [
+                'rgb(40, 167, 69)',
+                'rgb(220, 53, 69)',
+                'rgb(102, 126, 234)',
+                'rgb(255, 193, 7)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Failure Mode Chart
+const failureModeCtx = document.getElementById('failureModeChart').getContext('2d');
+new Chart(failureModeCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Bearing Failure', 'Electrical', 'Hydraulic Leak', 'Belt Wear', 'Sensor Error'],
+        datasets: [{
+            label: 'Occurrences',
+            data: [18, 12, 10, 8, 6],
+            backgroundColor: 'rgba(220, 53, 69, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true } }
+    }
+});
+
+// Cost Breakdown Chart
+const costBreakdownCtx = document.getElementById('costBreakdownChart').getContext('2d');
+new Chart(costBreakdownCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Labor', 'Parts', 'Contractors', 'Tools & Equipment', 'Other'],
+        datasets: [{
+            data: [35, 40, 15, 7, 3],
+            backgroundColor: [
+                'rgb(102, 126, 234)',
+                'rgb(255, 193, 7)',
+                'rgb(220, 53, 69)',
+                'rgb(40, 167, 69)',
+                'rgb(108, 117, 125)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+</script>
+{% endblock %}
