@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.user.theme_preference.theme|default:'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="Floor Management System - Enterprise Management Platform">
+    <title>{% block title %}Floor Management System{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Custom Theme CSS -->
+    <style>
+        :root {
+            /* Color Scheme Variables - Dynamic from user preferences */
+            {% if request.user.is_authenticated and request.user.theme_preference %}
+                {% with prefs=request.user.theme_preference.get_css_variables %}
+                    --color-primary: {{ prefs.primary }};
+                    --color-primary-dark: {{ prefs.primary-dark }};
+                    --color-primary-light: {{ prefs.primary-light }};
+                    --bg-primary: {{ prefs.bg-primary }};
+                    --bg-secondary: {{ prefs.bg-secondary }};
+                    --bg-tertiary: {{ prefs.bg-tertiary }};
+                    --text-primary: {{ prefs.text-primary }};
+                    --text-secondary: {{ prefs.text-secondary }};
+                    --text-muted: {{ prefs.text-muted }};
+                    --border-color: {{ prefs.border-color }};
+                    --font-size-base: {{ prefs.base }};
+                    --font-size-large: {{ prefs.large }};
+                    --font-size-xlarge: {{ prefs.xlarge }};
+                {% endwith %}
+            {% else %}
+                /* Default Theme - Light Blue */
+                --color-primary: #007bff;
+                --color-primary-dark: #0056b3;
+                --color-primary-light: #4da3ff;
+                --bg-primary: #ffffff;
+                --bg-secondary: #f8f9fa;
+                --bg-tertiary: #e9ecef;
+                --text-primary: #212529;
+                --text-secondary: #6c757d;
+                --text-muted: #adb5bd;
+                --border-color: #dee2e6;
+                --font-size-base: 14px;
+                --font-size-large: 16px;
+                --font-size-xlarge: 20px;
+            {% endif %}
+
+            /* Spacing */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+
+            /* Transitions */
+            {% if request.user.theme_preference.reduce_motion %}
+                --transition-speed: 0ms;
+            {% else %}
+                --transition-speed: 200ms;
+            {% endif %}
+        }
+
+        /* Dark Mode Overrides */
+        [data-theme="dark"] {
+            --color-success: #48d597;
+            --color-warning: #ffc107;
+            --color-danger: #f44336;
+            --color-info: #29b6f6;
+        }
+
+        /* Global Styles */
+        * {
+            transition: background-color var(--transition-speed) ease,
+                        color var(--transition-speed) ease,
+                        border-color var(--transition-speed) ease;
+        }
+
+        body {
+            font-size: var(--font-size-base);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Accessibility - High Contrast */
+        {% if request.user.theme_preference.high_contrast %}
+        body {
+            font-weight: 500;
+        }
+        a, button, .btn {
+            font-weight: 600;
+        }
+        {% endif %}
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        h1 { font-size: calc(var(--font-size-xlarge) * 1.5); }
+        h2 { font-size: calc(var(--font-size-xlarge) * 1.25); }
+        h3 { font-size: var(--font-size-xlarge); }
+        h4 { font-size: var(--font-size-large); }
+        h5, h6 { font-size: var(--font-size-base); }
+
+        p, li, td, th {
+            font-size: var(--font-size-base);
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background-color: var(--bg-secondary);
+            border-bottom-color: var(--border-color);
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-dark);
+            border-color: var(--color-primary-dark);
+        }
+
+        /* Tables */
+        .table {
+            color: var(--text-primary);
+        }
+
+        .table thead th {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-color);
+            font-weight: 600;
+        }
+
+        .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Navigation */
+        .navbar {
+            background-color: var(--bg-primary) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar {
+            background-color: var(--bg-primary);
+            border-right: 1px solid var(--border-color);
+            min-height: calc(100vh - 56px);
+        }
+
+        .sidebar .nav-link {
+            color: var(--text-secondary);
+            padding: var(--spacing-md);
+            border-radius: 6px;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: var(--bg-secondary);
+            color: var(--color-primary);
+        }
+
+        /* Responsive Design */
+
+        /* Mobile First - Base styles */
+        .container-fluid {
+            padding: var(--spacing-md);
+        }
+
+        /* Tablet (768px and up) */
+        @media (min-width: 768px) {
+            .container-fluid {
+                padding: var(--spacing-lg);
+            }
+
+            .stats-card {
+                min-height: 140px;
+            }
+        }
+
+        /* Desktop (992px and up) */
+        @media (min-width: 992px) {
+            .container-fluid {
+                padding: var(--spacing-xl);
+            }
+
+            {% if request.user.theme_preference.compact_mode %}
+            .stats-card {
+                padding: var(--spacing-md);
+            }
+            {% endif %}
+        }
+
+        /* Large Desktop (1200px and up) */
+        @media (min-width: 1200px) {
+            .container-fluid {
+                max-width: 1400px;
+            }
+        }
+
+        /* Mobile specific */
+        @media (max-width: 767px) {
+            .mobile-hide {
+                display: none !important;
+            }
+
+            .card {
+                margin-bottom: var(--spacing-md);
+            }
+
+            h1 {
+                font-size: calc(var(--font-size-large) * 1.5);
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .btn-group .btn {
+                width: auto;
+            }
+
+            .table {
+                font-size: calc(var(--font-size-base) * 0.9);
+            }
+
+            /* Stack columns on mobile */
+            .row > [class*='col-'] {
+                margin-bottom: var(--spacing-md);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                color: black;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+
+        /* Accessibility - Focus Visible */
+        *:focus-visible {
+            outline: 3px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        /* Loading State */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .alert-info { border-left-color: var(--color-info, #17a2b8); }
+        .alert-success { border-left-color: var(--color-success, #28a745); }
+        .alert-warning { border-left-color: var(--color-warning, #ffc107); }
+        .alert-danger { border-left-color: var(--color-danger, #dc3545); }
+
+        /* Badge Colors */
+        .badge {
+            font-weight: 600;
+            padding: 0.35em 0.65em;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Skip to main content - Accessibility -->
+    <a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light no-print" role="navigation" aria-label="Main navigation">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-building"></i>
+                <span class="d-none d-sm-inline">Floor Management</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if request.user.is_authenticated %}
+                        {% if request.user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:dashboard' %}" aria-label="Dashboard">
+                                <i class="bi bi-speedometer2"></i>
+                                <span class="d-none d-md-inline">Dashboard</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Notifications Bell -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link position-relative" href="#" id="notificationsDropdown"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                                <i class="bi bi-bell"></i>
+                                {% if request.user.notifications.filter.is_read=False.count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ request.user.notifications.filter.is_read=False.count }}
+                                    <span class="visually-hidden">unread notifications</span>
+                                </span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                                <li><h6 class="dropdown-header">Notifications</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item small" href="#">No new notifications</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- User Menu -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                                <i class="bi bi-person-circle"></i>
+                                <span class="d-none d-md-inline">{{ request.user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-palette"></i> Theme</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content" role="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4 bg-light no-print" role="contentinfo">
+        <div class="container-fluid text-center text-muted">
+            <p class="mb-0">
+                &copy; {% now "Y" %} Floor Management System
+                <span class="mobile-hide"> | Enterprise Management Platform</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Accessibility Announcements -->
+    <div aria-live="polite" aria-atomic="true" class="visually-hidden" id="a11y-announcer"></div>
+</body>
+</html>

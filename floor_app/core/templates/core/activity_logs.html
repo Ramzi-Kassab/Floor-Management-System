@@ -1,0 +1,189 @@
+{% extends "core/base_responsive.html" %}
+{% load static %}
+
+{% block title %}Activity Logs - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h2"><i class="bi bi-list-ul"></i> Activity Logs</h1>
+            <p class="text-muted">Monitor user activity and system usage</p>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3" role="search" aria-label="Filter activity logs">
+                <div class="col-md-3 col-sm-6">
+                    <label for="days" class="form-label">Time Range</label>
+                    <select class="form-select" id="days" name="days" aria-label="Select time range">
+                        <option value="1" {% if days == 1 %}selected{% endif %}>Last 24 hours</option>
+                        <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                        <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                        <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 col-sm-6">
+                    <label for="user" class="form-label">User</label>
+                    <input type="text" class="form-control" id="user" name="user"
+                           value="{{ user_filter|default:'' }}" placeholder="Username"
+                           aria-label="Filter by username">
+                </div>
+
+                <div class="col-md-3 col-sm-6">
+                    <label for="type" class="form-label">Activity Type</label>
+                    <select class="form-select" id="type" name="type" aria-label="Select activity type">
+                        <option value="">All Types</option>
+                        {% for value, label in activity_types %}
+                        <option value="{{ value }}" {% if activity_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 col-sm-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2" aria-label="Apply filters">
+                        <i class="bi bi-filter"></i> Filter
+                    </button>
+                    <a href="{% url 'core:activity_logs' %}" class="btn btn-outline-secondary" aria-label="Clear all filters">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Count and Export -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p class="text-muted" role="status" aria-live="polite">
+                Showing <strong>{{ page_obj.paginator.count }}</strong> activities
+            </p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group" role="group" aria-label="Export options">
+                <a href="{% url 'core:export_activity_logs' %}?format=excel&days={{ days }}"
+                   class="btn btn-sm btn-outline-success" aria-label="Export to Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    <span class="d-none d-md-inline">Excel</span>
+                </a>
+                <a href="{% url 'core:export_activity_logs' %}?format=pdf&days={{ days }}"
+                   class="btn btn-sm btn-outline-danger" aria-label="Export to PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    <span class="d-none d-md-inline">PDF</span>
+                </a>
+                <a href="{% url 'core:export_activity_logs' %}?format=csv&days={{ days }}"
+                   class="btn btn-sm btn-outline-info" aria-label="Export to CSV">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span class="d-none d-md-inline">CSV</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" aria-label="Activity logs table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">User</th>
+                            <th scope="col" class="mobile-hide">Activity</th>
+                            <th scope="col">Path</th>
+                            <th scope="col" class="mobile-hide">Duration</th>
+                            <th scope="col" class="mobile-hide">IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                        <tr>
+                            <td>
+                                <small class="text-muted">
+                                    {{ log.timestamp|date:"Y-m-d H:i" }}
+                                </small>
+                            </td>
+                            <td>
+                                <strong>{{ log.user.username|default:"Anonymous" }}</strong>
+                            </td>
+                            <td class="mobile-hide">
+                                <span class="badge bg-primary">
+                                    {{ log.get_activity_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <code class="small">{{ log.path|truncatechars:40 }}</code>
+                            </td>
+                            <td class="mobile-hide">
+                                {% if log.duration_ms %}
+                                    <span class="{% if log.duration_ms > 1000 %}text-danger{% elif log.duration_ms > 500 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ log.duration_ms }}ms
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="mobile-hide">
+                                <small class="text-muted">{{ log.ip_address|default:"-" }}</small>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No activity logs found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Activity log pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&days={{ days }}&user={{ user_filter }}&type={{ activity_type }}" aria-label="First page">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&days={{ days }}&user={{ user_filter }}&type={{ activity_type }}" aria-label="Previous page">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&days={{ days }}&user={{ user_filter }}&type={{ activity_type }}" aria-label="Next page">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&days={{ days }}&user={{ user_filter }}&type={{ activity_type }}" aria-label="Last page">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
