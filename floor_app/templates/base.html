@@ -1168,431 +1168,54 @@
     <!-- Data Table Component JS -->
     <script src="{% static 'core/js/data-table.js' %}"></script>
 
-    <!-- Custom JavaScript -->
+    <!-- Theme System Configuration (Django template variables for JavaScript) -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar toggle
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-            
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                    sidebarBackdrop.classList.toggle('show');
-                });
-            }
-            
-            // Close sidebar on backdrop click (mobile)
-            if (sidebarBackdrop) {
-                sidebarBackdrop.addEventListener('click', function() {
-                    sidebar.classList.remove('show');
-                    sidebarBackdrop.classList.remove('show');
-                });
-            }
-            
-            // Close sidebar on mobile when clicking outside
-            document.addEventListener('click', function(event) {
-                if (window.innerWidth < 992) {
-                    if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
-                        sidebar.classList.remove('show');
-                        sidebarBackdrop.classList.remove('show');
-                    }
-                }
-            });
-            
-            // Highlight active nav link (currentPath defined later for section navigation)
+        // User theme colors from Django context
+        {% if user_theme_preference %}
+        window.userThemeColors = {
+            primary: '{{ user_theme_preference.primary_color }}',
+            accent: '{{ user_theme_preference.accent_color }}',
+            background: '{{ user_theme_preference.background_color }}',
+            text: '{{ user_theme_preference.text_color }}'
+        };
+        {% else %}
+        window.userThemeColors = {
+            primary: '#2563eb',
+            accent: '#10b981',
+            background: '#ffffff',
+            text: '#1f2937'
+        };
+        {% endif %}
 
-            // ========== ENHANCED THEME SYSTEM ==========
-
-            // Get current theme preferences from context or defaults
-            const getCurrentTheme = () => {
-                const root = document.documentElement;
-                const style = getComputedStyle(root);
-
-                return {
-                    theme: root.dataset.theme || 'light',
-                    fontSize: root.dataset.fontSize || 'medium',
-                    density: root.dataset.density || 'comfortable',
-                    highContrast: root.dataset.highContrast === 'true',
-                    reduceMotion: root.dataset.reduceMotion === 'true',
-                    primaryColor: document.getElementById('primaryColorPicker')?.value || '#2563eb',
-                    accentColor: document.getElementById('accentColorPicker')?.value || '#10b981',
-                    backgroundColor: document.getElementById('backgroundColorPicker')?.value || '#ffffff',
-                    textColor: document.getElementById('textColorPicker')?.value || '#1f2937'
-                };
-            };
-
-            // Apply theme to page
-            const applyTheme = (preferences) => {
-                const html = document.documentElement;
-
-                // Update data attributes
-                html.dataset.theme = preferences.theme;
-                html.dataset.fontSize = preferences.fontSize;
-                html.dataset.density = preferences.density;
-                html.dataset.highContrast = preferences.highContrast;
-                html.dataset.reduceMotion = preferences.reduceMotion;
-
-                // Apply custom colors as CSS variables
-                if (preferences.primaryColor) {
-                    html.style.setProperty('--primary-color', preferences.primaryColor);
-                }
-                if (preferences.accentColor) {
-                    html.style.setProperty('--accent-color', preferences.accentColor);
-                }
-                if (preferences.backgroundColor) {
-                    html.style.setProperty('--color-bg-primary', preferences.backgroundColor);
-                    document.body.style.backgroundColor = preferences.backgroundColor;
-                }
-                if (preferences.textColor) {
-                    html.style.setProperty('--color-text-primary', preferences.textColor);
-                    document.body.style.color = preferences.textColor;
-                }
-
-                // Save to localStorage for non-authenticated users
-                localStorage.setItem('themePreferences', JSON.stringify(preferences));
-            };
-
-            // Initialize theme controls with current values
-            const initThemeControls = () => {
-                const current = getCurrentTheme();
-
-                // Set theme radio buttons
-                const themeRadio = document.querySelector(`input[name="theme"][value="${current.theme}"]`);
-                if (themeRadio) themeRadio.checked = true;
-
-                // Set font size
-                const fontSizeSelector = document.getElementById('fontSizeSelector');
-                if (fontSizeSelector) fontSizeSelector.value = current.fontSize;
-
-                // Set density
-                const densitySelector = document.getElementById('densitySelector');
-                if (densitySelector) densitySelector.value = current.density;
-
-                // Set accessibility toggles
-                const highContrastToggle = document.getElementById('highContrastToggle');
-                if (highContrastToggle) highContrastToggle.checked = current.highContrast;
-
-                const reduceMotionToggle = document.getElementById('reduceMotionToggle');
-                if (reduceMotionToggle) reduceMotionToggle.checked = current.reduceMotion;
-
-                // Initialize color pickers from user preferences or CSS variables
-                {% if user_theme_preference %}
-                const userPrimaryColor = '{{ user_theme_preference.primary_color }}';
-                const userAccentColor = '{{ user_theme_preference.accent_color }}';
-                const userBackgroundColor = '{{ user_theme_preference.background_color }}';
-                const userTextColor = '{{ user_theme_preference.text_color }}';
-                {% else %}
-                const userPrimaryColor = '#2563eb';
-                const userAccentColor = '#10b981';
-                const userBackgroundColor = '#ffffff';
-                const userTextColor = '#1f2937';
-                {% endif %}
-
-                // Set color pickers and text inputs
-                setColorInput('primaryColor', userPrimaryColor);
-                setColorInput('accentColor', userAccentColor);
-                setColorInput('backgroundColor', userBackgroundColor);
-                setColorInput('textColor', userTextColor);
-            };
-
-            // Helper function to set both color picker and text input
-            const setColorInput = (name, value) => {
-                const picker = document.getElementById(`${name}Picker`);
-                const text = document.getElementById(`${name}Text`);
-                if (picker) picker.value = value;
-                if (text) text.value = value;
-            };
-
-            // Save theme preferences to server
-            const saveThemePreferences = async (preferences) => {
-                {% if user.is_authenticated %}
-                try {
-                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-                                     getCookie('csrftoken');
-
-                    const response = await fetch('{% url "floor_app:api_user_save_theme" %}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrftoken
-                        },
-                        body: JSON.stringify(preferences)
-                    });
-
-                    if (response.ok) {
-                        // Show success message
-                        const saveBtn = document.getElementById('saveThemeBtn');
-                        if (saveBtn) {
-                            const originalHTML = saveBtn.innerHTML;
-                            saveBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Saved!';
-                            saveBtn.classList.add('btn-success');
-                            saveBtn.classList.remove('btn-primary');
-
-                            setTimeout(() => {
-                                saveBtn.innerHTML = originalHTML;
-                                saveBtn.classList.remove('btn-success');
-                                saveBtn.classList.add('btn-primary');
-                            }, 2000);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Failed to save theme preferences:', error);
-                }
-                {% endif %}
-            };
-
-            // Get CSRF token from cookies
-            const getCookie = (name) => {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            };
-
-            // Initialize theme controls on page load
-            initThemeControls();
-
-            // Theme radio button change
-            document.querySelectorAll('input[name="theme"]').forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    const preferences = getCurrentTheme();
-                    preferences.theme = e.target.value;
-                    applyTheme(preferences);
-                });
-            });
-
-            // Font size change
-            const fontSizeSelector = document.getElementById('fontSizeSelector');
-            if (fontSizeSelector) {
-                fontSizeSelector.addEventListener('change', (e) => {
-                    const preferences = getCurrentTheme();
-                    preferences.fontSize = e.target.value;
-                    applyTheme(preferences);
-                });
-            }
-
-            // Density change
-            const densitySelector = document.getElementById('densitySelector');
-            if (densitySelector) {
-                densitySelector.addEventListener('change', (e) => {
-                    const preferences = getCurrentTheme();
-                    preferences.density = e.target.value;
-                    applyTheme(preferences);
-                });
-            }
-
-            // High contrast toggle
-            const highContrastToggle = document.getElementById('highContrastToggle');
-            if (highContrastToggle) {
-                highContrastToggle.addEventListener('change', (e) => {
-                    const preferences = getCurrentTheme();
-                    preferences.highContrast = e.target.checked;
-                    applyTheme(preferences);
-                });
-            }
-
-            // Reduce motion toggle
-            const reduceMotionToggle = document.getElementById('reduceMotionToggle');
-            if (reduceMotionToggle) {
-                reduceMotionToggle.addEventListener('change', (e) => {
-                    const preferences = getCurrentTheme();
-                    preferences.reduceMotion = e.target.checked;
-                    applyTheme(preferences);
-                });
-            }
-
-            // Color picker change handlers
-            const setupColorPicker = (name) => {
-                const picker = document.getElementById(`${name}Picker`);
-                const text = document.getElementById(`${name}Text`);
-
-                if (picker) {
-                    picker.addEventListener('input', (e) => {
-                        if (text) text.value = e.target.value;
-                        const preferences = getCurrentTheme();
-                        applyTheme(preferences);
-                    });
-                }
-
-                if (text) {
-                    text.addEventListener('input', (e) => {
-                        const value = e.target.value;
-                        if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
-                            if (picker) picker.value = value;
-                            const preferences = getCurrentTheme();
-                            applyTheme(preferences);
-                        }
-                    });
-                }
-            };
-
-            // Setup all color pickers
-            setupColorPicker('primaryColor');
-            setupColorPicker('accentColor');
-            setupColorPicker('backgroundColor');
-            setupColorPicker('textColor');
-
-            // Color preset buttons
-            const colorPresets = {
-                light: {
-                    primaryColor: '#2563eb',
-                    accentColor: '#10b981',
-                    backgroundColor: '#ffffff',
-                    textColor: '#1f2937'
-                },
-                dark: {
-                    primaryColor: '#60a5fa',
-                    accentColor: '#34d399',
-                    backgroundColor: '#111827',
-                    textColor: '#f9fafb'
-                },
-                blue: {
-                    primaryColor: '#3b82f6',
-                    accentColor: '#06b6d4',
-                    backgroundColor: '#eff6ff',
-                    textColor: '#1e3a8a'
-                },
-                green: {
-                    primaryColor: '#10b981',
-                    accentColor: '#84cc16',
-                    backgroundColor: '#f0fdf4',
-                    textColor: '#14532d'
-                },
-                purple: {
-                    primaryColor: '#8b5cf6',
-                    accentColor: '#d946ef',
-                    backgroundColor: '#faf5ff',
-                    textColor: '#581c87'
-                }
-            };
-
-            document.querySelectorAll('[data-preset]').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const presetName = e.currentTarget.dataset.preset;
-                    const preset = colorPresets[presetName];
-
-                    if (preset) {
-                        setColorInput('primaryColor', preset.primaryColor);
-                        setColorInput('accentColor', preset.accentColor);
-                        setColorInput('backgroundColor', preset.backgroundColor);
-                        setColorInput('textColor', preset.textColor);
-
-                        const preferences = getCurrentTheme();
-                        applyTheme(preferences);
-                    }
-                });
-            });
-
-            // Save button click
-            const saveThemeBtn = document.getElementById('saveThemeBtn');
-            if (saveThemeBtn) {
-                saveThemeBtn.addEventListener('click', () => {
-                    const preferences = getCurrentTheme();
-                    saveThemePreferences(preferences);
-                });
-            }
-            
-            // Initialize tooltips
-            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
-            
-            // Add smooth scrolling
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
-            
-            // Collapsible section navigation
-            const sectionToggles = document.querySelectorAll('.nav-section-toggle');
-            const currentPath = window.location.pathname;
-
-            sectionToggles.forEach(toggle => {
-                const sectionId = toggle.getAttribute('data-section');
-                const sectionContent = document.getElementById(sectionId);
-                const toggleIcon = toggle.querySelector('.toggle-icon');
-
-                // Check if current page is within this section
-                const sectionLinks = sectionContent.querySelectorAll('a.nav-sub-item');
-                let isCurrentSection = false;
-                sectionLinks.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && currentPath.startsWith(href.split('?')[0])) {
-                        isCurrentSection = true;
-                        link.classList.add('active');
-                    }
-                });
-
-                // Load saved state from localStorage OR auto-expand if current section
-                const savedState = localStorage.getItem(`nav-section-${sectionId}`);
-                if (isCurrentSection || savedState === 'expanded') {
-                    sectionContent.style.display = 'flex';
-                    toggleIcon.style.transform = 'rotate(180deg)';
-                    // Save expanded state if it's the current section
-                    if (isCurrentSection) {
-                        localStorage.setItem(`nav-section-${sectionId}`, 'expanded');
-                    }
-                }
-
-                // Toggle section on click - only toggle, don't auto-collapse
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation(); // Prevent event bubbling
-                    const isVisible = sectionContent.style.display !== 'none';
-
-                    if (isVisible) {
-                        sectionContent.style.display = 'none';
-                        toggleIcon.style.transform = 'rotate(0deg)';
-                        localStorage.setItem(`nav-section-${sectionId}`, 'collapsed');
-                    } else {
-                        sectionContent.style.display = 'flex';
-                        toggleIcon.style.transform = 'rotate(180deg)';
-                        localStorage.setItem(`nav-section-${sectionId}`, 'expanded');
-                    }
-                });
-            });
-
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-                alerts.forEach(function(alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                });
-            }, 5000);
-
-            // Global Search keyboard shortcut (Ctrl+K or Cmd+K)
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    const searchInput = document.getElementById('globalSearchInput') || document.querySelector('.search-input');
-                    if (searchInput) {
-                        searchInput.focus();
-                        searchInput.select();
-                    }
-                }
-            });
-        });
+        // Theme API URL (only for authenticated users)
+        {% if user.is_authenticated %}
+        window.themeApiUrl = '{% url "floor_app:api_user_save_theme" %}';
+        {% endif %}
     </script>
+
+    <!-- Global Application JavaScript -->
+    <script src="{% static 'js/app.js' %}"></script>
+
+    <!-- Navigation & Sidebar JavaScript -->
+    <script src="{% static 'js/navigation.js' %}"></script>
+
+    <!-- Theme System JavaScript -->
+    <script src="{% static 'js/theme.js' %}"></script>
+
+    <!--
+    ====================================================================
+    ALL JAVASCRIPT HAS BEEN MOVED TO EXTERNAL FILES
+    ====================================================================
+
+    JavaScript is now organized into modular files for better maintainability:
+
+    1. app.js - Global utilities, CSRF helpers, tooltips, alerts, keyboard shortcuts
+    2. navigation.js - Sidebar toggle, collapsible sections, responsive menu
+    3. theme.js - Complete theme system with color customization
+
+    Page-specific JavaScript should go in {% block extra_js %} blocks below.
+    ====================================================================
+    -->
     
     {% block extra_js %}{% endblock %}
 </body>
