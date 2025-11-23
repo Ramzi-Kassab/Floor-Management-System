@@ -11,6 +11,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Remove index first before removing the field it references
+        migrations.RemoveIndex(
+            model_name='bitdesign',
+            name='ix_bd_level_size',
+        ),
         migrations.RemoveField(
             model_name='bitdesign',
             name='created_by',
