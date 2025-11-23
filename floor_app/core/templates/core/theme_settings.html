@@ -1,0 +1,286 @@
+{% extends "core/base_responsive.html" %}
+{% load static %}
+
+{% block title %}Theme Settings - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="mb-4">
+                <h1 class="h2"><i class="bi bi-palette"></i> Theme & Accessibility Settings</h1>
+                <p class="text-muted">Customize your visual experience and accessibility preferences</p>
+            </div>
+
+            <!-- Success/Error Messages -->
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'floor_core:theme_settings' %}" aria-label="Theme settings form">
+                {% csrf_token %}
+
+                <!-- Theme Mode Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-brightness-high"></i> Theme Mode</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <input type="radio" class="btn-check" name="theme" id="theme_light" value="light"
+                                       {% if form.theme.value == 'light' or not form.theme.value %}checked{% endif %}>
+                                <label class="btn btn-outline-primary w-100" for="theme_light">
+                                    <i class="bi bi-sun fs-3 d-block mb-2"></i>
+                                    Light Mode
+                                </label>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <input type="radio" class="btn-check" name="theme" id="theme_dark" value="dark"
+                                       {% if form.theme.value == 'dark' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary w-100" for="theme_dark">
+                                    <i class="bi bi-moon fs-3 d-block mb-2"></i>
+                                    Dark Mode
+                                </label>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <input type="radio" class="btn-check" name="theme" id="theme_auto" value="auto"
+                                       {% if form.theme.value == 'auto' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary w-100" for="theme_auto">
+                                    <i class="bi bi-circle-half fs-3 d-block mb-2"></i>
+                                    Auto (System)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color Scheme Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-palette-fill"></i> Color Scheme</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <input type="radio" class="btn-check" name="color_scheme" id="color_blue" value="blue"
+                                       {% if form.color_scheme.value == 'blue' or not form.color_scheme.value %}checked{% endif %}>
+                                <label class="btn btn-outline-primary w-100" for="color_blue">
+                                    <i class="bi bi-circle-fill text-primary fs-4"></i>
+                                    Blue
+                                </label>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <input type="radio" class="btn-check" name="color_scheme" id="color_green" value="green"
+                                       {% if form.color_scheme.value == 'green' %}checked{% endif %}>
+                                <label class="btn btn-outline-success w-100" for="color_green">
+                                    <i class="bi bi-circle-fill text-success fs-4"></i>
+                                    Green
+                                </label>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <input type="radio" class="btn-check" name="color_scheme" id="color_purple" value="purple"
+                                       {% if form.color_scheme.value == 'purple' %}checked{% endif %}>
+                                <label class="btn btn-outline-secondary w-100" for="color_purple">
+                                    <i class="bi bi-circle-fill" style="color: #6f42c1;"></i>
+                                    Purple
+                                </label>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <input type="radio" class="btn-check" name="color_scheme" id="color_orange" value="orange"
+                                       {% if form.color_scheme.value == 'orange' %}checked{% endif %}>
+                                <label class="btn btn-outline-warning w-100" for="color_orange">
+                                    <i class="bi bi-circle-fill text-warning fs-4"></i>
+                                    Orange
+                                </label>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <input type="radio" class="btn-check" name="color_scheme" id="color_red" value="red"
+                                       {% if form.color_scheme.value == 'red' %}checked{% endif %}>
+                                <label class="btn btn-outline-danger w-100" for="color_red">
+                                    <i class="bi bi-circle-fill text-danger fs-4"></i>
+                                    Red
+                                </label>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <input type="radio" class="btn-check" name="color_scheme" id="color_teal" value="teal"
+                                       {% if form.color_scheme.value == 'teal' %}checked{% endif %}>
+                                <label class="btn btn-outline-info w-100" for="color_teal">
+                                    <i class="bi bi-circle-fill text-info fs-4"></i>
+                                    Teal
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typography Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-type"></i> Typography</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="font_size" class="form-label">Font Size</label>
+                                <select class="form-select" id="font_size" name="font_size" aria-label="Select font size">
+                                    <option value="small" {% if form.font_size.value == 'small' %}selected{% endif %}>Small</option>
+                                    <option value="medium" {% if form.font_size.value == 'medium' or not form.font_size.value %}selected{% endif %}>Medium (Default)</option>
+                                    <option value="large" {% if form.font_size.value == 'large' %}selected{% endif %}>Large</option>
+                                    <option value="extra-large" {% if form.font_size.value == 'extra-large' %}selected{% endif %}>Extra Large</option>
+                                </select>
+                                <div class="form-text">Adjust text size for better readability</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch mt-4 pt-2">
+                                    <input class="form-check-input" type="checkbox" id="dyslexia_friendly" name="dyslexia_friendly"
+                                           {% if form.dyslexia_friendly.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="dyslexia_friendly">
+                                        <strong>Dyslexia-Friendly Font</strong><br>
+                                        <small class="text-muted">Use OpenDyslexic font for better readability</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accessibility Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-universal-access"></i> Accessibility</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="high_contrast" name="high_contrast"
+                                           {% if form.high_contrast.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="high_contrast">
+                                        <strong>High Contrast Mode</strong><br>
+                                        <small class="text-muted">Increase contrast for better visibility</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="reduce_motion" name="reduce_motion"
+                                           {% if form.reduce_motion.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="reduce_motion">
+                                        <strong>Reduce Motion</strong><br>
+                                        <small class="text-muted">Minimize animations and transitions</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="screen_reader_optimized" name="screen_reader_optimized"
+                                           {% if form.screen_reader_optimized.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="screen_reader_optimized">
+                                        <strong>Screen Reader Optimized</strong><br>
+                                        <small class="text-muted">Enhanced support for screen readers</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layout Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-layout-sidebar"></i> Layout</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="sidebar_collapsed" name="sidebar_collapsed"
+                                           {% if form.sidebar_collapsed.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="sidebar_collapsed">
+                                        <strong>Collapsed Sidebar</strong><br>
+                                        <small class="text-muted">Start with sidebar minimized</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="compact_mode" name="compact_mode"
+                                           {% if form.compact_mode.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="compact_mode">
+                                        <strong>Compact Mode</strong><br>
+                                        <small class="text-muted">Reduce spacing for more content</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+                    <button type="reset" class="btn btn-outline-secondary" aria-label="Reset form">
+                        <i class="bi bi-x-circle"></i> Reset
+                    </button>
+                    <button type="submit" class="btn btn-primary" aria-label="Save theme settings">
+                        <i class="bi bi-check-circle"></i> Save Settings
+                    </button>
+                </div>
+            </form>
+
+            <!-- Preview Card -->
+            <div class="card mb-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-eye"></i> Preview</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">This is a preview of how text will appear with your current settings.</p>
+                    <div class="alert alert-primary" role="alert">
+                        <h6 class="alert-heading">Sample Heading</h6>
+                        <p>This is sample text to help you preview your theme and accessibility settings.
+                           The quick brown fox jumps over the lazy dog. 1234567890</p>
+                        <hr>
+                        <p class="mb-0">
+                            <button class="btn btn-sm btn-primary me-2">Sample Button</button>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Sample Link</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h6><i class="bi bi-info-circle"></i> About Theme Settings</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Auto Mode:</strong> Automatically switches between light and dark based on your system settings</li>
+                        <li><strong>High Contrast:</strong> Meets WCAG 2.1 AAA standards for color contrast</li>
+                        <li><strong>Reduce Motion:</strong> Helpful for users with vestibular disorders or motion sensitivity</li>
+                        <li><strong>Screen Reader:</strong> Enhances compatibility with assistive technologies like JAWS and NVDA</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live preview of theme changes
+document.querySelectorAll('input[name="theme"], input[name="color_scheme"], input[name="font_size"]').forEach(input => {
+    input.addEventListener('change', function() {
+        // Could add live preview functionality here
+        console.log('Theme setting changed:', this.name, this.value);
+    });
+});
+</script>
+{% endblock %}

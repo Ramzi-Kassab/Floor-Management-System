@@ -287,6 +287,19 @@ class CanManageShifts(permissions.BasePermission):
 # PERMISSION HELPERS
 # ============================================================================
 
+def is_staff_or_superuser(user):
+    """
+    Check if user is staff or superuser
+
+    Args:
+        user: Django User object
+
+    Returns:
+        bool: True if user is staff or superuser
+    """
+    return user and (user.is_staff or user.is_superuser)
+
+
 def has_department_access(user, department):
     """
     Check if user has access to a specific department

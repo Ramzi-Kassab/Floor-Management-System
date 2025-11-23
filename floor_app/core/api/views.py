@@ -14,7 +14,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+# from django_filters.rest_framework import DjangoFilterBackend  # Install django-filter first: pip install django-filter
 from django.utils import timezone
 from datetime import timedelta
 
@@ -42,7 +42,7 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AuditLog.objects.all()
     serializer_class = AuditLogSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]  # Add DjangoFilterBackend after installing django-filter
     filterset_fields = ['action', 'model_name', 'username']
     search_fields = ['username', 'model_name', 'object_repr', 'message']
     ordering_fields = ['timestamp']
@@ -108,7 +108,7 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]  # Add DjangoFilterBackend after installing django-filter
     filterset_fields = ['activity_type', 'user']
     search_fields = ['path', 'description']
     ordering_fields = ['timestamp', 'duration_ms']
@@ -185,7 +185,7 @@ class SystemEventViewSet(viewsets.ModelViewSet):
     queryset = SystemEvent.objects.all()
     serializer_class = SystemEventSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filter_backends = [filters.OrderingFilter]  # Add DjangoFilterBackend after installing django-filter
     filterset_fields = ['level', 'category', 'is_resolved']
     ordering_fields = ['timestamp']
     ordering = ['-timestamp']
@@ -235,7 +235,7 @@ class ChangeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ChangeHistory.objects.all()
     serializer_class = ChangeHistorySerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filter_backends = [filters.OrderingFilter]  # Add DjangoFilterBackend after installing django-filter
     ordering_fields = ['changed_at']
     ordering = ['-changed_at']
 
@@ -272,7 +272,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filter_backends = [filters.OrderingFilter]  # Add DjangoFilterBackend after installing django-filter
     filterset_fields = ['notification_type', 'is_read']
     ordering_fields = ['created_at']
     ordering = ['-created_at']

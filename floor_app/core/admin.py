@@ -6,6 +6,8 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from .models import AuditLog, ChangeHistory, ActivityLog, SystemEvent
+from .notifications import Notification, NotificationPreference
+from .theme_preferences import UserThemePreference
 
 
 @admin.register(AuditLog)
@@ -522,3 +524,228 @@ class SystemEventAdmin(admin.ModelAdmin):
             resolved_by=request.user
         )
         self.message_user(request, f'{count} event(s) marked as resolved.')
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    """Admin interface for Notification"""
+
+    list_display = [
+        'created_at',
+        'user',
+        'notification_type_badge',
+        'title',
+        'is_read',
+        'is_sent',
+        'send_email',
+    ]
+
+    list_filter = [
+        'notification_type',
+        'is_read',
+        'is_sent',
+        'send_email',
+        'created_at',
+        ('user', admin.RelatedOnlyFieldListFilter),
+    ]
+
+    search_fields = [
+        'user__username',
+        'title',
+        'message',
+    ]
+
+    readonly_fields = [
+        'created_at',
+        'read_at',
+        'sent_at',
+    ]
+
+    fieldsets = [
+        ('Notification', {
+            'fields': ['user', 'notification_type', 'title', 'message']
+        }),
+        ('Settings', {
+            'fields': ['send_email', 'link']
+        }),
+        ('Status', {
+            'fields': ['is_read', 'read_at', 'is_sent', 'sent_at', 'created_at']
+        }),
+    ]
+
+    date_hierarchy = 'created_at'
+
+    actions = ['mark_as_read', 'mark_as_sent']
+
+    def notification_type_badge(self, obj):
+        """Display notification type as colored badge"""
+        colors = {
+            'INFO': '#17a2b8',
+            'SUCCESS': '#28a745',
+            'WARNING': '#ffc107',
+            'ERROR': '#dc3545',
+            'SYSTEM': '#6c757d',
+        }
+        color = colors.get(obj.notification_type, '#6c757d')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; '
+            'border-radius: 3px; font-size: 11px;">{}</span>',
+            color,
+            obj.get_notification_type_display()
+        )
+    notification_type_badge.short_description = 'Type'
+
+    @admin.action(description='Mark selected notifications as read')
+    def mark_as_read(self, request, queryset):
+        """Bulk action to mark notifications as read"""
+        count = 0
+        for notification in queryset:
+            if not notification.is_read:
+                notification.mark_as_read()
+                count += 1
+        self.message_user(request, f'{count} notification(s) marked as read.')
+
+    @admin.action(description='Mark selected notifications as sent')
+    def mark_as_sent(self, request, queryset):
+        """Bulk action to mark notifications as sent"""
+        from django.utils import timezone
+        count = queryset.filter(is_sent=False).update(
+            is_sent=True,
+            sent_at=timezone.now()
+        )
+        self.message_user(request, f'{count} notification(s) marked as sent.')
+
+
+@admin.register(NotificationPreference)
+class NotificationPreferenceAdmin(admin.ModelAdmin):
+    """Admin interface for NotificationPreference"""
+
+    list_display = [
+        'user',
+        'email_notifications',
+        'push_notifications',
+        'sms_notifications',
+        'activity_notifications',
+        'system_notifications',
+    ]
+
+    list_filter = [
+        'email_notifications',
+        'push_notifications',
+        'sms_notifications',
+        'activity_notifications',
+        'system_notifications',
+        'approval_notifications',
+    ]
+
+    search_fields = [
+        'user__username',
+        'user__email',
+    ]
+
+    fieldsets = [
+        ('User', {
+            'fields': ['user']
+        }),
+        ('Notification Channels', {
+            'fields': ['email_notifications', 'push_notifications', 'sms_notifications']
+        }),
+        ('Notification Types', {
+            'fields': [
+                'activity_notifications',
+                'system_notifications',
+                'approval_notifications',
+                'reminder_notifications',
+            ]
+        }),
+        ('Frequency', {
+            'fields': ['notification_frequency', 'quiet_hours_start', 'quiet_hours_end']
+        }),
+    ]
+
+
+@admin.register(UserThemePreference)
+class UserThemePreferenceAdmin(admin.ModelAdmin):
+    """Admin interface for UserThemePreference"""
+
+    list_display = [
+        'user',
+        'theme_badge',
+        'color_scheme_badge',
+        'font_size',
+        'high_contrast',
+        'reduce_motion',
+    ]
+
+    list_filter = [
+        'theme',
+        'color_scheme',
+        'font_size',
+        'high_contrast',
+        'reduce_motion',
+        'dyslexia_friendly',
+    ]
+
+    search_fields = [
+        'user__username',
+    ]
+
+    fieldsets = [
+        ('User', {
+            'fields': ['user']
+        }),
+        ('Theme', {
+            'fields': ['theme', 'color_scheme']
+        }),
+        ('Typography', {
+            'fields': ['font_size', 'dyslexia_friendly']
+        }),
+        ('Accessibility', {
+            'fields': ['high_contrast', 'reduce_motion', 'screen_reader_optimized']
+        }),
+        ('Layout', {
+            'fields': ['sidebar_collapsed', 'compact_mode']
+        }),
+    ]
+
+    def theme_badge(self, obj):
+        """Display theme as colored badge"""
+        colors = {
+            'light': '#f8f9fa',
+            'dark': '#212529',
+            'auto': '#6c757d',
+        }
+        text_colors = {
+            'light': '#212529',
+            'dark': '#f8f9fa',
+            'auto': '#ffffff',
+        }
+        color = colors.get(obj.theme, '#6c757d')
+        text_color = text_colors.get(obj.theme, '#ffffff')
+        return format_html(
+            '<span style="background-color: {}; color: {}; padding: 3px 8px; '
+            'border-radius: 3px; font-size: 11px; border: 1px solid #dee2e6;">{}</span>',
+            color,
+            text_color,
+            obj.get_theme_display()
+        )
+    theme_badge.short_description = 'Theme'
+
+    def color_scheme_badge(self, obj):
+        """Display color scheme as colored badge"""
+        colors = {
+            'blue': '#007bff',
+            'green': '#28a745',
+            'purple': '#6f42c1',
+            'orange': '#fd7e14',
+            'red': '#dc3545',
+            'teal': '#20c997',
+        }
+        color = colors.get(obj.color_scheme, '#007bff')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; '
+            'border-radius: 3px; font-size: 11px;">{}</span>',
+            color,
+            obj.get_color_scheme_display()
+        )
+    color_scheme_badge.short_description = 'Color Scheme'

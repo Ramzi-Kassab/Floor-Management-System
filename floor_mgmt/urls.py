@@ -15,6 +15,10 @@ urlpatterns = [
     # === Core utilities (if needed) ===
     path("core/", include(("core.urls", "core"), namespace="core")),
 
+    # === Core System Monitoring & Audit ===
+    # Dashboard, logs, monitoring, and system health
+    path("system/", include(("floor_app.core.urls", "floor_core"), namespace="floor_core")),
+
     # === (Legacy) Employee Management at /employees/ ===
     # Keep for backwards compatibility during transition
     path("employees/", floor_views.employee_list, name="employee_list"),
@@ -117,6 +121,9 @@ urlpatterns = [
     path("retrieval/", include(("floor_app.operations.retrieval.urls", "retrieval"), namespace="retrieval")),
 
     # === REST API Endpoints ===
+    # Core System API (Audit, Activity, Monitoring, Notifications)
+    path("api/core/", include("floor_app.core.api.urls")),
+
     # HR API
     path("api/hr/", include("floor_app.operations.hr.api.urls")),
 

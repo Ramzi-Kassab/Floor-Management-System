@@ -1,0 +1,274 @@
+{% extends "core/base_responsive.html" %}
+{% load static %}
+
+{% block title %}System Events - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h2"><i class="bi bi-exclamation-triangle"></i> System Events</h1>
+            <p class="text-muted">Monitor system errors, warnings, and critical events</p>
+        </div>
+    </div>
+
+    <!-- Alert Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Critical Events</h6>
+                    <h2 class="card-title text-danger">{{ critical_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Errors</h6>
+                    <h2 class="card-title text-warning">{{ error_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Warnings</h6>
+                    <h2 class="card-title text-info">{{ warning_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Resolved</h6>
+                    <h2 class="card-title text-success">{{ resolved_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3" role="search" aria-label="Filter system events">
+                <div class="col-md-2 col-sm-6">
+                    <label for="days" class="form-label">Time Range</label>
+                    <select class="form-select" id="days" name="days" aria-label="Select time range">
+                        <option value="1" {% if days == 1 %}selected{% endif %}>Last 24 hours</option>
+                        <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                        <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-6">
+                    <label for="level" class="form-label">Severity</label>
+                    <select class="form-select" id="level" name="level" aria-label="Select severity level">
+                        <option value="">All Levels</option>
+                        {% for value, label in level_choices %}
+                        <option value="{{ value }}" {% if level == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-6">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-select" id="category" name="category" aria-label="Select category">
+                        <option value="">All Categories</option>
+                        {% for value, label in category_choices %}
+                        <option value="{{ value }}" {% if category == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-6">
+                    <label for="resolved" class="form-label">Status</label>
+                    <select class="form-select" id="resolved" name="resolved" aria-label="Select resolution status">
+                        <option value="">All</option>
+                        <option value="false" {% if resolved == "false" %}selected{% endif %}>Unresolved</option>
+                        <option value="true" {% if resolved == "true" %}selected{% endif %}>Resolved</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-sm-12 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2" aria-label="Apply filters">
+                        <i class="bi bi-filter"></i> Filter
+                    </button>
+                    <a href="{% url 'floor_core:system_events' %}" class="btn btn-outline-secondary" aria-label="Clear all filters">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p class="text-muted" role="status" aria-live="polite">
+                Showing <strong>{{ page_obj.paginator.count }}</strong> events
+            </p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group" role="group" aria-label="Export options">
+                <a href="{% url 'floor_core:export_system_events' %}?format=excel&days={{ days }}"
+                   class="btn btn-sm btn-outline-success" aria-label="Export to Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    <span class="d-none d-md-inline">Excel</span>
+                </a>
+                <a href="{% url 'floor_core:export_system_events' %}?format=pdf&days={{ days }}"
+                   class="btn btn-sm btn-outline-danger" aria-label="Export to PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    <span class="d-none d-md-inline">PDF</span>
+                </a>
+                <a href="{% url 'floor_core:export_system_events' %}?format=csv&days={{ days }}"
+                   class="btn btn-sm btn-outline-info" aria-label="Export to CSV">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span class="d-none d-md-inline">CSV</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Events Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" aria-label="System events table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">Level</th>
+                            <th scope="col" class="mobile-hide">Category</th>
+                            <th scope="col">Event</th>
+                            <th scope="col">Message</th>
+                            <th scope="col" class="mobile-hide">User</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="mobile-hide">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in page_obj %}
+                        <tr class="{% if event.level == 'CRITICAL' %}table-danger{% elif event.level == 'ERROR' %}table-warning{% endif %}">
+                            <td>
+                                <small class="text-muted">
+                                    {{ event.timestamp|date:"Y-m-d H:i:s" }}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if event.level == 'CRITICAL' %}bg-danger
+                                    {% elif event.level == 'ERROR' %}bg-warning text-dark
+                                    {% elif event.level == 'WARNING' %}bg-info
+                                    {% elif event.level == 'INFO' %}bg-primary
+                                    {% else %}bg-secondary
+                                    {% endif %}">
+                                    {{ event.level }}
+                                </span>
+                            </td>
+                            <td class="mobile-hide">
+                                <small class="badge bg-secondary">{{ event.get_category_display }}</small>
+                            </td>
+                            <td>
+                                <strong>{{ event.event_name|truncatechars:30 }}</strong>
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 300px;"
+                                      title="{{ event.message }}">
+                                    {{ event.message|truncatechars:50 }}
+                                </span>
+                                {% if event.exception_type %}
+                                <br>
+                                <small class="text-danger">
+                                    <code>{{ event.exception_type }}</code>
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td class="mobile-hide">
+                                <small>{{ event.user.username|default:"System" }}</small>
+                            </td>
+                            <td>
+                                {% if event.is_resolved %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Resolved
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-circle"></i> Open
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="mobile-hide">
+                                {% if not event.is_resolved %}
+                                <form method="post" action="{% url 'floor_core:resolve_event' event.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success" aria-label="Mark as resolved">
+                                        <i class="bi bi-check"></i> Resolve
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{% url 'floor_core:system_event_detail' event.pk %}"
+                                   class="btn btn-sm btn-outline-primary" aria-label="View details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
+                                No system events found - All clear!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="System events pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&days={{ days }}&level={{ level }}&category={{ category }}&resolved={{ resolved }}" aria-label="First page">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&days={{ days }}&level={{ level }}&category={{ category }}&resolved={{ resolved }}" aria-label="Previous page">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&days={{ days }}&level={{ level }}&category={{ category }}&resolved={{ resolved }}" aria-label="Next page">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&days={{ days }}&level={{ level }}&category={{ category }}&resolved={{ resolved }}" aria-label="Last page">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

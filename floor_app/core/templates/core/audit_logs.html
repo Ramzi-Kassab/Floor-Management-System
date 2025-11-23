@@ -1,0 +1,220 @@
+{% extends "core/base_responsive.html" %}
+{% load static %}
+
+{% block title %}Audit Logs - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h2"><i class="bi bi-shield-check"></i> Audit Logs</h1>
+            <p class="text-muted">Comprehensive audit trail of all system changes and user actions</p>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3" role="search" aria-label="Filter audit logs">
+                <div class="col-md-3 col-sm-6">
+                    <label for="days" class="form-label">Time Range</label>
+                    <select class="form-select" id="days" name="days" aria-label="Select time range">
+                        <option value="1" {% if days == 1 %}selected{% endif %}>Last 24 hours</option>
+                        <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                        <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                        <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+                        <option value="180" {% if days == 180 %}selected{% endif %}>Last 6 months</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 col-sm-6">
+                    <label for="user" class="form-label">User</label>
+                    <input type="text" class="form-control" id="user" name="user"
+                           value="{{ user_filter|default:'' }}" placeholder="Username"
+                           aria-label="Filter by username">
+                </div>
+
+                <div class="col-md-2 col-sm-6">
+                    <label for="action" class="form-label">Action</label>
+                    <select class="form-select" id="action" name="action" aria-label="Select action type">
+                        <option value="">All Actions</option>
+                        {% for value, label in action_choices %}
+                        <option value="{{ value }}" {% if action == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-6">
+                    <label for="model" class="form-label">Model</label>
+                    <input type="text" class="form-control" id="model" name="model"
+                           value="{{ model_filter|default:'' }}" placeholder="Model name"
+                           aria-label="Filter by model name">
+                </div>
+
+                <div class="col-md-2 col-sm-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2" aria-label="Apply filters">
+                        <i class="bi bi-filter"></i> Filter
+                    </button>
+                    <a href="{% url 'floor_core:audit_logs' %}" class="btn btn-outline-secondary" aria-label="Clear all filters">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Count and Export -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p class="text-muted" role="status" aria-live="polite">
+                Showing <strong>{{ page_obj.paginator.count }}</strong> audit entries
+            </p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group" role="group" aria-label="Export options">
+                <a href="{% url 'floor_core:export_audit_logs' %}?format=excel&days={{ days }}"
+                   class="btn btn-sm btn-outline-success" aria-label="Export to Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    <span class="d-none d-md-inline">Excel</span>
+                </a>
+                <a href="{% url 'floor_core:export_audit_logs' %}?format=pdf&days={{ days }}"
+                   class="btn btn-sm btn-outline-danger" aria-label="Export to PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    <span class="d-none d-md-inline">PDF</span>
+                </a>
+                <a href="{% url 'floor_core:export_audit_logs' %}?format=csv&days={{ days }}"
+                   class="btn btn-sm btn-outline-info" aria-label="Export to CSV">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span class="d-none d-md-inline">CSV</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" aria-label="Audit logs table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Action</th>
+                            <th scope="col" class="mobile-hide">Model</th>
+                            <th scope="col">Object</th>
+                            <th scope="col" class="mobile-hide">Changes</th>
+                            <th scope="col" class="mobile-hide">IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                        <tr>
+                            <td>
+                                <small class="text-muted">
+                                    {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                                </small>
+                            </td>
+                            <td>
+                                <strong>{{ log.username|default:"System" }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if log.action == 'CREATE' %}bg-success
+                                    {% elif log.action == 'UPDATE' %}bg-primary
+                                    {% elif log.action == 'DELETE' %}bg-danger
+                                    {% elif log.action == 'LOGIN' %}bg-info
+                                    {% elif log.action == 'LOGOUT' %}bg-warning
+                                    {% elif log.action == 'APPROVE' %}bg-success
+                                    {% elif log.action == 'REJECT' %}bg-danger
+                                    {% else %}bg-secondary
+                                    {% endif %}">
+                                    {{ log.get_action_display }}
+                                </span>
+                            </td>
+                            <td class="mobile-hide">
+                                <code class="small">{{ log.model_name|default:"-" }}</code>
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 200px;"
+                                      title="{{ log.object_repr }}">
+                                    {{ log.object_repr|truncatechars:30 }}
+                                </span>
+                            </td>
+                            <td class="mobile-hide">
+                                {% if log.field_name %}
+                                    <small>
+                                        <strong>{{ log.field_name }}</strong>:
+                                        {% if log.old_value %}
+                                            <span class="text-danger">{{ log.old_value|truncatechars:20 }}</span>
+                                            →
+                                        {% endif %}
+                                        <span class="text-success">{{ log.new_value|truncatechars:20 }}</span>
+                                    </small>
+                                {% elif log.message %}
+                                    <small class="text-muted">{{ log.message|truncatechars:40 }}</small>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="mobile-hide">
+                                <small class="text-muted">{{ log.ip_address|default:"-" }}</small>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No audit logs found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Audit log pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&days={{ days }}&user={{ user_filter }}&action={{ action }}&model={{ model_filter }}" aria-label="First page">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&days={{ days }}&user={{ user_filter }}&action={{ action }}&model={{ model_filter }}" aria-label="Previous page">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&days={{ days }}&user={{ user_filter }}&action={{ action }}&model={{ model_filter }}" aria-label="Next page">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&days={{ days }}&user={{ user_filter }}&action={{ action }}&model={{ model_filter }}" aria-label="Last page">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

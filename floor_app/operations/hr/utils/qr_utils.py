@@ -4,8 +4,8 @@ QR Code Utilities for HR
 Helper functions to generate and manage QR codes for employees and assets.
 """
 from django.urls import reverse
-from qrcodes.services import QRCodeGenerator
-from qrcodes.models import QCode, QCodeType
+from floor_app.operations.qrcodes.services import QRCodeGenerator
+from floor_app.operations.qrcodes.models import QCode, QCodeType
 import json
 
 
