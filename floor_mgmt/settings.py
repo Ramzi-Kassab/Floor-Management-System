@@ -112,6 +112,7 @@ TEMPLATES = [
                 'core.context_processors.user_preferences',
                 'core.context_processors.global_settings',
                 # Floor app core context processors
+                'floor_app.core.context_processors.theme_preferences',
                 'floor_app.core.context_processors.system_status',
                 'floor_app.core.context_processors.user_activity',
             ],

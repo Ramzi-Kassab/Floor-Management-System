@@ -34,6 +34,17 @@
     <!-- Core Custom CSS Framework -->
     <link rel="stylesheet" href="{% static 'core/css/core.css' %}">
 
+    <!-- Apply User Theme CSS Variables -->
+    {% if theme_css_variables %}
+    <style id="user-theme-vars">
+        :root {
+            {% for var_name, var_value in theme_css_variables.items %}
+            --{{ var_name }}: {{ var_value }};
+            {% endfor %}
+        }
+    </style>
+    {% endif %}
+
     {% block extra_css %}{% endblock %}
 </head>
 <body class="theme-{{ theme|default:'light' }} ui-font-{{ font_size|default:'normal' }} table-density-{{ table_density|default:'normal' }}">

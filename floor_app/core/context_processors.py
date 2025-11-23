@@ -6,6 +6,54 @@ Provides global template context for system information
 from django.utils import timezone
 from datetime import timedelta
 from .models import SystemEvent, ActivityLog
+from .theme_preferences import UserThemePreference
+
+
+def theme_preferences(request):
+    """
+    Add user's theme preferences to template context
+
+    Available in all templates as:
+    - {{ theme_preferences }} - UserThemePreference object
+    - {{ theme_css_variables }} - Dict of CSS custom properties
+    - {{ theme }} - Theme mode (light/dark/auto)
+    - {{ color_scheme }} - Color scheme name
+    """
+    if not request.user.is_authenticated:
+        return {
+            'theme': 'light',
+            'color_scheme': 'blue',
+            'theme_preferences': None,
+            'theme_css_variables': {},
+        }
+
+    try:
+        # Get or create theme preference for user
+        theme_pref, created = UserThemePreference.objects.get_or_create(
+            user=request.user
+        )
+
+        # Get CSS variables for this theme
+        css_vars = theme_pref.get_css_variables()
+
+        return {
+            'theme_preferences': theme_pref,
+            'theme_css_variables': css_vars,
+            'theme': theme_pref.theme,
+            'color_scheme': theme_pref.color_scheme,
+            'font_size': theme_pref.font_size,
+            'high_contrast': theme_pref.high_contrast,
+            'reduce_motion': theme_pref.reduce_motion,
+            'compact_mode': theme_pref.compact_mode,
+        }
+    except Exception as e:
+        # Don't break template rendering if there's an error
+        return {
+            'theme': 'light',
+            'color_scheme': 'blue',
+            'theme_preferences': None,
+            'theme_css_variables': {},
+        }
 
 
 def system_status(request):
