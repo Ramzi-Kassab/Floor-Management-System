@@ -74,7 +74,13 @@ def hr_dashboard(request):
         num_employees=Count('employees', filter=Q(employees__is_deleted=False))
     ).filter(num_employees=0).select_related('department')
 
+    # Additional context for new dashboard template
+    departments_with_counts = Department.objects.annotate(
+        employee_count=Count('employees', filter=Q(employees__is_deleted=False))
+    ).select_related('manager', 'manager__person', 'cost_center').order_by('name')
+
     context = {
+        # Legacy summary data
         'summary': {
             'total_employees': employees.count(),
             'active_employees': employees.filter(status='ACTIVE').count(),
@@ -118,8 +124,19 @@ def hr_dashboard(request):
         'open_positions': open_positions[:6],
         'pending_overtime_requests': pending_overtime_requests,
         'contracts_due_soon': contracts_due_soon,
+        # New dashboard context
+        'today': today,
+        'total_employees': employees.count(),
+        'active_employees_count': employees.filter(status='ACTIVE').count(),
+        'new_employees_this_month': employees.filter(hire_date__gte=today - timedelta(days=30)).count(),
+        'departments_count': Department.objects.count(),
+        'positions_count': positions.count(),
+        'pending_leave_count': pending_leave_requests.count(),
+        'expiring_docs_count': expiring_documents.count(),
+        'pending_overtime_count': pending_overtime_requests.count(),
+        'departments_with_counts': departments_with_counts,
     }
-    return render(request, 'hr/hr_dashboard.html', context)
+    return render(request, 'hr/dashboard.html', context)
 
 
 @login_required
