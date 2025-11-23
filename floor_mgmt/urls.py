@@ -3,6 +3,7 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from floor_app import views as floor_views
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
     # === Skeleton: Auth, Dashboard, Landing Page ===
@@ -121,6 +122,11 @@ urlpatterns = [
     path("retrieval/", include(("floor_app.operations.retrieval.urls", "retrieval"), namespace="retrieval")),
 
     # === REST API Endpoints ===
+    # API Documentation (Swagger UI and ReDoc)
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+
     # Core System API (Audit, Activity, Monitoring, Notifications)
     path("api/core/", include("floor_app.core.api.urls")),
 

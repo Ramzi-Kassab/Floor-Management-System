@@ -63,9 +63,9 @@ INSTALLED_APPS = [
     'floor_app.operations.analytics.apps.AnalyticsConfig',
     # Third-party
     'widget_tweaks',
-    # 'django_filters',  # Enable after pip install
-    # 'drf_spectacular',  # Enable after pip install
-    # 'import_export',  # Enable after pip install
+    'django_filters',
+    'drf_spectacular',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -255,7 +255,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
     'DEFAULT_FILTER_BACKENDS': [
-        # 'django_filters.rest_framework.DjangoFilterBackend',  # Install django-filter first: pip install django-filter
+        'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
@@ -265,7 +265,19 @@ REST_FRAMEWORK = {
     ],
     'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
     'DATE_FORMAT': '%Y-%m-%d',
-    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Install drf-spectacular first: pip install drf-spectacular
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# ============================================================================
+# DRF SPECTACULAR SETTINGS
+# ============================================================================
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Floor Management System API',
+    'DESCRIPTION': 'Enterprise Floor Management System with comprehensive REST API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/',
 }
 
 # ============================================================================
