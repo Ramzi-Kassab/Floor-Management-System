@@ -3,21 +3,15 @@ version: '3.8'
 services:
   app:
     build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - ..:/workspace:cached
+      - ../..:/workspaces:cached
     command: sleep infinity
     network_mode: service:db
-    environment:
-      - DB_NAME=floor_mgmt_db
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_HOST=localhost
-      - DB_PORT=5432
-      - DEBUG=True
-      - SECRET_KEY=dev-secret-key-for-codespaces-only
-      - ALLOWED_HOSTS=localhost,127.0.0.1,*.githubpreview.dev,*.app.github.dev
+    depends_on:
+      - db
+      - redis
 
   db:
     image: postgres:15-alpine
@@ -25,9 +19,14 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=floor_mgmt_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_USER: floor_user
+      POSTGRES_PASSWORD: floor_password
+      POSTGRES_DB: floor_management
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    network_mode: service:db
 
 volumes:
   postgres-data:

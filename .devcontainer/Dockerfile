@@ -1,5 +1,4 @@
-# Use the official Python image as base
-FROM mcr.microsoft.com/devcontainers/python:3.11
+FROM mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
 
 # Install system dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -8,32 +7,17 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     libpq-dev \
     build-essential \
     git \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Python development tools
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install black flake8 isort pylint pytest pytest-django
+
 # Set working directory
-WORKDIR /workspace
+WORKDIR /workspaces/Floor-Management-System
 
-# Copy requirements file
+# Install Python dependencies (will be overridden by postCreateCommand)
 COPY requirements.txt /tmp/requirements.txt
-
-# Install Python dependencies
-RUN pip install --upgrade pip \
-    && pip install -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=floor_mgmt.settings
-
-# Create a non-root user
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-# Ensure the user exists (it should already exist in the base image)
-RUN groupmod --gid $USER_GID $USERNAME \
-    && usermod --uid $USER_UID --gid $USER_GID $USERNAME \
-    && chown -R $USER_UID:$USER_GID /home/$USERNAME
-
-USER $USERNAME
+RUN pip install -r /tmp/requirements.txt || true
