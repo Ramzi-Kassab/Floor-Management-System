@@ -19,6 +19,8 @@ from .models_system import (
     # Dashboard
     DashboardWidget,
     DashboardLayout,
+    # Theme & Preferences
+    UserThemePreference,
 )
 
 # Export all models
@@ -33,4 +35,5 @@ __all__ = [
     'HelpArticle',
     'DashboardWidget',
     'DashboardLayout',
+    'UserThemePreference',
 ]

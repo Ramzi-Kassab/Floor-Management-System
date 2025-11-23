@@ -404,3 +404,91 @@ class DashboardLayout(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.name}"
+
+
+# ========== USER THEME PREFERENCES ==========
+
+class UserThemePreference(models.Model):
+    """User interface theme and display preferences."""
+
+    THEME_CHOICES = [
+        ('light', 'Light Mode'),
+        ('dark', 'Dark Mode'),
+        ('auto', 'Auto (System)'),
+        ('custom', 'Custom Colors'),
+    ]
+
+    FONT_SIZE_CHOICES = [
+        ('small', 'Small (14px)'),
+        ('medium', 'Medium (16px)'),
+        ('large', 'Large (18px)'),
+        ('x-large', 'Extra Large (20px)'),
+    ]
+
+    DENSITY_CHOICES = [
+        ('compact', 'Compact'),
+        ('comfortable', 'Comfortable'),
+        ('spacious', 'Spacious'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='theme_preference')
+
+    # Theme settings
+    theme = models.CharField(max_length=20, choices=THEME_CHOICES, default='light')
+    high_contrast = models.BooleanField(default=False, help_text='Enable high contrast mode for accessibility')
+
+    # Custom colors (for custom theme)
+    primary_color = models.CharField(max_length=7, default='#2563eb', help_text='Hex color code')
+    accent_color = models.CharField(max_length=7, default='#10b981', help_text='Hex color code')
+
+    # Text preferences
+    font_size = models.CharField(max_length=20, choices=FONT_SIZE_CHOICES, default='medium')
+    font_family = models.CharField(max_length=100, default='system', help_text='Font family preference')
+    line_height = models.DecimalField(max_digits=3, decimal_places=1, default=1.5, help_text='Line height multiplier')
+
+    # Layout preferences
+    sidebar_collapsed = models.BooleanField(default=False)
+    density = models.CharField(max_length=20, choices=DENSITY_CHOICES, default='comfortable')
+    show_animations = models.BooleanField(default=True, help_text='Enable UI animations')
+
+    # Accessibility
+    reduce_motion = models.BooleanField(default=False, help_text='Reduce motion for accessibility')
+    focus_indicators = models.BooleanField(default=True, help_text='Show enhanced focus indicators')
+    screen_reader_optimized = models.BooleanField(default=False)
+
+    # Mobile preferences
+    mobile_view = models.CharField(max_length=20, default='auto', choices=[
+        ('auto', 'Auto Detect'),
+        ('mobile', 'Always Mobile'),
+        ('desktop', 'Always Desktop'),
+    ])
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'User Theme Preference'
+        verbose_name_plural = 'User Theme Preferences'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_theme_display()}"
+
+    def get_css_variables(self):
+        """Generate CSS custom properties for this theme."""
+        return {
+            '--primary-color': self.primary_color,
+            '--accent-color': self.accent_color,
+            '--font-size-base': self.get_font_size_px(),
+            '--line-height': str(self.line_height),
+            '--spacing-multiplier': self.get_density_multiplier(),
+        }
+
+    def get_font_size_px(self):
+        """Get font size in pixels."""
+        sizes = {'small': '14px', 'medium': '16px', 'large': '18px', 'x-large': '20px'}
+        return sizes.get(self.font_size, '16px')
+
+    def get_density_multiplier(self):
+        """Get spacing multiplier for density."""
+        densities = {'compact': '0.75', 'comfortable': '1', 'spacious': '1.25'}
+        return densities.get(self.density, '1')
