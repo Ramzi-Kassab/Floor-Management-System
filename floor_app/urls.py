@@ -134,6 +134,7 @@ urlpatterns = [
     # User Stats API
     path("api/user/stats/", views.api_user_stats, name="api_user_stats"),
     path("api/user/activity/", views.api_user_activity, name="api_user_activity"),
+    path("api/user/save-theme/", views.api_user_save_theme, name="api_user_save_theme"),
 
     # System Stats API (for admin dashboard)
     path("api/system/stats/", views.api_system_stats, name="api_system_stats"),

@@ -970,3 +970,68 @@ def api_system_alerts(request):
     # TODO: Implement system monitoring
     alerts = []
     return JsonResponse({'alerts': alerts})
+
+
+# ========== THEME PREFERENCES API ==========
+
+@login_required
+@require_http_methods(["POST"])
+def api_user_save_theme(request):
+    """
+    Save user theme preferences via AJAX.
+
+    POST data: {
+        theme: 'light'|'dark'|'auto'|'custom',
+        fontSize: 'small'|'medium'|'large'|'x-large',
+        density: 'compact'|'comfortable'|'spacious',
+        highContrast: boolean,
+        reduceMotion: boolean
+    }
+    """
+    try:
+        import json
+        from .models import UserThemePreference
+
+        data = json.loads(request.body)
+
+        # Get or create user theme preference
+        theme_pref, created = UserThemePreference.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'theme': 'light',
+                'font_size': 'medium',
+                'density': 'comfortable',
+            }
+        )
+
+        # Update fields from request
+        if 'theme' in data:
+            theme_pref.theme = data['theme']
+        if 'fontSize' in data:
+            theme_pref.font_size = data['fontSize']
+        if 'density' in data:
+            theme_pref.density = data['density']
+        if 'highContrast' in data:
+            theme_pref.high_contrast = data['highContrast']
+        if 'reduceMotion' in data:
+            theme_pref.reduce_motion = data['reduceMotion']
+
+        theme_pref.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Theme preferences saved successfully',
+            'preferences': {
+                'theme': theme_pref.theme,
+                'fontSize': theme_pref.font_size,
+                'density': theme_pref.density,
+                'highContrast': theme_pref.high_contrast,
+                'reduceMotion': theme_pref.reduce_motion,
+            }
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" {{ theme_data_attributes|safe }}>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -25,13 +25,28 @@
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Custom CSS -->
+    <!-- Enhanced Responsive Theme System CSS (Mobile-first, WCAG AA) -->
+    <link rel="stylesheet" href="{% static 'css/responsive-theme-system.css' %}">
+
+    <!-- Custom CSS (Legacy styles - loaded after for compatibility) -->
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
 
-    <!-- Theme System CSS -->
+    <!-- Theme System CSS (Core themes) -->
     <link rel="stylesheet" href="{% static 'core/css/themes.css' %}">
 
+    <!-- Dynamic Theme Variables -->
+    {% if theme_css_variables %}
+    <style>
+        :root {
+            {% for key, value in theme_css_variables.items %}
+            {{ key }}: {{ value }};
+            {% endfor %}
+        }
+    </style>
+    {% endif %}
+
     {% block extra_css %}{% endblock %}
+
 </head>
 <body class="theme-{{ theme|default:'light' }} ui-font-{{ font_size|default:'normal' }} table-density-{{ table_density|default:'normal' }}">
     <!-- Skip to Content (Accessibility) -->
@@ -59,11 +74,94 @@
             
             <!-- Right Side Actions -->
             <div class="ms-auto d-flex align-items-center gap-3">
-                <!-- Dark Mode Toggle -->
-                <button class="btn btn-link text-dark p-0" id="darkModeToggle" type="button" title="Toggle theme">
-                    <i class="bi bi-moon-stars fs-5"></i>
-                </button>
-                
+                <!-- Theme Switcher -->
+                <div class="dropdown">
+                    <button class="btn btn-link text-dark p-0"
+                            type="button"
+                            id="themeDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="Theme settings">
+                        <i class="bi bi-palette fs-5" id="themeIcon"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="themeDropdown" style="min-width: 280px;">
+                        <h6 class="dropdown-header px-0">
+                            <i class="bi bi-palette me-2"></i>Appearance
+                        </h6>
+
+                        <!-- Theme Selection -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-2">Theme</label>
+                            <div class="btn-group w-100" role="group" id="themeSelector">
+                                <input type="radio" class="btn-check" name="theme" id="themeLight" value="light" autocomplete="off">
+                                <label class="btn btn-outline-primary btn-sm" for="themeLight">
+                                    <i class="bi bi-sun me-1"></i>Light
+                                </label>
+
+                                <input type="radio" class="btn-check" name="theme" id="themeDark" value="dark" autocomplete="off">
+                                <label class="btn btn-outline-primary btn-sm" for="themeDark">
+                                    <i class="bi bi-moon-stars me-1"></i>Dark
+                                </label>
+
+                                <input type="radio" class="btn-check" name="theme" id="themeAuto" value="auto" autocomplete="off">
+                                <label class="btn btn-outline-primary btn-sm" for="themeAuto">
+                                    <i class="bi bi-circle-half me-1"></i>Auto
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Font Size -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-2">Font Size</label>
+                            <select class="form-select form-select-sm" id="fontSizeSelector">
+                                <option value="small">Small (14px)</option>
+                                <option value="medium" selected>Medium (16px)</option>
+                                <option value="large">Large (18px)</option>
+                                <option value="x-large">Extra Large (20px)</option>
+                            </select>
+                        </div>
+
+                        <!-- Density -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-2">Spacing</label>
+                            <select class="form-select form-select-sm" id="densitySelector">
+                                <option value="compact">Compact</option>
+                                <option value="comfortable" selected>Comfortable</option>
+                                <option value="spacious">Spacious</option>
+                            </select>
+                        </div>
+
+                        <!-- Accessibility -->
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="highContrastToggle">
+                            <label class="form-check-label small" for="highContrastToggle">
+                                High Contrast
+                            </label>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="reduceMotionToggle">
+                            <label class="form-check-label small" for="reduceMotionToggle">
+                                Reduce Motion
+                            </label>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        {% if user.is_authenticated %}
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary btn-sm" id="saveThemeBtn">
+                                <i class="bi bi-check-lg me-1"></i>Save Preferences
+                            </button>
+                        </div>
+                        {% else %}
+                        <small class="text-muted d-block text-center">
+                            <i class="bi bi-info-circle me-1"></i>Sign in to save preferences
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <!-- Notifications -->
                 <div class="notification-bell">
                     <i class="bi bi-bell bell-icon"></i>
@@ -1041,30 +1139,170 @@
             
             // Highlight active nav link (currentPath defined later for section navigation)
 
-            // Dark mode toggle
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            const darkModeIcon = darkModeToggle.querySelector('i');
-            
-            // Check for saved dark mode preference
-            const darkMode = localStorage.getItem('darkMode');
-            if (darkMode === 'enabled') {
-                document.body.classList.add('dark-mode');
-                darkModeIcon.classList.remove('bi-moon-stars');
-                darkModeIcon.classList.add('bi-sun-fill');
-            }
-            
-            darkModeToggle.addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                if (document.body.classList.contains('dark-mode')) {
-                    localStorage.setItem('darkMode', 'enabled');
-                    darkModeIcon.classList.remove('bi-moon-stars');
-                    darkModeIcon.classList.add('bi-sun-fill');
-                } else {
-                    localStorage.setItem('darkMode', null);
-                    darkModeIcon.classList.remove('bi-sun-fill');
-                    darkModeIcon.classList.add('bi-moon-stars');
-                }
+            // ========== ENHANCED THEME SYSTEM ==========
+
+            // Get current theme preferences from context or defaults
+            const getCurrentTheme = () => ({
+                theme: document.documentElement.dataset.theme || 'light',
+                fontSize: document.documentElement.dataset.fontSize || 'medium',
+                density: document.documentElement.dataset.density || 'comfortable',
+                highContrast: document.documentElement.dataset.highContrast === 'true',
+                reduceMotion: document.documentElement.dataset.reduceMotion === 'true'
             });
+
+            // Apply theme to page
+            const applyTheme = (preferences) => {
+                const html = document.documentElement;
+
+                // Update data attributes
+                html.dataset.theme = preferences.theme;
+                html.dataset.fontSize = preferences.fontSize;
+                html.dataset.density = preferences.density;
+                html.dataset.highContrast = preferences.highContrast;
+                html.dataset.reduceMotion = preferences.reduceMotion;
+
+                // Save to localStorage for non-authenticated users
+                localStorage.setItem('themePreferences', JSON.stringify(preferences));
+            };
+
+            // Initialize theme controls with current values
+            const initThemeControls = () => {
+                const current = getCurrentTheme();
+
+                // Set theme radio buttons
+                const themeRadio = document.querySelector(`input[name="theme"][value="${current.theme}"]`);
+                if (themeRadio) themeRadio.checked = true;
+
+                // Set font size
+                const fontSizeSelector = document.getElementById('fontSizeSelector');
+                if (fontSizeSelector) fontSizeSelector.value = current.fontSize;
+
+                // Set density
+                const densitySelector = document.getElementById('densitySelector');
+                if (densitySelector) densitySelector.value = current.density;
+
+                // Set accessibility toggles
+                const highContrastToggle = document.getElementById('highContrastToggle');
+                if (highContrastToggle) highContrastToggle.checked = current.highContrast;
+
+                const reduceMotionToggle = document.getElementById('reduceMotionToggle');
+                if (reduceMotionToggle) reduceMotionToggle.checked = current.reduceMotion;
+            };
+
+            // Save theme preferences to server
+            const saveThemePreferences = async (preferences) => {
+                {% if user.is_authenticated %}
+                try {
+                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                     getCookie('csrftoken');
+
+                    const response = await fetch('{% url "floor_app:api_user_save_theme" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify(preferences)
+                    });
+
+                    if (response.ok) {
+                        // Show success message
+                        const saveBtn = document.getElementById('saveThemeBtn');
+                        if (saveBtn) {
+                            const originalHTML = saveBtn.innerHTML;
+                            saveBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Saved!';
+                            saveBtn.classList.add('btn-success');
+                            saveBtn.classList.remove('btn-primary');
+
+                            setTimeout(() => {
+                                saveBtn.innerHTML = originalHTML;
+                                saveBtn.classList.remove('btn-success');
+                                saveBtn.classList.add('btn-primary');
+                            }, 2000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to save theme preferences:', error);
+                }
+                {% endif %}
+            };
+
+            // Get CSRF token from cookies
+            const getCookie = (name) => {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            };
+
+            // Initialize theme controls on page load
+            initThemeControls();
+
+            // Theme radio button change
+            document.querySelectorAll('input[name="theme"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const preferences = getCurrentTheme();
+                    preferences.theme = e.target.value;
+                    applyTheme(preferences);
+                });
+            });
+
+            // Font size change
+            const fontSizeSelector = document.getElementById('fontSizeSelector');
+            if (fontSizeSelector) {
+                fontSizeSelector.addEventListener('change', (e) => {
+                    const preferences = getCurrentTheme();
+                    preferences.fontSize = e.target.value;
+                    applyTheme(preferences);
+                });
+            }
+
+            // Density change
+            const densitySelector = document.getElementById('densitySelector');
+            if (densitySelector) {
+                densitySelector.addEventListener('change', (e) => {
+                    const preferences = getCurrentTheme();
+                    preferences.density = e.target.value;
+                    applyTheme(preferences);
+                });
+            }
+
+            // High contrast toggle
+            const highContrastToggle = document.getElementById('highContrastToggle');
+            if (highContrastToggle) {
+                highContrastToggle.addEventListener('change', (e) => {
+                    const preferences = getCurrentTheme();
+                    preferences.highContrast = e.target.checked;
+                    applyTheme(preferences);
+                });
+            }
+
+            // Reduce motion toggle
+            const reduceMotionToggle = document.getElementById('reduceMotionToggle');
+            if (reduceMotionToggle) {
+                reduceMotionToggle.addEventListener('change', (e) => {
+                    const preferences = getCurrentTheme();
+                    preferences.reduceMotion = e.target.checked;
+                    applyTheme(preferences);
+                });
+            }
+
+            // Save button click
+            const saveThemeBtn = document.getElementById('saveThemeBtn');
+            if (saveThemeBtn) {
+                saveThemeBtn.addEventListener('click', () => {
+                    const preferences = getCurrentTheme();
+                    saveThemePreferences(preferences);
+                });
+            }
             
             // Initialize tooltips
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
