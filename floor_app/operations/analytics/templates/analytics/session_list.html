@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Sessions - Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .session-card {
+        border-radius: 10px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #667eea;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        transition: all 0.2s;
+    }
+    .session-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateX(5px);
+    }
+    .session-card.active {
+        border-left-color: #28a745;
+        background: linear-gradient(to right, #d4edda 0%, white 10%);
+    }
+    .session-card.expired {
+        border-left-color: #6c757d;
+        opacity: 0.7;
+    }
+    .session-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .device-icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-right: 1rem;
+    }
+    .duration-bar {
+        height: 8px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .stat-box h3 {
+        font-size: 2.5rem;
+        margin: 0.5rem 0;
+        font-weight: bold;
+    }
+    .stat-box p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-user-clock"></i> User Sessions</h1>
+            <p class="text-muted mb-0">Monitor active and historical user sessions</p>
+        </div>
+        <div>
+            <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="btn btn-danger" onclick="confirmTerminateAll()">
+                <i class="fas fa-sign-out-alt"></i> Terminate All Sessions
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-box">
+            <i class="fas fa-users fa-2x mb-2"></i>
+            <h3>{{ active_sessions_count }}</h3>
+            <p>Active Sessions</p>
+        </div>
+        <div class="stat-box" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+            <i class="fas fa-clock fa-2x mb-2"></i>
+            <h3>{{ avg_duration|floatformat:0 }}</h3>
+            <p>Avg Duration (min)</p>
+        </div>
+        <div class="stat-box" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+            <i class="fas fa-calendar-day fa-2x mb-2"></i>
+            <h3>{{ today_sessions_count }}</h3>
+            <p>Sessions Today</p>
+        </div>
+        <div class="stat-box" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h3>{{ total_page_views }}</h3>
+            <p>Total Page Views</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">User</label>
+                    <input type="text" name="user" class="form-control" placeholder="Username" value="{{ request.GET.user }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Device</label>
+                    <select name="device" class="form-select">
+                        <option value="">All</option>
+                        <option value="desktop" {% if request.GET.device == 'desktop' %}selected{% endif %}>Desktop</option>
+                        <option value="mobile" {% if request.GET.device == 'mobile' %}selected{% endif %}>Mobile</option>
+                        <option value="tablet" {% if request.GET.device == 'tablet' %}selected{% endif %}>Tablet</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date Range</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="row">
+        <div class="col-12">
+            {% if object_list %}
+                {% for session in object_list %}
+                <div class="session-card {% if session.is_active %}active{% else %}expired{% endif %}">
+                    <div class="d-flex align-items-start">
+                        <div class="device-icon">
+                            {% if session.device_type == 'mobile' %}
+                            <i class="fas fa-mobile-alt text-primary"></i>
+                            {% elif session.device_type == 'tablet' %}
+                            <i class="fas fa-tablet-alt text-info"></i>
+                            {% else %}
+                            <i class="fas fa-desktop text-success"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="mb-1">
+                                        <i class="fas fa-user"></i> {{ session.user.get_full_name|default:session.user.username }}
+                                        {% if session.is_active %}
+                                        <span class="session-badge bg-success text-white">Active</span>
+                                        {% else %}
+                                        <span class="session-badge bg-secondary text-white">Expired</span>
+                                        {% endif %}
+                                    </h5>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-envelope"></i> {{ session.user.email }}
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <a href="{% url 'analytics:session_detail' session.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-info-circle"></i> Details
+                                    </a>
+                                    {% if session.is_active %}
+                                    <button class="btn btn-sm btn-outline-danger" onclick="terminateSession({{ session.pk }})">
+                                        <i class="fas fa-times"></i> Terminate
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block"><i class="fas fa-calendar-alt"></i> Started</small>
+                                    <strong>{{ session.login_time|date:"M d, Y H:i" }}</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block"><i class="fas fa-clock"></i> Duration</small>
+                                    <strong>{{ session.duration_minutes|floatformat:0 }} min</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block"><i class="fas fa-eye"></i> Page Views</small>
+                                    <strong>{{ session.page_views_count|default:0 }}</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block"><i class="fas fa-mouse-pointer"></i> Activities</small>
+                                    <strong>{{ session.activities_count|default:0 }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <small class="text-muted"><i class="fas fa-network-wired"></i> IP:</small>
+                                    <strong>{{ session.ip_address|default:"Unknown" }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted"><i class="fas fa-chrome"></i> Browser:</small>
+                                    <strong>{{ session.browser|default:"Unknown" }}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted"><i class="fas fa-laptop"></i> OS:</small>
+                                    <strong>{{ session.operating_system|default:"Unknown" }}</strong>
+                                </div>
+                            </div>
+
+                            {% if session.is_active %}
+                            <div class="duration-bar" style="width: {% if session.duration_minutes > 60 %}100{% else %}{% widthratio session.duration_minutes 60 100 %}{% endif %}%;"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Session pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-slash fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No sessions found</h5>
+                    <p class="text-muted">No user sessions match your criteria</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function terminateSession(sessionId) {
+    if (confirm('Are you sure you want to terminate this session? The user will be logged out.')) {
+        fetch(`/analytics/sessions/${sessionId}/terminate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to terminate session');
+            }
+        });
+    }
+}
+
+function confirmTerminateAll() {
+    if (confirm('Are you sure you want to terminate ALL active sessions? All users will be logged out.')) {
+        if (confirm('This action cannot be undone. Proceed?')) {
+            fetch('/analytics/sessions/terminate-all/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Terminated ${data.count} sessions`);
+                location.reload();
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

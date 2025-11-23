@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Error Log - Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-item {
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        transition: all 0.2s;
+    }
+    .error-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    .error-item.critical {
+        border-left-color: #dc3545;
+        background: linear-gradient(to right, #f8d7da 0%, white 10%);
+    }
+    .error-item.error {
+        border-left-color: #fd7e14;
+        background: linear-gradient(to right, #ffe5d0 0%, white 10%);
+    }
+    .error-item.warning {
+        border-left-color: #ffc107;
+        background: linear-gradient(to right, #fff3cd 0%, white 10%);
+    }
+    .error-item.info {
+        border-left-color: #17a2b8;
+        background: linear-gradient(to right, #d1ecf1 0%, white 10%);
+    }
+    .severity-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .severity-critical { background: #dc3545; color: white; }
+    .severity-error { background: #fd7e14; color: white; }
+    .severity-warning { background: #ffc107; color: #000; }
+    .severity-info { background: #17a2b8; color: white; }
+    .error-count-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        height: 100%;
+    }
+    .error-count-card h3 {
+        font-size: 3rem;
+        margin: 0.5rem 0;
+        font-weight: bold;
+    }
+    .error-count-card p {
+        margin: 0;
+        opacity: 0.9;
+    }
+    .filter-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .stacktrace {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-exclamation-triangle"></i> Error Log</h1>
+            <p class="text-muted mb-0">System errors and exceptions tracking</p>
+        </div>
+        <div>
+            <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="btn btn-success" onclick="exportErrors()">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <button class="btn btn-warning" onclick="markAllResolved()">
+                <i class="fas fa-check-double"></i> Mark All Resolved
+            </button>
+        </div>
+    </div>
+
+    <!-- Error Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="error-count-card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                <i class="fas fa-times-circle fa-2x mb-2"></i>
+                <h3>{{ critical_count }}</h3>
+                <p>Critical Errors</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="error-count-card" style="background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);">
+                <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                <h3>{{ error_count }}</h3>
+                <p>Errors</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="error-count-card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <h3>{{ warning_count }}</h3>
+                <p>Warnings</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="error-count-card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                <h3>{{ info_count }}</h3>
+                <p>Info</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <h5 class="mb-3"><i class="fas fa-filter"></i> Filter Errors</h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Severity</label>
+                <select name="severity" class="form-select">
+                    <option value="">All</option>
+                    <option value="critical" {% if request.GET.severity == 'critical' %}selected{% endif %}>Critical</option>
+                    <option value="error" {% if request.GET.severity == 'error' %}selected{% endif %}>Error</option>
+                    <option value="warning" {% if request.GET.severity == 'warning' %}selected{% endif %}>Warning</option>
+                    <option value="info" {% if request.GET.severity == 'info' %}selected{% endif %}>Info</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="unresolved" {% if request.GET.status == 'unresolved' %}selected{% endif %}>Unresolved</option>
+                    <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Module</label>
+                <select name="module" class="form-select">
+                    <option value="">All Modules</option>
+                    {% for module in available_modules %}
+                    <option value="{{ module }}" {% if request.GET.module == module %}selected{% endif %}>{{ module|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Error Type</label>
+                <input type="text" name="error_type" class="form-control" placeholder="e.g. ValueError" value="{{ request.GET.error_type }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Errors List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i> Error Messages
+                <span class="badge bg-danger">{{ object_list.count }} errors</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if object_list %}
+                {% for error in object_list %}
+                <div class="error-item {{ error.severity|lower }}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">
+                                <span class="severity-badge severity-{{ error.severity|lower }}">
+                                    {{ error.get_severity_display }}
+                                </span>
+                                {{ error.error_type }}
+                                {% if error.is_resolved %}
+                                <span class="badge bg-success">Resolved</span>
+                                {% else %}
+                                <span class="badge bg-danger">Unresolved</span>
+                                {% endif %}
+                            </h5>
+                            <p class="mb-2">
+                                <strong>{{ error.error_message }}</strong>
+                            </p>
+                            <div class="row g-2 text-muted">
+                                <div class="col-md-3">
+                                    <i class="fas fa-cube"></i> Module: <strong>{{ error.module|default:"Unknown" }}</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <i class="fas fa-file-code"></i> File: <strong>{{ error.file|default:"Unknown" }}</strong>
+                                </div>
+                                <div class="col-md-2">
+                                    <i class="fas fa-hashtag"></i> Line: <strong>{{ error.line_number|default:"N/A" }}</strong>
+                                </div>
+                                <div class="col-md-2">
+                                    <i class="fas fa-user"></i> User: <strong>{{ error.user.username|default:"Anonymous" }}</strong>
+                                </div>
+                                <div class="col-md-2">
+                                    <i class="fas fa-clock"></i> {{ error.timestamp|timesince }} ago
+                                </div>
+                            </div>
+                            {% if error.url %}
+                            <div class="mt-2 text-muted">
+                                <i class="fas fa-link"></i> URL: <code>{{ error.url }}</code>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            <a href="{% url 'analytics:error_detail' error.pk %}" class="btn btn-sm btn-outline-primary mb-1">
+                                <i class="fas fa-info-circle"></i> Details
+                            </a>
+                            {% if not error.is_resolved %}
+                            <button class="btn btn-sm btn-outline-success mb-1" onclick="markResolved({{ error.pk }})">
+                                <i class="fas fa-check"></i> Resolve
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteError({{ error.pk }})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    {% if error.stack_trace %}
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#stack-{{ error.pk }}">
+                            <i class="fas fa-code"></i> View Stack Trace
+                        </button>
+                        <div class="collapse mt-2" id="stack-{{ error.pk }}">
+                            <div class="stacktrace">{{ error.stack_trace }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if error.occurrences > 1 %}
+                    <div class="mt-2">
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-redo"></i> Occurred {{ error.occurrences }} times
+                        </span>
+                        <small class="text-muted">
+                            First: {{ error.first_occurrence|date:"M d, Y H:i" }}
+                            | Last: {{ error.timestamp|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Error pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h5 class="text-success">No Errors Found!</h5>
+                    <p class="text-muted">
+                        {% if request.GET.severity or request.GET.module or request.GET.status %}
+                        No errors match your filters
+                        {% else %}
+                        Your system is running smoothly
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markResolved(errorId) {
+    fetch(`/analytics/errors/${errorId}/resolve/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to mark as resolved');
+        }
+    });
+}
+
+function deleteError(errorId) {
+    if (confirm('Are you sure you want to delete this error log?')) {
+        fetch(`/analytics/errors/${errorId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to delete error');
+            }
+        });
+    }
+}
+
+function markAllResolved() {
+    if (confirm('Mark all visible errors as resolved?')) {
+        fetch('/analytics/errors/resolve-all/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({{ request.GET|safe }})
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(`Marked ${data.count} errors as resolved`);
+            location.reload();
+        });
+    }
+}
+
+function exportErrors() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{% url "analytics:export_report" %}?type=errors&' + params.toString();
+}
+</script>
+{% endblock %}

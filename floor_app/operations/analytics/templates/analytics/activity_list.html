@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Activities - Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .activity-item {
+        border-left: 4px solid #007bff;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 0 8px 8px 0;
+        transition: all 0.2s;
+    }
+    .activity-item:hover {
+        background: #e9ecef;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .activity-item.create { border-left-color: #28a745; }
+    .activity-item.update { border-left-color: #17a2b8; }
+    .activity-item.delete { border-left-color: #dc3545; }
+    .activity-item.view { border-left-color: #6c757d; }
+    .activity-icon {
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-right: 1rem;
+    }
+    .activity-icon.create { background: #d4edda; color: #155724; }
+    .activity-icon.update { background: #d1ecf1; color: #0c5460; }
+    .activity-icon.delete { background: #f8d7da; color: #721c24; }
+    .activity-icon.view { background: #e2e3e5; color: #383d41; }
+    .filter-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .stat-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.2);
+        border-radius: 8px;
+        margin: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-history"></i> User Activities</h1>
+            <p class="text-muted mb-0">Track all user actions across the system</p>
+        </div>
+        <div>
+            <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="btn btn-success" onclick="exportActivities()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+        <h5 class="mb-3"><i class="fas fa-filter"></i> Filters & Statistics</h5>
+        <div class="row">
+            <div class="col-md-8">
+                <form method="get" class="row g-2">
+                    <div class="col-md-3">
+                        <input type="text" name="user" class="form-control" placeholder="Username" value="{{ request.GET.user }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="action_type" class="form-select">
+                            <option value="">All Actions</option>
+                            <option value="create" {% if request.GET.action_type == 'create' %}selected{% endif %}>Create</option>
+                            <option value="update" {% if request.GET.action_type == 'update' %}selected{% endif %}>Update</option>
+                            <option value="delete" {% if request.GET.action_type == 'delete' %}selected{% endif %}>Delete</option>
+                            <option value="view" {% if request.GET.action_type == 'view' %}selected{% endif %}>View</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="module" class="form-select">
+                            <option value="">All Modules</option>
+                            {% for module in available_modules %}
+                            <option value="{{ module }}" {% if request.GET.module == module %}selected{% endif %}>{{ module|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-light w-100">
+                            <i class="fas fa-search"></i> Apply
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-badge">
+                    <strong>{{ object_list.count }}</strong> activities
+                </div>
+                <div class="stat-badge">
+                    <strong>{{ unique_users }}</strong> users
+                </div>
+                <div class="stat-badge">
+                    <strong>{{ unique_modules }}</strong> modules
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activities List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i> Activity Log
+                {% if request.GET.action_type or request.GET.module or request.GET.user %}
+                <span class="badge bg-info">Filtered</span>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if object_list %}
+                {% for activity in object_list %}
+                <div class="activity-item {{ activity.action_type|lower }}">
+                    <div class="d-flex align-items-start">
+                        <div class="activity-icon {{ activity.action_type|lower }}">
+                            {% if activity.action_type == 'CREATE' %}
+                            <i class="fas fa-plus"></i>
+                            {% elif activity.action_type == 'UPDATE' %}
+                            <i class="fas fa-edit"></i>
+                            {% elif activity.action_type == 'DELETE' %}
+                            <i class="fas fa-trash"></i>
+                            {% else %}
+                            <i class="fas fa-eye"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <strong>{{ activity.user.get_full_name|default:activity.user.username }}</strong>
+                                        <span class="text-muted">{{ activity.get_action_type_display|lower }}</span>
+                                        <span class="badge bg-primary">{{ activity.model_name|default:"item" }}</span>
+                                    </h6>
+                                    <p class="mb-1 text-muted">
+                                        {% if activity.description %}
+                                            {{ activity.description }}
+                                        {% else %}
+                                            {{ activity.action_type }} operation on {{ activity.model_name }}
+                                        {% endif %}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-cube"></i> Module: <strong>{{ activity.module|default:"core"|title }}</strong>
+                                        {% if activity.object_id %}
+                                        | ID: {{ activity.object_id }}
+                                        {% endif %}
+                                        {% if activity.ip_address %}
+                                        | IP: {{ activity.ip_address }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">
+                                        <i class="far fa-clock"></i> {{ activity.timestamp|timesince }} ago
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ activity.timestamp|date:"M d, Y H:i" }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% if activity.changes %}
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#changes-{{ activity.pk }}">
+                                    <i class="fas fa-code"></i> View Changes
+                                </button>
+                                <div class="collapse mt-2" id="changes-{{ activity.pk }}">
+                                    <pre class="bg-light p-2 rounded" style="font-size: 0.85rem;">{{ activity.changes }}</pre>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Activity pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.user %}&user={{ request.GET.user }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.module %}&module={{ request.GET.module }}{% endif %}">
+                                <i class="fas fa-angle-double-left"></i> First
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.user %}&user={{ request.GET.user }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.module %}&module={{ request.GET.module }}{% endif %}">
+                                <i class="fas fa-angle-left"></i> Previous
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.user %}&user={{ request.GET.user }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.module %}&module={{ request.GET.module }}{% endif %}">
+                                Next <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.user %}&user={{ request.GET.user }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.module %}&module={{ request.GET.module }}{% endif %}">
+                                Last <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No activities found</h5>
+                    <p class="text-muted">
+                        {% if request.GET.action_type or request.GET.module or request.GET.user %}
+                        Try adjusting your filters
+                        {% else %}
+                        No user activities have been logged yet
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportActivities() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{% url "analytics:export_report" %}?' + params.toString();
+}
+</script>
+{% endblock %}

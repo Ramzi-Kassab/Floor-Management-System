@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Module Usage - Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .module-card {
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        border-left: 5px solid #667eea;
+    }
+    .module-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .module-icon {
+        font-size: 3rem;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-right: 1.5rem;
+    }
+    .usage-bar {
+        height: 12px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 6px;
+        transition: width 0.5s ease;
+    }
+    .usage-bar-container {
+        background: #e9ecef;
+        border-radius: 6px;
+        height: 12px;
+        margin: 0.5rem 0;
+    }
+    .stat-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        height: 100%;
+    }
+    .stat-box h3 {
+        font-size: 2.5rem;
+        margin: 0.5rem 0;
+        font-weight: bold;
+    }
+    .stat-box p {
+        margin: 0;
+        opacity: 0.9;
+    }
+    .trend-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .trend-up {
+        background: #d4edda;
+        color: #155724;
+    }
+    .trend-down {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .chart-container {
+        position: relative;
+        height: 400px;
+    }
+    .top-users-list {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    .user-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .user-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-cube"></i> Module Usage Analytics</h1>
+            <p class="text-muted mb-0">Detailed statistics on module adoption and engagement</p>
+        </div>
+        <div>
+            <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="btn btn-success" onclick="exportReport()">
+                <i class="fas fa-download"></i> Export Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <i class="fas fa-cubes fa-2x mb-2"></i>
+                <h3>{{ total_modules }}</h3>
+                <p>Total Modules</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <h3>{{ active_modules }}</h3>
+                <p>Active Modules</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                <i class="fas fa-eye fa-2x mb-2"></i>
+                <h3>{{ total_page_views|floatformat:0 }}</h3>
+                <p>Total Page Views</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h3>{{ total_users }}</h3>
+                <p>Active Users</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Range Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Time Period</label>
+                    <select name="period" class="form-select" onchange="this.form.submit()">
+                        <option value="7" {% if period == '7' %}selected{% endif %}>Last 7 days</option>
+                        <option value="30" {% if period == '30' %}selected{% endif %}>Last 30 days</option>
+                        <option value="90" {% if period == '90' %}selected{% endif %}>Last 90 days</option>
+                        <option value="365" {% if period == '365' %}selected{% endif %}>Last year</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sort By</label>
+                    <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="page_views" {% if sort == 'page_views' %}selected{% endif %}>Page Views</option>
+                        <option value="activities" {% if sort == 'activities' %}selected{% endif %}>Activities</option>
+                        <option value="users" {% if sort == 'users' %}selected{% endif %}>Unique Users</option>
+                        <option value="name" {% if sort == 'name' %}selected{% endif %}>Module Name</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Filter</label>
+                    <select name="filter" class="form-select" onchange="this.form.submit()">
+                        <option value="all" {% if filter == 'all' %}selected{% endif %}>All Modules</option>
+                        <option value="active" {% if filter == 'active' %}selected{% endif %}>Active Only</option>
+                        <option value="inactive" {% if filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Module Usage List -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Module Statistics</h5>
+                </div>
+                <div class="card-body">
+                    {% if module_stats %}
+                        {% for module in module_stats %}
+                        <div class="module-card" style="border-left-color: {{ module.color|default:'#667eea' }};">
+                            <div class="d-flex align-items-start">
+                                <div class="module-icon" style="background: linear-gradient(135deg, {{ module.color|default:'#667eea' }} 0%, {{ module.color_dark|default:'#764ba2' }} 100%);">
+                                    <i class="fas {{ module.icon|default:'fa-cube' }}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="mb-1">{{ module.name|title }}</h5>
+                                            <p class="text-muted mb-0">{{ module.description|default:"Module description" }}</p>
+                                        </div>
+                                        <div class="text-end">
+                                            {% if module.trend > 0 %}
+                                            <span class="trend-badge trend-up">
+                                                <i class="fas fa-arrow-up"></i> {{ module.trend }}%
+                                            </span>
+                                            {% elif module.trend < 0 %}
+                                            <span class="trend-badge trend-down">
+                                                <i class="fas fa-arrow-down"></i> {{ module.trend|cut:"-" }}%
+                                            </span>
+                                            {% else %}
+                                            <span class="trend-badge bg-light text-dark">
+                                                <i class="fas fa-minus"></i> 0%
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3 mb-2">
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Page Views</small>
+                                            <strong class="text-primary">{{ module.page_views|floatformat:0 }}</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Activities</small>
+                                            <strong class="text-success">{{ module.activities|floatformat:0 }}</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Unique Users</small>
+                                            <strong class="text-info">{{ module.unique_users }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="usage-bar-container">
+                                        <div class="usage-bar" style="width: {% widthratio module.page_views max_page_views 100 %}%; background: linear-gradient(90deg, {{ module.color|default:'#667eea' }} 0%, {{ module.color_dark|default:'#764ba2' }} 100%);"></div>
+                                    </div>
+
+                                    <div class="mt-2 d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            Avg session: {{ module.avg_time|floatformat:1 }} min
+                                            | Engagement: {{ module.engagement_score|floatformat:0 }}%
+                                        </small>
+                                        <a href="{% url 'analytics:module_usage' %}?module={{ module.name }}&details=1" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-chart-bar"></i> Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Module Data</h5>
+                            <p class="text-muted">No module usage data available for the selected period</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="col-md-4">
+            <!-- Usage Trend Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-area"></i> Usage Trend</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Users -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Top Users</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="top-users-list">
+                        {% if top_users %}
+                            {% for user in top_users %}
+                            <div class="user-item">
+                                <div>
+                                    <strong>{{ user.username }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ user.full_name|default:"No name" }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary">{{ user.activity_count }}</span>
+                                    <br>
+                                    <small class="text-muted">activities</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No user data</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Distribution -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Usage Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Trend Chart
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: {{ trend_labels|safe }},
+        datasets: [{
+            label: 'Total Page Views',
+            data: {{ trend_data|safe }},
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+
+// Distribution Chart
+const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+const distributionChart = new Chart(distributionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for module in module_stats|slice:":5" %}'{{ module.name|title }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for module in module_stats|slice:":5" %}{{ module.page_views }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                'rgb(102, 126, 234)',
+                'rgb(255, 99, 132)',
+                'rgb(54, 162, 235)',
+                'rgb(255, 205, 86)',
+                'rgb(75, 192, 192)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12,
+                    font: {
+                        size: 11
+                    }
+                }
+            }
+        }
+    }
+});
+
+function exportReport() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{% url "analytics:export_report" %}?type=modules&' + params.toString();
+}
+</script>
+{% endblock %}

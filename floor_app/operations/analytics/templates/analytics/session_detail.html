@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Session Details - Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    .info-value {
+        font-weight: 600;
+        color: #212529;
+    }
+    .timeline-item {
+        position: relative;
+        padding-left: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-left: 2px solid #e9ecef;
+    }
+    .timeline-item:last-child {
+        border-left-color: transparent;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -8px;
+        top: 0;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+    }
+    .timeline-dot.view { background: #17a2b8; box-shadow: 0 0 0 2px #17a2b8; }
+    .timeline-dot.create { background: #28a745; box-shadow: 0 0 0 2px #28a745; }
+    .timeline-dot.update { background: #ffc107; box-shadow: 0 0 0 2px #ffc107; }
+    .timeline-dot.delete { background: #dc3545; box-shadow: 0 0 0 2px #dc3545; }
+    .session-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: rgba(255,255,255,0.95);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+    }
+    .stat-card h3 {
+        font-size: 2rem;
+        margin: 0.5rem 0;
+        color: #667eea;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="session-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1>
+                    <i class="fas fa-user-clock"></i> Session Details
+                    {% if object.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Ended</span>
+                    {% endif %}
+                </h1>
+                <p class="mb-0">
+                    <i class="fas fa-user"></i> {{ object.user.get_full_name|default:object.user.username }}
+                    ({{ object.user.username }})
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'analytics:session_list' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> Back to Sessions
+                </a>
+                {% if object.is_active %}
+                <button class="btn btn-danger" onclick="terminateSession()">
+                    <i class="fas fa-sign-out-alt"></i> Terminate Session
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <i class="fas fa-clock fa-2x text-primary"></i>
+                    <h3>{{ object.duration_minutes|floatformat:0 }}</h3>
+                    <p class="mb-0">Minutes</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <i class="fas fa-eye fa-2x text-info"></i>
+                    <h3>{{ page_views_count }}</h3>
+                    <p class="mb-0">Page Views</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <i class="fas fa-mouse-pointer fa-2x text-success"></i>
+                    <h3>{{ activities_count }}</h3>
+                    <p class="mb-0">Activities</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <i class="fas fa-cube fa-2x text-warning"></i>
+                    <h3>{{ unique_modules }}</h3>
+                    <p class="mb-0">Modules Used</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Session Information -->
+        <div class="col-md-6">
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-info-circle"></i> Session Information</h5>
+                <div class="info-row">
+                    <span class="info-label">Session ID</span>
+                    <span class="info-value">{{ object.session_key|truncatechars:20 }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Login Time</span>
+                    <span class="info-value">{{ object.login_time|date:"M d, Y H:i:s" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Last Activity</span>
+                    <span class="info-value">
+                        {{ object.last_activity|date:"M d, Y H:i:s" }}
+                        <small class="text-muted">({{ object.last_activity|timesince }} ago)</small>
+                    </span>
+                </div>
+                {% if not object.is_active %}
+                <div class="info-row">
+                    <span class="info-label">Logout Time</span>
+                    <span class="info-value">{{ object.logout_time|date:"M d, Y H:i:s" }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value">
+                        {% if object.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Ended</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-laptop"></i> Device & Browser</h5>
+                <div class="info-row">
+                    <span class="info-label">IP Address</span>
+                    <span class="info-value">{{ object.ip_address|default:"Unknown" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Device Type</span>
+                    <span class="info-value">
+                        {% if object.device_type == 'mobile' %}
+                        <i class="fas fa-mobile-alt"></i> Mobile
+                        {% elif object.device_type == 'tablet' %}
+                        <i class="fas fa-tablet-alt"></i> Tablet
+                        {% else %}
+                        <i class="fas fa-desktop"></i> Desktop
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Browser</span>
+                    <span class="info-value">{{ object.browser|default:"Unknown" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Operating System</span>
+                    <span class="info-value">{{ object.operating_system|default:"Unknown" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">User Agent</span>
+                    <span class="info-value">
+                        <small class="text-muted">{{ object.user_agent|truncatechars:50|default:"Unknown" }}</small>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Module Usage -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-cube"></i> Module Usage</h5>
+                {% if module_usage %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Views</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for module in module_usage %}
+                            <tr>
+                                <td><strong>{{ module.name|title }}</strong></td>
+                                <td><span class="badge bg-info">{{ module.views }}</span></td>
+                                <td><span class="badge bg-primary">{{ module.actions }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No module usage data</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="col-md-6">
+            <div class="info-card">
+                <h5 class="mb-4"><i class="fas fa-history"></i> Activity Timeline</h5>
+                {% if activities %}
+                <div class="timeline">
+                    {% for activity in activities %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot {{ activity.action_type|lower }}"></div>
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong>
+                                {% if activity.action_type == 'CREATE' %}
+                                <i class="fas fa-plus text-success"></i> Created
+                                {% elif activity.action_type == 'UPDATE' %}
+                                <i class="fas fa-edit text-warning"></i> Updated
+                                {% elif activity.action_type == 'DELETE' %}
+                                <i class="fas fa-trash text-danger"></i> Deleted
+                                {% else %}
+                                <i class="fas fa-eye text-info"></i> Viewed
+                                {% endif %}
+                                {{ activity.model_name|default:"item" }}
+                            </strong>
+                            <small class="text-muted">{{ activity.timestamp|time:"H:i:s" }}</small>
+                        </div>
+                        <p class="mb-1 text-muted">
+                            {{ activity.description|default:"No description" }}
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-cube"></i> {{ activity.module|default:"core"|title }}
+                            {% if activity.object_id %}| ID: {{ activity.object_id }}{% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if activities.count > 20 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'analytics:activity_list' %}?session={{ object.pk }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-list"></i> View All {{ activities.count }} Activities
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                    <p class="text-muted">No activities recorded</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Page Views Chart -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-chart-line"></i> Activity Over Time</h5>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Activity Chart
+const ctx = document.getElementById('activityChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ hourly_labels|safe }},
+        datasets: [{
+            label: 'Activities per Hour',
+            data: {{ hourly_data|safe }},
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+
+function terminateSession() {
+    if (confirm('Are you sure you want to terminate this session?')) {
+        fetch('{{ object.pk }}/terminate/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Session terminated successfully');
+                location.reload();
+            } else {
+                alert('Failed to terminate session');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
