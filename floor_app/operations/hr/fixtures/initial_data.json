@@ -1,0 +1,251 @@
+[
+  {
+    "model": "hr.department",
+    "pk": 1,
+    "fields": {
+      "code": "HR",
+      "name": "Human Resources",
+      "description": "Human Resources Department - Manages employee relations, recruitment, and HR policies",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 2,
+    "fields": {
+      "code": "IT",
+      "name": "Information Technology",
+      "description": "IT Department - Manages technology infrastructure and systems",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 3,
+    "fields": {
+      "code": "FIN",
+      "name": "Finance",
+      "description": "Finance Department - Manages financial operations and accounting",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 4,
+    "fields": {
+      "code": "OPS",
+      "name": "Operations",
+      "description": "Operations Department - Manages day-to-day business operations",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.department",
+    "pk": 5,
+    "fields": {
+      "code": "SALES",
+      "name": "Sales & Marketing",
+      "description": "Sales and Marketing Department - Customer relations and business development",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.position",
+    "pk": 1,
+    "fields": {
+      "code": "CEO",
+      "title": "Chief Executive Officer",
+      "description": "Executive leadership position",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.position",
+    "pk": 2,
+    "fields": {
+      "code": "MGR",
+      "title": "Manager",
+      "description": "Department manager position",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.position",
+    "pk": 3,
+    "fields": {
+      "code": "SUPV",
+      "title": "Supervisor",
+      "description": "Team supervisor position",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.position",
+    "pk": 4,
+    "fields": {
+      "code": "LEAD",
+      "title": "Team Lead",
+      "description": "Team lead position",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.position",
+    "pk": 5,
+    "fields": {
+      "code": "SR",
+      "title": "Senior Specialist",
+      "description": "Senior level specialist",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.position",
+    "pk": 6,
+    "fields": {
+      "code": "SPEC",
+      "title": "Specialist",
+      "description": "Mid-level specialist",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.position",
+    "pk": 7,
+    "fields": {
+      "code": "JR",
+      "title": "Junior Specialist",
+      "description": "Junior level specialist",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.leavetype",
+    "pk": 1,
+    "fields": {
+      "code": "ANNUAL",
+      "name": "Annual Leave",
+      "description": "Standard annual vacation leave",
+      "days_per_year": 20,
+      "requires_approval": true,
+      "can_be_carried_forward": true,
+      "max_consecutive_days": 15,
+      "color": "#28a745",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.leavetype",
+    "pk": 2,
+    "fields": {
+      "code": "SICK",
+      "name": "Sick Leave",
+      "description": "Medical/illness leave",
+      "days_per_year": 10,
+      "requires_approval": false,
+      "can_be_carried_forward": false,
+      "max_consecutive_days": 5,
+      "color": "#dc3545",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.leavetype",
+    "pk": 3,
+    "fields": {
+      "code": "PERSONAL",
+      "name": "Personal Leave",
+      "description": "Personal matters leave",
+      "days_per_year": 5,
+      "requires_approval": true,
+      "can_be_carried_forward": false,
+      "max_consecutive_days": 3,
+      "color": "#ffc107",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.leavetype",
+    "pk": 4,
+    "fields": {
+      "code": "MATERNITY",
+      "name": "Maternity Leave",
+      "description": "Maternity leave for mothers",
+      "days_per_year": 90,
+      "requires_approval": true,
+      "can_be_carried_forward": false,
+      "max_consecutive_days": 90,
+      "color": "#e83e8c",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.leavetype",
+    "pk": 5,
+    "fields": {
+      "code": "PATERNITY",
+      "name": "Paternity Leave",
+      "description": "Paternity leave for fathers",
+      "days_per_year": 10,
+      "requires_approval": true,
+      "can_be_carried_forward": false,
+      "max_consecutive_days": 10,
+      "color": "#17a2b8",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.leavetype",
+    "pk": 6,
+    "fields": {
+      "code": "UNPAID",
+      "name": "Unpaid Leave",
+      "description": "Leave without pay",
+      "days_per_year": 0,
+      "requires_approval": true,
+      "can_be_carried_forward": false,
+      "max_consecutive_days": 30,
+      "color": "#6c757d",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.shift",
+    "pk": 1,
+    "fields": {
+      "code": "DAY",
+      "name": "Day Shift",
+      "description": "Regular day shift",
+      "start_time": "08:00:00",
+      "end_time": "17:00:00",
+      "color": "#007bff",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.shift",
+    "pk": 2,
+    "fields": {
+      "code": "NIGHT",
+      "name": "Night Shift",
+      "description": "Night shift",
+      "start_time": "20:00:00",
+      "end_time": "05:00:00",
+      "color": "#6610f2",
+      "is_active": true
+    }
+  },
+  {
+    "model": "hr.shift",
+    "pk": 3,
+    "fields": {
+      "code": "SWING",
+      "name": "Swing Shift",
+      "description": "Afternoon/evening shift",
+      "start_time": "14:00:00",
+      "end_time": "23:00:00",
+      "color": "#fd7e14",
+      "is_active": true
+    }
+  }
+]

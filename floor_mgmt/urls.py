@@ -117,6 +117,10 @@ urlpatterns = [
     path("retrieval/", include(("floor_app.operations.retrieval.urls", "retrieval"), namespace="retrieval")),
 
     # === REST API Endpoints ===
+    # HR API
+    path("api/hr/", include("floor_app.operations.hr.api.urls")),
+
+    # Other APIs
     path("api/hoc/", include("floor_app.operations.hoc.api.urls")),
     path("api/journey-management/", include("floor_app.operations.journey_management.api.urls")),
     path("api/hr-assets/", include("floor_app.operations.hr_assets.api.urls")),
