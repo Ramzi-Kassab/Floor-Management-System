@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Remove indexes and constraints first before removing the fields they reference
+        # Remove all indexes and constraints first before removing the fields they reference
         migrations.RemoveIndex(
             model_name='bitdesign',
             name='ix_bd_level_size',
@@ -19,6 +19,10 @@ class Migration(migrations.Migration):
         migrations.RemoveIndex(
             model_name='bitdesignrevision',
             name='ix_bdr_design_active',
+        ),
+        migrations.RemoveIndex(
+            model_name='bitdesignrevision',
+            name='ix_bdr_design_type',
         ),
         migrations.RemoveConstraint(
             model_name='bitdesignrevision',
