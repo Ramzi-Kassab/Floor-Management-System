@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Wells - Sales{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-map-marker-alt"></i> Wells</h1>
+            <p class="text-muted mb-0">Manage drilling wells and locations</p>
+        </div>
+        <div>
+            <a href="{% url 'sales:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+            <a href="{% url 'sales:well_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Well
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search wells..." value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="rig" class="form-select">
+                        <option value="">All Rigs</option>
+                        {% for rig in rigs %}
+                        <option value="{{ rig.pk }}">{{ rig.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wells Table -->
+    {% if object_list %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Well Name</th>
+                            <th>Rig</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Depth (ft)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for well in object_list %}
+                        <tr>
+                            <td>
+                                <strong>{{ well.name }}</strong>
+                                <br><small class="text-muted">{{ well.well_number|default:"No number" }}</small>
+                            </td>
+                            <td>{{ well.rig.name|default:"Not assigned" }}</td>
+                            <td>{{ well.location|default:"Unknown" }}</td>
+                            <td>
+                                <span class="badge bg-{% if well.status == 'active' %}success{% elif well.status == 'completed' %}info{% else %}secondary{% endif %}">
+                                    {{ well.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ well.depth|default:"-" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'sales:well_detail' well.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'sales:well_update' well.pk %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-map-marker-alt fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">No Wells Found</h5>
+            <a href="{% url 'sales:well_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add First Well
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

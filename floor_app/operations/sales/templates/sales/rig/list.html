@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rigs - Sales{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rig-card {
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 5px solid #667eea;
+        transition: all 0.3s;
+    }
+    .rig-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .rig-icon {
+        font-size: 3rem;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-right: 1.5rem;
+    }
+    .stat-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin: 0.25rem;
+    }
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+        font-weight: 600;
+    }
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-oil-well"></i> Rigs</h1>
+            <p class="text-muted mb-0">Manage drilling rigs and equipment</p>
+        </div>
+        <div>
+            <a href="{% url 'sales:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="{% url 'sales:rig_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Rig
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search rigs..." value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="customer" class="form-select">
+                        <option value="">All Customers</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.pk }}" {% if request.GET.customer == customer.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ customer.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rigs List -->
+    {% if object_list %}
+        <div class="row">
+            {% for rig in object_list %}
+            <div class="col-md-6 col-lg-4">
+                <div class="rig-card">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="rig-icon">
+                            <i class="fas fa-oil-well"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">{{ rig.name }}</h5>
+                            <p class="text-muted mb-0">{{ rig.rig_number|default:"No number" }}</p>
+                        </div>
+                        <span class="status-{{ rig.status|lower }}">
+                            {{ rig.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Customer</small>
+                                <strong>{{ rig.customer.name|default:"Not assigned" }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Location</small>
+                                <strong>{{ rig.location|default:"Unknown" }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Type</small>
+                                <strong>{{ rig.rig_type|default:"Not specified" }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Active Wells</small>
+                                <strong>{{ rig.active_wells_count|default:0 }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'sales:rig_detail' rig.pk %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                        <div class="btn-group">
+                            <a href="{% url 'sales:rig_update' rig.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{% url 'sales:well_create' %}?rig={{ rig.pk }}" class="btn btn-outline-success">
+                                <i class="fas fa-plus"></i> Add Well
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Rig pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-oil-well fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Rigs Found</h5>
+                <p class="text-muted mb-3">Start by adding your first rig</p>
+                <a href="{% url 'sales:rig_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add First Rig
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

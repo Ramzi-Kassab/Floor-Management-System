@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ object.order_number }} - Sales{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h1><i class="fas fa-file-invoice"></i> Order #{{ object.order_number }}</h1>
+                    <p class="mb-0">{{ object.customer.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'sales:order_list' %}" class="btn btn-light">Back</a>
+                    <a href="{% url 'sales:order_update' object.pk %}" class="btn btn-warning">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 200px;">Order Number:</th>
+                            <td><strong>{{ object.order_number }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Customer:</th>
+                            <td><a href="{% url 'sales:customer_detail' object.customer.pk %}">{{ object.customer.name }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{% if object.status == 'delivered' %}success{% elif object.status == 'cancelled' %}danger{% else %}primary{% endif %}">
+                                    {{ object.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Order Date:</th>
+                            <td>{{ object.order_date|date:"M d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Amount:</th>
+                            <td><strong>${{ object.total_amount|floatformat:2 }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Expected Delivery:</th>
+                            <td>{{ object.expected_delivery_date|date:"M d, Y"|default:"Not set" }}</td>
+                        </tr>
+                        {% if object.notes %}
+                        <tr>
+                            <th>Notes:</th>
+                            <td>{{ object.notes }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Order Items</h5>
+                </div>
+                <div class="card-body">
+                    {% if object.items.all %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in object.items.all %}
+                                <tr>
+                                    <td>{{ item.product_name }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>${{ item.unit_price|floatformat:2 }}</td>
+                                    <td>${{ item.total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No items in this order</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Created:</strong> {{ object.created_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>Updated:</strong> {{ object.updated_at|date:"M d, Y H:i" }}</p>
+                    {% if object.created_by %}
+                    <p><strong>Created By:</strong> {{ object.created_by.get_full_name|default:object.created_by.username }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

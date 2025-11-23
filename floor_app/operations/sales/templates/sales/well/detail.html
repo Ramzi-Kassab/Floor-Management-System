@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.name }} - Well Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1><i class="fas fa-map-marker-alt"></i> {{ object.name }}</h1>
+                    <p class="mb-0">{{ object.well_number|default:"No well number" }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'sales:well_list' %}" class="btn btn-light">Back</a>
+                    <a href="{% url 'sales:well_update' object.pk %}" class="btn btn-warning">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Well Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 200px;">Name:</th>
+                            <td>{{ object.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Well Number:</th>
+                            <td>{{ object.well_number|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Rig:</th>
+                            <td><a href="{% url 'sales:rig_detail' object.rig.pk %}">{{ object.rig.name }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Location:</th>
+                            <td>{{ object.location|default:"Unknown" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Depth:</th>
+                            <td>{{ object.depth|default:"-" }} ft</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{% if object.status == 'active' %}success{% elif object.status == 'completed' %}info{% else %}secondary{% endif %}">
+                                    {{ object.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% if object.description %}
+                        <tr>
+                            <th>Description:</th>
+                            <td>{{ object.description }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            <!-- Drilling Runs -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Drilling Runs</h5>
+                </div>
+                <div class="card-body">
+                    {% if object.drilling_runs.all %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Run Number</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for run in object.drilling_runs.all %}
+                                <tr>
+                                    <td>{{ run.run_number }}</td>
+                                    <td>{{ run.start_date|date:"M d, Y" }}</td>
+                                    <td><span class="badge bg-info">{{ run.status }}</span></td>
+                                    <td>
+                                        <a href="{% url 'sales:drilling_detail' run.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No drilling runs recorded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Runs:</strong> <span class="badge bg-primary">{{ object.drilling_runs.count }}</span></p>
+                    <p><strong>Created:</strong> {{ object.created_at|date:"M d, Y" }}</p>
+                    <p><strong>Updated:</strong> {{ object.updated_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

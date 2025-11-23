@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Sales Order{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-invoice"></i>
+                        {% if object %}Edit Order{% else %}Create Sales Order{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Order Number *</label>
+                                {{ form.order_number }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status *</label>
+                                {{ form.status }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Customer *</label>
+                                {{ form.customer }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Order Date</label>
+                                {{ form.order_date }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Total Amount</label>
+                                {{ form.total_amount }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Expected Delivery</label>
+                                {{ form.expected_delivery_date }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'sales:order_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {% if object %}Update{% else %}Create{% endif %} Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

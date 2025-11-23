@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Well{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {% if object %}Edit Well: {{ object.name }}{% else %}Create New Well{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Well Name *</label>
+                                {{ form.name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Well Number</label>
+                                {{ form.well_number }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Rig *</label>
+                                {{ form.rig }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                {{ form.status }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location</label>
+                                {{ form.location }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Depth (ft)</label>
+                                {{ form.depth }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'sales:well_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update{% else %}Create{% endif %} Well
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

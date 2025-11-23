@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.name }} - Opportunity Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h1><i class="fas fa-bullseye"></i> {{ object.name }}</h1>
+                    <p class="mb-0">{{ object.customer.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'sales:opportunity_list' %}" class="btn btn-light">Back</a>
+                    <a href="{% url 'sales:opportunity_update' object.pk %}" class="btn btn-warning">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Opportunity Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 200px;">Name:</th>
+                            <td>{{ object.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Customer:</th>
+                            <td><a href="{% url 'sales:customer_detail' object.customer.pk %}">{{ object.customer.name }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Stage:</th>
+                            <td>
+                                <span class="badge bg-{% if object.stage == 'won' %}success{% elif object.stage == 'lost' %}danger{% else %}primary{% endif %}">
+                                    {{ object.get_stage_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Expected Revenue:</th>
+                            <td>${{ object.expected_revenue|floatformat:2|default:"0.00" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Probability:</th>
+                            <td>{{ object.probability|default:0 }}%</td>
+                        </tr>
+                        <tr>
+                            <th>Expected Close Date:</th>
+                            <td>{{ object.expected_close_date|date:"M d, Y"|default:"Not set" }}</td>
+                        </tr>
+                        {% if object.description %}
+                        <tr>
+                            <th>Description:</th>
+                            <td>{{ object.description }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Created:</strong> {{ object.created_at|date:"M d, Y" }}</p>
+                    <p><strong>Updated:</strong> {{ object.updated_at|date:"M d, Y" }}</p>
+                    {% if object.created_by %}
+                    <p><strong>Created By:</strong> {{ object.created_by.get_full_name|default:object.created_by.username }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
