@@ -130,8 +130,8 @@ urlpatterns = [
     # Core System API (Audit, Activity, Monitoring, Notifications)
     path("api/core/", include("floor_app.core.api.urls")),
 
-    # HR API
-    path("api/hr/", include("floor_app.operations.hr.api.urls")),
+    # HR API - TEMPORARILY DISABLED DUE TO IMPORT ERRORS
+    # path("api/hr/", include("floor_app.operations.hr.api.urls")),
 
     # Other APIs
     path("api/hoc/", include("floor_app.operations.hoc.api.urls")),

@@ -17,10 +17,8 @@ class UserThemePreferenceForm(forms.ModelForm):
             'custom_text_color',
             'custom_primary_color',
             'font_size',
-            'dyslexia_friendly',
             'high_contrast',
             'reduce_motion',
-            'screen_reader_optimized',
             'sidebar_collapsed',
             'compact_mode',
         ]
