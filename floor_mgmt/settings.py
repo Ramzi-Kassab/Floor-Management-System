@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     # Core foundation & skeleton
     'core',  # Foundation models (renamed concept as core_foundation)
+    'floor_app.core.apps.CoreConfig',  # Audit logging, monitoring, permissions
     'skeleton.apps.SkeletonConfig',  # Global auth, templates, dashboard
     # Main app
     'floor_app.apps.FloorAppConfig',
@@ -62,6 +63,9 @@ INSTALLED_APPS = [
     'floor_app.operations.analytics.apps.AnalyticsConfig',
     # Third-party
     'widget_tweaks',
+    'django_filters',
+    'drf_spectacular',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -74,6 +78,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'floor_app.middleware.CurrentRequestMiddleware',
     'floor_app.operations.analytics.middleware.AnalyticsMiddleware',
+    # Core middleware for audit and monitoring
+    'floor_app.core.middleware.ActivityTrackingMiddleware',
+    'floor_app.core.middleware.AuditTrailMiddleware',
+    'floor_app.core.middleware.RequestTimingMiddleware',
+    'floor_app.core.middleware.ErrorMonitoringMiddleware',
 ]
 
 if RUNNING_TESTS:
@@ -235,17 +244,152 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
     'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
     'DATE_FORMAT': '%Y-%m-%d',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+# ============================================================================
+# EMAIL CONFIGURATION
+# ============================================================================
+
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = config('EMAIL_HOST', default='localhost')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL',
+    default='Floor Management System <noreply@example.com>'
+)
+SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
+
+# ============================================================================
+# CELERY CONFIGURATION
+# ============================================================================
+
+# Celery broker URL (Redis recommended for production)
+CELERY_BROKER_URL = config(
+    'CELERY_BROKER_URL',
+    default='redis://localhost:6379/0'
+)
+
+# Celery result backend
+CELERY_RESULT_BACKEND = config(
+    'CELERY_RESULT_BACKEND',
+    default='redis://localhost:6379/0'
+)
+
+# Celery task settings
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Celery task routing
+CELERY_TASK_ROUTES = {
+    'floor_app.core.tasks.*': {'queue': 'default'},
+    'floor_app.operations.hr.tasks.*': {'queue': 'hr'},
+}
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'floor_mgmt.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'error.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'floor_app': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+import os
+os.makedirs(BASE_DIR / 'logs', exist_ok=True)
+
+# ============================================================================
+# SITE CONFIGURATION
+# ============================================================================
+
+SITE_URL = config('SITE_URL', default='http://localhost:8000')
+SITE_NAME = 'Floor Management System'
 
