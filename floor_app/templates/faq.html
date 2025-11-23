@@ -1,0 +1,882 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Frequently Asked Questions - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .faq-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .faq-search {
+        max-width: 600px;
+        margin: 2rem auto 0;
+        position: relative;
+    }
+
+    .faq-search input {
+        border-radius: 50px;
+        padding: 1rem 1.5rem;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .category-tabs {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .category-tab {
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .category-tab:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .category-tab.active {
+        background: var(--primary-gradient);
+        color: white;
+        border-color: transparent;
+    }
+
+    .faq-section {
+        margin-bottom: 3rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        margin-right: 1rem;
+    }
+
+    .icon-general { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .icon-production { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .icon-quality { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .icon-inventory { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+    .icon-technical { background: linear-gradient(135deg, #fa709a, #fee140); }
+
+    .faq-accordion {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .faq-item {
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+
+    .faq-question {
+        padding: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .faq-question:hover {
+        background: #f9fafb;
+        color: #667eea;
+    }
+
+    .faq-question.active {
+        background: #f0f4ff;
+        color: #667eea;
+    }
+
+    .faq-icon {
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+        color: #667eea;
+    }
+
+    .faq-question.active .faq-icon {
+        transform: rotate(180deg);
+    }
+
+    .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        padding: 0 1.5rem;
+    }
+
+    .faq-answer.active {
+        max-height: 1000px;
+        padding: 0 1.5rem 1.5rem;
+    }
+
+    .faq-answer-content {
+        color: #6b7280;
+        line-height: 1.8;
+    }
+
+    .faq-answer-content code {
+        background: #f3f4f6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        color: #ef4444;
+        font-family: 'Courier New', monospace;
+    }
+
+    .faq-answer-content ul {
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+    }
+
+    .faq-answer-content li {
+        margin: 0.5rem 0;
+    }
+
+    .helpful-box {
+        background: #f0f4ff;
+        border: 2px solid #667eea;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 3rem;
+    }
+
+    .helpful-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .helpful-buttons button {
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .helpful-buttons button:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .popular-badge {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
+
+    .related-links {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .related-links h6 {
+        color: #f59e0b;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .related-links a {
+        display: block;
+        color: #374151;
+        text-decoration: none;
+        padding: 0.25rem 0;
+    }
+
+    .related-links a:hover {
+        color: #f59e0b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="faq-header">
+    <div class="container">
+        <h1 class="text-center"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h1>
+        <p class="text-center lead mb-0">Find answers to common questions</p>
+
+        <div class="faq-search">
+            <input type="text" class="form-control" id="faqSearch" placeholder="Search FAQs...">
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">150+</div>
+            <div class="stat-label">Questions Answered</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">95%</div>
+            <div class="stat-label">Resolution Rate</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">24/7</div>
+            <div class="stat-label">Support Available</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">&lt;2h</div>
+            <div class="stat-label">Avg Response Time</div>
+        </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="category-tabs">
+        <button class="category-tab active" data-category="all">All Questions</button>
+        <button class="category-tab" data-category="general">General</button>
+        <button class="category-tab" data-category="production">Production</button>
+        <button class="category-tab" data-category="quality">Quality</button>
+        <button class="category-tab" data-category="inventory">Inventory</button>
+        <button class="category-tab" data-category="technical">Technical</button>
+    </div>
+
+    <!-- General Questions -->
+    <div class="faq-section" data-category="general">
+        <div class="section-header">
+            <div class="section-icon icon-general">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div>
+                <h3>General Questions</h3>
+                <p class="text-muted mb-0">Common questions about the system</p>
+            </div>
+        </div>
+
+        <div class="faq-accordion">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>
+                        What is Floor Management System?
+                        <span class="popular-badge">POPULAR</span>
+                    </span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Floor Management System is a comprehensive enterprise resource planning (ERP) solution designed specifically for manufacturing operations. It integrates production planning, quality control, inventory management, HR, and analytics into a single unified platform.</p>
+                        <p>Key features include:</p>
+                        <ul>
+                            <li>Real-time production tracking and scheduling</li>
+                            <li>Quality inspection and defect management</li>
+                            <li>Inventory control and warehouse management</li>
+                            <li>Employee management and payroll</li>
+                            <li>Advanced analytics and reporting</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How do I get started with the system?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Getting started is easy! Follow these steps:</p>
+                        <ol>
+                            <li>Complete the onboarding tutorial when you first log in</li>
+                            <li>Set up your user profile and preferences</li>
+                            <li>Explore the dashboard and familiarize yourself with the navigation</li>
+                            <li>Watch our video tutorials for your primary module</li>
+                            <li>Start with simple tasks and gradually explore advanced features</li>
+                        </ol>
+                        <div class="related-links">
+                            <h6><i class="fas fa-link"></i> Related Resources</h6>
+                            <a href="#"><i class="fas fa-book"></i> Quick Start Guide</a>
+                            <a href="#"><i class="fas fa-video"></i> Introduction Video</a>
+                            <a href="#"><i class="fas fa-graduation-cap"></i> Training Materials</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>What are the system requirements?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>The system is web-based and works on most modern browsers:</p>
+                        <ul>
+                            <li><strong>Browsers:</strong> Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</li>
+                            <li><strong>Screen Resolution:</strong> Minimum 1280x720, recommended 1920x1080</li>
+                            <li><strong>Internet:</strong> Broadband connection (minimum 5 Mbps)</li>
+                            <li><strong>Mobile:</strong> iOS 13+ or Android 8+ for mobile app</li>
+                        </ul>
+                        <p>No installation required - access from anywhere with an internet connection!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Is my data secure?<span class="popular-badge">POPULAR</span></span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Absolutely! We take security very seriously:</p>
+                        <ul>
+                            <li><strong>Encryption:</strong> All data is encrypted in transit (SSL/TLS) and at rest (AES-256)</li>
+                            <li><strong>Authentication:</strong> Two-factor authentication (2FA) available</li>
+                            <li><strong>Access Control:</strong> Role-based permissions and audit logging</li>
+                            <li><strong>Backups:</strong> Daily automated backups with 30-day retention</li>
+                            <li><strong>Compliance:</strong> ISO 27001, SOC 2 certified</li>
+                            <li><strong>Monitoring:</strong> 24/7 security monitoring and intrusion detection</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Can I customize my dashboard?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Yes! The dashboard is fully customizable:</p>
+                        <ul>
+                            <li>Rearrange widgets by drag-and-drop</li>
+                            <li>Add or remove widgets based on your needs</li>
+                            <li>Configure widget settings and data sources</li>
+                            <li>Save multiple dashboard layouts</li>
+                            <li>Set different dashboards for different roles</li>
+                        </ul>
+                        <p>To customize: Click <code>Settings</code> → <code>Dashboard Preferences</code> → <code>Customize Layout</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Production Questions -->
+    <div class="faq-section" data-category="production">
+        <div class="section-header">
+            <div class="section-icon icon-production">
+                <i class="fas fa-industry"></i>
+            </div>
+            <div>
+                <h3>Production Management</h3>
+                <p class="text-muted mb-0">Questions about production operations</p>
+            </div>
+        </div>
+
+        <div class="faq-accordion">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How do I create a production job?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Creating a production job is straightforward:</p>
+                        <ol>
+                            <li>Navigate to <code>Production</code> → <code>Jobs</code> → <code>New Job</code></li>
+                            <li>Enter job details (material, quantity, due date)</li>
+                            <li>Select work center and routing</li>
+                            <li>Assign operators if needed</li>
+                            <li>Click <code>Create Job</code></li>
+                        </ol>
+                        <p>The job will be automatically scheduled based on work center capacity and material availability.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Can I schedule jobs in advance?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Yes! The system supports advanced scheduling:</p>
+                        <ul>
+                            <li>Schedule jobs days, weeks, or months in advance</li>
+                            <li>Use the production planner to visualize schedules</li>
+                            <li>Set recurring jobs for regular production runs</li>
+                            <li>Automatic capacity planning and conflict detection</li>
+                            <li>Drag-and-drop rescheduling</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How do I track job progress?<span class="popular-badge">POPULAR</span></span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Multiple ways to track job progress:</p>
+                        <ul>
+                            <li><strong>Dashboard:</strong> Real-time job status on your dashboard</li>
+                            <li><strong>Job List:</strong> Filter and sort by status, work center, date</li>
+                            <li><strong>Gantt Chart:</strong> Visual timeline of all jobs</li>
+                            <li><strong>Mobile App:</strong> Track jobs on the floor</li>
+                            <li><strong>Notifications:</strong> Get alerts for status changes</li>
+                        </ul>
+                        <p>Job statuses: Scheduled → In Progress → Quality Check → Completed</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>What if a work center goes down?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>The system helps manage disruptions:</p>
+                        <ol>
+                            <li>Mark the work center as "Down" in the system</li>
+                            <li>System automatically flags affected jobs</li>
+                            <li>Use the rescheduling tool to reassign jobs</li>
+                            <li>Track downtime and reasons for analytics</li>
+                            <li>Receive alerts for critical impacts</li>
+                        </ol>
+                        <p>Go to <code>Production</code> → <code>Work Centers</code> → Select center → <code>Mark as Down</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Questions -->
+    <div class="faq-section" data-category="quality">
+        <div class="section-header">
+            <div class="section-icon icon-quality">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <h3>Quality Control</h3>
+                <p class="text-muted mb-0">Quality inspection and defect management</p>
+            </div>
+        </div>
+
+        <div class="faq-accordion">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How do I perform a quality inspection?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Quality inspections are easy to perform:</p>
+                        <ol>
+                            <li>Go to <code>Quality</code> → <code>Inspections</code> → <code>Start Inspection</code></li>
+                            <li>Select the job or batch to inspect</li>
+                            <li>Choose inspection template or create custom</li>
+                            <li>Complete inspection checklist</li>
+                            <li>Record measurements and observations</li>
+                            <li>Upload photos if needed</li>
+                            <li>Submit results (Pass/Fail/Conditional)</li>
+                        </ol>
+                        <p>Failed inspections automatically create defect records.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Can I create custom inspection templates?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Yes! Create inspection templates tailored to your needs:</p>
+                        <ul>
+                            <li>Define inspection points and criteria</li>
+                            <li>Set acceptable tolerances and limits</li>
+                            <li>Add checkboxes, measurements, or text fields</li>
+                            <li>Include photos or document attachments</li>
+                            <li>Create templates for different materials or processes</li>
+                            <li>Share templates across your organization</li>
+                        </ul>
+                        <p>Path: <code>Quality</code> → <code>Settings</code> → <code>Inspection Templates</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How are defects tracked?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Comprehensive defect tracking system:</p>
+                        <ul>
+                            <li>Automatic defect creation from failed inspections</li>
+                            <li>Manual defect reporting by operators</li>
+                            <li>Categorization by type, severity, and root cause</li>
+                            <li>Assignment to responsible persons</li>
+                            <li>Status tracking (Open → In Review → Resolved → Closed)</li>
+                            <li>Corrective action planning and verification</li>
+                            <li>Trend analysis and reporting</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Questions -->
+    <div class="faq-section" data-category="inventory">
+        <div class="section-header">
+            <div class="section-icon icon-inventory">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div>
+                <h3>Inventory Management</h3>
+                <p class="text-muted mb-0">Stock control and material movements</p>
+            </div>
+        </div>
+
+        <div class="faq-accordion">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How do I check current stock levels?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Multiple ways to view inventory:</p>
+                        <ul>
+                            <li><strong>Dashboard Widget:</strong> Quick stock overview on main dashboard</li>
+                            <li><strong>Inventory List:</strong> <code>Inventory</code> → <code>Stock Overview</code></li>
+                            <li><strong>Material Detail:</strong> Click any material for detailed info</li>
+                            <li><strong>Location View:</strong> See stock by warehouse location</li>
+                            <li><strong>Reports:</strong> Generate stock reports by various criteria</li>
+                        </ul>
+                        <p>Stock levels update in real-time as transactions occur.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How do I adjust inventory?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Inventory adjustments for corrections:</p>
+                        <ol>
+                            <li>Navigate to <code>Inventory</code> → <code>Adjustments</code></li>
+                            <li>Select material and location</li>
+                            <li>Enter new quantity or adjustment amount</li>
+                            <li>Provide reason (cycle count, damage, etc.)</li>
+                            <li>Add notes if needed</li>
+                            <li>Submit adjustment</li>
+                        </ol>
+                        <p>All adjustments are logged in the audit trail for traceability.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>What are reorder points?<span class="popular-badge">POPULAR</span></span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Reorder points trigger automatic purchase suggestions:</p>
+                        <ul>
+                            <li>Set minimum stock level for each material</li>
+                            <li>System alerts when stock falls below this level</li>
+                            <li>Automatic purchase requisition creation (optional)</li>
+                            <li>Consider lead time in calculations</li>
+                            <li>Safety stock buffer recommendations</li>
+                        </ul>
+                        <p>Configure: <code>Inventory</code> → <code>Materials</code> → Select material → <code>Reorder Settings</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Questions -->
+    <div class="faq-section" data-category="technical">
+        <div class="section-header">
+            <div class="section-icon icon-technical">
+                <i class="fas fa-cog"></i>
+            </div>
+            <div>
+                <h3>Technical Support</h3>
+                <p class="text-muted mb-0">Troubleshooting and technical issues</p>
+            </div>
+        </div>
+
+        <div class="faq-accordion">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>I forgot my password. What should I do?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Password reset is simple:</p>
+                        <ol>
+                            <li>Click "Forgot Password?" on the login page</li>
+                            <li>Enter your email address</li>
+                            <li>Check your email for reset link (arrives in 1-2 minutes)</li>
+                            <li>Click link and set new password</li>
+                            <li>Log in with new password</li>
+                        </ol>
+                        <p>If you don't receive the email, check spam folder or contact your administrator.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>The system is running slowly. What can I do?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Try these troubleshooting steps:</p>
+                        <ul>
+                            <li>Clear browser cache and cookies</li>
+                            <li>Close unnecessary browser tabs</li>
+                            <li>Check internet connection speed</li>
+                            <li>Update to latest browser version</li>
+                            <li>Disable browser extensions temporarily</li>
+                            <li>Try a different browser</li>
+                        </ul>
+                        <p>If issues persist, contact support with details about your setup.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Can I access the system on mobile?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Yes! Multiple mobile options:</p>
+                        <ul>
+                            <li><strong>Mobile Web:</strong> Access via mobile browser (responsive design)</li>
+                            <li><strong>iOS App:</strong> Download from Apple App Store</li>
+                            <li><strong>Android App:</strong> Download from Google Play Store</li>
+                        </ul>
+                        <p>Mobile apps support key functions like job tracking, inspections, and inventory scanning.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>How do I export data?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Data export options:</p>
+                        <ul>
+                            <li><strong>Quick Export:</strong> Click export button on most lists (CSV, Excel)</li>
+                            <li><strong>Report Builder:</strong> Create custom reports with export</li>
+                            <li><strong>Scheduled Exports:</strong> Automate regular data exports</li>
+                            <li><strong>API Access:</strong> Programmatic data access for integrations</li>
+                        </ul>
+                        <p>Formats supported: CSV, Excel, PDF, JSON</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Still Need Help Box -->
+    <div class="helpful-box">
+        <h4><i class="fas fa-life-ring"></i> Still Need Help?</h4>
+        <p class="mb-0">Can't find what you're looking for? Our support team is here to help.</p>
+        <div class="helpful-buttons">
+            <button onclick="location.href='/help-center'">
+                <i class="fas fa-book"></i> Visit Help Center
+            </button>
+            <button onclick="location.href='mailto:support@floormanagement.com'">
+                <i class="fas fa-envelope"></i> Contact Support
+            </button>
+            <button onclick="startLiveChat()">
+                <i class="fas fa-comments"></i> Live Chat
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleFAQ(element) {
+        const answer = element.nextElementSibling;
+        const allQuestions = document.querySelectorAll('.faq-question');
+        const allAnswers = document.querySelectorAll('.faq-answer');
+
+        // Close all other FAQs
+        allQuestions.forEach(q => {
+            if (q !== element) {
+                q.classList.remove('active');
+            }
+        });
+        allAnswers.forEach(a => {
+            if (a !== answer) {
+                a.classList.remove('active');
+            }
+        });
+
+        // Toggle current FAQ
+        element.classList.toggle('active');
+        answer.classList.toggle('active');
+    }
+
+    // Category filtering
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+
+            // Update active tab
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            // Show/hide sections
+            document.querySelectorAll('.faq-section').forEach(section => {
+                if (category === 'all' || section.getAttribute('data-category') === category) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('faqSearch');
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+
+        document.querySelectorAll('.faq-item').forEach(item => {
+            const question = item.querySelector('.faq-question').textContent.toLowerCase();
+            const answer = item.querySelector('.faq-answer-content').textContent.toLowerCase();
+
+            if (question.includes(query) || answer.includes(query)) {
+                item.style.display = 'block';
+                if (query.length > 2) {
+                    // Highlight matching text
+                    const questionElement = item.querySelector('.faq-question span');
+                    questionElement.innerHTML = highlightText(questionElement.textContent, query);
+                }
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Hide sections with no visible items
+        document.querySelectorAll('.faq-section').forEach(section => {
+            const visibleItems = section.querySelectorAll('.faq-item[style="display: block;"]');
+            section.style.display = visibleItems.length > 0 ? 'block' : 'none';
+        });
+    });
+
+    function highlightText(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    }
+
+    function startLiveChat() {
+        // Placeholder for live chat integration
+        alert('Live chat would open here. Integration with your chat service (Intercom, Zendesk, etc.)');
+    }
+</script>
+{% endblock %}

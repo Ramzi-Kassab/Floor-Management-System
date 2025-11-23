@@ -1,0 +1,914 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}API Management - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+    }
+
+    .page-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
+
+    .api-keys-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .api-key-item {
+        background: #f9fafb;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .api-key-item:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .api-key-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .api-key-title h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .api-key-title small {
+        color: #6b7280;
+    }
+
+    .api-key-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .key-display {
+        background: white;
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1rem 0;
+    }
+
+    .key-text {
+        color: #667eea;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+
+    .key-hidden {
+        color: #9ca3af;
+    }
+
+    .api-key-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .meta-item i {
+        margin-right: 0.5rem;
+        color: #667eea;
+    }
+
+    .usage-chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .endpoints-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .endpoint-item {
+        background: #f9fafb;
+        border-left: 4px solid #667eea;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .endpoint-item:hover {
+        background: #f0f4ff;
+        transform: translateX(5px);
+    }
+
+    .endpoint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .http-method {
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        margin-right: 0.75rem;
+    }
+
+    .method-get {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .method-post {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .method-put {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .method-delete {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .endpoint-url {
+        font-family: 'Courier New', monospace;
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .endpoint-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .webhook-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .webhook-item {
+        background: #f9fafb;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .webhook-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .status-active {
+        background: var(--success-color);
+        animation: pulse 2s infinite;
+    }
+
+    .status-inactive {
+        background: #d1d5db;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .rate-limit-card {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px solid #f59e0b;
+    }
+
+    .rate-limit-bar {
+        background: white;
+        border-radius: 10px;
+        height: 30px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .rate-limit-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        transition: width 0.5s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .docs-link-card {
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .btn-gradient {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .code-block {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 1.5rem;
+        border-radius: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+
+    .code-block .keyword {
+        color: #c678dd;
+    }
+
+    .code-block .string {
+        color: #98c379;
+    }
+
+    .code-block .comment {
+        color: #5c6370;
+    }
+
+    .integration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .integration-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .integration-card:hover {
+        border-color: #667eea;
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .integration-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .connected-badge {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-plug"></i> API Management</h1>
+                <p class="mb-0">Manage API keys, webhooks, and integrations</p>
+            </div>
+            <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#createKeyModal">
+                <i class="fas fa-plus"></i> Create API Key
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_keys|default:12 }}</div>
+            <div class="stat-label">Active API Keys</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ api_calls|default:"2.4M" }}</div>
+            <div class="stat-label">API Calls (30 days)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">99.8%</div>
+            <div class="stat-label">Uptime</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ webhooks|default:8 }}</div>
+            <div class="stat-label">Active Webhooks</div>
+        </div>
+    </div>
+
+    <!-- Rate Limit Card -->
+    <div class="rate-limit-card">
+        <h5><i class="fas fa-tachometer-alt"></i> Current Rate Limit Usage</h5>
+        <div class="rate-limit-bar">
+            <div class="rate-limit-fill" style="width: 45%;">
+                4,500 / 10,000 requests per hour
+            </div>
+        </div>
+        <small class="text-muted">Resets in 23 minutes</small>
+    </div>
+
+    <!-- API Keys -->
+    <div class="api-keys-card">
+        <h4 class="mb-4"><i class="fas fa-key"></i> API Keys</h4>
+
+        <div class="api-key-item">
+            <div class="api-key-header">
+                <div class="api-key-title">
+                    <h5>Production API Key</h5>
+                    <small>Used for production integrations</small>
+                </div>
+                <div class="api-key-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="toggleKeyVisibility(this)">
+                        <i class="fas fa-eye"></i> Show
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="regenerateKey('prod')">
+                        <i class="fas fa-sync"></i> Regenerate
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteKey('prod')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+
+            <div class="key-display">
+                <span class="key-hidden">••••••••••••••••••••••••••••••••</span>
+                <span class="key-text" style="display: none;">fms_prod_a8f3d9e2b7c4a1f6e8d3b9c2a7f4e1d8</span>
+                <button class="btn btn-sm btn-outline-secondary" onclick="copyKey(this)">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+
+            <div class="api-key-meta">
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i> Created: Jan 15, 2025
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i> Last used: 2 hours ago
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-chart-line"></i> 1.2M requests
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-shield-alt"></i> Full Access
+                </div>
+            </div>
+        </div>
+
+        <div class="api-key-item">
+            <div class="api-key-header">
+                <div class="api-key-title">
+                    <h5>Development API Key</h5>
+                    <small>For testing and development</small>
+                </div>
+                <div class="api-key-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="toggleKeyVisibility(this)">
+                        <i class="fas fa-eye"></i> Show
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="regenerateKey('dev')">
+                        <i class="fas fa-sync"></i> Regenerate
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteKey('dev')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+
+            <div class="key-display">
+                <span class="key-hidden">••••••••••••••••••••••••••••••••</span>
+                <span class="key-text" style="display: none;">fms_dev_b9e4a8f3c7d2e1a6f9d4c8b3a2e7f1d5</span>
+                <button class="btn btn-sm btn-outline-secondary" onclick="copyKey(this)">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+
+            <div class="api-key-meta">
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i> Created: Jan 10, 2025
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i> Last used: 1 day ago
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-chart-line"></i> 45K requests
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-shield-alt"></i> Read Only
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Chart -->
+    <div class="usage-chart-container">
+        <h4 class="mb-4"><i class="fas fa-chart-area"></i> API Usage (Last 30 Days)</h4>
+        <canvas id="usageChart" height="80"></canvas>
+    </div>
+
+    <!-- API Endpoints Documentation -->
+    <div class="endpoints-card">
+        <h4 class="mb-4"><i class="fas fa-code"></i> Available Endpoints</h4>
+
+        <div class="endpoint-item" onclick="toggleEndpointDetails(this)">
+            <div class="endpoint-header">
+                <div>
+                    <span class="http-method method-get">GET</span>
+                    <span class="endpoint-url">/api/v1/production/jobs</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <p class="endpoint-description mb-0">Retrieve list of production jobs</p>
+        </div>
+
+        <div class="endpoint-item" onclick="toggleEndpointDetails(this)">
+            <div class="endpoint-header">
+                <div>
+                    <span class="http-method method-post">POST</span>
+                    <span class="endpoint-url">/api/v1/production/jobs</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <p class="endpoint-description mb-0">Create a new production job</p>
+        </div>
+
+        <div class="endpoint-item" onclick="toggleEndpointDetails(this)">
+            <div class="endpoint-header">
+                <div>
+                    <span class="http-method method-get">GET</span>
+                    <span class="endpoint-url">/api/v1/quality/inspections</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <p class="endpoint-description mb-0">Get quality inspection records</p>
+        </div>
+
+        <div class="endpoint-item" onclick="toggleEndpointDetails(this)">
+            <div class="endpoint-header">
+                <div>
+                    <span class="http-method method-post">POST</span>
+                    <span class="endpoint-url">/api/v1/inventory/adjustments</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <p class="endpoint-description mb-0">Submit inventory adjustment</p>
+        </div>
+
+        <div class="endpoint-item" onclick="toggleEndpointDetails(this)">
+            <div class="endpoint-header">
+                <div>
+                    <span class="http-method method-get">GET</span>
+                    <span class="endpoint-url">/api/v1/analytics/reports</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <p class="endpoint-description mb-0">Access analytics reports and data</p>
+        </div>
+    </div>
+
+    <!-- Webhooks -->
+    <div class="webhook-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="fas fa-bolt"></i> Webhooks</h4>
+            <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#createWebhookModal">
+                <i class="fas fa-plus"></i> Add Webhook
+            </button>
+        </div>
+
+        <div class="webhook-item">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6>Production Job Completed</h6>
+                    <small class="text-muted">https://api.external.com/webhooks/job-completed</small>
+                </div>
+                <div class="webhook-status">
+                    <div class="status-indicator status-active"></div>
+                    <span class="text-success fw-bold">Active</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-vial"></i> Test</button>
+                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i> Disable</button>
+            </div>
+        </div>
+
+        <div class="webhook-item">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6>Quality Inspection Failed</h6>
+                    <small class="text-muted">https://api.external.com/webhooks/inspection-failed</small>
+                </div>
+                <div class="webhook-status">
+                    <div class="status-indicator status-active"></div>
+                    <span class="text-success fw-bold">Active</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-vial"></i> Test</button>
+                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i> Disable</button>
+            </div>
+        </div>
+
+        <div class="webhook-item">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6>Low Stock Alert</h6>
+                    <small class="text-muted">https://api.external.com/webhooks/low-stock</small>
+                </div>
+                <div class="webhook-status">
+                    <div class="status-indicator status-inactive"></div>
+                    <span class="text-muted fw-bold">Inactive</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-vial"></i> Test</button>
+                <button class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i> Enable</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Third-Party Integrations -->
+    <div class="api-keys-card">
+        <h4 class="mb-4"><i class="fas fa-puzzle-piece"></i> Third-Party Integrations</h4>
+
+        <div class="integration-grid">
+            <div class="integration-card">
+                <div class="integration-icon" style="color: #0078d4;">
+                    <i class="fab fa-microsoft"></i>
+                </div>
+                <h6>Microsoft Azure</h6>
+                <span class="connected-badge">Connected</span>
+                <button class="btn btn-sm btn-outline-primary mt-2">Configure</button>
+            </div>
+
+            <div class="integration-card">
+                <div class="integration-icon" style="color: #FF9900;">
+                    <i class="fab fa-aws"></i>
+                </div>
+                <h6>Amazon AWS</h6>
+                <span class="connected-badge">Connected</span>
+                <button class="btn btn-sm btn-outline-primary mt-2">Configure</button>
+            </div>
+
+            <div class="integration-card">
+                <div class="integration-icon" style="color: #00a0df;">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h6>SAP ERP</h6>
+                <button class="btn btn-sm btn-primary mt-2">Connect</button>
+            </div>
+
+            <div class="integration-card">
+                <div class="integration-icon" style="color: #6264a7;">
+                    <i class="fab fa-slack"></i>
+                </div>
+                <h6>Slack</h6>
+                <span class="connected-badge">Connected</span>
+                <button class="btn btn-sm btn-outline-primary mt-2">Configure</button>
+            </div>
+
+            <div class="integration-card">
+                <div class="integration-icon" style="color: #3b5998;">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h6>Email (SMTP)</h6>
+                <span class="connected-badge">Connected</span>
+                <button class="btn btn-sm btn-outline-primary mt-2">Configure</button>
+            </div>
+
+            <div class="integration-card">
+                <div class="integration-icon" style="color: #667eea;">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h6>Custom Webhook</h6>
+                <button class="btn btn-sm btn-primary mt-2">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Documentation Link -->
+    <div class="docs-link-card">
+        <h3><i class="fas fa-book"></i> API Documentation</h3>
+        <p class="lead mb-4">Complete API reference, code examples, and integration guides</p>
+        <button class="btn btn-light btn-lg" onclick="window.open('/api/docs', '_blank')">
+            <i class="fas fa-external-link-alt"></i> View Full Documentation
+        </button>
+
+        <div class="code-block mt-4 text-start">
+            <span class="comment">// Example: Create a production job</span><br>
+            <span class="keyword">curl</span> -X <span class="string">POST</span> https://api.floormanagement.com/v1/production/jobs \<br>
+            &nbsp;&nbsp;-H <span class="string">"Authorization: Bearer YOUR_API_KEY"</span> \<br>
+            &nbsp;&nbsp;-H <span class="string">"Content-Type: application/json"</span> \<br>
+            &nbsp;&nbsp;-d <span class="string">'{"material": "MAT-001", "quantity": 1000, "due_date": "2025-02-01"}'</span>
+        </div>
+    </div>
+</div>
+
+<!-- Create API Key Modal -->
+<div class="modal fade" id="createKeyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-key"></i> Create New API Key</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createKeyForm">
+                    <div class="mb-3">
+                        <label class="form-label">Key Name *</label>
+                        <input type="text" class="form-control" placeholder="e.g., Production API Key" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" rows="3" placeholder="What will this key be used for?"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Permissions *</label>
+                        <select class="form-select" required>
+                            <option value="">Select permission level...</option>
+                            <option value="full">Full Access</option>
+                            <option value="read">Read Only</option>
+                            <option value="write">Write Only</option>
+                            <option value="custom">Custom Permissions</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rate Limit</label>
+                        <select class="form-select">
+                            <option>10,000 requests/hour (default)</option>
+                            <option>50,000 requests/hour</option>
+                            <option>100,000 requests/hour</option>
+                            <option>Unlimited</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="createKeyForm" class="btn btn-gradient">
+                    <i class="fas fa-plus"></i> Create Key
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Webhook Modal -->
+<div class="modal fade" id="createWebhookModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-bolt"></i> Create Webhook</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createWebhookForm">
+                    <div class="mb-3">
+                        <label class="form-label">Event Type *</label>
+                        <select class="form-select" required>
+                            <option value="">Select event...</option>
+                            <option>Production Job Created</option>
+                            <option>Production Job Completed</option>
+                            <option>Quality Inspection Passed</option>
+                            <option>Quality Inspection Failed</option>
+                            <option>Low Stock Alert</option>
+                            <option>User Login</option>
+                            <option>Custom Event</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Callback URL *</label>
+                        <input type="url" class="form-control" placeholder="https://your-api.com/webhook" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Secret Key (Optional)</label>
+                        <input type="text" class="form-control" placeholder="For webhook signature verification">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="createWebhookForm" class="btn btn-gradient">
+                    <i class="fas fa-plus"></i> Create Webhook
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Usage Chart
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Today'],
+            datasets: [{
+                label: 'API Calls',
+                data: [65000, 82000, 75000, 95000, 88000, 102000, 98000],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Toggle key visibility
+    function toggleKeyVisibility(btn) {
+        const keyDisplay = btn.closest('.api-key-item').querySelector('.key-display');
+        const hiddenText = keyDisplay.querySelector('.key-hidden');
+        const keyText = keyDisplay.querySelector('.key-text');
+        const icon = btn.querySelector('i');
+
+        if (hiddenText.style.display !== 'none') {
+            hiddenText.style.display = 'none';
+            keyText.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-eye-slash"></i> Hide';
+        } else {
+            hiddenText.style.display = 'block';
+            keyText.style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-eye"></i> Show';
+        }
+    }
+
+    // Copy key
+    function copyKey(btn) {
+        const keyDisplay = btn.closest('.key-display');
+        const keyText = keyDisplay.querySelector('.key-text').textContent;
+
+        navigator.clipboard.writeText(keyText).then(() => {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+            }, 2000);
+        });
+    }
+
+    // Regenerate key
+    function regenerateKey(keyType) {
+        if (confirm('Are you sure you want to regenerate this API key? The old key will stop working immediately.')) {
+            console.log('Regenerating key:', keyType);
+            // Implement regeneration
+        }
+    }
+
+    // Delete key
+    function deleteKey(keyType) {
+        if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+            console.log('Deleting key:', keyType);
+            // Implement deletion
+        }
+    }
+
+    // Toggle endpoint details
+    function toggleEndpointDetails(element) {
+        console.log('Show endpoint details');
+        // Could expand to show request/response examples
+    }
+
+    // Form submissions
+    document.getElementById('createKeyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Creating new API key...');
+        alert('API Key created successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('createKeyModal')).hide();
+    });
+
+    document.getElementById('createWebhookForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Creating webhook...');
+        alert('Webhook created successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('createWebhookModal')).hide();
+    });
+</script>
+{% endblock %}

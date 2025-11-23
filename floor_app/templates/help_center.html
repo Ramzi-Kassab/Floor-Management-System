@@ -1,0 +1,796 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Help Center - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #3b82f6;
+    }
+
+    .help-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .help-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .help-search {
+        max-width: 600px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .help-search input {
+        border-radius: 50px;
+        padding: 1rem 3rem 1rem 1.5rem;
+        border: none;
+        font-size: 1.1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .help-search button {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+    }
+
+    .category-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        border-color: #667eea;
+    }
+
+    .category-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .icon-production { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .icon-quality { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .icon-inventory { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .icon-hr { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+    .icon-analytics { background: linear-gradient(135deg, #fa709a, #fee140); }
+    .icon-settings { background: linear-gradient(135deg, #30cfd0, #330867); }
+
+    .article-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0 0 0;
+    }
+
+    .article-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+
+    .article-item:hover {
+        padding-left: 10px;
+        color: #667eea;
+    }
+
+    .article-item i {
+        margin-right: 0.75rem;
+        color: #9ca3af;
+    }
+
+    .popular-topics {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .topic-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        display: inline-block;
+        margin: 0.25rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .topic-badge:hover {
+        background: rgba(255,255,255,0.3);
+        transform: scale(1.05);
+    }
+
+    .video-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .video-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .video-thumbnail {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        position: relative;
+    }
+
+    .video-duration {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.7);
+        padding: 0.25rem 0.75rem;
+        border-radius: 5px;
+        font-size: 0.875rem;
+    }
+
+    .video-info {
+        padding: 1.5rem;
+    }
+
+    .contact-support {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .contact-support .btn {
+        background: white;
+        color: #f5576c;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+
+    .contact-support .btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .quick-links {
+        background: #f9fafb;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .quick-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        text-decoration: none;
+        color: #374151;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .quick-link:hover {
+        border-color: #667eea;
+        transform: translateX(5px);
+        color: #667eea;
+    }
+
+    .quick-link i {
+        font-size: 1.5rem;
+        width: 40px;
+        color: #667eea;
+    }
+
+    .search-results {
+        display: none;
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .search-results.active {
+        display: block;
+    }
+
+    .result-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .result-item:hover {
+        background: #f9fafb;
+        padding-left: 1.5rem;
+    }
+
+    .result-item:last-child {
+        border-bottom: none;
+    }
+
+    .result-category {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: #e0e7ff;
+        color: #4f46e5;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-row {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="help-header">
+    <div class="container">
+        <h1><i class="fas fa-question-circle"></i> How can we help you?</h1>
+        <p class="lead mb-4">Search our knowledge base or browse categories below</p>
+
+        <div class="help-search">
+            <input type="text" class="form-control" id="helpSearch" placeholder="Search for help articles, tutorials, or guides...">
+            <button type="button" id="searchBtn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Search Results (Initially Hidden) -->
+    <div class="search-results" id="searchResults">
+        <h4 class="mb-3"><i class="fas fa-search"></i> Search Results</h4>
+        <div id="resultsContainer">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="row">
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-value">{{ total_articles|default:247 }}</div>
+                    <div class="stat-label">Help Articles</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-value">{{ video_tutorials|default:56 }}</div>
+                    <div class="stat-label">Video Tutorials</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-value">{{ avg_response|default:"2h" }}</div>
+                    <div class="stat-label">Avg Response Time</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <div class="stat-value">98%</div>
+                    <div class="stat-label">Satisfaction Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Topics -->
+    <div class="popular-topics">
+        <h4 class="mb-3"><i class="fas fa-fire"></i> Popular Topics</h4>
+        <div>
+            <span class="topic-badge" data-topic="getting-started">Getting Started</span>
+            <span class="topic-badge" data-topic="user-management">User Management</span>
+            <span class="topic-badge" data-topic="production-planning">Production Planning</span>
+            <span class="topic-badge" data-topic="quality-control">Quality Control</span>
+            <span class="topic-badge" data-topic="inventory">Inventory Management</span>
+            <span class="topic-badge" data-topic="reporting">Reporting & Analytics</span>
+            <span class="topic-badge" data-topic="integration">System Integration</span>
+            <span class="topic-badge" data-topic="troubleshooting">Troubleshooting</span>
+            <span class="topic-badge" data-topic="mobile">Mobile App</span>
+            <span class="topic-badge" data-topic="api">API Documentation</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Categories -->
+        <div class="col-lg-8">
+            <h3 class="mb-4">Browse by Category</h3>
+
+            <!-- Production Management -->
+            <div class="category-card" data-category="production">
+                <div class="d-flex align-items-start">
+                    <div class="category-icon icon-production">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4>Production Management</h4>
+                        <p class="text-muted mb-3">Learn how to manage production jobs, work centers, and schedules</p>
+                        <ul class="article-list">
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Creating and Managing Production Jobs</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Work Center Configuration and Optimization</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Production Scheduling Best Practices</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Managing Production Operations and Routing</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Real-time Production Monitoring</span>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-sm btn-outline-primary mt-2">View All (23 articles)</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Control -->
+            <div class="category-card" data-category="quality">
+                <div class="d-flex align-items-start">
+                    <div class="category-icon icon-quality">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4>Quality Control</h4>
+                        <p class="text-muted mb-3">Quality inspection procedures and defect management</p>
+                        <ul class="article-list">
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Creating Quality Inspection Templates</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Defect Tracking and Resolution</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Quality Metrics and KPI Monitoring</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Root Cause Analysis Tools</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Quality Reports and Compliance</span>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-sm btn-outline-primary mt-2">View All (18 articles)</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Management -->
+            <div class="category-card" data-category="inventory">
+                <div class="d-flex align-items-start">
+                    <div class="category-icon icon-inventory">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4>Inventory Management</h4>
+                        <p class="text-muted mb-3">Stock control, material movements, and warehouse operations</p>
+                        <ul class="article-list">
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Material Master Data Management</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Stock Transactions and Adjustments</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Warehouse Location Management</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Inventory Valuation Methods</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Cycle Counting and Physical Inventory</span>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-sm btn-outline-primary mt-2">View All (31 articles)</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HR Management -->
+            <div class="category-card" data-category="hr">
+                <div class="d-flex align-items-start">
+                    <div class="category-icon icon-hr">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4>HR Management</h4>
+                        <p class="text-muted mb-3">Employee management, attendance, and payroll</p>
+                        <ul class="article-list">
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Employee Onboarding Process</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Attendance and Time Tracking</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Leave Management System</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Performance Reviews and Evaluations</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Payroll Processing Guide</span>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-sm btn-outline-primary mt-2">View All (27 articles)</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics & Reporting -->
+            <div class="category-card" data-category="analytics">
+                <div class="d-flex align-items-start">
+                    <div class="category-icon icon-analytics">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4>Analytics & Reporting</h4>
+                        <p class="text-muted mb-3">Dashboard customization, report generation, and data analysis</p>
+                        <ul class="article-list">
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Custom Dashboard Creation</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Report Builder and Scheduling</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>KPI Tracking and Alerts</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Data Export and Integration</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Advanced Analytics Features</span>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-sm btn-outline-primary mt-2">View All (19 articles)</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="category-card" data-category="settings">
+                <div class="d-flex align-items-start">
+                    <div class="category-icon icon-settings">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4>System Settings & Administration</h4>
+                        <p class="text-muted mb-3">User management, permissions, and system configuration</p>
+                        <ul class="article-list">
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>User Roles and Permissions Setup</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>System Preferences Configuration</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Security and Access Control</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Backup and Data Management</span>
+                            </li>
+                            <li class="article-item">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Integration and API Configuration</span>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-sm btn-outline-primary mt-2">View All (22 articles)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Links -->
+            <div class="quick-links">
+                <h5 class="mb-3"><i class="fas fa-bolt"></i> Quick Links</h5>
+                <a href="#" class="quick-link">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <strong>Getting Started Guide</strong>
+                        <small class="d-block text-muted">New to the system?</small>
+                    </div>
+                </a>
+                <a href="#" class="quick-link">
+                    <i class="fas fa-video"></i>
+                    <div>
+                        <strong>Video Tutorials</strong>
+                        <small class="d-block text-muted">Learn by watching</small>
+                    </div>
+                </a>
+                <a href="#" class="quick-link">
+                    <i class="fas fa-book"></i>
+                    <div>
+                        <strong>User Manual</strong>
+                        <small class="d-block text-muted">Complete documentation</small>
+                    </div>
+                </a>
+                <a href="#" class="quick-link">
+                    <i class="fas fa-code"></i>
+                    <div>
+                        <strong>API Documentation</strong>
+                        <small class="d-block text-muted">Developer resources</small>
+                    </div>
+                </a>
+                <a href="#" class="quick-link">
+                    <i class="fas fa-question-circle"></i>
+                    <div>
+                        <strong>FAQs</strong>
+                        <small class="d-block text-muted">Common questions</small>
+                    </div>
+                </a>
+                <a href="#" class="quick-link">
+                    <i class="fas fa-rocket"></i>
+                    <div>
+                        <strong>What's New</strong>
+                        <small class="d-block text-muted">Latest features</small>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Video Tutorials -->
+            <h5 class="mb-3"><i class="fas fa-video"></i> Featured Videos</h5>
+
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <i class="fas fa-play-circle"></i>
+                    <div class="video-duration">5:42</div>
+                </div>
+                <div class="video-info">
+                    <h6>Getting Started with Floor Management</h6>
+                    <small class="text-muted">Introduction to the system</small>
+                </div>
+            </div>
+
+            <div class="video-card">
+                <div class="video-thumbnail" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <i class="fas fa-play-circle"></i>
+                    <div class="video-duration">8:15</div>
+                </div>
+                <div class="video-info">
+                    <h6>Production Job Management</h6>
+                    <small class="text-muted">Creating and tracking jobs</small>
+                </div>
+            </div>
+
+            <div class="video-card">
+                <div class="video-thumbnail" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <i class="fas fa-play-circle"></i>
+                    <div class="video-duration">6:30</div>
+                </div>
+                <div class="video-info">
+                    <h6>Quality Control Process</h6>
+                    <small class="text-muted">Inspection and defect tracking</small>
+                </div>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="contact-support">
+                <h4><i class="fas fa-headset"></i> Need More Help?</h4>
+                <p>Our support team is here to assist you</p>
+                <button class="btn" onclick="location.href='mailto:support@floormanagement.com'">
+                    <i class="fas fa-envelope"></i> Contact Support
+                </button>
+                <div class="mt-3">
+                    <small>Available Mon-Fri, 9am-6pm EST</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sample search data
+    const searchData = [
+        { title: "Creating Production Jobs", category: "Production", excerpt: "Learn how to create and manage production jobs...", url: "#" },
+        { title: "Quality Inspection Process", category: "Quality", excerpt: "Step-by-step guide to quality inspections...", url: "#" },
+        { title: "Inventory Adjustments", category: "Inventory", excerpt: "How to perform stock adjustments...", url: "#" },
+        { title: "User Role Configuration", category: "Settings", excerpt: "Configure user roles and permissions...", url: "#" },
+        { title: "Production Scheduling", category: "Production", excerpt: "Best practices for production scheduling...", url: "#" },
+        { title: "Defect Tracking", category: "Quality", excerpt: "Track and resolve quality defects...", url: "#" },
+        { title: "Material Management", category: "Inventory", excerpt: "Managing material master data...", url: "#" },
+        { title: "Employee Onboarding", category: "HR", excerpt: "Complete onboarding process guide...", url: "#" },
+        { title: "Custom Reports", category: "Analytics", excerpt: "Create custom reports and dashboards...", url: "#" },
+        { title: "API Integration", category: "Settings", excerpt: "Integrate with external systems...", url: "#" }
+    ];
+
+    // Search functionality
+    const searchInput = document.getElementById('helpSearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchResults = document.getElementById('searchResults');
+    const resultsContainer = document.getElementById('resultsContainer');
+
+    function performSearch(query) {
+        if (!query || query.length < 2) {
+            searchResults.classList.remove('active');
+            return;
+        }
+
+        const results = searchData.filter(item =>
+            item.title.toLowerCase().includes(query.toLowerCase()) ||
+            item.excerpt.toLowerCase().includes(query.toLowerCase()) ||
+            item.category.toLowerCase().includes(query.toLowerCase())
+        );
+
+        if (results.length > 0) {
+            resultsContainer.innerHTML = results.map(result => `
+                <div class="result-item" onclick="location.href='${result.url}'">
+                    <span class="result-category">${result.category}</span>
+                    <h6 class="mb-1">${highlightText(result.title, query)}</h6>
+                    <p class="text-muted mb-0 small">${highlightText(result.excerpt, query)}</p>
+                </div>
+            `).join('');
+            searchResults.classList.add('active');
+        } else {
+            resultsContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No results found for "${query}"</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('searchResults').classList.remove('active')">
+                        Clear Search
+                    </button>
+                </div>
+            `;
+            searchResults.classList.add('active');
+        }
+    }
+
+    function highlightText(text, query) {
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<strong class="text-primary">$1</strong>');
+    }
+
+    searchInput.addEventListener('input', (e) => {
+        performSearch(e.target.value);
+    });
+
+    searchBtn.addEventListener('click', () => {
+        performSearch(searchInput.value);
+    });
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performSearch(searchInput.value);
+        }
+    });
+
+    // Topic badge clicks
+    document.querySelectorAll('.topic-badge').forEach(badge => {
+        badge.addEventListener('click', function() {
+            const topic = this.getAttribute('data-topic');
+            searchInput.value = topic.replace('-', ' ');
+            performSearch(searchInput.value);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+
+    // Category card clicks
+    document.querySelectorAll('.category-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't trigger if clicking on article links or buttons
+            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
+                return;
+            }
+            const category = this.getAttribute('data-category');
+            console.log('Navigate to category:', category);
+        });
+    });
+</script>
+{% endblock %}

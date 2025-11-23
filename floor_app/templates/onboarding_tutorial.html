@@ -1,0 +1,843 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome to Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-color: #10b981;
+        --step-bg: #f9fafb;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    .onboarding-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .welcome-hero {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 3rem;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .welcome-hero h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .welcome-hero p {
+        font-size: 1.2rem;
+        opacity: 0.95;
+    }
+
+    .progress-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+
+    .step-progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .step-progress::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #e5e7eb;
+        z-index: 1;
+    }
+
+    .step-progress-bar {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+        transition: width 0.5s ease;
+        z-index: 2;
+    }
+
+    .step-indicator {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: white;
+        border: 4px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        position: relative;
+        z-index: 3;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .step-indicator.active {
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+        transform: scale(1.2);
+    }
+
+    .step-indicator.completed {
+        border-color: var(--success-color);
+        background: var(--success-color);
+        color: white;
+    }
+
+    .step-content {
+        display: none;
+        animation: fadeIn 0.5s;
+    }
+
+    .step-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .step-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .step-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .step-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        background: var(--primary-gradient);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 1.5rem;
+    }
+
+    .step-title h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .feature-box {
+        background: var(--step-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .feature-box:hover {
+        border-color: #667eea;
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .feature-box i {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+
+    .feature-box h5 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .checklist {
+        list-style: none;
+        padding: 0;
+    }
+
+    .checklist-item {
+        padding: 1rem;
+        background: var(--step-bg);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .checklist-item:hover {
+        border-color: #667eea;
+    }
+
+    .checklist-checkbox {
+        width: 30px;
+        height: 30px;
+        border: 3px solid #d1d5db;
+        border-radius: 8px;
+        margin-right: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .checklist-item.completed .checklist-checkbox {
+        background: var(--success-color);
+        border-color: var(--success-color);
+        color: white;
+    }
+
+    .checklist-item.completed {
+        opacity: 0.7;
+    }
+
+    .checklist-item.completed .checklist-text {
+        text-decoration: line-through;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: space-between;
+    }
+
+    .btn-onboarding {
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-gradient {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .btn-primary-gradient:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-outline-custom {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+
+    .btn-outline-custom:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .video-container {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 2rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .video-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-align: center;
+    }
+
+    .video-placeholder i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .video-placeholder i:hover {
+        transform: scale(1.2);
+    }
+
+    .tip-box {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+    }
+
+    .tip-box strong {
+        color: #f59e0b;
+    }
+
+    .module-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .module-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .module-card:hover, .module-card.selected {
+        border-color: #667eea;
+        background: #f0f4ff;
+        transform: translateY(-3px);
+    }
+
+    .module-card i {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    .completion-card {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+    }
+
+    .completion-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        animation: bounceIn 1s;
+    }
+
+    @keyframes bounceIn {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-30px);
+        }
+        60% {
+            transform: translateY(-15px);
+        }
+    }
+
+    .skip-link {
+        text-align: center;
+        margin-top: 2rem;
+        color: #6b7280;
+    }
+
+    .skip-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .skip-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="onboarding-container">
+    <!-- Welcome Hero -->
+    <div class="welcome-hero">
+        <i class="fas fa-rocket fa-3x mb-3"></i>
+        <h1>Welcome to Floor Management System!</h1>
+        <p>Let's get you started with a quick tour of the platform</p>
+        <small>This will only take 5 minutes</small>
+    </div>
+
+    <!-- Progress Container -->
+    <div class="progress-container">
+        <div class="step-progress">
+            <div class="step-progress-bar" id="progressBar" style="width: 0%"></div>
+            <div class="step-indicator active" data-step="1">1</div>
+            <div class="step-indicator" data-step="2">2</div>
+            <div class="step-indicator" data-step="3">3</div>
+            <div class="step-indicator" data-step="4">4</div>
+            <div class="step-indicator" data-step="5">5</div>
+        </div>
+        <div class="text-center mt-3">
+            <small class="text-muted">Step <span id="currentStep">1</span> of 5</small>
+        </div>
+    </div>
+
+    <!-- Step 1: Welcome & Overview -->
+    <div class="step-content active" data-step="1">
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div class="step-title">
+                    <h2>Welcome & Overview</h2>
+                    <p class="text-muted">Learn about the key features</p>
+                </div>
+            </div>
+
+            <div class="video-container">
+                <div class="video-placeholder">
+                    <i class="fas fa-play-circle"></i>
+                    <p>Introduction Video (2:30)</p>
+                    <small>Click to play</small>
+                </div>
+            </div>
+
+            <h4 class="mt-4 mb-3">What You Can Do</h4>
+            <div class="feature-grid">
+                <div class="feature-box">
+                    <i class="fas fa-industry"></i>
+                    <h5>Production Management</h5>
+                    <p class="small text-muted">Create and track production jobs in real-time</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-check-circle"></i>
+                    <h5>Quality Control</h5>
+                    <p class="small text-muted">Perform inspections and track defects</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-boxes"></i>
+                    <h5>Inventory Management</h5>
+                    <p class="small text-muted">Manage stock levels and movements</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-users"></i>
+                    <h5>HR Management</h5>
+                    <p class="small text-muted">Employee tracking and payroll</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-chart-line"></i>
+                    <h5>Analytics & Reports</h5>
+                    <p class="small text-muted">Insights and custom dashboards</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h5>Mobile Access</h5>
+                    <p class="small text-muted">Work from anywhere, anytime</p>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <strong><i class="fas fa-lightbulb"></i> Tip:</strong>
+                You can access all these features from the main navigation menu at the top of the page.
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Dashboard Navigation -->
+    <div class="step-content" data-step="2">
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                    <i class="fas fa-compass"></i>
+                </div>
+                <div class="step-title">
+                    <h2>Navigate Your Dashboard</h2>
+                    <p class="text-muted">Understanding the main interface</p>
+                </div>
+            </div>
+
+            <h4 class="mb-3">Dashboard Components</h4>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Navigation Menu</strong>
+                        <p class="small text-muted mb-0">Located at the top - access all modules from here</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Quick Stats Cards</strong>
+                        <p class="small text-muted mb-0">Real-time metrics for your key operations</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Notification Center</strong>
+                        <p class="small text-muted mb-0">Stay updated with system alerts and messages</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Search Function</strong>
+                        <p class="small text-muted mb-0">Quick global search for jobs, materials, employees</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>User Profile</strong>
+                        <p class="small text-muted mb-0">Manage your account and preferences</p>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="tip-box">
+                <strong><i class="fas fa-lightbulb"></i> Tip:</strong>
+                You can customize your dashboard layout and widgets in Settings > Dashboard Preferences.
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Choose Your Module -->
+    <div class="step-content" data-step="3">
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                    <i class="fas fa-th-large"></i>
+                </div>
+                <div class="step-title">
+                    <h2>Choose Your Primary Module</h2>
+                    <p class="text-muted">Select what you'll use most often</p>
+                </div>
+            </div>
+
+            <p class="mb-3">This helps us personalize your experience. You can always access other modules anytime.</p>
+
+            <div class="module-selector">
+                <div class="module-card" onclick="selectModule(this, 'production')">
+                    <i class="fas fa-industry text-primary"></i>
+                    <h6>Production</h6>
+                    <small class="text-muted">Manufacturing & Operations</small>
+                </div>
+                <div class="module-card" onclick="selectModule(this, 'quality')">
+                    <i class="fas fa-check-circle text-danger"></i>
+                    <h6>Quality</h6>
+                    <small class="text-muted">QC & Inspections</small>
+                </div>
+                <div class="module-card" onclick="selectModule(this, 'inventory')">
+                    <i class="fas fa-boxes text-info"></i>
+                    <h6>Inventory</h6>
+                    <small class="text-muted">Stock Management</small>
+                </div>
+                <div class="module-card" onclick="selectModule(this, 'hr')">
+                    <i class="fas fa-users text-success"></i>
+                    <h6>HR</h6>
+                    <small class="text-muted">Human Resources</small>
+                </div>
+                <div class="module-card" onclick="selectModule(this, 'analytics')">
+                    <i class="fas fa-chart-line text-warning"></i>
+                    <h6>Analytics</h6>
+                    <small class="text-muted">Reports & Insights</small>
+                </div>
+                <div class="module-card" onclick="selectModule(this, 'admin')">
+                    <i class="fas fa-cog text-secondary"></i>
+                    <h6>Administration</h6>
+                    <small class="text-muted">System Management</small>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <strong><i class="fas fa-lightbulb"></i> Tip:</strong>
+                Your primary module will appear first on your dashboard and in quick access menus.
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Quick Actions -->
+    <div class="step-content" data-step="4">
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="step-title">
+                    <h2>Quick Actions</h2>
+                    <p class="text-muted">Common tasks you'll perform</p>
+                </div>
+            </div>
+
+            <h4 class="mb-3">Try These Actions</h4>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Create a Production Job</strong>
+                        <p class="small text-muted mb-0">Navigate to Production > New Job</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Perform a Quality Inspection</strong>
+                        <p class="small text-muted mb-0">Go to Quality > Start Inspection</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Check Inventory Levels</strong>
+                        <p class="small text-muted mb-0">Visit Inventory > Stock Overview</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Generate a Report</strong>
+                        <p class="small text-muted mb-0">Analytics > Report Builder</p>
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleChecklistItem(this)">
+                    <div class="checklist-checkbox">
+                        <i class="fas fa-check" style="display: none;"></i>
+                    </div>
+                    <div class="checklist-text">
+                        <strong>Update Your Profile</strong>
+                        <p class="small text-muted mb-0">Click your avatar > Profile Settings</p>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="feature-grid mt-4">
+                <div class="feature-box">
+                    <i class="fas fa-keyboard"></i>
+                    <h6>Keyboard Shortcuts</h6>
+                    <p class="small text-muted">Press <kbd>?</kbd> to see all shortcuts</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-star"></i>
+                    <h6>Favorites</h6>
+                    <p class="small text-muted">Bookmark frequently used pages</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-history"></i>
+                    <h6>Recent Items</h6>
+                    <p class="small text-muted">Quick access to recent work</p>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <strong><i class="fas fa-lightbulb"></i> Tip:</strong>
+                Use the Quick Actions menu (⚡ icon) in the top navigation for fast access to common tasks.
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 5: Completion -->
+    <div class="step-content" data-step="5">
+        <div class="step-card">
+            <div class="completion-card">
+                <div class="completion-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>You're All Set!</h2>
+                <p class="lead mb-4">Congratulations! You've completed the onboarding tutorial.</p>
+
+                <div class="row text-start mt-4">
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.2); padding: 1.5rem; border-radius: 12px;">
+                            <h5><i class="fas fa-book"></i> Next Steps</h5>
+                            <ul class="mb-0">
+                                <li>Explore the Help Center for detailed guides</li>
+                                <li>Watch video tutorials for each module</li>
+                                <li>Join our community forum</li>
+                                <li>Contact support if you need help</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div style="background: rgba(255,255,255,0.2); padding: 1.5rem; border-radius: 12px;">
+                            <h5><i class="fas fa-rocket"></i> Pro Tips</h5>
+                            <ul class="mb-0">
+                                <li>Customize your dashboard layout</li>
+                                <li>Set up notifications and alerts</li>
+                                <li>Configure your preferences</li>
+                                <li>Enable two-factor authentication</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-light btn-lg me-2" onclick="location.href='/help-center'">
+                        <i class="fas fa-question-circle"></i> Visit Help Center
+                    </button>
+                    <button class="btn btn-outline-light btn-lg" onclick="location.href='/'">
+                        <i class="fas fa-home"></i> Go to Dashboard
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <small>You can replay this tutorial anytime from your profile settings</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="action-buttons">
+        <button class="btn btn-outline-custom btn-onboarding" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+            <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <div class="skip-link">
+            <a href="/" id="skipLink">Skip tutorial and go to dashboard →</a>
+        </div>
+        <button class="btn btn-primary-gradient btn-onboarding" id="nextBtn" onclick="changeStep(1)">
+            Next <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentStep = 1;
+    const totalSteps = 5;
+    let selectedModule = null;
+
+    function changeStep(direction) {
+        const newStep = currentStep + direction;
+
+        if (newStep < 1 || newStep > totalSteps) return;
+
+        // Hide current step
+        document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.remove('active');
+        document.querySelector(`.step-indicator[data-step="${currentStep}"]`).classList.remove('active');
+        document.querySelector(`.step-indicator[data-step="${currentStep}"]`).classList.add('completed');
+
+        // Show new step
+        currentStep = newStep;
+        document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.add('active');
+        document.querySelector(`.step-indicator[data-step="${currentStep}"]`).classList.add('active');
+
+        // Update progress bar
+        const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+        document.getElementById('currentStep').textContent = currentStep;
+
+        // Update buttons
+        document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'block';
+
+        if (currentStep === totalSteps) {
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('skipLink').style.display = 'none';
+        } else {
+            document.getElementById('nextBtn').style.display = 'block';
+            document.getElementById('skipLink').style.display = 'block';
+        }
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleChecklistItem(item) {
+        item.classList.toggle('completed');
+        const icon = item.querySelector('.checklist-checkbox i');
+        icon.style.display = item.classList.contains('completed') ? 'block' : 'none';
+    }
+
+    function selectModule(card, module) {
+        // Remove selected class from all cards
+        document.querySelectorAll('.module-card').forEach(c => c.classList.remove('selected'));
+
+        // Add selected class to clicked card
+        card.classList.add('selected');
+        selectedModule = module;
+
+        console.log('Selected module:', module);
+        // Here you would typically save this preference to the backend
+    }
+
+    // Click on step indicators to jump to steps
+    document.querySelectorAll('.step-indicator').forEach(indicator => {
+        indicator.addEventListener('click', function() {
+            const targetStep = parseInt(this.getAttribute('data-step'));
+            if (targetStep < currentStep || this.classList.contains('completed')) {
+                const diff = targetStep - currentStep;
+                changeStep(diff);
+            }
+        });
+    });
+
+    // Track tutorial completion
+    window.addEventListener('beforeunload', function() {
+        if (currentStep === totalSteps) {
+            // Mark tutorial as completed
+            localStorage.setItem('onboarding_completed', 'true');
+        }
+    });
+</script>
+{% endblock %}

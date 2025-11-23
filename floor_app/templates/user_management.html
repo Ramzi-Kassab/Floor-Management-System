@@ -1,0 +1,941 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Management - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+    }
+
+    .page-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .stat-change.positive {
+        color: var(--success-color);
+    }
+
+    .stat-change.negative {
+        color: var(--danger-color);
+    }
+
+    .filters-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filter-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .users-table-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        padding: 1.5rem;
+        border-bottom: 2px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .users-table {
+        width: 100%;
+    }
+
+    .users-table thead {
+        background: #f9fafb;
+    }
+
+    .users-table th {
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .users-table td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .users-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .users-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 0.75rem;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-details h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .user-details small {
+        color: #6b7280;
+    }
+
+    .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .role-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #e0e7ff;
+        color: #4f46e5;
+        display: inline-block;
+        margin: 0.125rem;
+    }
+
+    .role-admin {
+        background: #fce7f3;
+        color: #9f1239;
+    }
+
+    .role-manager {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .role-operator {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        margin: 0 0.25rem;
+    }
+
+    .action-btn:hover {
+        background: #f3f4f6;
+        color: #667eea;
+    }
+
+    .btn-gradient {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .bulk-actions {
+        background: #fef3c7;
+        border: 2px solid #f59e0b;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .bulk-actions.active {
+        display: flex;
+    }
+
+    .bulk-actions-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .checkbox-custom {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .last-active {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .last-active i {
+        margin-right: 0.25rem;
+    }
+
+    .pagination {
+        padding: 1.5rem;
+        border-top: 2px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-info {
+        color: #6b7280;
+    }
+
+    .page-numbers {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .page-btn:hover, .page-btn.active {
+        background: var(--primary-gradient);
+        color: white;
+        border-color: transparent;
+    }
+
+    .modal-backdrop.show {
+        opacity: 0.5;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+    }
+
+    .modal-header {
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        border-bottom: none;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e5e7eb;
+        padding: 0.75rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .permission-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .permission-item {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 2px solid #e5e7eb;
+    }
+
+    .permission-item label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .permission-item input {
+        margin-right: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-users-cog"></i> User Management</h1>
+                <p class="mb-0">Manage system users, roles, and permissions</p>
+            </div>
+            <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="fas fa-user-plus"></i> Add New User
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_users|default:487 }}</div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> +12 this month
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_users|default:453 }}</div>
+            <div class="stat-label">Active Users</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> 93% active rate
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ online_users|default:87 }}</div>
+            <div class="stat-label">Currently Online</div>
+            <div class="stat-change">
+                <i class="fas fa-circle text-success"></i> Real-time
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ pending_users|default:8 }}</div>
+            <div class="stat-label">Pending Approval</div>
+            <div class="stat-change warning">
+                <i class="fas fa-exclamation-triangle"></i> Needs review
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <div class="filter-group">
+            <div>
+                <label class="form-label">Search Users</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="userSearch" placeholder="Name, email, or ID...">
+                </div>
+            </div>
+            <div>
+                <label class="form-label">Role</label>
+                <select class="form-select" id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="admin">Administrator</option>
+                    <option value="manager">Manager</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="operator">Operator</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Department</label>
+                <select class="form-select" id="departmentFilter">
+                    <option value="">All Departments</option>
+                    <option value="production">Production</option>
+                    <option value="quality">Quality</option>
+                    <option value="inventory">Inventory</option>
+                    <option value="hr">HR</option>
+                    <option value="it">IT</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Status</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="pending">Pending</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions" id="bulkActions">
+        <div class="bulk-actions-left">
+            <strong><span id="selectedCount">0</span> users selected</strong>
+            <button class="btn btn-sm btn-primary" onclick="bulkAction('activate')">
+                <i class="fas fa-check"></i> Activate
+            </button>
+            <button class="btn btn-sm btn-warning" onclick="bulkAction('deactivate')">
+                <i class="fas fa-ban"></i> Deactivate
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="bulkAction('delete')">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+            Clear Selection
+        </button>
+    </div>
+
+    <!-- Users Table -->
+    <div class="users-table-card">
+        <div class="table-header">
+            <h5 class="mb-0">All Users ({{ total_users|default:487 }})</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="exportUsers()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshTable()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th width="50"><input type="checkbox" class="checkbox-custom" id="selectAll" onchange="toggleSelectAll()"></th>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Last Active</th>
+                    <th width="150">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <!-- User rows will be populated here -->
+                <tr data-user-id="1">
+                    <td><input type="checkbox" class="checkbox-custom user-checkbox"></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">JS</div>
+                            <div class="user-details">
+                                <h6>John Smith</h6>
+                                <small>john.smith@company.com</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="role-badge role-admin">Administrator</span></td>
+                    <td>IT</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td class="last-active">
+                        <i class="fas fa-circle text-success"></i> Online now
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit" onclick="editUser(1)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" title="Permissions" onclick="managePermissions(1)">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn" title="View Details" onclick="viewUser(1)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr data-user-id="2">
+                    <td><input type="checkbox" class="checkbox-custom user-checkbox"></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background: linear-gradient(135deg, #f093fb, #f5576c);">MJ</div>
+                            <div class="user-details">
+                                <h6>Mary Johnson</h6>
+                                <small>mary.johnson@company.com</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="role-badge role-manager">Manager</span></td>
+                    <td>Production</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td class="last-active">
+                        <i class="fas fa-clock"></i> 2 hours ago
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit" onclick="editUser(2)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" title="Permissions" onclick="managePermissions(2)">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn" title="View Details" onclick="viewUser(2)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr data-user-id="3">
+                    <td><input type="checkbox" class="checkbox-custom user-checkbox"></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">RW</div>
+                            <div class="user-details">
+                                <h6>Robert Williams</h6>
+                                <small>robert.williams@company.com</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="role-badge role-operator">Operator</span></td>
+                    <td>Production</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td class="last-active">
+                        <i class="fas fa-clock"></i> 1 day ago
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit" onclick="editUser(3)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" title="Permissions" onclick="managePermissions(3)">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn" title="View Details" onclick="viewUser(3)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr data-user-id="4">
+                    <td><input type="checkbox" class="checkbox-custom user-checkbox"></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">SB</div>
+                            <div class="user-details">
+                                <h6>Sarah Brown</h6>
+                                <small>sarah.brown@company.com</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="role-badge role-manager">Manager</span></td>
+                    <td>Quality</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td class="last-active">
+                        <i class="fas fa-circle text-success"></i> Online now
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit" onclick="editUser(4)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" title="Permissions" onclick="managePermissions(4)">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn" title="View Details" onclick="viewUser(4)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr data-user-id="5">
+                    <td><input type="checkbox" class="checkbox-custom user-checkbox"></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background: linear-gradient(135deg, #fa709a, #fee140);">DM</div>
+                            <div class="user-details">
+                                <h6>David Martinez</h6>
+                                <small>david.martinez@company.com</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="role-badge">Supervisor</span></td>
+                    <td>Inventory</td>
+                    <td><span class="status-badge status-inactive">Inactive</span></td>
+                    <td class="last-active">
+                        <i class="fas fa-clock"></i> 15 days ago
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit" onclick="editUser(5)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" title="Permissions" onclick="managePermissions(5)">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn" title="View Details" onclick="viewUser(5)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr data-user-id="6">
+                    <td><input type="checkbox" class="checkbox-custom user-checkbox"></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">LG</div>
+                            <div class="user-details">
+                                <h6>Lisa Garcia</h6>
+                                <small>lisa.garcia@company.com</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="role-badge">Viewer</span></td>
+                    <td>HR</td>
+                    <td><span class="status-badge status-pending">Pending</span></td>
+                    <td class="last-active">
+                        <i class="fas fa-clock"></i> Never logged in
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit" onclick="editUser(6)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" title="Permissions" onclick="managePermissions(6)">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn" title="Approve" onclick="approveUser(6)">
+                            <i class="fas fa-check-circle text-success"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <div class="page-info">
+                Showing <strong>1-6</strong> of <strong>487</strong> users
+            </div>
+            <div class="page-numbers">
+                <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">...</button>
+                <button class="page-btn">82</button>
+                <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Role *</label>
+                            <select class="form-select" required>
+                                <option value="">Select role...</option>
+                                <option value="admin">Administrator</option>
+                                <option value="manager">Manager</option>
+                                <option value="supervisor">Supervisor</option>
+                                <option value="operator">Operator</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Department *</label>
+                            <select class="form-select" required>
+                                <option value="">Select department...</option>
+                                <option value="production">Production</option>
+                                <option value="quality">Quality</option>
+                                <option value="inventory">Inventory</option>
+                                <option value="hr">HR</option>
+                                <option value="it">IT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Employee ID</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Permissions</label>
+                        <div class="permission-grid">
+                            <div class="permission-item">
+                                <label>
+                                    <input type="checkbox"> Production Module
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label>
+                                    <input type="checkbox"> Quality Module
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label>
+                                    <input type="checkbox"> Inventory Module
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label>
+                                    <input type="checkbox"> HR Module
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label>
+                                    <input type="checkbox"> Analytics Module
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label>
+                                    <input type="checkbox"> Admin Panel
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="sendWelcomeEmail" checked>
+                            <label class="form-check-label" for="sendWelcomeEmail">
+                                Send welcome email with login credentials
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addUserForm" class="btn btn-gradient">
+                    <i class="fas fa-plus"></i> Create User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Select all checkbox functionality
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateBulkActions();
+    }
+
+    // Update bulk actions bar
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateBulkActions);
+    });
+
+    function updateBulkActions() {
+        const checked = document.querySelectorAll('.user-checkbox:checked').length;
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+
+        if (checked > 0) {
+            bulkActions.classList.add('active');
+            selectedCount.textContent = checked;
+        } else {
+            bulkActions.classList.remove('active');
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+        document.getElementById('selectAll').checked = false;
+        updateBulkActions();
+    }
+
+    function bulkAction(action) {
+        const checked = document.querySelectorAll('.user-checkbox:checked');
+        const userIds = Array.from(checked).map(cb => cb.closest('tr').dataset.userId);
+
+        if (confirm(`Are you sure you want to ${action} ${userIds.length} user(s)?`)) {
+            console.log(`Bulk ${action}:`, userIds);
+            // Implement bulk action
+        }
+    }
+
+    // Filter functionality
+    function resetFilters() {
+        document.getElementById('userSearch').value = '';
+        document.getElementById('roleFilter').value = '';
+        document.getElementById('departmentFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        filterUsers();
+    }
+
+    function filterUsers() {
+        const search = document.getElementById('userSearch').value.toLowerCase();
+        const role = document.getElementById('roleFilter').value;
+        const department = document.getElementById('departmentFilter').value;
+        const status = document.getElementById('statusFilter').value;
+
+        document.querySelectorAll('#usersTableBody tr').forEach(row => {
+            const userText = row.textContent.toLowerCase();
+            const matchSearch = search === '' || userText.includes(search);
+            const matchRole = role === '' || row.querySelector('.role-badge').textContent.toLowerCase().includes(role);
+            const matchDept = department === '' || row.cells[3].textContent.toLowerCase() === department;
+            const matchStatus = status === '' || row.querySelector('.status-badge').className.includes(status);
+
+            row.style.display = matchSearch && matchRole && matchDept && matchStatus ? '' : 'none';
+        });
+    }
+
+    document.getElementById('userSearch').addEventListener('input', filterUsers);
+    document.getElementById('roleFilter').addEventListener('change', filterUsers);
+    document.getElementById('departmentFilter').addEventListener('change', filterUsers);
+    document.getElementById('statusFilter').addEventListener('change', filterUsers);
+
+    // User actions
+    function editUser(userId) {
+        console.log('Edit user:', userId);
+        // Implement edit functionality
+    }
+
+    function viewUser(userId) {
+        console.log('View user:', userId);
+        window.location.href = `/users/${userId}/`;
+    }
+
+    function managePermissions(userId) {
+        console.log('Manage permissions for user:', userId);
+        // Open permissions modal
+    }
+
+    function approveUser(userId) {
+        if (confirm('Approve this user and send welcome email?')) {
+            console.log('Approve user:', userId);
+            // Implement approval
+        }
+    }
+
+    function exportUsers() {
+        console.log('Exporting users...');
+        // Implement export functionality
+    }
+
+    function refreshTable() {
+        console.log('Refreshing table...');
+        location.reload();
+    }
+
+    // Form submission
+    document.getElementById('addUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Creating new user...');
+        // Implement user creation
+        alert('User created successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+    });
+</script>
+{% endblock %}
