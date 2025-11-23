@@ -530,7 +530,7 @@ class UserThemePreferenceAdmin(admin.ModelAdmin):
             'fields': ('user',)
         }),
         ('Theme Settings', {
-            'fields': ('theme', 'high_contrast', 'primary_color', 'accent_color')
+            'fields': ('theme', 'high_contrast', 'primary_color', 'accent_color', 'background_color', 'text_color')
         }),
         ('Typography', {
             'fields': ('font_size', 'font_family', 'line_height')
