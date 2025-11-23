@@ -97,6 +97,12 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.user_preferences',
                 'core.context_processors.global_settings',
+                # Floor App context processors
+                'floor_app.context_processors.system_context',
+                'floor_app.context_processors.navigation_context',
+                'floor_app.context_processors.user_permissions_context',
+                'floor_app.context_processors.stats_context',
+                'floor_app.context_processors.theme_context',
             ],
         },
     },

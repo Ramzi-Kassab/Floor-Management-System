@@ -289,6 +289,7 @@ from .models_system import (
     HelpArticle,
     DashboardWidget,
     DashboardLayout,
+    UserThemePreference,
 )
 
 
@@ -513,3 +514,44 @@ class DashboardLayoutAdmin(admin.ModelAdmin):
     list_filter = ['is_default', 'created_at']
     search_fields = ['name', 'user__username']
     readonly_fields = ['created_at']
+
+
+# ========== USER THEME PREFERENCES ==========
+
+@admin.register(UserThemePreference)
+class UserThemePreferenceAdmin(admin.ModelAdmin):
+    list_display = ['user', 'theme', 'font_size', 'density', 'high_contrast', 'updated_at']
+    list_filter = ['theme', 'font_size', 'density', 'high_contrast', 'reduce_motion']
+    search_fields = ['user__username', 'user__email']
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        ('User', {
+            'fields': ('user',)
+        }),
+        ('Theme Settings', {
+            'fields': ('theme', 'high_contrast', 'primary_color', 'accent_color')
+        }),
+        ('Typography', {
+            'fields': ('font_size', 'font_family', 'line_height')
+        }),
+        ('Layout', {
+            'fields': ('density', 'sidebar_collapsed', 'show_animations')
+        }),
+        ('Accessibility', {
+            'fields': ('reduce_motion', 'focus_indicators', 'screen_reader_optimized')
+        }),
+        ('Mobile', {
+            'fields': ('mobile_view',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        """Make user field readonly when editing existing preference."""
+        if obj:  # Editing
+            return self.readonly_fields + ('user',)
+        return self.readonly_fields

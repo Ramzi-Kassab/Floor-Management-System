@@ -134,3 +134,62 @@ def stats_context(request):
         }
 
     return context
+
+
+def theme_context(request):
+    """
+    Add user theme preferences to template context.
+
+    Available in all templates:
+    - user_theme_preference
+    - theme_css_variables
+    - theme_data_attributes
+    """
+    if not request.user.is_authenticated:
+        return {
+            'user_theme_preference': None,
+            'theme_css_variables': {},
+            'theme_data_attributes': 'data-theme="light" data-font-size="medium" data-density="comfortable"',
+        }
+
+    try:
+        from .models import UserThemePreference
+
+        # Get or create user theme preference
+        theme_pref, created = UserThemePreference.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'theme': 'light',
+                'font_size': 'medium',
+                'density': 'comfortable',
+            }
+        )
+
+        # Generate CSS variables
+        css_variables = theme_pref.get_css_variables()
+
+        # Generate data attributes for HTML element
+        data_attrs = (
+            f'data-theme="{theme_pref.theme}" '
+            f'data-font-size="{theme_pref.font_size}" '
+            f'data-density="{theme_pref.density}" '
+            f'data-high-contrast="{str(theme_pref.high_contrast).lower()}" '
+            f'data-reduce-motion="{str(theme_pref.reduce_motion).lower()}" '
+            f'data-focus-indicators="{"enhanced" if theme_pref.focus_indicators else "normal"}"'
+        )
+
+        context = {
+            'user_theme_preference': theme_pref,
+            'theme_css_variables': css_variables,
+            'theme_data_attributes': data_attrs,
+        }
+
+    except Exception:
+        # Fallback if model doesn't exist or error occurs
+        context = {
+            'user_theme_preference': None,
+            'theme_css_variables': {},
+            'theme_data_attributes': 'data-theme="light" data-font-size="medium" data-density="comfortable"',
+        }
+
+    return context
