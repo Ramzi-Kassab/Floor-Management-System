@@ -4,6 +4,7 @@ from . import views_employee_wizard as views
 from . import views_department
 from . import views_position
 from .views import leave_views, document_views, attendance_views, training_views
+from .views import contract_views, shift_views, asset_views
 
 app_name = "hr"
 
@@ -160,6 +161,69 @@ urlpatterns = [
     path("training/my-training/", training_views.my_training_dashboard, name="my_training_dashboard"),
     path("training/complete/<int:pk>/", training_views.complete_training, name="training_complete"),
     path("training/feedback/<int:pk>/", training_views.submit_feedback, name="training_feedback"),
+
+    # ========== Contract Management ==========
+    # Contract Dashboard & List
+    path("contracts/", contract_views.ContractListView.as_view(), name="contract_list"),
+    path("contracts/dashboard/", contract_views.contract_dashboard, name="contract_dashboard"),
+
+    # Contract CRUD
+    path("contracts/create/", contract_views.ContractCreateView.as_view(), name="contract_create"),
+    path("contracts/<int:pk>/", contract_views.ContractDetailView.as_view(), name="contract_detail"),
+    path("contracts/<int:pk>/edit/", contract_views.ContractUpdateView.as_view(), name="contract_edit"),
+
+    # Contract Actions
+    path("contracts/<int:pk>/renew/", contract_views.contract_renew, name="contract_renew"),
+    path("contracts/<int:pk>/terminate/", contract_views.contract_terminate, name="contract_terminate"),
+
+    # Contract Reports
+    path("contracts/report/", contract_views.contract_report, name="contract_report"),
+    path("contracts/export/", contract_views.export_contracts_csv, name="export_contracts_csv"),
+
+    # ========== Shift Management ==========
+    # Shift Templates
+    path("shifts/templates/", shift_views.ShiftTemplateListView.as_view(), name="shift_template_list"),
+    path("shifts/templates/create/", shift_views.ShiftTemplateCreateView.as_view(), name="shift_template_create"),
+    path("shifts/templates/<int:pk>/", shift_views.ShiftTemplateDetailView.as_view(), name="shift_template_detail"),
+    path("shifts/templates/<int:pk>/edit/", shift_views.ShiftTemplateUpdateView.as_view(), name="shift_template_edit"),
+
+    # Shift Assignments
+    path("shifts/assignments/", shift_views.ShiftAssignmentListView.as_view(), name="shift_assignment_list"),
+    path("shifts/assignments/create/", shift_views.ShiftAssignmentCreateView.as_view(), name="shift_assignment_create"),
+    path("shifts/assignments/<int:pk>/", shift_views.ShiftAssignmentDetailView.as_view(), name="shift_assignment_detail"),
+    path("shifts/assignments/<int:pk>/edit/", shift_views.ShiftAssignmentUpdateView.as_view(), name="shift_assignment_edit"),
+    path("shifts/assignments/<int:pk>/end/", shift_views.end_shift_assignment, name="shift_assignment_end"),
+
+    # Shift Schedule
+    path("shifts/schedule/", shift_views.shift_schedule, name="shift_schedule"),
+
+    # Shift APIs
+    path("api/shifts/templates/", shift_views.shift_template_api, name="shift_template_api"),
+    path("api/employees/<int:employee_id>/shift/", shift_views.employee_current_shift, name="employee_current_shift"),
+
+    # ========== Asset Management ==========
+    # Asset Types
+    path("assets/types/", asset_views.AssetTypeListView.as_view(), name="asset_type_list"),
+    path("assets/types/create/", asset_views.AssetTypeCreateView.as_view(), name="asset_type_create"),
+    path("assets/types/<int:pk>/edit/", asset_views.AssetTypeUpdateView.as_view(), name="asset_type_edit"),
+
+    # Assets
+    path("assets/", asset_views.AssetListView.as_view(), name="asset_list"),
+    path("assets/dashboard/", asset_views.asset_dashboard, name="asset_dashboard"),
+    path("assets/create/", asset_views.AssetCreateView.as_view(), name="asset_create"),
+    path("assets/<int:pk>/", asset_views.AssetDetailView.as_view(), name="asset_detail"),
+    path("assets/<int:pk>/edit/", asset_views.AssetUpdateView.as_view(), name="asset_edit"),
+    path("assets/export/", asset_views.export_assets_csv, name="export_assets_csv"),
+
+    # Asset Assignments
+    path("assets/assignments/", asset_views.AssetAssignmentListView.as_view(), name="asset_assignment_list"),
+    path("assets/assignments/create/", asset_views.AssetAssignmentCreateView.as_view(), name="asset_assignment_create"),
+    path("assets/assignments/<int:pk>/", asset_views.AssetAssignmentDetailView.as_view(), name="asset_assignment_detail"),
+    path("assets/assignments/<int:pk>/return/", asset_views.return_asset, name="return_asset"),
+
+    # Asset APIs
+    path("api/assets/search/", asset_views.asset_search_api, name="asset_search_api"),
+    path("api/employees/<int:employee_id>/assets/", asset_views.employee_assets_api, name="employee_assets_api"),
 
     # ========== Legacy/Deprecated URLs (redirect to new system) ==========
     path("employees/create/", views.employee_wizard_start, name="employee_create"),  # Redirect to wizard
