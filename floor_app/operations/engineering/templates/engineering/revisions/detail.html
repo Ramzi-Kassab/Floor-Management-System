@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ revision.mat_number }} - Revision Detail - Engineering{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-file-earmark-text me-2"></i> {{ revision.mat_number }}
+            </h1>
+            <p class="page-subtitle">Revision {{ revision.revision_code }} of {{ revision.bit_design.design_code }}</p>
+        </div>
+        <div>
+            <a href="{% url 'engineering:bit_design_detail' revision.bit_design.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-diagram-3 me-2"></i> View Design
+            </a>
+            <a href="{% url 'engineering:revision_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Revision Details -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Revision Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">MAT Number</label>
+                        <div class="fw-bold">{{ revision.mat_number }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Revision Code</label>
+                        <div>{{ revision.revision_code }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Bit Design</label>
+                        <div>
+                            <a href="{% url 'engineering:bit_design_detail' revision.bit_design.pk %}">
+                                {{ revision.bit_design.design_code }} - {{ revision.bit_design.name }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Design Type</label>
+                        <div>
+                            {% if revision.design_type %}
+                            <span class="badge bg-secondary">{{ revision.design_type.name }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Effective Date</label>
+                        <div>{{ revision.effective_date|date:"Y-m-d"|default:"-" }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Obsolete Date</label>
+                        <div>{{ revision.obsolete_date|date:"Y-m-d"|default:"-" }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Status</label>
+                        <div>
+                            {% if revision.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                            {% if revision.is_temporary %}
+                            <span class="badge bg-warning text-dark ms-1">Temporary</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Superseded By</label>
+                        <div>
+                            {% if revision.superseded_by %}
+                            <a href="{% url 'engineering:revision_detail' revision.superseded_by.pk %}">
+                                {{ revision.superseded_by.mat_number }}
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Change Reason</label>
+                        <div>{{ revision.change_reason|default:"-" }}</div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Notes</label>
+                        <div class="border p-3 bg-light">{{ revision.notes|default:"No notes"|linebreaks }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERP Integration -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-link-45deg me-2"></i> ERP Integration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">ERP Item Number</label>
+                        <div>{{ revision.erp_item_number|default:"-" }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">ERP BOM Number</label>
+                        <div>{{ revision.erp_bom_number|default:"-" }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Standard Cost</label>
+                        <div>
+                            {% if revision.standard_cost %}
+                            ${{ revision.standard_cost|floatformat:2 }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Last Purchase Cost</label>
+                        <div>
+                            {% if revision.last_purchase_cost %}
+                            ${{ revision.last_purchase_cost|floatformat:2 }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOMs -->
+        <div class="card border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-list-columns me-2"></i> Bills of Materials
+                </h5>
+                <a href="{% url 'engineering:bom_create' %}?revision={{ revision.pk }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i> New BOM
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>BOM Number</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bom in boms %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'engineering:bom_detail' bom.pk %}">
+                                        {{ bom.bom_number }}
+                                    </a>
+                                </td>
+                                <td>{{ bom.name }}</td>
+                                <td>{{ bom.get_bom_type_display }}</td>
+                                <td>
+                                    <span class="badge bg-{{ bom.status }}">
+                                        {{ bom.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'engineering:bom_detail' bom.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    No BOMs defined. <a href="{% url 'engineering:bom_create' %}?revision={{ revision.pk }}">Create one</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Info -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Quick Info</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">Created</label>
+                    <div>{{ revision.created_at|date:"Y-m-d H:i" }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Last Modified</label>
+                    <div>{{ revision.updated_at|date:"Y-m-d H:i" }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Total BOMs</label>
+                    <h4>{{ boms.count }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'engineering:bit_design_detail' revision.bit_design.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-diagram-3 me-2"></i> View Bit Design
+                    </a>
+                    <a href="{% url 'engineering:bom_create' %}?revision={{ revision.pk }}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle me-2"></i> Create BOM
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

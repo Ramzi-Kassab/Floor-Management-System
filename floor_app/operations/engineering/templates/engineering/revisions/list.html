@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Design Revisions - Engineering - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-file-earmark-text me-2"></i> Design Revisions
+            </h1>
+            <p class="page-subtitle">All bit design revisions and MAT numbers</p>
+        </div>
+        <div>
+            <a href="{% url 'engineering:revision_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Revision
+            </a>
+            <a href="{% url 'engineering:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Search revisions..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-4">
+                <select name="design" class="form-select">
+                    <option value="">All Designs</option>
+                    {% for design in designs %}
+                    <option value="{{ design.id }}" {% if request.GET.design == design.id|stringformat:"s" %}selected{% endif %}>
+                        {{ design.design_code }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Revisions List -->
+<div class="card border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>MAT Number</th>
+                        <th>Bit Design</th>
+                        <th>Revision Code</th>
+                        <th>Type</th>
+                        <th>Effective Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for revision in revisions %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'engineering:revision_detail' revision.pk %}" class="fw-bold">
+                                {{ revision.mat_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'engineering:bit_design_detail' revision.bit_design.pk %}">
+                                {{ revision.bit_design.design_code }}
+                            </a>
+                        </td>
+                        <td>{{ revision.revision_code }}</td>
+                        <td>
+                            {% if revision.design_type %}
+                            <span class="badge bg-secondary">{{ revision.design_type.code }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ revision.effective_date|date:"Y-m-d"|default:"-" }}</td>
+                        <td>
+                            {% if revision.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                            {% if revision.is_temporary %}
+                            <span class="badge bg-warning text-dark">Temporary</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'engineering:revision_detail' revision.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            No revisions found. <a href="{% url 'engineering:revision_create' %}">Create one</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

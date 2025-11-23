@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ design.design_code }} - Roller Cone Design - Engineering{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-gear-wide-connected me-2"></i> {{ design.design_code }}
+            </h1>
+            <p class="page-subtitle">{{ design.description }}</p>
+        </div>
+        <div>
+            <a href="{% url 'engineering:roller_cone_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Design Details -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Design Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Design Code</label>
+                        <div class="fw-bold">{{ design.design_code }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Bit Type</label>
+                        <div>
+                            <span class="badge bg-secondary">{{ design.bit_type.name }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Bearing Type</label>
+                        <div>{{ design.bearing.name|default:"-" }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Seal Type</label>
+                        <div>{{ design.seal.name|default:"-" }}</div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Description</label>
+                        <div>{{ design.description|default:"-" }}</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small">Specifications</label>
+                        <div class="border p-3 bg-light">{{ design.specifications|default:"No specifications"|linebreaks }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Components -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-list-ul me-2"></i> Components
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Sequence</th>
+                                <th>Component</th>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for component in design.components.all %}
+                            <tr>
+                                <td>{{ component.sequence }}</td>
+                                <td>{{ component.component_name }}</td>
+                                <td>
+                                    {% if component.item %}
+                                    {{ component.item.name }}
+                                    <br><small class="text-muted">SKU: {{ component.item.sku }}</small>
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>{{ component.quantity }}</td>
+                                <td>{{ component.notes|default:"-"|truncatewords:10 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    No components defined yet
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOMs -->
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-list-columns me-2"></i> Bills of Materials
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>BOM Code</th>
+                                <th>Name</th>
+                                <th>Items</th>
+                                <th>Active</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bom in boms %}
+                            <tr>
+                                <td>{{ bom.bom_code }}</td>
+                                <td>{{ bom.name }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ bom.items.count }}</span>
+                                </td>
+                                <td>
+                                    {% if bom.is_active %}
+                                    <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    No BOMs defined for this design
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Info -->
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Quick Info</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">Total Components</label>
+                    <h4>{{ design.components.count }}</h4>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Total BOMs</label>
+                    <h4>{{ boms.count }}</h4>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Created</label>
+                    <div>{{ design.created_at|date:"Y-m-d H:i" }}</div>
+                </div>
+                <div>
+                    <label class="text-muted small">Last Modified</label>
+                    <div>{{ design.updated_at|date:"Y-m-d H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
