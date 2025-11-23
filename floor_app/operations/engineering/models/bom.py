@@ -153,6 +153,7 @@ class BOMHeader(PublicIdMixin, AuditMixin, SoftDeleteMixin):
     notes = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_bom_header"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "BOM Header"
         verbose_name_plural = "BOM Headers"
@@ -338,6 +339,7 @@ class BOMLine(AuditMixin, SoftDeleteMixin):
     notes = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_bom_line"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "BOM Line"
         verbose_name_plural = "BOM Lines"

@@ -70,6 +70,7 @@ class RollerConeBitType(models.Model):
     sort_order = models.IntegerField(default=0)
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_roller_cone_bit_type"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "Roller Cone Bit Type"
         verbose_name_plural = "Roller Cone Bit Types"
@@ -117,6 +118,7 @@ class RollerConeBearing(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_roller_cone_bearing"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "Roller Cone Bearing Type"
         verbose_name_plural = "Roller Cone Bearing Types"
@@ -154,6 +156,7 @@ class RollerConeSeal(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_roller_cone_seal"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "Roller Cone Seal Type"
         verbose_name_plural = "Roller Cone Seal Types"
@@ -341,6 +344,7 @@ class RollerConeDesign(AuditMixin, SoftDeleteMixin):
     notes = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_roller_cone_design"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "Roller Cone Design"
         verbose_name_plural = "Roller Cone Designs"
@@ -431,6 +435,7 @@ class RollerConeComponent(AuditMixin):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_roller_cone_component"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "Roller Cone Component"
         verbose_name_plural = "Roller Cone Components"
@@ -497,6 +502,7 @@ class RollerConeBOM(AuditMixin):
     notes = models.TextField(blank=True, default="")
 
     class Meta:
+        app_label = 'engineering'  # Required for Django to recognize the app
         db_table = "inventory_roller_cone_bom"  # ⚠️ KEEP original table name to preserve data
         verbose_name = "Roller Cone BOM Line"
         verbose_name_plural = "Roller Cone BOM Lines"
