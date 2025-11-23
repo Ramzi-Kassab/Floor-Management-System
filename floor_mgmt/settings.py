@@ -63,9 +63,9 @@ INSTALLED_APPS = [
     'floor_app.operations.analytics.apps.AnalyticsConfig',
     # Third-party
     'widget_tweaks',
-    'django_filters',
-    'drf_spectacular',
-    'import_export',
+    # 'django_filters',  # Enable after pip install
+    # 'drf_spectacular',  # Enable after pip install
+    # 'import_export',  # Enable after pip install
 ]
 
 MIDDLEWARE = [
