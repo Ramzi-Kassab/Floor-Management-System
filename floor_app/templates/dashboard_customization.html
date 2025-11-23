@@ -1,0 +1,621 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Customization{% endblock %}
+
+{% block extra_css %}
+<style>
+    .custom-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .widget-library {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    .widget-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: grab;
+        transition: all 0.2s;
+    }
+    .widget-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .widget-card.dragging {
+        opacity: 0.5;
+        cursor: grabbing;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1rem;
+        min-height: 600px;
+    }
+    .grid-item {
+        background: white;
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        position: relative;
+        transition: all 0.2s;
+    }
+    .grid-item.active {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-color: #667eea;
+        border-style: solid;
+    }
+    .grid-item .widget-controls {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .grid-item:hover .widget-controls {
+        opacity: 1;
+    }
+    .widget-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        margin-right: 1rem;
+    }
+    .icon-production { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .icon-inventory { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+    .icon-quality { background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%); }
+    .icon-hr { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); }
+    .icon-chart { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); }
+    .template-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .template-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .template-card.active {
+        border-color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    }
+    .size-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #e9ecef;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="custom-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-th-large"></i> Dashboard Customization</h1>
+                <p class="mb-0">Design your personalized dashboard with drag-and-drop widgets</p>
+            </div>
+            <div>
+                <button class="btn btn-light me-2" onclick="resetDashboard()">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+                <button class="btn btn-light" onclick="saveDashboard()">
+                    <i class="fas fa-save"></i> Save Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Selector -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-layer-group"></i> Quick Start Templates</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="template-card active" onclick="loadTemplate('executive')">
+                        <h6><i class="fas fa-chart-line"></i> Executive Dashboard</h6>
+                        <p class="text-muted small mb-0">High-level KPIs and metrics</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="template-card" onclick="loadTemplate('production')">
+                        <h6><i class="fas fa-industry"></i> Production Focus</h6>
+                        <p class="text-muted small mb-0">Real-time production monitoring</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="template-card" onclick="loadTemplate('quality')">
+                        <h6><i class="fas fa-clipboard-check"></i> Quality Control</h6>
+                        <p class="text-muted small mb-0">Quality metrics and NCR tracking</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="template-card" onclick="loadTemplate('blank')">
+                        <h6><i class="fas fa-plus"></i> Start from Scratch</h6>
+                        <p class="text-muted small mb-0">Build your own custom layout</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Widget Library -->
+        <div class="col-md-3">
+            <div class="widget-library">
+                <h5 class="mb-3"><i class="fas fa-puzzle-piece"></i> Widget Library</h5>
+                <p class="text-muted small">Drag widgets to add them to your dashboard</p>
+
+                <!-- Production Widgets -->
+                <h6 class="mt-3 mb-2"><i class="fas fa-industry"></i> Production</h6>
+                <div class="widget-card" draggable="true" data-widget="production-summary">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-production">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div>
+                            <strong>Production Summary</strong>
+                            <span class="size-badge">6x4</span>
+                            <br><small class="text-muted">Output, OEE, Jobs</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-card" draggable="true" data-widget="job-status">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-production">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div>
+                            <strong>Job Status</strong>
+                            <span class="size-badge">4x3</span>
+                            <br><small class="text-muted">Active jobs breakdown</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-card" draggable="true" data-widget="work-center-utilization">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-production">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div>
+                            <strong>Work Center Utilization</strong>
+                            <span class="size-badge">6x3</span>
+                            <br><small class="text-muted">Capacity by center</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Widgets -->
+                <h6 class="mt-3 mb-2"><i class="fas fa-boxes"></i> Inventory</h6>
+                <div class="widget-card" draggable="true" data-widget="stock-levels">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-inventory">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div>
+                            <strong>Stock Levels</strong>
+                            <span class="size-badge">4x4</span>
+                            <br><small class="text-muted">Current inventory status</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-card" draggable="true" data-widget="reorder-alerts">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-inventory">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <strong>Reorder Alerts</strong>
+                            <span class="size-badge">4x3</span>
+                            <br><small class="text-muted">Low stock items</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quality Widgets -->
+                <h6 class="mt-3 mb-2"><i class="fas fa-clipboard-check"></i> Quality</h6>
+                <div class="widget-card" draggable="true" data-widget="quality-metrics">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-quality">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <strong>Quality Metrics</strong>
+                            <span class="size-badge">6x4</span>
+                            <br><small class="text-muted">Pass rate, NCRs</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-card" draggable="true" data-widget="recent-ncrs">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-quality">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div>
+                            <strong>Recent NCRs</strong>
+                            <span class="size-badge">6x3</span>
+                            <br><small class="text-muted">Latest non-conformances</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HR Widgets -->
+                <h6 class="mt-3 mb-2"><i class="fas fa-users"></i> HR</h6>
+                <div class="widget-card" draggable="true" data-widget="headcount">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-hr">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <strong>Headcount</strong>
+                            <span class="size-badge">3x3</span>
+                            <br><small class="text-muted">Total employees</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-card" draggable="true" data-widget="attendance">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-hr">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <strong>Attendance</strong>
+                            <span class="size-badge">3x3</span>
+                            <br><small class="text-muted">Today's attendance</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Widgets -->
+                <h6 class="mt-3 mb-2"><i class="fas fa-chart-bar"></i> Charts</h6>
+                <div class="widget-card" draggable="true" data-widget="line-chart">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-chart">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <strong>Line Chart</strong>
+                            <span class="size-badge">6x4</span>
+                            <br><small class="text-muted">Trend visualization</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-card" draggable="true" data-widget="pie-chart">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon icon-chart">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <strong>Pie Chart</strong>
+                            <span class="size-badge">4x4</span>
+                            <br><small class="text-muted">Distribution view</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Canvas -->
+        <div class="col-md-9">
+            <div class="widget-library" style="max-height: none; min-height: 600px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-desktop"></i> Dashboard Preview</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="toggleGrid()">
+                            <i class="fas fa-grid"></i> Toggle Grid
+                        </button>
+                        <select class="form-select form-select-sm d-inline-block" style="width: auto;">
+                            <option selected>12 Column Grid</option>
+                            <option>24 Column Grid</option>
+                            <option>Fixed Layout</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" id="dashboardGrid">
+                    <!-- Grid items will be added here dynamically -->
+                    <div class="grid-item active" style="grid-column: span 6; grid-row: span 4;" data-widget="production-summary">
+                        <div class="widget-controls">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="configureWidget(this)">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeWidget(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <h6><i class="fas fa-chart-bar"></i> Production Summary</h6>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <h3 class="text-primary">152</h3>
+                                <small class="text-muted">Total Output Today</small>
+                            </div>
+                            <div class="col-6">
+                                <h3 class="text-success">85%</h3>
+                                <small class="text-muted">OEE</small>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <h3 class="text-info">42</h3>
+                                <small class="text-muted">Active Jobs</small>
+                            </div>
+                            <div class="col-6">
+                                <h3 class="text-warning">8</h3>
+                                <small class="text-muted">Pending</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-item" style="grid-column: span 6; grid-row: span 4;" data-widget="quality-metrics">
+                        <div class="widget-controls">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="configureWidget(this)">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeWidget(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <h6><i class="fas fa-chart-line"></i> Quality Metrics</h6>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Quality Rate</span>
+                                <strong>96.5%</strong>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-success" style="width: 96.5%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>NCRs This Month</span>
+                                <strong>12</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Inspections Pending</span>
+                                <strong>5</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-item" style="grid-column: span 4; grid-row: span 3;" data-widget="stock-levels">
+                        <div class="widget-controls">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="configureWidget(this)">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeWidget(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <h6><i class="fas fa-warehouse"></i> Stock Levels</h6>
+                        <div class="mt-3">
+                            <div class="mb-2">
+                                <small class="text-muted">Total Items</small>
+                                <h4>1,247</h4>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-danger">Out of Stock</small>
+                                <h5 class="text-danger">12</h5>
+                            </div>
+                            <div>
+                                <small class="text-warning">Below Reorder</small>
+                                <h5 class="text-warning">28</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-item" style="grid-column: span 4; grid-row: span 3;" data-widget="headcount">
+                        <div class="widget-controls">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="configureWidget(this)">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeWidget(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <h6><i class="fas fa-users"></i> Headcount</h6>
+                        <div class="mt-3 text-center">
+                            <h2 class="text-primary">487</h2>
+                            <p class="text-muted mb-2">Total Employees</p>
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up"></i> +12 this month
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="grid-item" style="grid-column: span 4; grid-row: span 3;" data-widget="attendance">
+                        <div class="widget-controls">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="configureWidget(this)">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeWidget(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <h6><i class="fas fa-calendar-check"></i> Attendance Today</h6>
+                        <div class="mt-3 text-center">
+                            <h2 class="text-success">456</h2>
+                            <p class="text-muted mb-2">Present</p>
+                            <div class="d-flex justify-content-around">
+                                <div>
+                                    <strong>18</strong>
+                                    <br><small class="text-muted">Absent</small>
+                                </div>
+                                <div>
+                                    <strong>13</strong>
+                                    <br><small class="text-muted">On Leave</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <strong><i class="fas fa-info-circle"></i> Tips:</strong>
+                    <ul class="mb-0">
+                        <li>Drag widgets from the library to add them to your dashboard</li>
+                        <li>Click the gear icon to configure widget settings</li>
+                        <li>Resize widgets by dragging their corners</li>
+                        <li>Changes are saved automatically when you click "Save Dashboard"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Widget Configuration Modal -->
+<div class="modal fade" id="widgetConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Widget Configuration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label"><strong>Widget Title</strong></label>
+                    <input type="text" class="form-control" value="Production Summary">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Refresh Interval</strong></label>
+                    <select class="form-select">
+                        <option>Never</option>
+                        <option>Every 30 seconds</option>
+                        <option selected>Every minute</option>
+                        <option>Every 5 minutes</option>
+                        <option>Every hour</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Date Range</strong></label>
+                    <select class="form-select">
+                        <option selected>Today</option>
+                        <option>This Week</option>
+                        <option>This Month</option>
+                        <option>This Year</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="showLegend" checked>
+                        <label class="form-check-label" for="showLegend">
+                            Show legend
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveWidgetConfig()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Drag and drop functionality
+const widgetCards = document.querySelectorAll('.widget-card');
+const dashboardGrid = document.getElementById('dashboardGrid');
+
+widgetCards.forEach(card => {
+    card.addEventListener('dragstart', dragStart);
+    card.addEventListener('dragend', dragEnd);
+});
+
+function dragStart(e) {
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('text/html', this.dataset.widget);
+}
+
+function dragEnd(e) {
+    this.classList.remove('dragging');
+}
+
+dashboardGrid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+});
+
+dashboardGrid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const widgetType = e.dataTransfer.getData('text/html');
+    alert('Adding widget: ' + widgetType);
+    // In real implementation, this would create a new grid item
+});
+
+function toggleGrid() {
+    dashboardGrid.style.gridTemplateColumns = dashboardGrid.style.gridTemplateColumns === 'repeat(24, 1fr)'
+        ? 'repeat(12, 1fr)'
+        : 'repeat(24, 1fr)';
+}
+
+function configureWidget(btn) {
+    const modal = new bootstrap.Modal(document.getElementById('widgetConfigModal'));
+    modal.show();
+}
+
+function removeWidget(btn) {
+    if (confirm('Remove this widget?')) {
+        btn.closest('.grid-item').remove();
+    }
+}
+
+function saveWidgetConfig() {
+    alert('Widget configuration saved!');
+    bootstrap.Modal.getInstance(document.getElementById('widgetConfigModal')).hide();
+}
+
+function loadTemplate(templateName) {
+    document.querySelectorAll('.template-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    event.target.closest('.template-card').classList.add('active');
+    alert('Loading template: ' + templateName);
+}
+
+function resetDashboard() {
+    if (confirm('Reset dashboard to default layout?')) {
+        location.reload();
+    }
+}
+
+function saveDashboard() {
+    alert('Dashboard layout saved!');
+    // In real implementation, save layout to database via AJAX
+}
+</script>
+{% endblock %}

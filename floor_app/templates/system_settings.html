@@ -1,0 +1,730 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .settings-nav {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 20px;
+    }
+    .nav-item-custom {
+        padding: 0.75rem 1rem;
+        border-left: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 0.5rem;
+        border-radius: 5px;
+    }
+    .nav-item-custom:hover {
+        background: #f8f9fa;
+        border-left-color: #667eea;
+    }
+    .nav-item-custom.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-left-color: #764ba2;
+    }
+    .setting-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .setting-row {
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .setting-row:last-child {
+        border-bottom: none;
+    }
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 28px;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 28px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #667eea;
+    }
+    input:checked + .slider:before {
+        transform: translateX(32px);
+    }
+    .danger-zone {
+        background: #fff5f5;
+        border: 2px solid #dc3545;
+        border-radius: 10px;
+        padding: 1.5rem;
+    }
+    .color-picker-preview {
+        width: 40px;
+        height: 40px;
+        border-radius: 5px;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+    }
+    .permission-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        background: #667eea;
+        color: white;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        margin: 0.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="settings-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-cogs"></i> System Settings</h1>
+                <p class="mb-0">Configure system-wide settings and preferences</p>
+            </div>
+            <div>
+                <button class="btn btn-light" onclick="saveAllSettings()">
+                    <i class="fas fa-save"></i> Save All Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="settings-nav">
+                <div class="nav-item-custom active" onclick="showSection('general')">
+                    <i class="fas fa-sliders-h"></i> General
+                </div>
+                <div class="nav-item-custom" onclick="showSection('appearance')">
+                    <i class="fas fa-palette"></i> Appearance
+                </div>
+                <div class="nav-item-custom" onclick="showSection('security')">
+                    <i class="fas fa-shield-alt"></i> Security
+                </div>
+                <div class="nav-item-custom" onclick="showSection('notifications')">
+                    <i class="fas fa-bell"></i> Notifications
+                </div>
+                <div class="nav-item-custom" onclick="showSection('integrations')">
+                    <i class="fas fa-plug"></i> Integrations
+                </div>
+                <div class="nav-item-custom" onclick="showSection('modules')">
+                    <i class="fas fa-th"></i> Modules
+                </div>
+                <div class="nav-item-custom" onclick="showSection('backup')">
+                    <i class="fas fa-database"></i> Backup & Restore
+                </div>
+                <div class="nav-item-custom" onclick="showSection('advanced')">
+                    <i class="fas fa-code"></i> Advanced
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="col-md-9">
+            <!-- General Settings -->
+            <div id="section-general" class="settings-section">
+                <div class="setting-card">
+                    <h5 class="mb-3"><i class="fas fa-sliders-h"></i> General Settings</h5>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>System Name</strong>
+                                <p class="text-muted small mb-0">Display name shown in headers and emails</p>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" value="Floor Management System">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Company Name</strong>
+                                <p class="text-muted small mb-0">Your organization name</p>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" placeholder="Enter company name">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Default Language</strong>
+                                <p class="text-muted small mb-0">System-wide default language</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option selected>English (US)</option>
+                                    <option>Spanish</option>
+                                    <option>French</option>
+                                    <option>German</option>
+                                    <option>Chinese</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Timezone</strong>
+                                <p class="text-muted small mb-0">Default timezone for dates and times</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option>UTC</option>
+                                    <option selected>America/New_York (EST)</option>
+                                    <option>America/Los_Angeles (PST)</option>
+                                    <option>Europe/London (GMT)</option>
+                                    <option>Asia/Tokyo (JST)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Date Format</strong>
+                                <p class="text-muted small mb-0">How dates are displayed</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option selected>MM/DD/YYYY</option>
+                                    <option>DD/MM/YYYY</option>
+                                    <option>YYYY-MM-DD</option>
+                                    <option>DD MMM YYYY</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Currency</strong>
+                                <p class="text-muted small mb-0">Default currency for financial data</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option selected>USD ($)</option>
+                                    <option>EUR (€)</option>
+                                    <option>GBP (£)</option>
+                                    <option>JPY (¥)</option>
+                                    <option>CAD ($)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance Settings -->
+            <div id="section-appearance" class="settings-section" style="display: none;">
+                <div class="setting-card">
+                    <h5 class="mb-3"><i class="fas fa-palette"></i> Appearance Settings</h5>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Theme</strong>
+                                <p class="text-muted small mb-0">Choose light or dark theme</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option selected>Light</option>
+                                    <option>Dark</option>
+                                    <option>Auto (System)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Primary Color</strong>
+                                <p class="text-muted small mb-0">Main accent color for the interface</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex gap-2">
+                                    <div class="color-picker-preview" style="background: #667eea;" onclick="selectColor('#667eea')"></div>
+                                    <div class="color-picker-preview" style="background: #28a745;" onclick="selectColor('#28a745')"></div>
+                                    <div class="color-picker-preview" style="background: #dc3545;" onclick="selectColor('#dc3545')"></div>
+                                    <div class="color-picker-preview" style="background: #ffc107;" onclick="selectColor('#ffc107')"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Logo</strong>
+                                <p class="text-muted small mb-0">Upload company logo</p>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="file" class="form-control" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Compact Mode</strong>
+                                <p class="text-muted small mb-0">Reduce padding and spacing</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div id="section-security" class="settings-section" style="display: none;">
+                <div class="setting-card">
+                    <h5 class="mb-3"><i class="fas fa-shield-alt"></i> Security Settings</h5>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Require Two-Factor Authentication</strong>
+                                <p class="text-muted small mb-0">All users must enable 2FA</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Session Timeout</strong>
+                                <p class="text-muted small mb-0">Auto-logout after inactivity</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option>15 minutes</option>
+                                    <option selected>30 minutes</option>
+                                    <option>1 hour</option>
+                                    <option>2 hours</option>
+                                    <option>Never</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Password Requirements</strong>
+                                <p class="text-muted small mb-0">Minimum password strength</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option>Low</option>
+                                    <option selected>Medium</option>
+                                    <option>High</option>
+                                    <option>Very High</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Audit Logging</strong>
+                                <p class="text-muted small mb-0">Track all user activities</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>IP Whitelist</strong>
+                                <p class="text-muted small mb-0">Restrict access to specific IP addresses</p>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-sm btn-outline-primary">Configure</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div id="section-notifications" class="settings-section" style="display: none;">
+                <div class="setting-card">
+                    <h5 class="mb-3"><i class="fas fa-bell"></i> Notification Settings</h5>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Email Notifications</strong>
+                                <p class="text-muted small mb-0">Send system notifications via email</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>SMTP Server</strong>
+                                <p class="text-muted small mb-0">Email server configuration</p>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-sm btn-outline-primary">Configure</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Slack Integration</strong>
+                                <p class="text-muted small mb-0">Send notifications to Slack</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>SMS Notifications</strong>
+                                <p class="text-muted small mb-0">Send urgent alerts via SMS</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Settings -->
+            <div id="section-modules" class="settings-section" style="display: none;">
+                <div class="setting-card">
+                    <h5 class="mb-3"><i class="fas fa-th"></i> Module Management</h5>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Production Module</strong>
+                                <p class="text-muted small mb-0">Job scheduling and work center management</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Inventory Module</strong>
+                                <p class="text-muted small mb-0">Stock management and tracking</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Quality Module</strong>
+                                <p class="text-muted small mb-0">Inspections and NCR management</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>HR Module</strong>
+                                <p class="text-muted small mb-0">Employee management and payroll</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Sales Module</strong>
+                                <p class="text-muted small mb-0">CRM and order management</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backup & Restore -->
+            <div id="section-backup" class="settings-section" style="display: none;">
+                <div class="setting-card">
+                    <h5 class="mb-3"><i class="fas fa-database"></i> Backup & Restore</h5>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Automatic Backups</strong>
+                                <p class="text-muted small mb-0">Schedule automatic database backups</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Backup Frequency</strong>
+                                <p class="text-muted small mb-0">How often to backup</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option>Every 6 hours</option>
+                                    <option selected>Daily</option>
+                                    <option>Weekly</option>
+                                    <option>Monthly</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Backup Location</strong>
+                                <p class="text-muted small mb-0">Where to store backups</p>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select">
+                                    <option selected>Local Storage</option>
+                                    <option>AWS S3</option>
+                                    <option>Google Cloud</option>
+                                    <option>Azure Blob</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button class="btn btn-primary me-2">
+                            <i class="fas fa-download"></i> Create Backup Now
+                        </button>
+                        <button class="btn btn-outline-primary">
+                            <i class="fas fa-upload"></i> Restore from Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Settings -->
+            <div id="section-advanced" class="settings-section" style="display: none;">
+                <div class="setting-card">
+                    <h5 class="mb-3"><i class="fas fa-code"></i> Advanced Settings</h5>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Debug Mode</strong>
+                                <p class="text-muted small mb-0">Enable detailed error messages</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>API Rate Limiting</strong>
+                                <p class="text-muted small mb-0">Requests per minute per user</p>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" value="60">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <strong>Cache Duration</strong>
+                                <p class="text-muted small mb-0">How long to cache data (seconds)</p>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" value="300">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="danger-zone mt-4">
+                    <h5 class="text-danger mb-3"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+                    <div class="mb-3">
+                        <strong>Clear All Cache</strong>
+                        <p class="text-muted small">Remove all cached data (may slow performance temporarily)</p>
+                        <button class="btn btn-outline-danger">Clear Cache</button>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Reset to Factory Defaults</strong>
+                        <p class="text-muted small">Reset all settings to default values</p>
+                        <button class="btn btn-outline-danger">Reset Settings</button>
+                    </div>
+                    <div>
+                        <strong>Delete All Data</strong>
+                        <p class="text-muted small">Permanently delete all system data (cannot be undone)</p>
+                        <button class="btn btn-danger">Delete All Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.settings-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Show selected section
+    document.getElementById('section-' + sectionId).style.display = 'block';
+
+    // Update active nav item
+    document.querySelectorAll('.nav-item-custom').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+function selectColor(color) {
+    alert('Primary color set to: ' + color);
+    // In real implementation, this would update CSS variables
+}
+
+function saveAllSettings() {
+    alert('Saving all settings...');
+    // In real implementation, this would save to database via AJAX
+}
+</script>
+{% endblock %}

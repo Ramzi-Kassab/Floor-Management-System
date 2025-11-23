@@ -1,0 +1,566 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Global Search{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .search-box {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .search-input {
+        font-size: 1.2rem;
+        padding: 1rem 1.5rem;
+        border-radius: 50px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .search-btn {
+        border-radius: 50px;
+        padding: 1rem 2rem;
+        font-weight: bold;
+    }
+    .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .chip {
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border-radius: 20px;
+        border: 2px solid white;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .chip:hover {
+        background: white;
+        color: #667eea;
+    }
+    .chip.active {
+        background: white;
+        color: #667eea;
+    }
+    .results-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .result-item {
+        padding: 1rem;
+        border-left: 4px solid #667eea;
+        background: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+    .result-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateX(5px);
+        background: white;
+    }
+    .module-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: white;
+    }
+    .badge-production { background: #667eea; }
+    .badge-inventory { background: #28a745; }
+    .badge-quality { background: #dc3545; }
+    .badge-hr { background: #ffc107; color: #333; }
+    .badge-sales { background: #17a2b8; }
+    .badge-maintenance { background: #fd7e14; }
+    .badge-planning { background: #6f42c1; }
+    .badge-purchasing { background: #e83e8c; }
+    .quick-stats {
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .highlight {
+        background: yellow;
+        padding: 0.1rem 0.2rem;
+        border-radius: 3px;
+    }
+    .advanced-filters {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .recent-search {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        margin: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .recent-search:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Search Header -->
+    <div class="search-header">
+        <h1><i class="fas fa-search"></i> Global Search</h1>
+        <p class="mb-4">Search across all modules: Production, Inventory, Quality, HR, Sales, and more</p>
+
+        <div class="search-box">
+            <form method="get" action="{% url 'global_search' %}">
+                <div class="input-group input-group-lg">
+                    <input type="text"
+                           name="q"
+                           class="form-control search-input"
+                           placeholder="Search for jobs, parts, employees, orders, inspections..."
+                           value="{{ query }}"
+                           autofocus>
+                    <button class="btn btn-light search-btn" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+
+            <!-- Filter Chips -->
+            <div class="filter-chips">
+                <div class="chip active" data-module="all">
+                    <i class="fas fa-globe"></i> All Modules
+                </div>
+                <div class="chip" data-module="production">
+                    <i class="fas fa-industry"></i> Production
+                </div>
+                <div class="chip" data-module="inventory">
+                    <i class="fas fa-boxes"></i> Inventory
+                </div>
+                <div class="chip" data-module="quality">
+                    <i class="fas fa-clipboard-check"></i> Quality
+                </div>
+                <div class="chip" data-module="hr">
+                    <i class="fas fa-users"></i> HR
+                </div>
+                <div class="chip" data-module="sales">
+                    <i class="fas fa-dollar-sign"></i> Sales
+                </div>
+                <div class="chip" data-module="maintenance">
+                    <i class="fas fa-wrench"></i> Maintenance
+                </div>
+                <div class="chip" data-module="planning">
+                    <i class="fas fa-calendar-alt"></i> Planning
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filters (Collapsible) -->
+    <div class="advanced-filters" id="advancedFilters" style="display: none;">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label"><strong>Date Range</strong></label>
+                <select class="form-select">
+                    <option>Any time</option>
+                    <option>Last 7 days</option>
+                    <option>Last 30 days</option>
+                    <option>Last 90 days</option>
+                    <option>This year</option>
+                    <option>Custom range...</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><strong>Status</strong></label>
+                <select class="form-select">
+                    <option>Any status</option>
+                    <option>Active</option>
+                    <option>Completed</option>
+                    <option>Pending</option>
+                    <option>On Hold</option>
+                    <option>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><strong>Created By</strong></label>
+                <input type="text" class="form-control" placeholder="User name...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><strong>Sort By</strong></label>
+                <select class="form-select">
+                    <option>Relevance</option>
+                    <option>Date (newest)</option>
+                    <option>Date (oldest)</option>
+                    <option>Title A-Z</option>
+                    <option>Module</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button class="btn btn-primary">Apply Filters</button>
+            <button class="btn btn-outline-secondary" onclick="clearFilters()">Clear</button>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-sm btn-outline-primary" onclick="toggleAdvancedFilters()">
+            <i class="fas fa-filter"></i> Advanced Filters
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="saveSearch()">
+            <i class="fas fa-save"></i> Save Search
+        </button>
+        <button class="btn btn-sm btn-outline-info" onclick="exportResults()">
+            <i class="fas fa-download"></i> Export Results
+        </button>
+    </div>
+
+    {% if query %}
+    <!-- Results Section -->
+    <div class="row">
+        <div class="col-md-9">
+            <div class="results-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Search Results for "{{ query }}"</h5>
+                    <span class="text-muted">{{ total_results|default:0 }} results found in {{ search_time|default:"0.08" }}s</span>
+                </div>
+
+                <!-- Results by Module -->
+
+                <!-- Production Results -->
+                {% if production_results %}
+                <h6 class="mt-4 mb-3"><i class="fas fa-industry"></i> Production Jobs ({{ production_results|length }})</h6>
+                {% for result in production_results %}
+                <div class="result-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="module-badge badge-production">PRODUCTION</span>
+                            <h6 class="mt-2 mb-1">
+                                <a href="{{ result.url }}">{{ result.title }}</a>
+                            </h6>
+                            <p class="text-muted mb-1">{{ result.description|truncatechars:150 }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> {{ result.created_at|date:"M d, Y" }}
+                                | <i class="fas fa-user"></i> {{ result.created_by }}
+                                {% if result.status %}
+                                | <span class="badge bg-secondary">{{ result.status }}</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- Inventory Results -->
+                {% if inventory_results %}
+                <h6 class="mt-4 mb-3"><i class="fas fa-boxes"></i> Inventory Items ({{ inventory_results|length }})</h6>
+                {% for result in inventory_results %}
+                <div class="result-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="module-badge badge-inventory">INVENTORY</span>
+                            <h6 class="mt-2 mb-1">
+                                <a href="{{ result.url }}">{{ result.title }}</a>
+                            </h6>
+                            <p class="text-muted mb-1">{{ result.description|truncatechars:150 }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-box"></i> Stock: {{ result.quantity }}
+                                | <i class="fas fa-dollar-sign"></i> Value: ${{ result.value }}
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- Quality Results -->
+                {% if quality_results %}
+                <h6 class="mt-4 mb-3"><i class="fas fa-clipboard-check"></i> Quality Inspections ({{ quality_results|length }})</h6>
+                {% for result in quality_results %}
+                <div class="result-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="module-badge badge-quality">QUALITY</span>
+                            <h6 class="mt-2 mb-1">
+                                <a href="{{ result.url }}">{{ result.title }}</a>
+                            </h6>
+                            <p class="text-muted mb-1">{{ result.description|truncatechars:150 }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> {{ result.inspection_date|date:"M d, Y" }}
+                                | <i class="fas fa-user-check"></i> Inspector: {{ result.inspector }}
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- HR Results -->
+                {% if hr_results %}
+                <h6 class="mt-4 mb-3"><i class="fas fa-users"></i> Employees ({{ hr_results|length }})</h6>
+                {% for result in hr_results %}
+                <div class="result-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="module-badge badge-hr">HR</span>
+                            <h6 class="mt-2 mb-1">
+                                <a href="{{ result.url }}">{{ result.name }}</a>
+                            </h6>
+                            <p class="text-muted mb-1">{{ result.position }} - {{ result.department }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-envelope"></i> {{ result.email }}
+                                | <i class="fas fa-id-badge"></i> {{ result.employee_id }}
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- No Results -->
+                {% if not production_results and not inventory_results and not quality_results and not hr_results %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No results found for "{{ query }}"</h5>
+                    <p class="text-muted">Try different keywords or check your spelling</p>
+                    <button class="btn btn-outline-primary" onclick="clearSearch()">
+                        <i class="fas fa-redo"></i> Clear Search
+                    </button>
+                </div>
+                {% endif %}
+
+                <!-- Pagination -->
+                {% if total_results > 20 %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <!-- Result Stats -->
+            <div class="results-card">
+                <h6 class="mb-3"><i class="fas fa-chart-bar"></i> Results by Module</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Production</small>
+                        <strong>{{ production_count|default:0 }}</strong>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-primary" style="width: {{ production_percent|default:0 }}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Inventory</small>
+                        <strong>{{ inventory_count|default:0 }}</strong>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-success" style="width: {{ inventory_percent|default:0 }}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Quality</small>
+                        <strong>{{ quality_count|default:0 }}</strong>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-danger" style="width: {{ quality_percent|default:0 }}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>HR</small>
+                        <strong>{{ hr_count|default:0 }}</strong>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-warning" style="width: {{ hr_percent|default:0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Searches -->
+            <div class="results-card">
+                <h6 class="mb-3"><i class="fas fa-star"></i> Saved Searches</h6>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-search"></i> Open production jobs
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-search"></i> Low stock items
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-search"></i> Failed inspections
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0">
+                        <i class="fas fa-search"></i> Active employees
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="results-card">
+                <h6 class="mb-3"><i class="fas fa-bolt"></i> Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'production:job_create' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus"></i> New Job
+                    </a>
+                    <a href="{% url 'inventory:item_create' %}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-plus"></i> New Item
+                    </a>
+                    <a href="{% url 'quality:inspection_create' %}" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-plus"></i> New Inspection
+                    </a>
+                    <a href="{% url 'hr:employee_create' %}" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-plus"></i> New Employee
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Initial State - No Search Yet -->
+    <div class="row">
+        <div class="col-12">
+            <div class="results-card">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-5x text-muted mb-4"></i>
+                    <h3 class="text-muted mb-3">Search the entire system</h3>
+                    <p class="text-muted mb-4">Find production jobs, inventory items, quality inspections, employees, and more</p>
+
+                    <!-- Recent Searches -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">Recent Searches</h6>
+                        <div>
+                            <span class="recent-search" onclick="searchFor('JOB-12345')">
+                                <i class="fas fa-clock"></i> JOB-12345
+                            </span>
+                            <span class="recent-search" onclick="searchFor('bearing SKF')">
+                                <i class="fas fa-clock"></i> bearing SKF
+                            </span>
+                            <span class="recent-search" onclick="searchFor('John Smith')">
+                                <i class="fas fa-clock"></i> John Smith
+                            </span>
+                            <span class="recent-search" onclick="searchFor('NCR-789')">
+                                <i class="fas fa-clock"></i> NCR-789
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Search Tips -->
+                    <div class="mt-5 text-start" style="max-width: 600px; margin: 0 auto;">
+                        <h6><i class="fas fa-info-circle"></i> Search Tips</h6>
+                        <ul class="text-muted">
+                            <li>Use quotation marks for exact phrases: "CNC machine"</li>
+                            <li>Use AND/OR for multiple terms: bearing AND SKF</li>
+                            <li>Use wildcards: part*</li>
+                            <li>Search by ID numbers: JOB-12345, NCR-789, EMP-456</li>
+                            <li>Use module filters to narrow results</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Module filter chips
+document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        // Could trigger AJAX search filtered by module
+    });
+});
+
+function toggleAdvancedFilters() {
+    const filters = document.getElementById('advancedFilters');
+    filters.style.display = filters.style.display === 'none' ? 'block' : 'none';
+}
+
+function clearFilters() {
+    document.querySelectorAll('select, input[type="text"]').forEach(el => {
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+    });
+}
+
+function saveSearch() {
+    const query = document.querySelector('[name="q"]').value;
+    if (query) {
+        alert('Search "' + query + '" saved!');
+    }
+}
+
+function exportResults() {
+    alert('Exporting search results to CSV...');
+}
+
+function clearSearch() {
+    document.querySelector('[name="q"]').value = '';
+    window.location.href = '{% url "global_search" %}';
+}
+
+function searchFor(query) {
+    document.querySelector('[name="q"]').value = query;
+    document.querySelector('form').submit();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + K for search focus
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.querySelector('[name="q"]').focus();
+    }
+});
+</script>
+{% endblock %}
