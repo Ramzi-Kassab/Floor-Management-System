@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .admin-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .metric-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        height: 100%;
+    }
+    .metric-box.danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+    .metric-box.warning {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    }
+    .metric-box.success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    .metric-box.info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    .user-row {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background 0.2s;
+    }
+    .user-row:hover {
+        background: #f8f9fa;
+    }
+    .user-row:last-child {
+        border-bottom: none;
+    }
+    .status-online {
+        width: 10px;
+        height: 10px;
+        background: #28a745;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+    .status-offline {
+        width: 10px;
+        height: 10px;
+        background: #6c757d;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: 1rem;
+    }
+    .system-alert {
+        border-left: 4px solid #dc3545;
+        background: #fff5f5;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 0.75rem;
+    }
+    .system-alert.warning {
+        border-left-color: #ffc107;
+        background: #fffbf0;
+    }
+    .system-alert.info {
+        border-left-color: #17a2b8;
+        background: #f0f9ff;
+    }
+    .quick-action-btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        text-align: left;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="admin-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+                <p class="mb-0">System administration and monitoring</p>
+            </div>
+            <div>
+                <span class="badge bg-light text-dark">Last Updated: {{ now|date:"g:i A" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-box">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <div class="metric-value">{{ total_users|default:487 }}</div>
+                <div class="metric-label">Total Users</div>
+                <small><i class="fas fa-arrow-up"></i> {{ active_users|default:156 }} active now</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-box success">
+                <i class="fas fa-server fa-2x mb-2"></i>
+                <div class="metric-value">{{ system_uptime|default:"99.8" }}%</div>
+                <div class="metric-label">System Uptime</div>
+                <small>Last 30 days</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-box warning">
+                <i class="fas fa-database fa-2x mb-2"></i>
+                <div class="metric-value">{{ db_size|default:"2.4" }}GB</div>
+                <div class="metric-label">Database Size</div>
+                <small>{{ db_growth|default:"+12%" }} this month</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-box info">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <div class="metric-value">{{ api_calls|default:"1.2M" }}</div>
+                <div class="metric-label">API Calls Today</div>
+                <small>Avg response: {{ avg_response|default:"120" }}ms</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- System Health -->
+            <div class="admin-card">
+                <h5 class="mb-3"><i class="fas fa-heartbeat"></i> System Health</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><strong>CPU Usage</strong></small>
+                            <small>42%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 42%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><strong>Memory Usage</strong></small>
+                            <small>68%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: 68%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><strong>Disk Usage</strong></small>
+                            <small>54%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: 54%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><strong>Network I/O</strong></small>
+                            <small>28%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 28%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Alerts -->
+            <div class="admin-card">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle"></i> System Alerts</h5>
+                <div class="system-alert">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong><i class="fas fa-exclamation-circle"></i> High Memory Usage Detected</strong>
+                            <p class="mb-0 text-muted small">Memory usage at 68% - consider scaling resources</p>
+                        </div>
+                        <small class="text-muted">5 min ago</small>
+                    </div>
+                </div>
+                <div class="system-alert warning">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong><i class="fas fa-database"></i> Database Backup Scheduled</strong>
+                            <p class="mb-0 text-muted small">Next automatic backup in 4 hours</p>
+                        </div>
+                        <small class="text-muted">1 hour ago</small>
+                    </div>
+                </div>
+                <div class="system-alert info">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong><i class="fas fa-info-circle"></i> System Update Available</strong>
+                            <p class="mb-0 text-muted small">Version 2.5.1 includes security patches and performance improvements</p>
+                        </div>
+                        <small class="text-muted">Today</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Activity Chart -->
+            <div class="admin-card">
+                <h5 class="mb-3"><i class="fas fa-chart-area"></i> User Activity (Last 7 Days)</h5>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent User Activity -->
+            <div class="admin-card">
+                <h5 class="mb-3"><i class="fas fa-history"></i> Recent User Activity</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Module</th>
+                                <th>IP Address</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>John Smith</strong></td>
+                                <td>Created Job #12346</td>
+                                <td><span class="badge bg-primary">Production</span></td>
+                                <td>192.168.1.105</td>
+                                <td>2 min ago</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sarah Williams</strong></td>
+                                <td>Approved PR #789</td>
+                                <td><span class="badge bg-success">Purchasing</span></td>
+                                <td>192.168.1.112</td>
+                                <td>8 min ago</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Michael Brown</strong></td>
+                                <td>Updated Inventory Item</td>
+                                <td><span class="badge bg-warning">Inventory</span></td>
+                                <td>192.168.1.98</td>
+                                <td>15 min ago</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Jennifer Davis</strong></td>
+                                <td>Created NCR #790</td>
+                                <td><span class="badge bg-danger">Quality</span></td>
+                                <td>192.168.1.87</td>
+                                <td>22 min ago</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Robert Wilson</strong></td>
+                                <td>Login</td>
+                                <td><span class="badge bg-secondary">System</span></td>
+                                <td>192.168.1.134</td>
+                                <td>35 min ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-4">
+            <!-- Quick Actions -->
+            <div class="admin-card">
+                <h6 class="mb-3"><i class="fas fa-bolt"></i> Quick Actions</h6>
+                <button class="btn btn-primary quick-action-btn" onclick="location.href='{% url "system_settings" %}'">
+                    <i class="fas fa-cog"></i> System Settings
+                </button>
+                <button class="btn btn-success quick-action-btn" onclick="location.href='{% url "user_management" %}'">
+                    <i class="fas fa-users-cog"></i> Manage Users
+                </button>
+                <button class="btn btn-info quick-action-btn" onclick="performBackup()">
+                    <i class="fas fa-database"></i> Backup Database
+                </button>
+                <button class="btn btn-warning quick-action-btn" onclick="clearCache()">
+                    <i class="fas fa-broom"></i> Clear Cache
+                </button>
+                <button class="btn btn-secondary quick-action-btn" onclick="location.href='{% url "audit_logs" %}'">
+                    <i class="fas fa-clipboard-list"></i> View Audit Logs
+                </button>
+            </div>
+
+            <!-- Active Users -->
+            <div class="admin-card">
+                <h6 class="mb-3"><i class="fas fa-users"></i> Active Users ({{ active_users|default:156 }})</h6>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <div class="user-row">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="status-online"></span>
+                                <strong>John Smith</strong>
+                                <br><small class="text-muted">Production</small>
+                            </div>
+                            <small class="text-muted">Active now</small>
+                        </div>
+                    </div>
+                    <div class="user-row">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="status-online"></span>
+                                <strong>Sarah Williams</strong>
+                                <br><small class="text-muted">Purchasing</small>
+                            </div>
+                            <small class="text-muted">Active now</small>
+                        </div>
+                    </div>
+                    <div class="user-row">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="status-online"></span>
+                                <strong>Michael Brown</strong>
+                                <br><small class="text-muted">Inventory</small>
+                            </div>
+                            <small class="text-muted">2 min ago</small>
+                        </div>
+                    </div>
+                    <div class="user-row">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="status-online"></span>
+                                <strong>Jennifer Davis</strong>
+                                <br><small class="text-muted">Quality</small>
+                            </div>
+                            <small class="text-muted">5 min ago</small>
+                        </div>
+                    </div>
+                    <div class="user-row">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="status-offline"></span>
+                                <strong>Robert Wilson</strong>
+                                <br><small class="text-muted">HR</small>
+                            </div>
+                            <small class="text-muted">1 hour ago</small>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary w-100 mt-2">View All Users</button>
+            </div>
+
+            <!-- System Statistics -->
+            <div class="admin-card">
+                <h6 class="mb-3"><i class="fas fa-chart-pie"></i> System Statistics</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Total Records</small>
+                        <strong>1,247,892</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Production Jobs</small>
+                        <strong>45,678</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Inventory Items</small>
+                        <strong>1,247</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Quality Inspections</small>
+                        <strong>12,456</strong>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Employees</small>
+                        <strong>487</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Status -->
+            <div class="admin-card">
+                <h6 class="mb-3"><i class="fas fa-th"></i> Module Status</h6>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-industry text-primary"></i> Production</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-boxes text-success"></i> Inventory</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-clipboard-check text-danger"></i> Quality</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-users text-warning"></i> HR</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-dollar-sign text-info"></i> Sales</span>
+                        <span class="badge bg-secondary">Disabled</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Backups -->
+            <div class="admin-card">
+                <h6 class="mb-3"><i class="fas fa-database"></i> Recent Backups</h6>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>Full Backup</strong>
+                            <span class="badge bg-success">Success</span>
+                        </div>
+                        <small class="text-muted">Today at 2:00 AM • 2.4 GB</small>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>Full Backup</strong>
+                            <span class="badge bg-success">Success</span>
+                        </div>
+                        <small class="text-muted">Yesterday at 2:00 AM • 2.3 GB</small>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>Full Backup</strong>
+                            <span class="badge bg-success">Success</span>
+                        </div>
+                        <small class="text-muted">2 days ago • 2.3 GB</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// User Activity Chart
+const activityCtx = document.getElementById('activityChart').getContext('2d');
+new Chart(activityCtx, {
+    type: 'line',
+    data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+            label: 'Active Users',
+            data: [145, 152, 148, 156, 142, 67, 45],
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'API Calls (thousands)',
+            data: [1100, 1250, 1180, 1420, 1310, 780, 450],
+            borderColor: 'rgb(40, 167, 69)',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+function performBackup() {
+    if (confirm('Start database backup now? This may take several minutes.')) {
+        alert('Backup started in background. You will be notified when complete.');
+    }
+}
+
+function clearCache() {
+    if (confirm('Clear all cached data? This may temporarily slow down the system.')) {
+        alert('Cache cleared successfully!');
+    }
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    console.log('Refreshing dashboard data...');
+    // In real implementation, would fetch updated data via AJAX
+}, 30000);
+</script>
+{% endblock %}

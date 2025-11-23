@@ -1,0 +1,693 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notification Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .notification-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .notification-item {
+        padding: 1rem;
+        border-left: 4px solid #667eea;
+        background: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .notification-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateX(5px);
+        background: white;
+    }
+    .notification-item.unread {
+        background: #e7f3ff;
+        border-left-color: #0066cc;
+        font-weight: 600;
+    }
+    .notification-item.unread::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        background: #0066cc;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+    .notification-item {
+        position: relative;
+    }
+    .notification-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+    .icon-info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); }
+    .icon-success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+    .icon-warning { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); }
+    .icon-danger { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); }
+    .icon-task { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 20px;
+        margin: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+    .filter-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+    }
+    .notification-actions {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .notification-item:hover .notification-actions {
+        opacity: 1;
+    }
+    .time-badge {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .notification-settings-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #667eea;
+    }
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="notification-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-bell"></i> Notification Center</h1>
+                <p class="mb-0">Stay updated with important alerts and system events</p>
+            </div>
+            <div>
+                <button class="btn btn-light me-2" onclick="markAllAsRead()">
+                    <i class="fas fa-check-double"></i> Mark All Read
+                </button>
+                <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="notification-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <button class="filter-btn active" onclick="filterNotifications('all')">
+                    <i class="fas fa-inbox"></i> All ({{ total_count|default:47 }})
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('unread')">
+                    <i class="fas fa-circle"></i> Unread ({{ unread_count|default:12 }})
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('production')">
+                    <i class="fas fa-industry"></i> Production
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('quality')">
+                    <i class="fas fa-clipboard-check"></i> Quality
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('inventory')">
+                    <i class="fas fa-boxes"></i> Inventory
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('hr')">
+                    <i class="fas fa-users"></i> HR
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('system')">
+                    <i class="fas fa-server"></i> System
+                </button>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-danger" onclick="clearAll()">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-9">
+            <!-- Notifications List -->
+            <div class="notification-card">
+                <h5 class="mb-3">Today</h5>
+
+                <!-- Unread Notification -->
+                <div class="notification-item unread" data-category="production" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Work Center A3 Approaching Capacity</strong>
+                                    <p class="mb-1 text-muted">Current utilization at 94%. Consider load balancing to prevent bottleneck.</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> 5 minutes ago</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(1)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notification-item unread" data-category="quality" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-danger">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Quality Issue Detected - Job #12344</strong>
+                                    <p class="mb-1 text-muted">Failed inspection at final QC. NCR #789 has been created and requires your review.</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> 15 minutes ago</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(2)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notification-item unread" data-category="inventory" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-warning">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Low Stock Alert</strong>
+                                    <p class="mb-1 text-muted">BEARING-SKF-6205 is out of stock. HYDRAULIC-OIL-32 below reorder point (5 units remaining).</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> 1 hour ago</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(3)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Read Notifications -->
+                <div class="notification-item" data-category="production" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Job #12345 Completed Successfully</strong>
+                                    <p class="mb-1 text-muted">Completed 2 hours ahead of schedule with 100% quality pass rate.</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> 2 hours ago</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(4)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notification-item" data-category="hr" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-info">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>New Employee Onboarding</strong>
+                                    <p class="mb-1 text-muted">Sarah Johnson joined the IT Department. Please complete onboarding tasks.</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> 3 hours ago</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(5)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3 mt-4">Yesterday</h5>
+
+                <div class="notification-item" data-category="system" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-info">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Automated Backup Completed</strong>
+                                    <p class="mb-1 text-muted">Daily backup completed successfully. Database size: 2.4 GB. Backup stored in AWS S3.</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> Yesterday at 2:00 AM</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(6)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notification-item" data-category="production" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-task">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Weekly Production Report Ready</strong>
+                                    <p class="mb-1 text-muted">Week 47 production summary is available. Overall output: +12% vs. target.</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> Yesterday at 8:00 AM</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(7)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3 mt-4">This Week</h5>
+
+                <div class="notification-item" data-category="quality" onclick="openNotification(this)">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon icon-success">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Quality Milestone Achieved</strong>
+                                    <p class="mb-1 text-muted">Reached 98.5% quality pass rate for November - highest this year!</p>
+                                    <span class="time-badge"><i class="fas fa-clock"></i> 3 days ago</span>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); viewDetails(8)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); archiveNotification(this)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <!-- Quick Stats -->
+            <div class="notification-card">
+                <h6 class="mb-3"><i class="fas fa-chart-bar"></i> Notification Stats</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Unread</small>
+                        <strong class="text-primary">12</strong>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar" style="width: 25%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>This Week</small>
+                        <strong>28</strong>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>This Month</small>
+                        <strong>142</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="notification-card">
+                <h6 class="mb-3"><i class="fas fa-bolt"></i> Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="filterNotifications('unread')">
+                        <i class="fas fa-circle"></i> View Unread Only
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="markAllAsRead()">
+                        <i class="fas fa-check-double"></i> Mark All as Read
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="clearAll()">
+                        <i class="fas fa-trash"></i> Clear All Notifications
+                    </button>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="notification-card">
+                <h6 class="mb-3"><i class="fas fa-filter"></i> Filter by Type</h6>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action px-0" onclick="filterNotifications('production')">
+                        <i class="fas fa-industry text-primary"></i> Production <span class="badge bg-secondary float-end">15</span>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0" onclick="filterNotifications('quality')">
+                        <i class="fas fa-clipboard-check text-danger"></i> Quality <span class="badge bg-secondary float-end">8</span>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0" onclick="filterNotifications('inventory')">
+                        <i class="fas fa-boxes text-success"></i> Inventory <span class="badge bg-secondary float-end">12</span>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0" onclick="filterNotifications('hr')">
+                        <i class="fas fa-users text-warning"></i> HR <span class="badge bg-secondary float-end">7</span>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action px-0" onclick="filterNotifications('system')">
+                        <i class="fas fa-server text-info"></i> System <span class="badge bg-secondary float-end">5</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-cog"></i> Notification Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 class="mb-3">Email Notifications</h6>
+                <div class="notification-settings-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Production Alerts</strong>
+                            <p class="text-muted small mb-0">Receive emails for production issues and completions</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Quality Notifications</strong>
+                            <p class="text-muted small mb-0">Get notified about NCRs and inspection results</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Inventory Alerts</strong>
+                            <p class="text-muted small mb-0">Low stock and reorder point notifications</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>System Updates</strong>
+                            <p class="text-muted small mb-0">Backup confirmations and system events</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <h6 class="mb-3 mt-4">In-App Notifications</h6>
+                <div class="notification-settings-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Desktop Notifications</strong>
+                            <p class="text-muted small mb-0">Show browser notifications for important alerts</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Sound Alerts</strong>
+                            <p class="text-muted small mb-0">Play sound when receiving notifications</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Badge Count</strong>
+                            <p class="text-muted small mb-0">Show unread count on navigation icon</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <h6 class="mb-3 mt-4">Frequency</h6>
+                <div class="notification-settings-card">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Digest Frequency</strong></label>
+                        <select class="form-select">
+                            <option>Real-time (as they happen)</option>
+                            <option selected>Hourly digest</option>
+                            <option>Daily digest</option>
+                            <option>Weekly digest</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label"><strong>Quiet Hours</strong></label>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="time" class="form-control" value="22:00">
+                                <small class="text-muted">From</small>
+                            </div>
+                            <div class="col-6">
+                                <input type="time" class="form-control" value="07:00">
+                                <small class="text-muted">To</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function filterNotifications(category) {
+    // Update active button
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Filter notifications
+    const items = document.querySelectorAll('.notification-item');
+    items.forEach(item => {
+        if (category === 'all') {
+            item.style.display = '';
+        } else if (category === 'unread') {
+            item.style.display = item.classList.contains('unread') ? '' : 'none';
+        } else {
+            item.style.display = item.dataset.category === category ? '' : 'none';
+        }
+    });
+}
+
+function openNotification(element) {
+    // Mark as read
+    element.classList.remove('unread');
+    // In real implementation, would navigate to detail page
+    console.log('Opening notification');
+}
+
+function viewDetails(id) {
+    alert('Viewing notification details: ' + id);
+}
+
+function archiveNotification(btn) {
+    const item = btn.closest('.notification-item');
+    item.style.transition = 'all 0.3s';
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+        item.remove();
+    }, 300);
+}
+
+function markAllAsRead() {
+    document.querySelectorAll('.notification-item.unread').forEach(item => {
+        item.classList.remove('unread');
+    });
+    alert('All notifications marked as read');
+}
+
+function clearAll() {
+    if (confirm('Clear all notifications? This cannot be undone.')) {
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.style.transition = 'all 0.3s';
+            item.style.opacity = '0';
+        });
+        setTimeout(() => {
+            document.querySelectorAll('.notification-item').forEach(item => item.remove());
+        }, 300);
+    }
+}
+
+function saveSettings() {
+    alert('Notification settings saved!');
+    bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+}
+
+// Request notification permission on load
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+</script>
+{% endblock %}

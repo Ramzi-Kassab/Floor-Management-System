@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .audit-header {
+        background: linear-gradient(135deg, #6f42c1 0%, #5a32a1 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .audit-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .log-entry {
+        padding: 1rem;
+        border-left: 4px solid #6f42c1;
+        background: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    .log-entry:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateX(5px);
+        background: white;
+    }
+    .log-entry.create {
+        border-left-color: #28a745;
+    }
+    .log-entry.update {
+        border-left-color: #ffc107;
+    }
+    .log-entry.delete {
+        border-left-color: #dc3545;
+    }
+    .log-entry.login {
+        border-left-color: #17a2b8;
+    }
+    .filter-panel {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .action-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .badge-create { background: #28a745; color: white; }
+    .badge-update { background: #ffc107; color: #333; }
+    .badge-delete { background: #dc3545; color: white; }
+    .badge-login { background: #17a2b8; color: white; }
+    .badge-export { background: #6f42c1; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="audit-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-clipboard-list"></i> Audit Logs</h1>
+                <p class="mb-0">Complete system activity tracking and compliance reporting</p>
+            </div>
+            <div>
+                <button class="btn btn-light me-2" onclick="exportLogs()">
+                    <i class="fas fa-download"></i> Export Logs
+                </button>
+                <button class="btn btn-light" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="filter-panel">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label"><strong>Date Range</strong></label>
+                <select class="form-select">
+                    <option selected>Last 24 hours</option>
+                    <option>Last 7 days</option>
+                    <option>Last 30 days</option>
+                    <option>Last 90 days</option>
+                    <option>Custom range...</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><strong>Action Type</strong></label>
+                <select class="form-select" id="actionFilter">
+                    <option value="">All Actions</option>
+                    <option value="create">Create</option>
+                    <option value="update">Update</option>
+                    <option value="delete">Delete</option>
+                    <option value="login">Login/Logout</option>
+                    <option value="export">Export</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><strong>User</strong></label>
+                <input type="text" class="form-control" placeholder="Search by user...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><strong>Module</strong></label>
+                <select class="form-select">
+                    <option value="">All Modules</option>
+                    <option>Production</option>
+                    <option>Inventory</option>
+                    <option>Quality</option>
+                    <option>HR</option>
+                    <option>Sales</option>
+                </select>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <label class="form-label"><strong>IP Address</strong></label>
+                <input type="text" class="form-control" placeholder="e.g., 192.168.1.100">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><strong>Sort By</strong></label>
+                <select class="form-select">
+                    <option selected>Newest First</option>
+                    <option>Oldest First</option>
+                    <option>User A-Z</option>
+                    <option>Action Type</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-9">
+            <!-- Audit Log Entries -->
+            <div class="audit-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Audit Trail</h5>
+                    <span class="text-muted">Showing {{ log_count|default:1247 }} entries</span>
+                </div>
+
+                <!-- Today -->
+                <h6 class="mt-4 mb-3">Today</h6>
+
+                <div class="log-entry create" data-action="create">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-create me-2">CREATE</span>
+                                <strong>Production Job Created</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>John Smith</strong> created production job <code>#12346</code>
+                                for customer order CO-5678
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> 15 minutes ago
+                                | <i class="fas fa-desktop"></i> 192.168.1.105
+                                | <i class="fas fa-industry"></i> Production Module
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(1)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-entry update" data-action="update">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-update me-2">UPDATE</span>
+                                <strong>Inventory Item Modified</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>Michael Brown</strong> updated stock quantity for
+                                <code>BEARING-SKF-6205</code> from 45 to 50 units
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> 32 minutes ago
+                                | <i class="fas fa-desktop"></i> 192.168.1.98
+                                | <i class="fas fa-boxes"></i> Inventory Module
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(2)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-entry create" data-action="create">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-create me-2">CREATE</span>
+                                <strong>NCR Created</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>Jennifer Davis</strong> created non-conformance report <code>#790</code>
+                                for dimensional defect in Job #12344
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> 1 hour ago
+                                | <i class="fas fa-desktop"></i> 192.168.1.87
+                                | <i class="fas fa-clipboard-check"></i> Quality Module
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(3)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-entry login" data-action="login">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-login me-2">LOGIN</span>
+                                <strong>User Login</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>Robert Wilson</strong> logged in successfully
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> 2 hours ago
+                                | <i class="fas fa-desktop"></i> 192.168.1.134
+                                | <i class="fas fa-globe"></i> Chrome 119.0 on Windows
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(4)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-entry delete" data-action="delete">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-delete me-2">DELETE</span>
+                                <strong>Production Job Deleted</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>Sarah Williams</strong> deleted production job <code>#12340</code>
+                                (Reason: Duplicate entry)
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> 3 hours ago
+                                | <i class="fas fa-desktop"></i> 192.168.1.112
+                                | <i class="fas fa-industry"></i> Production Module
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(5)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Yesterday -->
+                <h6 class="mt-4 mb-3">Yesterday</h6>
+
+                <div class="log-entry export" data-action="export">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-export me-2">EXPORT</span>
+                                <strong>Report Export</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>John Smith</strong> exported production summary report to Excel
+                                (142 records)
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> Yesterday at 4:32 PM
+                                | <i class="fas fa-desktop"></i> 192.168.1.105
+                                | <i class="fas fa-file-alt"></i> Reporting Module
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(6)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-entry update" data-action="update">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-update me-2">UPDATE</span>
+                                <strong>User Profile Updated</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>Jennifer Davis</strong> updated email address and phone number
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> Yesterday at 2:15 PM
+                                | <i class="fas fa-desktop"></i> 192.168.1.87
+                                | <i class="fas fa-user"></i> User Profile
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(7)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-entry create" data-action="create">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="action-badge badge-create me-2">CREATE</span>
+                                <strong>Purchase Order Created</strong>
+                            </div>
+                            <p class="mb-1 text-muted">
+                                <strong>Sarah Williams</strong> created purchase order <code>PO-2345</code>
+                                for supplier ABC Manufacturing ($12,450)
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> Yesterday at 10:22 AM
+                                | <i class="fas fa-desktop"></i> 192.168.1.112
+                                | <i class="fas fa-shopping-cart"></i> Purchasing Module
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(8)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">4</a></li>
+                        <li class="page-item"><a class="page-link" href="#">5</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <!-- Summary Stats -->
+            <div class="audit-card">
+                <h6 class="mb-3"><i class="fas fa-chart-bar"></i> Activity Summary</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Total Events Today</small>
+                        <strong>342</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Creates</small>
+                        <strong class="text-success">128</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Updates</small>
+                        <strong class="text-warning">156</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Deletes</small>
+                        <strong class="text-danger">12</strong>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Logins</small>
+                        <strong class="text-info">46</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Users -->
+            <div class="audit-card">
+                <h6 class="mb-3"><i class="fas fa-users"></i> Most Active Users</h6>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0 d-flex justify-content-between">
+                        <span>John Smith</span>
+                        <span class="badge bg-primary">87</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between">
+                        <span>Sarah Williams</span>
+                        <span class="badge bg-primary">64</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between">
+                        <span>Michael Brown</span>
+                        <span class="badge bg-primary">52</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between">
+                        <span>Jennifer Davis</span>
+                        <span class="badge bg-primary">48</span>
+                    </div>
+                    <div class="list-group-item px-0 d-flex justify-content-between">
+                        <span>Robert Wilson</span>
+                        <span class="badge bg-primary">41</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Activity -->
+            <div class="audit-card">
+                <h6 class="mb-3"><i class="fas fa-th"></i> Activity by Module</h6>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Production</small>
+                        <small>42%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-primary" style="width: 42%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Inventory</small>
+                        <small>28%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: 28%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Quality</small>
+                        <small>18%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: 18%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Other</small>
+                        <small>12%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-secondary" style="width: 12%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="audit-card">
+                <h6 class="mb-3"><i class="fas fa-bolt"></i> Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportLogs()">
+                        <i class="fas fa-download"></i> Export Logs
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="generateReport()">
+                        <i class="fas fa-file-alt"></i> Generate Report
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="archiveOld()">
+                        <i class="fas fa-archive"></i> Archive Old Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewDetails(logId) {
+    alert('Viewing detailed audit log entry #' + logId);
+    // In real implementation, would show modal with full details
+}
+
+function applyFilters() {
+    const actionFilter = document.getElementById('actionFilter').value;
+    const entries = document.querySelectorAll('.log-entry');
+
+    entries.forEach(entry => {
+        if (!actionFilter || entry.dataset.action === actionFilter) {
+            entry.style.display = '';
+        } else {
+            entry.style.display = 'none';
+        }
+    });
+}
+
+function clearFilters() {
+    document.querySelectorAll('select, input').forEach(el => {
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+    });
+    document.querySelectorAll('.log-entry').forEach(entry => {
+        entry.style.display = '';
+    });
+}
+
+function exportLogs() {
+    alert('Exporting audit logs to CSV...');
+}
+
+function generateReport() {
+    alert('Generating compliance report...');
+}
+
+function archiveOld() {
+    if (confirm('Archive logs older than 90 days?')) {
+        alert('Archiving old logs...');
+    }
+}
+</script>
+{% endblock %}

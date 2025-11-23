@@ -1,0 +1,672 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 5px solid white;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: #667eea;
+        margin: 0 auto 1rem;
+        position: relative;
+        cursor: pointer;
+    }
+    .avatar-upload {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 40px;
+        height: 40px;
+        background: #667eea;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        cursor: pointer;
+        border: 3px solid white;
+    }
+    .profile-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .profile-nav {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 20px;
+    }
+    .nav-item-profile {
+        padding: 0.75rem 1rem;
+        border-left: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 0.5rem;
+        border-radius: 5px;
+    }
+    .nav-item-profile:hover {
+        background: #f8f9fa;
+        border-left-color: #667eea;
+    }
+    .nav-item-profile.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-left-color: #764ba2;
+    }
+    .stat-box {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .skill-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        margin: 0.25rem;
+        font-size: 0.9rem;
+    }
+    .activity-item {
+        padding: 1rem;
+        border-left: 3px solid #667eea;
+        background: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 0.75rem;
+    }
+    .cert-card {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+    .cert-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .cert-badge {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        margin-right: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="text-center">
+            <div class="profile-avatar">
+                <i class="fas fa-user"></i>
+                <div class="avatar-upload" onclick="document.getElementById('avatarUpload').click()">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="uploadAvatar(this)">
+            </div>
+            <h2 class="mb-2">{{ user.get_full_name|default:"John Smith" }}</h2>
+            <p class="mb-1">{{ user.position|default:"Production Manager" }} - {{ user.department|default:"Operations" }}</p>
+            <p class="mb-3">{{ user.email|default:"john.smith@company.com" }}</p>
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-light">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </button>
+                <button class="btn btn-outline-light">
+                    <i class="fas fa-share"></i> Share
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="profile-nav">
+                <div class="nav-item-profile active" onclick="showSection('overview')">
+                    <i class="fas fa-th-large"></i> Overview
+                </div>
+                <div class="nav-item-profile" onclick="showSection('personal')">
+                    <i class="fas fa-user"></i> Personal Info
+                </div>
+                <div class="nav-item-profile" onclick="showSection('employment')">
+                    <i class="fas fa-briefcase"></i> Employment
+                </div>
+                <div class="nav-item-profile" onclick="showSection('skills')">
+                    <i class="fas fa-certificate"></i> Skills & Certifications
+                </div>
+                <div class="nav-item-profile" onclick="showSection('activity')">
+                    <i class="fas fa-history"></i> Activity
+                </div>
+                <div class="nav-item-profile" onclick="showSection('preferences')">
+                    <i class="fas fa-cog"></i> Preferences
+                </div>
+                <div class="nav-item-profile" onclick="showSection('security')">
+                    <i class="fas fa-shield-alt"></i> Security
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="profile-card">
+                <h6 class="mb-3"><i class="fas fa-chart-bar"></i> Quick Stats</h6>
+                <div class="stat-box mb-2">
+                    <div class="stat-value">487</div>
+                    <small class="text-muted">Days with Company</small>
+                </div>
+                <div class="stat-box mb-2">
+                    <div class="stat-value">156</div>
+                    <small class="text-muted">Tasks Completed</small>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">98%</div>
+                    <small class="text-muted">Attendance Rate</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Overview Section -->
+            <div id="section-overview" class="profile-section">
+                <!-- About -->
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-user-circle"></i> About</h5>
+                    <p class="text-muted">
+                        Experienced production manager with over 10 years in manufacturing operations.
+                        Specializes in lean manufacturing, process optimization, and team leadership.
+                        Passionate about continuous improvement and operational excellence.
+                    </p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Contact Info -->
+                        <div class="profile-card">
+                            <h5 class="mb-3"><i class="fas fa-address-card"></i> Contact Information</h5>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Email</small>
+                                <strong>john.smith@company.com</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Phone</small>
+                                <strong>+1 (555) 123-4567</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Extension</small>
+                                <strong>4567</strong>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Office Location</small>
+                                <strong>Building A, Floor 2, Room 205</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <!-- Employment Info -->
+                        <div class="profile-card">
+                            <h5 class="mb-3"><i class="fas fa-briefcase"></i> Employment Details</h5>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Employee ID</small>
+                                <strong>EMP-2345</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Department</small>
+                                <strong>Operations</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Position</small>
+                                <strong>Production Manager</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Start Date</small>
+                                <strong>January 15, 2024</strong>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Reports To</small>
+                                <strong>Sarah Williams (Operations Director)</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-star"></i> Top Skills</h5>
+                    <div>
+                        <span class="skill-badge">Lean Manufacturing</span>
+                        <span class="skill-badge">Process Optimization</span>
+                        <span class="skill-badge">Team Leadership</span>
+                        <span class="skill-badge">Six Sigma</span>
+                        <span class="skill-badge">Quality Management</span>
+                        <span class="skill-badge">ERP Systems</span>
+                        <span class="skill-badge">Project Management</span>
+                        <span class="skill-badge">Continuous Improvement</span>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-clock"></i> Recent Activity</h5>
+                    <div class="activity-item">
+                        <strong>Completed Job #12345</strong>
+                        <p class="mb-1 text-muted small">Production job finished 2 hours ahead of schedule</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> 2 hours ago</small>
+                    </div>
+                    <div class="activity-item">
+                        <strong>Approved Purchase Requisition #PR-789</strong>
+                        <p class="mb-1 text-muted small">Materials for next week's production</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> 5 hours ago</small>
+                    </div>
+                    <div class="activity-item">
+                        <strong>Updated Production Schedule</strong>
+                        <p class="mb-1 text-muted small">Optimized work center allocation</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> Yesterday</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Info Section -->
+            <div id="section-personal" class="profile-section" style="display: none;">
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-user"></i> Personal Information</h5>
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control" value="John">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control" value="Smith">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="john.smith@company.com">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" value="+1 (555) 123-4567">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Extension</label>
+                                <input type="text" class="form-control" value="4567">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" value="1985-03-15">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" rows="3">123 Main Street
+Apt 4B
+New York, NY 10001</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Employment Section -->
+            <div id="section-employment" class="profile-section" style="display: none;">
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-briefcase"></i> Employment Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Employee ID</label>
+                            <input type="text" class="form-control" value="EMP-2345" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Department</label>
+                            <select class="form-select">
+                                <option>Operations</option>
+                                <option>Production</option>
+                                <option>Quality</option>
+                                <option>IT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Position</label>
+                            <input type="text" class="form-control" value="Production Manager">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Employment Type</label>
+                            <select class="form-select">
+                                <option selected>Full-time</option>
+                                <option>Part-time</option>
+                                <option>Contract</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" value="2024-01-15">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Manager</label>
+                            <select class="form-select">
+                                <option selected>Sarah Williams</option>
+                                <option>Michael Brown</option>
+                                <option>Jennifer Davis</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Office Location</label>
+                        <input type="text" class="form-control" value="Building A, Floor 2, Room 205">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills & Certifications Section -->
+            <div id="section-skills" class="profile-section" style="display: none;">
+                <div class="profile-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-certificate"></i> Certifications</h5>
+                        <button class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Add Certification
+                        </button>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="d-flex align-items-start">
+                            <div class="cert-badge">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">Six Sigma Black Belt</h6>
+                                <p class="text-muted small mb-1">American Society for Quality (ASQ)</p>
+                                <small class="text-muted">Issued: June 2023 | Expires: June 2026</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="d-flex align-items-start">
+                            <div class="cert-badge">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">Project Management Professional (PMP)</h6>
+                                <p class="text-muted small mb-1">Project Management Institute (PMI)</p>
+                                <small class="text-muted">Issued: March 2022 | Expires: March 2025</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-card">
+                        <div class="d-flex align-items-start">
+                            <div class="cert-badge">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">OSHA 30-Hour Safety Certification</h6>
+                                <p class="text-muted small mb-1">Occupational Safety and Health Administration</p>
+                                <small class="text-muted">Issued: January 2024 | No Expiration</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-star"></i> Skills</h5>
+                        <button class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Add Skill
+                        </button>
+                    </div>
+                    <div>
+                        <span class="skill-badge">Lean Manufacturing</span>
+                        <span class="skill-badge">Process Optimization</span>
+                        <span class="skill-badge">Team Leadership</span>
+                        <span class="skill-badge">Six Sigma</span>
+                        <span class="skill-badge">Quality Management</span>
+                        <span class="skill-badge">ERP Systems</span>
+                        <span class="skill-badge">Project Management</span>
+                        <span class="skill-badge">Continuous Improvement</span>
+                        <span class="skill-badge">5S Methodology</span>
+                        <span class="skill-badge">Root Cause Analysis</span>
+                        <span class="skill-badge">Kaizen</span>
+                        <span class="skill-badge">Value Stream Mapping</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Section -->
+            <div id="section-activity" class="profile-section" style="display: none;">
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-history"></i> Recent Activity</h5>
+                    <div class="activity-item">
+                        <strong>Created Production Job #12346</strong>
+                        <p class="mb-1 text-muted small">New job for customer order CO-5678</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> 30 minutes ago</small>
+                    </div>
+                    <div class="activity-item">
+                        <strong>Completed Job #12345</strong>
+                        <p class="mb-1 text-muted small">Production job finished 2 hours ahead of schedule</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> 2 hours ago</small>
+                    </div>
+                    <div class="activity-item">
+                        <strong>Approved Purchase Requisition #PR-789</strong>
+                        <p class="mb-1 text-muted small">Materials for next week's production</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> 5 hours ago</small>
+                    </div>
+                    <div class="activity-item">
+                        <strong>Updated Production Schedule</strong>
+                        <p class="mb-1 text-muted small">Optimized work center allocation for Week 48</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> Yesterday at 3:45 PM</small>
+                    </div>
+                    <div class="activity-item">
+                        <strong>Completed Training: Advanced Quality Control</strong>
+                        <p class="mb-1 text-muted small">4-hour training session with certification</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> 2 days ago</small>
+                    </div>
+                    <div class="activity-item">
+                        <strong>Reviewed NCR #456</strong>
+                        <p class="mb-1 text-muted small">Non-conformance report for dimensional issue</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> 3 days ago</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preferences Section -->
+            <div id="section-preferences" class="profile-section" style="display: none;">
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-cog"></i> Preferences</h5>
+                    <div class="mb-4">
+                        <h6 class="mb-3">Display Settings</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Language</label>
+                            <select class="form-select">
+                                <option selected>English (US)</option>
+                                <option>Spanish</option>
+                                <option>French</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Timezone</label>
+                            <select class="form-select">
+                                <option selected>America/New_York (EST)</option>
+                                <option>America/Los_Angeles (PST)</option>
+                                <option>Europe/London (GMT)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date Format</label>
+                            <select class="form-select">
+                                <option selected>MM/DD/YYYY</option>
+                                <option>DD/MM/YYYY</option>
+                                <option>YYYY-MM-DD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3">Notification Preferences</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                            <label class="form-check-label" for="emailNotif">
+                                Email notifications
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="pushNotif" checked>
+                            <label class="form-check-label" for="pushNotif">
+                                Push notifications
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="smsNotif">
+                            <label class="form-check-label" for="smsNotif">
+                                SMS notifications
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary">Save Preferences</button>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div id="section-security" class="profile-section" style="display: none;">
+                <div class="profile-card">
+                    <h5 class="mb-3"><i class="fas fa-shield-alt"></i> Security Settings</h5>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3">Change Password</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control">
+                        </div>
+                        <button class="btn btn-primary">Update Password</button>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3">Two-Factor Authentication</h6>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Two-factor authentication is currently <strong>enabled</strong>
+                        </div>
+                        <button class="btn btn-outline-danger">Disable 2FA</button>
+                    </div>
+
+                    <div>
+                        <h6 class="mb-3">Active Sessions</h6>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong><i class="fas fa-laptop"></i> Windows PC - Chrome</strong>
+                                        <p class="mb-0 small text-muted">New York, NY • Current session</p>
+                                    </div>
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong><i class="fas fa-mobile-alt"></i> iPhone 14 - Safari</strong>
+                                        <p class="mb-0 small text-muted">New York, NY • Last active 2 hours ago</p>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger">Revoke</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.profile-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Show selected section
+    document.getElementById('section-' + sectionId).style.display = 'block';
+
+    // Update active nav item
+    document.querySelectorAll('.nav-item-profile').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+function uploadAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // In real implementation, would upload to server and update avatar
+            alert('Avatar uploaded successfully!');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}
