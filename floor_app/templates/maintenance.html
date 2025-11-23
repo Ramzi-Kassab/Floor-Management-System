@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Maintenance | Floor Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .maintenance-container {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+            max-width: 800px;
+        }
+
+        .maintenance-icon {
+            font-size: 8rem;
+            margin-bottom: 2rem;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .maintenance-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .maintenance-message {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .countdown-container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .countdown-item {
+            text-align: center;
+        }
+
+        .countdown-value {
+            font-size: 3rem;
+            font-weight: 700;
+            display: block;
+            text-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .countdown-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .info-box h5 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-box li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-box li i {
+            margin-right: 0.75rem;
+            color: #fbbf24;
+            font-size: 1.2rem;
+        }
+
+        .status-badge {
+            background: #fbbf24;
+            color: #1f2937;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            display: inline-block;
+            margin: 1rem 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .contact-info {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .contact-info a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .maintenance-title {
+                font-size: 2rem;
+            }
+
+            .maintenance-icon {
+                font-size: 5rem;
+            }
+
+            .countdown-value {
+                font-size: 2rem;
+            }
+
+            .countdown {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="maintenance-container">
+        <div class="maintenance-icon">
+            <i class="fas fa-tools"></i>
+        </div>
+
+        <h1 class="maintenance-title">System Under Maintenance</h1>
+        <p class="maintenance-message">
+            We're currently performing scheduled maintenance to improve your experience.
+            <br>We'll be back shortly!
+        </p>
+
+        <div class="status-badge">
+            <i class="fas fa-circle"></i> Maintenance in Progress
+        </div>
+
+        <div class="countdown-container">
+            <h4 class="mb-4">Estimated Time Remaining</h4>
+            <div class="countdown" id="countdown">
+                <div class="countdown-item">
+                    <span class="countdown-value" id="hours">02</span>
+                    <span class="countdown-label">Hours</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-value" id="minutes">30</span>
+                    <span class="countdown-label">Minutes</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-value" id="seconds">00</span>
+                    <span class="countdown-label">Seconds</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h5><i class="fas fa-wrench"></i> What We're Working On</h5>
+            <ul>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Database optimization and performance improvements</span>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Security updates and patches</span>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>New features and enhancements</span>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>System infrastructure upgrades</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h5><i class="fas fa-info-circle"></i> Important Information</h5>
+            <ul>
+                <li>
+                    <i class="fas fa-save"></i>
+                    <span>All your data is safe and secure</span>
+                </li>
+                <li>
+                    <i class="fas fa-bell"></i>
+                    <span>You'll receive an email when we're back online</span>
+                </li>
+                <li>
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Emergency operations can still access the mobile app</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="contact-info">
+            <p>
+                <strong>Need urgent assistance?</strong>
+                <br>
+                Contact our support team:
+                <a href="mailto:support@floormanagement.com">support@floormanagement.com</a>
+                <br>
+                Emergency Hotline: +1-800-FLOOR-MS
+            </p>
+            <p class="mt-3">
+                <small>
+                    Follow us for real-time updates:
+                    <a href="#"><i class="fab fa-twitter"></i> Twitter</a> |
+                    <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                </small>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer
+        let targetTime = new Date().getTime() + (2.5 * 60 * 60 * 1000); // 2.5 hours from now
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetTime - now;
+
+            if (distance < 0) {
+                document.getElementById('countdown').innerHTML = '<h4>Maintenance Complete!</h4><p>Refreshing...</p>';
+                setTimeout(() => location.reload(), 3000);
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        }
+
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Auto-refresh check every 30 seconds
+        setInterval(() => {
+            fetch('/health-check')
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    }
+                })
+                .catch(() => {
+                    // Still in maintenance
+                });
+        }, 30000);
+    </script>
+</body>
+</html>

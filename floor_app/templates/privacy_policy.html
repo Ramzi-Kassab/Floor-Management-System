@@ -1,0 +1,439 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Privacy Policy - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .page-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .toc-card {
+        background: #f9fafb;
+        border-radius: 15px;
+        padding: 2rem;
+        position: sticky;
+        top: 20px;
+    }
+
+    .toc-card a {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: #374151;
+        text-decoration: none;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .toc-card a:hover {
+        border-left-color: #667eea;
+        background: white;
+        color: #667eea;
+    }
+
+    .toc-card a.active {
+        border-left-color: #667eea;
+        background: white;
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 3px solid #e5e7eb;
+    }
+
+    .section-title:first-child {
+        margin-top: 0;
+    }
+
+    .subsection-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .content-card p {
+        color: #6b7280;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+    }
+
+    .content-card ul, .content-card ol {
+        color: #6b7280;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+    }
+
+    .content-card li {
+        margin-bottom: 0.5rem;
+    }
+
+    .highlight-box {
+        background: #f0f4ff;
+        border-left: 4px solid #667eea;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+    }
+
+    .highlight-box strong {
+        color: #667eea;
+    }
+
+    .last-updated {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .contact-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 3rem;
+        text-align: center;
+    }
+
+    .contact-box a {
+        color: white;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="text-center">
+            <h1><i class="fas fa-shield-alt"></i> Privacy Policy</h1>
+            <p class="lead mb-0">How we collect, use, and protect your data</p>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Table of Contents -->
+        <div class="col-lg-3">
+            <div class="toc-card">
+                <h5 class="mb-3"><i class="fas fa-list"></i> Contents</h5>
+                <a href="#introduction" class="active">Introduction</a>
+                <a href="#information-we-collect">Information We Collect</a>
+                <a href="#how-we-use-data">How We Use Your Data</a>
+                <a href="#data-sharing">Data Sharing</a>
+                <a href="#data-security">Data Security</a>
+                <a href="#your-rights">Your Rights</a>
+                <a href="#cookies">Cookies & Tracking</a>
+                <a href="#retention">Data Retention</a>
+                <a href="#changes">Policy Changes</a>
+                <a href="#contact">Contact Us</a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="col-lg-9">
+            <div class="content-card">
+                <div class="last-updated">
+                    <i class="fas fa-calendar"></i> Last Updated: January 23, 2025
+                </div>
+
+                <!-- Introduction -->
+                <h2 class="section-title" id="introduction">1. Introduction</h2>
+                <p>
+                    Welcome to Floor Management System ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our floor management software platform and related services (collectively, the "Services").
+                </p>
+                <p>
+                    By accessing or using our Services, you agree to the terms of this Privacy Policy. If you do not agree with the terms, please do not access or use the Services.
+                </p>
+
+                <!-- Information We Collect -->
+                <h2 class="section-title" id="information-we-collect">2. Information We Collect</h2>
+
+                <h3 class="subsection-title">2.1 Information You Provide</h3>
+                <p>We collect information that you provide directly to us, including:</p>
+                <ul>
+                    <li><strong>Account Information:</strong> Name, email address, phone number, job title, department</li>
+                    <li><strong>Company Information:</strong> Company name, industry, size, location</li>
+                    <li><strong>Production Data:</strong> Job details, work center information, operation records</li>
+                    <li><strong>Quality Data:</strong> Inspection results, defect reports, compliance records</li>
+                    <li><strong>Inventory Data:</strong> Material information, stock levels, transaction records</li>
+                    <li><strong>HR Data:</strong> Employee information, attendance records, performance data</li>
+                    <li><strong>Communications:</strong> Support requests, feedback, survey responses</li>
+                </ul>
+
+                <h3 class="subsection-title">2.2 Information We Collect Automatically</h3>
+                <p>When you use our Services, we automatically collect certain information:</p>
+                <ul>
+                    <li><strong>Usage Information:</strong> Pages viewed, features used, time spent, click patterns</li>
+                    <li><strong>Device Information:</strong> IP address, browser type, operating system, device identifiers</li>
+                    <li><strong>Location Data:</strong> General geographic location based on IP address</li>
+                    <li><strong>Log Data:</strong> Server logs, error reports, system activity</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong><i class="fas fa-info-circle"></i> Important:</strong>
+                    We do not collect sensitive personal information such as social security numbers, financial account details, or health information unless specifically required for service delivery and with your explicit consent.
+                </div>
+
+                <!-- How We Use Data -->
+                <h2 class="section-title" id="how-we-use-data">3. How We Use Your Data</h2>
+                <p>We use the collected information for the following purposes:</p>
+                <ul>
+                    <li><strong>Service Delivery:</strong> Provide, maintain, and improve our Services</li>
+                    <li><strong>Account Management:</strong> Create and manage your account, authenticate users</li>
+                    <li><strong>Communication:</strong> Send updates, notifications, support responses</li>
+                    <li><strong>Analytics:</strong> Analyze usage patterns, system performance, user behavior</li>
+                    <li><strong>Security:</strong> Detect fraud, prevent abuse, ensure system security</li>
+                    <li><strong>Compliance:</strong> Meet legal obligations, respond to lawful requests</li>
+                    <li><strong>Product Development:</strong> Develop new features, enhance existing functionality</li>
+                    <li><strong>Customer Support:</strong> Respond to inquiries, troubleshoot issues</li>
+                </ul>
+
+                <!-- Data Sharing -->
+                <h2 class="section-title" id="data-sharing">4. Data Sharing and Disclosure</h2>
+
+                <h3 class="subsection-title">4.1 We May Share Your Information With:</h3>
+                <ul>
+                    <li><strong>Service Providers:</strong> Third-party vendors who assist in service delivery (hosting, analytics, support)</li>
+                    <li><strong>Business Partners:</strong> Authorized integrations and partnerships with your consent</li>
+                    <li><strong>Legal Requirements:</strong> When required by law, court order, or government request</li>
+                    <li><strong>Business Transfers:</strong> In connection with mergers, acquisitions, or asset sales</li>
+                    <li><strong>With Your Consent:</strong> When you explicitly authorize us to share your information</li>
+                </ul>
+
+                <h3 class="subsection-title">4.2 We Do NOT:</h3>
+                <ul>
+                    <li>Sell your personal information to third parties</li>
+                    <li>Share your data for marketing purposes without consent</li>
+                    <li>Disclose confidential business data to competitors</li>
+                    <li>Use your data for purposes unrelated to service delivery</li>
+                </ul>
+
+                <!-- Data Security -->
+                <h2 class="section-title" id="data-security">5. Data Security</h2>
+                <p>We implement industry-standard security measures to protect your information:</p>
+                <ul>
+                    <li><strong>Encryption:</strong> Data encrypted in transit (SSL/TLS) and at rest (AES-256)</li>
+                    <li><strong>Access Controls:</strong> Role-based permissions, multi-factor authentication</li>
+                    <li><strong>Network Security:</strong> Firewalls, intrusion detection, DDoS protection</li>
+                    <li><strong>Regular Audits:</strong> Security assessments, penetration testing, compliance reviews</li>
+                    <li><strong>Employee Training:</strong> Security awareness, data handling procedures</li>
+                    <li><strong>Incident Response:</strong> Breach notification procedures, recovery protocols</li>
+                    <li><strong>Backups:</strong> Daily automated backups with 30-day retention</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong><i class="fas fa-certificate"></i> Certifications:</strong>
+                    Our platform is ISO 27001 and SOC 2 Type II certified. We undergo annual third-party security audits.
+                </div>
+
+                <!-- Your Rights -->
+                <h2 class="section-title" id="your-rights">6. Your Rights and Choices</h2>
+                <p>You have the following rights regarding your personal information:</p>
+
+                <h3 class="subsection-title">6.1 Access and Portability</h3>
+                <ul>
+                    <li>Request a copy of your personal data</li>
+                    <li>Export your data in machine-readable format</li>
+                    <li>Review information we hold about you</li>
+                </ul>
+
+                <h3 class="subsection-title">6.2 Correction and Update</h3>
+                <ul>
+                    <li>Update inaccurate or incomplete information</li>
+                    <li>Modify your profile and preferences</li>
+                    <li>Correct errors in your data</li>
+                </ul>
+
+                <h3 class="subsection-title">6.3 Deletion and Restriction</h3>
+                <ul>
+                    <li>Request deletion of your personal data (subject to legal obligations)</li>
+                    <li>Restrict processing of your information</li>
+                    <li>Object to certain types of processing</li>
+                </ul>
+
+                <h3 class="subsection-title">6.4 Communication Preferences</h3>
+                <ul>
+                    <li>Opt-out of marketing communications</li>
+                    <li>Manage notification settings</li>
+                    <li>Control email preferences</li>
+                </ul>
+
+                <p>To exercise these rights, contact us at <a href="mailto:privacy@floormanagement.com">privacy@floormanagement.com</a></p>
+
+                <!-- Cookies -->
+                <h2 class="section-title" id="cookies">7. Cookies and Tracking Technologies</h2>
+                <p>We use cookies and similar technologies to:</p>
+                <ul>
+                    <li>Maintain session state and user authentication</li>
+                    <li>Remember user preferences and settings</li>
+                    <li>Analyze usage patterns and improve Services</li>
+                    <li>Provide personalized content and features</li>
+                </ul>
+
+                <h3 class="subsection-title">7.1 Types of Cookies We Use:</h3>
+                <ul>
+                    <li><strong>Essential Cookies:</strong> Required for basic functionality</li>
+                    <li><strong>Preference Cookies:</strong> Remember your settings and choices</li>
+                    <li><strong>Analytics Cookies:</strong> Help us understand usage patterns</li>
+                    <li><strong>Security Cookies:</strong> Detect suspicious activity, prevent fraud</li>
+                </ul>
+
+                <p>You can control cookies through your browser settings. Note that disabling certain cookies may limit functionality.</p>
+
+                <!-- Data Retention -->
+                <h2 class="section-title" id="retention">8. Data Retention</h2>
+                <p>We retain your information for as long as necessary to:</p>
+                <ul>
+                    <li>Provide our Services to you</li>
+                    <li>Comply with legal obligations</li>
+                    <li>Resolve disputes and enforce agreements</li>
+                    <li>Meet regulatory requirements</li>
+                </ul>
+
+                <h3 class="subsection-title">8.1 Retention Periods:</h3>
+                <ul>
+                    <li><strong>Account Data:</strong> Duration of active account plus 2 years</li>
+                    <li><strong>Transaction Records:</strong> 7 years for compliance</li>
+                    <li><strong>Usage Logs:</strong> 90 days unless needed for security</li>
+                    <li><strong>Support Communications:</strong> 3 years</li>
+                </ul>
+
+                <!-- Policy Changes -->
+                <h2 class="section-title" id="changes">9. Changes to This Privacy Policy</h2>
+                <p>
+                    We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. We will notify you of any material changes by:
+                </p>
+                <ul>
+                    <li>Posting the updated policy on our website</li>
+                    <li>Sending email notification to registered users</li>
+                    <li>Displaying an in-app notification</li>
+                </ul>
+                <p>
+                    Your continued use of the Services after changes become effective constitutes acceptance of the updated Privacy Policy.
+                </p>
+
+                <!-- Contact -->
+                <h2 class="section-title" id="contact">10. Contact Information</h2>
+                <p>If you have questions or concerns about this Privacy Policy or our data practices, please contact us:</p>
+
+                <div class="highlight-box">
+                    <p><strong>Data Protection Officer</strong></p>
+                    <p>
+                        Email: <a href="mailto:privacy@floormanagement.com">privacy@floormanagement.com</a><br>
+                        Phone: +1-800-FLOOR-MS<br>
+                        Mail: Floor Management System, Data Protection Office<br>
+                        123 Manufacturing Blvd, Suite 500<br>
+                        Tech City, TC 12345
+                    </p>
+                </div>
+
+                <!-- Additional Information -->
+                <h2 class="section-title">11. Additional Information</h2>
+
+                <h3 class="subsection-title">11.1 Children's Privacy</h3>
+                <p>
+                    Our Services are not directed to individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.
+                </p>
+
+                <h3 class="subsection-title">11.2 International Data Transfers</h3>
+                <p>
+                    Your information may be transferred to and processed in countries other than your own. We ensure appropriate safeguards are in place through standard contractual clauses and compliance with applicable data protection laws.
+                </p>
+
+                <h3 class="subsection-title">11.3 California Privacy Rights</h3>
+                <p>
+                    California residents have additional rights under the California Consumer Privacy Act (CCPA), including the right to know what personal information is collected and the right to opt-out of the sale of personal information. We do not sell personal information.
+                </p>
+
+                <h3 class="subsection-title">11.4 GDPR Compliance</h3>
+                <p>
+                    For users in the European Economic Area (EEA), we comply with the General Data Protection Regulation (GDPR). You have rights including access, rectification, erasure, data portability, and the right to lodge a complaint with a supervisory authority.
+                </p>
+
+                <!-- Final Contact Box -->
+                <div class="contact-box">
+                    <h4><i class="fas fa-envelope"></i> Questions About Privacy?</h4>
+                    <p>Our Data Protection team is here to help.</p>
+                    <p class="mb-0">
+                        <strong>Email:</strong> <a href="mailto:privacy@floormanagement.com">privacy@floormanagement.com</a><br>
+                        <strong>Phone:</strong> +1-800-FLOOR-MS
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scrolling for TOC links
+    document.querySelectorAll('.toc-card a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Update active link
+                document.querySelectorAll('.toc-card a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+            }
+        });
+    });
+
+    // Highlight active section on scroll
+    window.addEventListener('scroll', function() {
+        const sections = document.querySelectorAll('[id]');
+        let current = '';
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (pageYOffset >= sectionTop - 100) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        document.querySelectorAll('.toc-card a').forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}
