@@ -56,6 +56,28 @@ class UserThemePreference(models.Model):
         default='blue'
     )
 
+    # Custom Colors (overrides color_scheme if set)
+    custom_background_color = models.CharField(
+        max_length=7,
+        blank=True,
+        null=True,
+        help_text='Custom background color in hex format (e.g., #ffffff)'
+    )
+
+    custom_text_color = models.CharField(
+        max_length=7,
+        blank=True,
+        null=True,
+        help_text='Custom text color in hex format (e.g., #000000)'
+    )
+
+    custom_primary_color = models.CharField(
+        max_length=7,
+        blank=True,
+        null=True,
+        help_text='Custom primary/accent color in hex format (e.g., #007bff)'
+    )
+
     # Typography
     font_size = models.CharField(
         max_length=20,
@@ -195,4 +217,82 @@ class UserThemePreference(models.Model):
             **font_sizes.get(self.font_size, font_sizes['medium']),
         }
 
+        # Apply custom colors (override defaults)
+        if self.custom_background_color:
+            variables['bg-primary'] = self.custom_background_color
+            # Generate lighter/darker shades for secondary and tertiary
+            variables['bg-secondary'] = self._adjust_brightness(self.custom_background_color, 0.05)
+            variables['bg-tertiary'] = self._adjust_brightness(self.custom_background_color, 0.1)
+
+        if self.custom_text_color:
+            variables['text-primary'] = self.custom_text_color
+            # Generate lighter shades for secondary and muted text
+            variables['text-secondary'] = self._adjust_opacity(self.custom_text_color, 0.7)
+            variables['text-muted'] = self._adjust_opacity(self.custom_text_color, 0.5)
+
+        if self.custom_primary_color:
+            variables['primary'] = self.custom_primary_color
+            variables['primary-dark'] = self._adjust_brightness(self.custom_primary_color, -0.15)
+            variables['primary-light'] = self._adjust_brightness(self.custom_primary_color, 0.15)
+
         return variables
+
+    def _adjust_brightness(self, hex_color, percent):
+        """
+        Adjust brightness of a hex color by a percentage
+
+        Args:
+            hex_color: Hex color string (e.g., '#ff0000')
+            percent: Percentage to adjust (-1.0 to 1.0, negative for darker, positive for lighter)
+
+        Returns:
+            Adjusted hex color string
+        """
+        # Remove '#' if present
+        hex_color = hex_color.lstrip('#')
+
+        # Convert to RGB
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+
+        # Adjust brightness
+        if percent > 0:
+            # Lighten
+            r = int(r + (255 - r) * percent)
+            g = int(g + (255 - g) * percent)
+            b = int(b + (255 - b) * percent)
+        else:
+            # Darken
+            r = int(r * (1 + percent))
+            g = int(g * (1 + percent))
+            b = int(b * (1 + percent))
+
+        # Clamp values
+        r = max(0, min(255, r))
+        g = max(0, min(255, g))
+        b = max(0, min(255, b))
+
+        # Convert back to hex
+        return f'#{r:02x}{g:02x}{b:02x}'
+
+    def _adjust_opacity(self, hex_color, opacity):
+        """
+        Convert hex color to rgba with opacity
+
+        Args:
+            hex_color: Hex color string (e.g., '#ff0000')
+            opacity: Opacity value (0.0 to 1.0)
+
+        Returns:
+            RGBA color string
+        """
+        # Remove '#' if present
+        hex_color = hex_color.lstrip('#')
+
+        # Convert to RGB
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+
+        return f'rgba({r}, {g}, {b}, {opacity})'

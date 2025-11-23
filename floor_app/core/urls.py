@@ -20,6 +20,9 @@ urlpatterns = [
     path('system-events/', views.system_events, name='system_events'),
     path('user-activity/<str:username>/', views.user_activity_report, name='user_activity_report'),
 
+    # Theme and preferences
+    path('theme-settings/', views.theme_settings, name='theme_settings'),
+
     # Export endpoints
     path('export/activity-logs/', views.export_activity_logs, name='export_activity_logs'),
     path('export/audit-logs/', views.export_audit_logs, name='export_audit_logs'),

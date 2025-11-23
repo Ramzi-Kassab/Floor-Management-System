@@ -25,7 +25,7 @@
             </div>
             {% endif %}
 
-            <form method="post" action="{% url 'floor_core:theme_settings' %}" aria-label="Theme settings form">
+            <form method="post" action="{% url 'core:theme_settings' %}" aria-label="Theme settings form">
                 {% csrf_token %}
 
                 <!-- Theme Mode Section -->
@@ -63,10 +63,73 @@
                     </div>
                 </div>
 
+                <!-- Custom Colors Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-palette2"></i> Custom Colors</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_background_color" class="form-label">Background Color</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="custom_background_color"
+                                           name="custom_background_color"
+                                           value="{{ form.custom_background_color.value|default:'#ffffff' }}"
+                                           title="Choose background color">
+                                    <input type="text" class="form-control" id="custom_background_color_text"
+                                           value="{{ form.custom_background_color.value|default:'' }}"
+                                           pattern="^#[0-9A-Fa-f]{6}$" placeholder="#ffffff">
+                                    <button class="btn btn-outline-secondary" type="button" id="clearBgColor" title="Clear custom background">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Custom background color (overrides theme default)</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_text_color" class="form-label">Text Color</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="custom_text_color"
+                                           name="custom_text_color"
+                                           value="{{ form.custom_text_color.value|default:'#000000' }}"
+                                           title="Choose text color">
+                                    <input type="text" class="form-control" id="custom_text_color_text"
+                                           value="{{ form.custom_text_color.value|default:'' }}"
+                                           pattern="^#[0-9A-Fa-f]{6}$" placeholder="#000000">
+                                    <button class="btn btn-outline-secondary" type="button" id="clearTextColor" title="Clear custom text color">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Custom text color (overrides theme default)</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_primary_color" class="form-label">Primary/Accent Color</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="custom_primary_color"
+                                           name="custom_primary_color"
+                                           value="{{ form.custom_primary_color.value|default:'#007bff' }}"
+                                           title="Choose primary color">
+                                    <input type="text" class="form-control" id="custom_primary_color_text"
+                                           value="{{ form.custom_primary_color.value|default:'' }}"
+                                           pattern="^#[0-9A-Fa-f]{6}$" placeholder="#007bff">
+                                    <button class="btn btn-outline-secondary" type="button" id="clearPrimaryColor" title="Clear custom primary color">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Custom accent color (overrides color scheme)</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info small mb-0" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Note:</strong> Custom colors will override the preset color scheme below. Clear custom colors to use preset schemes.
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Color Scheme Section -->
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-palette-fill"></i> Color Scheme</h5>
+                        <h5 class="mb-0"><i class="bi bi-palette-fill"></i> Preset Color Schemes</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -275,12 +338,88 @@
 
 {% block extra_js %}
 <script>
-// Live preview of theme changes
-document.querySelectorAll('input[name="theme"], input[name="color_scheme"], input[name="font_size"]').forEach(input => {
-    input.addEventListener('change', function() {
-        // Could add live preview functionality here
-        console.log('Theme setting changed:', this.name, this.value);
+document.addEventListener('DOMContentLoaded', function() {
+    // Color picker synchronization
+    function syncColorInputs(colorInput, textInput) {
+        // Sync color picker to text input
+        colorInput.addEventListener('input', function() {
+            textInput.value = this.value;
+        });
+
+        // Sync text input to color picker
+        textInput.addEventListener('input', function() {
+            const hexPattern = /^#[0-9A-Fa-f]{6}$/;
+            if (hexPattern.test(this.value)) {
+                colorInput.value = this.value;
+            }
+        });
+    }
+
+    // Setup color pickers
+    const bgColorPicker = document.getElementById('custom_background_color');
+    const bgColorText = document.getElementById('custom_background_color_text');
+    const textColorPicker = document.getElementById('custom_text_color');
+    const textColorText = document.getElementById('custom_text_color_text');
+    const primaryColorPicker = document.getElementById('custom_primary_color');
+    const primaryColorText = document.getElementById('custom_primary_color_text');
+
+    syncColorInputs(bgColorPicker, bgColorText);
+    syncColorInputs(textColorPicker, textColorText);
+    syncColorInputs(primaryColorPicker, primaryColorText);
+
+    // Clear button handlers
+    document.getElementById('clearBgColor').addEventListener('click', function() {
+        bgColorPicker.value = '#ffffff';
+        bgColorText.value = '';
     });
+
+    document.getElementById('clearTextColor').addEventListener('click', function() {
+        textColorPicker.value = '#000000';
+        textColorText.value = '';
+    });
+
+    document.getElementById('clearPrimaryColor').addEventListener('click', function() {
+        primaryColorPicker.value = '#007bff';
+        primaryColorText.value = '';
+    });
+
+    // Live preview of theme changes including custom colors
+    const previewInputs = document.querySelectorAll(
+        'input[name="theme"], input[name="color_scheme"], input[name="font_size"], ' +
+        '#custom_background_color, #custom_text_color, #custom_primary_color'
+    );
+
+    previewInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            updateLivePreview();
+        });
+    });
+
+    function updateLivePreview() {
+        const theme = document.querySelector('input[name="theme"]:checked')?.value;
+        const colorScheme = document.querySelector('input[name="color_scheme"]:checked')?.value;
+        const fontSize = document.querySelector('select[name="font_size"]')?.value;
+        const customBg = bgColorText.value || null;
+        const customText = textColorText.value || null;
+        const customPrimary = primaryColorText.value || null;
+
+        // Apply live preview to preview card
+        const previewCard = document.querySelector('.alert-primary');
+        if (previewCard && customBg) {
+            previewCard.style.backgroundColor = customBg;
+        }
+        if (previewCard && customText) {
+            previewCard.style.color = customText;
+        }
+        if (previewCard && customPrimary) {
+            previewCard.style.borderColor = customPrimary;
+        }
+
+        // Show notification that changes will apply on save
+        if (typeof FloorMS !== 'undefined' && FloorMS.notify) {
+            FloorMS.notify.info('Preview updated. Click "Save Settings" to apply changes.');
+        }
+    }
 });
 </script>
 {% endblock %}

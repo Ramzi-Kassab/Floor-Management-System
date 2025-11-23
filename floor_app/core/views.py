@@ -15,8 +15,12 @@ from django.db.models import Count, Avg, Q
 from datetime import timedelta
 
 from .models import AuditLog, ActivityLog, SystemEvent, ChangeHistory
+from .theme_preferences import UserThemePreference
+from .forms import UserThemePreferenceForm
 from .utils import get_system_health_summary, get_user_activity_summary
 from .exports import export_queryset_to_excel, export_queryset_to_pdf, export_queryset_to_csv
+from django.contrib import messages
+from django.shortcuts import redirect
 
 
 def is_staff_or_superuser(user):
@@ -479,3 +483,31 @@ def api_audit_stats(request):
             'end': timezone.now().isoformat(),
         }
     })
+
+
+@login_required
+def theme_settings(request):
+    """
+    User theme and appearance settings
+
+    URL: /core/theme-settings/
+    """
+    # Get or create theme preference for current user
+    theme_pref, created = UserThemePreference.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = UserThemePreferenceForm(request.POST, instance=theme_pref)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Theme settings saved successfully!')
+            return redirect('floor_core:theme_settings')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserThemePreferenceForm(instance=theme_pref)
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'core/theme_settings.html', context)
