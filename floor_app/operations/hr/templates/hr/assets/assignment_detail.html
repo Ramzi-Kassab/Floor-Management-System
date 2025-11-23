@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Asset Assignment - Floor Management System{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-box-arrow-right me-2"></i> Asset Assignment</h1>
+</div>
+<div class="card border-0">
+    <div class="card-body">
+        <p><strong>Asset:</strong> {{ assignment.asset.name }}</p>
+        <p><strong>Employee:</strong> {{ assignment.employee.person.full_name }}</p>
+        <p><strong>Date:</strong> {{ assignment.assignment_date }}</p>
+    </div>
+</div>
+{% endblock %}

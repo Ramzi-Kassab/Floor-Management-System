@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Shift Template - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-calendar3 me-2"></i> {% if form.instance.pk %}Edit{% else %}Create{% endif %} Shift Template
+    </h1>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Code *</label>
+                            {{ form.code }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Name *</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Start Time *</label>
+                            {{ form.start_time }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">End Time *</label>
+                            {{ form.end_time }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Duration (hours)</label>
+                            {{ form.duration_hours }}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i> Save
+                        </button>
+                        <a href="{% url 'hr:shift_template_list' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formControls = document.querySelectorAll('input, select, textarea');
+    formControls.forEach(field => field.classList.add('form-control'));
+});
+</script>
+{% endblock %}

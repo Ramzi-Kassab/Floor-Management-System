@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shift Templates - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-calendar3 me-2"></i> Shift Templates
+            </h1>
+            <p class="page-subtitle">Manage shift templates and work schedules</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:shift_template_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Template
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Templates</h6>
+                <h3 class="mb-0">{{ stats.total_templates }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Active</h6>
+                <h3 class="mb-0">{{ stats.active_templates }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Night Shifts</h6>
+                <h3 class="mb-0">{{ stats.night_shifts }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Assignments</h6>
+                <h3 class="mb-0">{{ stats.total_assignments }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Time</th>
+                        <th>Duration</th>
+                        <th>Type</th>
+                        <th>Assignments</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td><strong>{{ template.code }}</strong></td>
+                        <td>{{ template.name }}</td>
+                        <td>{{ template.start_time }} - {{ template.end_time }}</td>
+                        <td>{{ template.duration_hours }} hrs</td>
+                        <td>
+                            {% if template.is_night_shift %}
+                            <span class="badge bg-dark">Night</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">Day</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ template.assignment_count }}</td>
+                        <td>
+                            {% if template.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'hr:shift_template_detail' template.pk %}" class="btn btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'hr:shift_template_edit' template.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">No shift templates found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

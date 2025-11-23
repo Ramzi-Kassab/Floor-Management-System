@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shift Assignments - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-people me-2"></i> Shift Assignments
+            </h1>
+            <p class="page-subtitle">Employee shift assignments and schedules</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:shift_schedule' %}" class="btn btn-outline-primary">
+                <i class="bi bi-calendar-week me-2"></i> View Schedule
+            </a>
+            <a href="{% url 'hr:shift_assignment_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Assignment
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Shift</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in assignments %}
+                    <tr>
+                        <td>{{ assignment.employee.person.full_name }}</td>
+                        <td>{{ assignment.shift_template.name }}</td>
+                        <td>{{ assignment.start_date }}</td>
+                        <td>{{ assignment.end_date|default:"-" }}</td>
+                        <td>
+                            {% if assignment.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Ended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'hr:shift_assignment_detail' assignment.pk %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No assignments found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

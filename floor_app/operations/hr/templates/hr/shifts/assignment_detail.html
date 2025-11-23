@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Shift Assignment - Floor Management System{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-calendar-check me-2"></i> Shift Assignment</h1>
+</div>
+<div class="card border-0">
+    <div class="card-body">
+        <p><strong>Employee:</strong> {{ assignment.employee.person.full_name }}</p>
+        <p><strong>Shift:</strong> {{ assignment.shift_template.name }}</p>
+        <p><strong>Period:</strong> {{ assignment.start_date }} - {{ assignment.end_date|default:"Ongoing" }}</p>
+    </div>
+</div>
+{% endblock %}

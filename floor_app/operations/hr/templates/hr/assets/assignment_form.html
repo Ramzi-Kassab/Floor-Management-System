@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Asset Assignment Form - Floor Management System{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-box-arrow-right me-2"></i> Assign Asset</h1>
+</div>
+<form method="post">
+    {% csrf_token %}
+    <div class="card border-0">
+        <div class="card-body">
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Assign</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

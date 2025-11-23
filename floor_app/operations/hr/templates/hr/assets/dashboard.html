@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Asset Dashboard - Floor Management System{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-laptop me-2"></i> Asset Management Dashboard</h1>
+</div>
+<div class="row">
+    <div class="col-md-3">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Assets</h6>
+                <h3 class="mb-0">{{ stats.total_assets }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Available</h6>
+                <h3 class="mb-0 text-success">{{ stats.available }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

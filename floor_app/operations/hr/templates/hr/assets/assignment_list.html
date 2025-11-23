@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Asset Assignments - Floor Management System{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-box-arrow-right me-2"></i> Asset Assignments</h1>
+</div>
+<div class="card border-0">
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Employee</th>
+                    <th>Assignment Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                <tr>
+                    <td>{{ assignment.asset.asset_tag }}</td>
+                    <td>{{ assignment.employee.person.full_name }}</td>
+                    <td>{{ assignment.assignment_date }}</td>
+                    <td>{{ assignment.get_status_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

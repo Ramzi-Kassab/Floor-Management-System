@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contract Management Dashboard - Floor Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-file-text me-2"></i> Contract Management
+            </h1>
+            <p class="page-subtitle">Employee contracts, compensation, and employment terms</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:contract_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Contract
+            </a>
+            <a href="{% url 'hr:contract_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list-ul me-2"></i> All Contracts
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(99, 102, 241, 0.1);">
+                            <i class="bi bi-file-text-fill fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Total Contracts</h6>
+                        <h3 class="mb-0">{{ stats.total_contracts }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(16, 185, 129, 0.1);">
+                            <i class="bi bi-check-circle-fill fs-4 text-success"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Active Contracts</h6>
+                        <h3 class="mb-0">{{ stats.active_contracts }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(249, 115, 22, 0.1);">
+                            <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Expiring Soon</h6>
+                        <h3 class="mb-0">{{ stats.expiring_soon }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(239, 68, 68, 0.1);">
+                            <i class="bi bi-x-circle-fill fs-4 text-danger"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Expired</h6>
+                        <h3 class="mb-0">{{ stats.expired_contracts }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Contracts by Type -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-bar-chart me-2"></i> Contracts by Type
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th class="text-end">Count</th>
+                                <th style="width: 40%;">Distribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for type_name, count in contracts_by_type.items %}
+                            <tr>
+                                <td>{{ type_name }}</td>
+                                <td class="text-end">{{ count }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar"
+                                             style="width: {% widthratio count stats.active_contracts 100 %}%"
+                                             aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ stats.active_contracts }}">
+                                            {% widthratio count stats.active_contracts 100 %}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No contract data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Contracts -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-clock-history me-2"></i> Recent Contracts
+                </h5>
+                <a href="{% url 'hr:contract_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Contract</th>
+                                <th>Employee</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contract in recent_contracts %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'hr:contract_detail' contract.pk %}">
+                                        {{ contract.contract_number }}
+                                    </a>
+                                </td>
+                                <td>{{ contract.employee.person.full_name }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ contract.get_contract_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if contract.is_current %}
+                                    <span class="badge bg-success">Current</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Not Current</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No recent contracts</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expiring Contracts -->
+    {% if expiring_contracts %}
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-exclamation-triangle me-2 text-warning"></i> Expiring Contracts (Next 90 Days)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Contract Number</th>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Type</th>
+                                <th>End Date</th>
+                                <th>Days Remaining</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contract in expiring_contracts %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'hr:contract_detail' contract.pk %}">
+                                        {{ contract.contract_number }}
+                                    </a>
+                                </td>
+                                <td>{{ contract.employee.person.full_name }}</td>
+                                <td>{{ contract.employee.department.name }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ contract.get_contract_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ contract.end_date }}</td>
+                                <td>
+                                    {% with days_remaining=contract.end_date|timeuntil %}
+                                    <span class="badge {% if contract.end_date|timeuntil|slice:'0:2'|add:'0' < 30 %}bg-danger{% else %}bg-warning{% endif %}">
+                                        {{ days_remaining }}
+                                    </span>
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'hr:contract_renew' contract.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-arrow-repeat"></i> Renew
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

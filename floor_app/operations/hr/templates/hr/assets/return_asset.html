@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Return Asset - Floor Management System{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-box-arrow-left me-2"></i> Return Asset</h1>
+</div>
+<form method="post">
+    {% csrf_token %}
+    <div class="card border-0">
+        <div class="card-body">
+            <p><strong>Asset:</strong> {{ assignment.asset.name }}</p>
+            <p><strong>Employee:</strong> {{ assignment.employee.person.full_name }}</p>
+            <div class="mb-3">
+                <label class="form-label">Return Date</label>
+                <input type="date" name="actual_return_date" class="form-control" value="{{ suggested_return_date|date:'Y-m-d' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Condition</label>
+                <select name="condition_at_return" class="form-control" required>
+                    {% for value, label in condition_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea name="return_notes" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Return Asset</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

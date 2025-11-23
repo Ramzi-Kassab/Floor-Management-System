@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Renew Contract - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-arrow-repeat me-2"></i> Renew Contract
+    </h1>
+    <p class="page-subtitle">Create a new contract based on {{ old_contract.contract_number }}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Old Contract Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Employee:</strong> {{ old_contract.employee.person.full_name }}</p>
+                    <p><strong>Current End Date:</strong> {{ old_contract.end_date }}</p>
+                    <p><strong>Compensation:</strong> {{ old_contract.total_compensation }} {{ old_contract.currency.code }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">New Contract Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Start Date *</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ suggested_start_date|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" class="form-control">
+                        <small class="form-text text-muted">Leave blank for no end date</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3">Renewed from contract {{ old_contract.contract_number }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle me-2"></i> Create Renewed Contract
+                        </button>
+                        <a href="{% url 'hr:contract_detail' old_contract.pk %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

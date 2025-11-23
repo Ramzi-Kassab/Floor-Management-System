@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contract {{ contract.contract_number }} - Floor Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-file-text me-2"></i> Contract {{ contract.contract_number }}
+            </h1>
+            <p class="page-subtitle">{{ contract.employee.person.full_name }} ({{ contract.employee.employee_code }})</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:contract_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back to List
+            </a>
+            <a href="{% url 'hr:contract_edit' contract.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-2"></i> Edit
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Contract Status Badge -->
+<div class="row mb-4">
+    <div class="col-12">
+        {% if contract.is_current %}
+            <div class="alert alert-success d-flex align-items-center">
+                <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>Current Contract</strong> - This is the active contract for this employee.
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-secondary d-flex align-items-center">
+                <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>Not Current</strong> - This contract is not currently active.
+                </div>
+            </div>
+        {% endif %}
+
+        {% if ending_soon %}
+            <div class="alert alert-warning d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>Ending Soon!</strong> - This contract will end in {{ days_until_end }} days.
+                    <a href="{% url 'hr:contract_renew' contract.pk %}" class="alert-link">Renew Contract</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Contract Details -->
+    <div class="col-lg-8">
+        <!-- Basic Information -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Contract Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Contract Number</label>
+                        <div class="fw-bold">{{ contract.contract_number }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Contract Type</label>
+                        <div>
+                            <span class="badge
+                                {% if contract.contract_type == 'permanent' %}bg-success
+                                {% elif contract.contract_type == 'temporary' %}bg-warning
+                                {% else %}bg-secondary{% endif %}">
+                                {{ contract.get_contract_type_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Start Date</label>
+                        <div class="fw-bold">{{ contract.start_date }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">End Date</label>
+                        <div class="fw-bold">
+                            {% if contract.end_date %}
+                                {{ contract.end_date }}
+                            {% else %}
+                                <span class="text-muted">No end date (Permanent)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Information -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Employee Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Employee Name</label>
+                        <div class="fw-bold">
+                            <a href="{% url 'hr:employee-detail' contract.employee.pk %}">
+                                {{ contract.employee.person.full_name }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Employee Code</label>
+                        <div class="fw-bold">{{ contract.employee.employee_code }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Department</label>
+                        <div>{{ contract.employee.department.name }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Position</label>
+                        <div>{{ contract.employee.position.title }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compensation Details (Collapsible) -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <a class="fw-bold text-decoration-none text-dark d-flex justify-content-between align-items-center"
+                   data-bs-toggle="collapse" href="#compensationCollapse" role="button">
+                    <h5 class="mb-0 fw-bold">Compensation Details</h5>
+                    <i class="bi bi-chevron-down"></i>
+                </a>
+            </div>
+            <div class="collapse show" id="compensationCollapse">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Basic Salary</label>
+                            <div class="fw-bold fs-5">
+                                {{ contract.basic_salary }} {{ contract.currency.code }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Housing Allowance</label>
+                            <div class="fw-bold">
+                                {{ contract.housing_allowance }} {{ contract.currency.code }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Transport Allowance</label>
+                            <div class="fw-bold">
+                                {{ contract.transport_allowance }} {{ contract.currency.code }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Other Allowances</label>
+                            <div class="fw-bold">
+                                {{ contract.other_allowances }} {{ contract.currency.code }}
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="text-muted small">Total Monthly Compensation</label>
+                            <div class="fw-bold fs-4 text-primary">
+                                {{ contract.total_compensation }} {{ contract.currency.code }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Terms -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Contract Terms</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Probation Period</label>
+                        <div>
+                            {% if contract.probation_period_months %}
+                                {{ contract.probation_period_months }} months
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Notice Period</label>
+                        <div>
+                            {% if contract.notice_period_days %}
+                                {{ contract.notice_period_days }} days
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Work Hours per Week</label>
+                        <div>{{ contract.work_hours_per_week }} hours</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Annual Leave Days</label>
+                        <div>{{ contract.annual_leave_days }} days</div>
+                    </div>
+                </div>
+
+                {% if contract.notes %}
+                <hr>
+                <label class="text-muted small">Notes</label>
+                <div>{{ contract.notes|linebreaks }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Actions -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'hr:contract_edit' contract.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-2"></i> Edit Contract
+                    </a>
+                    {% if contract.is_current and contract.contract_type != 'permanent' %}
+                    <a href="{% url 'hr:contract_renew' contract.pk %}" class="btn btn-success">
+                        <i class="bi bi-arrow-repeat me-2"></i> Renew Contract
+                    </a>
+                    {% endif %}
+                    {% if contract.is_current %}
+                    <a href="{% url 'hr:contract_terminate' contract.pk %}" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-2"></i> Terminate Contract
+                    </a>
+                    {% endif %}
+                    {% if contract.contract_file %}
+                    <a href="{{ contract.contract_file.url }}" class="btn btn-outline-primary" target="_blank">
+                        <i class="bi bi-file-pdf me-2"></i> View Contract File
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Information -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Audit Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">Created At</label>
+                    <div>{{ contract.created_at }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Updated At</label>
+                    <div>{{ contract.updated_at }}</div>
+                </div>
+                {% if contract.created_by %}
+                <div>
+                    <label class="text-muted small">Created By</label>
+                    <div>{{ contract.created_by.get_full_name }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Other Contracts -->
+        {% if other_contracts %}
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Other Contracts</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for other in other_contracts %}
+                <a href="{% url 'hr:contract_detail' other.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">{{ other.contract_number }}</div>
+                            <small class="text-muted">
+                                {{ other.start_date }} - {% if other.end_date %}{{ other.end_date }}{% else %}Present{% endif %}
+                            </small>
+                        </div>
+                        {% if other.is_current %}
+                        <span class="badge bg-success">Current</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Contract - Floor Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-file-text me-2"></i>
+                {% if form.instance.pk %}Edit{% else %}Create{% endif %} Contract
+            </h1>
+            <p class="page-subtitle">Employee contract and compensation details</p>
+        </div>
+        <div>
+            <a href="{% if form.instance.pk %}{% url 'hr:contract_detail' form.instance.pk %}{% else %}{% url 'hr:contract_list' %}{% endif %}"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-2"></i> Cancel
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <h5 class="alert-heading">Please correct the following errors:</h5>
+        {{ form.errors }}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Contract Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.employee.id_for_label }}" class="form-label">Employee *</label>
+                            {{ form.employee }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.contract_type.id_for_label }}" class="form-label">Contract Type *</label>
+                            {{ form.contract_type }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date *</label>
+                            {{ form.start_date }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date</label>
+                            {{ form.end_date }}
+                            <small class="form-text text-muted">Leave blank for permanent contracts</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <input type="checkbox" name="is_current" {% if form.instance.is_current or not form.instance.pk %}checked{% endif %}>
+                                Set as Current Contract
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compensation -->
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Compensation Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.basic_salary.id_for_label }}" class="form-label">Basic Salary *</label>
+                            {{ form.basic_salary }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.currency.id_for_label }}" class="form-label">Currency *</label>
+                            {{ form.currency }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.housing_allowance.id_for_label }}" class="form-label">Housing Allowance</label>
+                            {{ form.housing_allowance }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.transport_allowance.id_for_label }}" class="form-label">Transport Allowance</label>
+                            {{ form.transport_allowance }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.other_allowances.id_for_label }}" class="form-label">Other Allowances</label>
+                            {{ form.other_allowances }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Terms -->
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Contract Terms</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.probation_period_months.id_for_label }}" class="form-label">Probation Period (months)</label>
+                            {{ form.probation_period_months }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.notice_period_days.id_for_label }}" class="form-label">Notice Period (days)</label>
+                            {{ form.notice_period_days }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.work_hours_per_week.id_for_label }}" class="form-label">Work Hours per Week *</label>
+                            {{ form.work_hours_per_week }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.annual_leave_days.id_for_label }}" class="form-label">Annual Leave Days *</label>
+                            {{ form.annual_leave_days }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Details -->
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Additional Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.contract_file.id_for_label }}" class="form-label">Contract Document</label>
+                        {{ form.contract_file }}
+                        <small class="form-text text-muted">Upload signed contract PDF</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {% if form.instance.pk %}Update{% else %}Create{% endif %} Contract
+                        </button>
+                        <a href="{% if form.instance.pk %}{% url 'hr:contract_detail' form.instance.pk %}{% else %}{% url 'hr:contract_list' %}{% endif %}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Help</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">
+                        <strong>Required fields:</strong> Employee, Contract Type, Start Date, Basic Salary, Currency
+                    </p>
+                    <p class="small text-muted mb-0">
+                        <strong>Tip:</strong> Leave the End Date blank for permanent contracts.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Bootstrap classes to form fields
+    const formControls = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], select, textarea');
+    formControls.forEach(field => {
+        field.classList.add('form-control');
+    });
+
+    // File input special styling
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(field => {
+        field.classList.add('form-control');
+    });
+});
+</script>
+{% endblock %}

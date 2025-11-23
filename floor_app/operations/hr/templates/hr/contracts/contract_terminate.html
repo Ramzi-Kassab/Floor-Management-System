@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Terminate Contract - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-x-circle me-2"></i> Terminate Contract
+    </h1>
+    <p class="page-subtitle">Terminate contract {{ contract.contract_number }}</p>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Warning:</strong> This action will terminate the contract and update the employee's status.
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Contract Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Employee:</strong> {{ contract.employee.person.full_name }}</p>
+                    <p><strong>Contract Number:</strong> {{ contract.contract_number }}</p>
+                    <p><strong>Start Date:</strong> {{ contract.start_date }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Termination Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Termination Date *</label>
+                        <input type="date" name="termination_date" class="form-control" value="{% now 'Y-m-d' %}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Termination Reason *</label>
+                        <textarea name="termination_reason" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-x-circle me-2"></i> Terminate Contract
+                        </button>
+                        <a href="{% url 'hr:contract_detail' contract.pk %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shift Template {{ template.code }} - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-calendar3 me-2"></i> {{ template.name }}
+            </h1>
+            <p class="page-subtitle">{{ template.code }}</p>
+        </div>
+        <div>
+            <a href="{% url 'hr:shift_template_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back
+            </a>
+            <a href="{% url 'hr:shift_template_edit' template.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-2"></i> Edit
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Shift Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Code</label>
+                        <div class="fw-bold">{{ template.code }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Name</label>
+                        <div>{{ template.name }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="text-muted small">Start Time</label>
+                        <div class="fw-bold">{{ template.start_time }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="text-muted small">End Time</label>
+                        <div class="fw-bold">{{ template.end_time }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="text-muted small">Duration</label>
+                        <div>{{ template.duration_hours }} hours</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Type</label>
+                        <div>
+                            {% if template.is_night_shift %}
+                            <span class="badge bg-dark">Night Shift</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">Day Shift</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Status</label>
+                        <div>
+                            {% if template.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Current Assignments ({{ active_assignments }})</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Start Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in current_assignments %}
+                            <tr>
+                                <td>{{ assignment.employee.person.full_name }}</td>
+                                <td>{{ assignment.employee.department.name }}</td>
+                                <td>{{ assignment.start_date }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">No current assignments</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'hr:shift_assignment_create' %}?shift={{ template.pk }}" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-2"></i> Assign to Employee
+                    </a>
+                    <a href="{% url 'hr:shift_template_edit' template.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i> Edit Template
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

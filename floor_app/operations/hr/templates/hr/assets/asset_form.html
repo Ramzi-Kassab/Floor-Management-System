@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Asset - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-laptop me-2"></i> {% if form.instance.pk %}Edit{% else %}Create{% endif %} Asset
+    </h1>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Asset Type *</label>
+                            {{ form.asset_type }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Name *</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Serial Number</label>
+                            {{ form.serial_number }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Manufacturer</label>
+                            {{ form.manufacturer }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Model</label>
+                            {{ form.model }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status *</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Condition *</label>
+                            {{ form.condition }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Location</label>
+                            {{ form.current_location }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i> Save
+                        </button>
+                        <a href="{% url 'hr:asset_list' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formControls = document.querySelectorAll('input, select, textarea');
+    formControls.forEach(field => field.classList.add('form-control'));
+});
+</script>
+{% endblock %}
