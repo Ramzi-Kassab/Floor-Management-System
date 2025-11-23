@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('inventory', '0004_rollerconebearing_rollerconebittype_rollerconeseal_and_more'),
+        ('inventory', '0005_remove_bitdesign_created_by_remove_bitdesign_level_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
