@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Shipment #{{ object.shipment_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h1><i class="fas fa-shipping-fast"></i> Shipment #{{ object.shipment_number }}</h1>
+                    <p class="mb-0">{{ object.customer.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'sales:shipment_list' %}" class="btn btn-light">Back</a>
+                    <a href="{% url 'sales:shipment_update' object.pk %}" class="btn btn-warning">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Shipment Information</h5></div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr><th style="width: 200px;">Shipment Number:</th><td><strong>{{ object.shipment_number }}</strong></td></tr>
+                        <tr><th>Customer:</th><td><a href="{% url 'sales:customer_detail' object.customer.pk %}">{{ object.customer.name }}</a></td></tr>
+                        <tr><th>Ship Date:</th><td>{{ object.ship_date|date:"M d, Y" }}</td></tr>
+                        <tr><th>Expected Delivery:</th><td>{{ object.expected_delivery_date|date:"M d, Y"|default:"Not set" }}</td></tr>
+                        <tr><th>Status:</th><td><span class="badge bg-success">{{ object.get_status_display }}</span></td></tr>
+                        <tr><th>Tracking Number:</th><td><code>{{ object.tracking_number|default:"Not available" }}</code></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Timeline</h5></div>
+                <div class="card-body">
+                    <p><strong>Created:</strong> {{ object.created_at|date:"M d, Y" }}</p>
+                    <p><strong>Updated:</strong> {{ object.updated_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

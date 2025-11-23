@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Junk Sales - Sales{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-recycle"></i> Junk Sales</h1>
+            <p class="text-muted mb-0">Manage disposal and recycling of used equipment</p>
+        </div>
+        <div>
+            <a href="{% url 'sales:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
+            <a href="{% url 'sales:junksale_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Junk Sale
+            </a>
+        </div>
+    </div>
+
+    <!-- Junk Sales Table -->
+    {% if object_list %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Sale #</th>
+                            <th>Item Description</th>
+                            <th>Quantity</th>
+                            <th>Sale Date</th>
+                            <th>Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in object_list %}
+                        <tr>
+                            <td><strong>{{ sale.sale_number|default:sale.pk }}</strong></td>
+                            <td>{{ sale.item_description|truncatechars:50 }}</td>
+                            <td>{{ sale.quantity }}</td>
+                            <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                            <td>${{ sale.sale_amount|floatformat:2 }}</td>
+                            <td>
+                                <a href="{% url 'sales:junksale_detail' sale.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'sales:junksale_update' sale.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-recycle fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">No Junk Sales Found</h5>
+            <a href="{% url 'sales:junksale_create' %}" class="btn btn-primary">Create First Junk Sale</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Drilling Run #{{ object.run_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h1><i class="fas fa-drill"></i> Drilling Run #{{ object.run_number }}</h1>
+                    <p class="mb-0">{{ object.well.name }} - {{ object.well.rig.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'sales:drilling_list' %}" class="btn btn-light">Back</a>
+                    <a href="{% url 'sales:drilling_update' object.pk %}" class="btn btn-warning">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Run Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 200px;">Run Number:</th>
+                            <td><strong>{{ object.run_number }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Well:</th>
+                            <td><a href="{% url 'sales:well_detail' object.well.pk %}">{{ object.well.name }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Rig:</th>
+                            <td><a href="{% url 'sales:rig_detail' object.well.rig.pk %}">{{ object.well.rig.name }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Start Date:</th>
+                            <td>{{ object.start_date|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>End Date:</th>
+                            <td>{{ object.end_date|date:"M d, Y H:i"|default:"In Progress" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Duration:</th>
+                            <td>{{ object.duration_hours|default:"Calculating..." }} hours</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{% if object.status == 'completed' %}success{% else %}primary{% endif %}">
+                                    {{ object.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-ruler-vertical"></i> Depth & Performance</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 200px;">Depth In:</th>
+                            <td>{{ object.depth_in|default:"0" }} ft</td>
+                        </tr>
+                        <tr>
+                            <th>Depth Out:</th>
+                            <td>{{ object.depth_out|default:"0" }} ft</td>
+                        </tr>
+                        <tr>
+                            <th>Total Footage:</th>
+                            <td><strong>{{ object.total_footage|default:"0" }} ft</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Rate of Penetration:</th>
+                            <td>{{ object.rop|floatformat:2|default:"-" }} ft/hr</td>
+                        </tr>
+                        <tr>
+                            <th>Bit Serial Number:</th>
+                            <td><code>{{ object.bit_serial_number|default:"Not specified" }}</code></td>
+                        </tr>
+                    </table>
+                    {% if object.notes %}
+                    <div class="mt-3">
+                        <strong>Notes:</strong>
+                        <p>{{ object.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Footage:</strong> {{ object.total_footage|default:"0" }} ft</p>
+                    <p><strong>Average ROP:</strong> {{ object.rop|floatformat:2|default:"-" }} ft/hr</p>
+                    <p><strong>Duration:</strong> {{ object.duration_hours|default:"-" }} hours</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Created:</strong> {{ object.created_at|date:"M d, Y" }}</p>
+                    <p><strong>Updated:</strong> {{ object.updated_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

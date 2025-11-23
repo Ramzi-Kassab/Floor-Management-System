@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Junk Sale Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h1><i class="fas fa-recycle"></i> Junk Sale #{{ object.sale_number|default:object.pk }}</h1>
+                </div>
+                <div>
+                    <a href="{% url 'sales:junksale_list' %}" class="btn btn-light">Back</a>
+                    <a href="{% url 'sales:junksale_update' object.pk %}" class="btn btn-warning">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Sale Information</h5></div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr><th style="width: 200px;">Sale Number:</th><td>{{ object.sale_number|default:object.pk }}</td></tr>
+                        <tr><th>Item Description:</th><td>{{ object.item_description }}</td></tr>
+                        <tr><th>Quantity:</th><td>{{ object.quantity }}</td></tr>
+                        <tr><th>Sale Date:</th><td>{{ object.sale_date|date:"M d, Y" }}</td></tr>
+                        <tr><th>Sale Amount:</th><td><strong>${{ object.sale_amount|floatformat:2 }}</strong></td></tr>
+                        <tr><th>Buyer:</th><td>{{ object.buyer|default:"Not specified" }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Timeline</h5></div>
+                <div class="card-body">
+                    <p><strong>Created:</strong> {{ object.created_at|date:"M d, Y" }}</p>
+                    <p><strong>Updated:</strong> {{ object.updated_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

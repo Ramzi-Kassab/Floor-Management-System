@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Dull Grade Evaluation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h1><i class="fas fa-clipboard-check"></i> Dull Grade Evaluation</h1>
+                    <p class="mb-0">Drilling Run #{{ object.drilling_run.run_number }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'sales:dullgrade_list' %}" class="btn btn-light">Back</a>
+                    <a href="{% url 'sales:dullgrade_update' object.pk %}" class="btn btn-warning">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Evaluation Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 200px;">Drilling Run:</th>
+                            <td><a href="{% url 'sales:drilling_detail' object.drilling_run.pk %}">#{{ object.drilling_run.run_number }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Bit Serial Number:</th>
+                            <td><code>{{ object.bit_serial_number|default:"Not specified" }}</code></td>
+                        </tr>
+                        <tr>
+                            <th>Dull Grade:</th>
+                            <td><strong>{{ object.dull_grade|default:"Not graded" }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Inner Row:</th>
+                            <td>{{ object.inner_row|default:"-" }}/8</td>
+                        </tr>
+                        <tr>
+                            <th>Outer Row:</th>
+                            <td>{{ object.outer_row|default:"-" }}/8</td>
+                        </tr>
+                        <tr>
+                            <th>Location:</th>
+                            <td>{{ object.location|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Reason Pulled:</th>
+                            <td>{{ object.reason_pulled|default:"Not specified" }}</td>
+                        </tr>
+                        {% if object.comments %}
+                        <tr>
+                            <th>Comments:</th>
+                            <td>{{ object.comments }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Evaluated:</strong> {{ object.created_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>Updated:</strong> {{ object.updated_at|date:"M d, Y" }}</p>
+                    {% if object.created_by %}
+                    <p><strong>Evaluator:</strong> {{ object.created_by.get_full_name|default:object.created_by.username }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

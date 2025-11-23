@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Shipments - Sales{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-shipping-fast"></i> Shipments</h1>
+            <p class="text-muted mb-0">Track and manage shipments</p>
+        </div>
+        <div>
+            <a href="{% url 'sales:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
+            <a href="{% url 'sales:shipment_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Shipment
+            </a>
+        </div>
+    </div>
+
+    <!-- Search/Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search shipments..." value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_transit">In Transit</option>
+                        <option value="delivered">Delivered</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="date_from" class="form-control" placeholder="From Date">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Shipments Table -->
+    {% if object_list %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Shipment #</th>
+                            <th>Customer</th>
+                            <th>Ship Date</th>
+                            <th>Expected Delivery</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shipment in object_list %}
+                        <tr>
+                            <td><strong>{{ shipment.shipment_number }}</strong></td>
+                            <td>{{ shipment.customer.name }}</td>
+                            <td>{{ shipment.ship_date|date:"M d, Y" }}</td>
+                            <td>{{ shipment.expected_delivery_date|date:"M d, Y"|default:"-" }}</td>
+                            <td>
+                                <span class="badge bg-{% if shipment.status == 'delivered' %}success{% elif shipment.status == 'in_transit' %}primary{% else %}secondary{% endif %}">
+                                    {{ shipment.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'sales:shipment_detail' shipment.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'sales:shipment_update' shipment.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-shipping-fast fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">No Shipments Found</h5>
+            <a href="{% url 'sales:shipment_create' %}" class="btn btn-primary">Create First Shipment</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

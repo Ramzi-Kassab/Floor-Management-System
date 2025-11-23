@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sales Reports Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .report-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-chart-bar"></i> Sales Reports Dashboard</h1>
+            <p class="text-muted mb-0">Comprehensive sales analytics and reporting</p>
+        </div>
+        <div>
+            <a href="{% url 'sales:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Categories -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="report-card text-center">
+                <i class="fas fa-dollar-sign report-icon"></i>
+                <h5>Revenue Reports</h5>
+                <p class="text-muted">Sales revenue, trends, and forecasts</p>
+                <button class="btn btn-primary btn-sm">Generate Report</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="report-card text-center">
+                <i class="fas fa-users report-icon"></i>
+                <h5>Customer Reports</h5>
+                <p class="text-muted">Customer activity and engagement metrics</p>
+                <button class="btn btn-primary btn-sm">Generate Report</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="report-card text-center">
+                <i class="fas fa-oil-well report-icon"></i>
+                <h5>Drilling Reports</h5>
+                <p class="text-muted">Drilling performance and bit lifecycle</p>
+                <button class="btn btn-primary btn-sm">Generate Report</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="report-card text-center">
+                <i class="fas fa-chart-line report-icon"></i>
+                <h5>Performance Reports</h5>
+                <p class="text-muted">KPIs and performance metrics</p>
+                <button class="btn btn-primary btn-sm">Generate Report</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="report-card text-center">
+                <i class="fas fa-shipping-fast report-icon"></i>
+                <h5>Shipment Reports</h5>
+                <p class="text-muted">Delivery tracking and logistics</p>
+                <button class="btn btn-primary btn-sm">Generate Report</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="report-card text-center">
+                <i class="fas fa-file-invoice-dollar report-icon"></i>
+                <h5>Order Reports</h5>
+                <p class="text-muted">Order history and fulfillment stats</p>
+                <button class="btn btn-primary btn-sm">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Quick Statistics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h3 class="text-primary">${{ total_revenue|floatformat:0|default:"0" }}</h3>
+                    <p class="text-muted mb-0">Total Revenue (YTD)</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-success">{{ total_orders|default:0 }}</h3>
+                    <p class="text-muted mb-0">Total Orders</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-info">{{ active_customers|default:0 }}</h3>
+                    <p class="text-muted mb-0">Active Customers</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-warning">{{ total_footage|floatformat:0|default:"0" }}</h3>
+                    <p class="text-muted mb-0">Total Footage Drilled</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
