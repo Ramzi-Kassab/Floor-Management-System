@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"System Dashboard" }} - Floor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .stats-card h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+    .stats-card .value {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    .stats-card .label {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    .health-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .health-HEALTHY { background-color: #d4edda; color: #155724; }
+    .health-DEGRADED { background-color: #fff3cd; color: #856404; }
+    .health-WARNING { background-color: #fff3cd; color: #856404; }
+    .health-CRITICAL { background-color: #f8d7da; color: #721c24; }
+
+    .activity-item {
+        padding: 12px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    .activity-item .timestamp {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    .log-table {
+        font-size: 14px;
+    }
+    .log-table td {
+        padding: 8px;
+        vertical-align: middle;
+    }
+    .badge-action {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+    .filter-bar {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h2">{% block dashboard_title %}System Dashboard{% endblock %}</h1>
+            <p class="text-muted">{% block dashboard_subtitle %}Monitor system health and activity{% endblock %}</p>
+        </div>
+    </div>
+
+    {% if system_status.has_alerts %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>⚠️ System Alerts:</strong>
+        {% if system_status.critical_events > 0 %}
+            {{ system_status.critical_events }} critical event(s) detected.
+        {% endif %}
+        {% if system_status.unresolved_errors > 0 %}
+            {{ system_status.unresolved_errors }} unresolved error(s).
+        {% endif %}
+        <a href="{% url 'core:system_events' %}?unresolved=true" class="alert-link">View Details →</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    {% block dashboard_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{% block dashboard_js %}{% endblock %}
+{% endblock %}

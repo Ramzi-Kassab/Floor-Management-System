@@ -1,0 +1,279 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block dashboard_content %}
+<!-- System Health Overview -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card bg-white">
+            <h3>System Health</h3>
+            <div class="value">
+                <span class="health-badge health-{{ health.health_status }}">
+                    {{ health.health_status }}
+                </span>
+            </div>
+            <div class="label">Last checked: {{ health.timestamp|date:"H:i" }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-white">
+            <h3>Total Activities</h3>
+            <div class="value text-primary">{{ total_activities|default:0 }}</div>
+            <div class="label">Last {{ days }} days</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-white">
+            <h3>Active Users</h3>
+            <div class="value text-success">{{ unique_users|default:0 }}</div>
+            <div class="label">Unique users</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-white">
+            <h3>Audit Logs</h3>
+            <div class="value text-info">{{ total_audits|default:0 }}</div>
+            <div class="label">Changes tracked</div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card {% if health.critical_count > 0 %}bg-danger text-white{% else %}bg-white{% endif %}">
+            <h3>Critical Events</h3>
+            <div class="value">{{ health.critical_count|default:0 }}</div>
+            <div class="label">Last 24 hours</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card {% if health.error_count > 10 %}bg-warning{% else %}bg-white{% endif %}">
+            <h3>Errors</h3>
+            <div class="value">{{ health.error_count|default:0 }}</div>
+            <div class="label">Last 24 hours</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-white">
+            <h3>Warnings</h3>
+            <div class="value text-warning">{{ health.warning_count|default:0 }}</div>
+            <div class="label">Last 24 hours</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-white">
+            <h3>Avg Response</h3>
+            <div class="value text-secondary">
+                {% if avg_duration %}{{ avg_duration|floatformat:0 }}ms{% else %}N/A{% endif %}
+            </div>
+            <div class="label">Request duration</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Activities by Type</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="activitiesChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actions by Type</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="actionsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Users and Recent Errors -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Top Active Users</h5>
+                <a href="{% url 'core:activity_logs' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if top_users %}
+                <div class="list-group list-group-flush">
+                    {% for user in top_users %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-person-circle"></i>
+                            <strong>{{ user.user__username|default:"Anonymous" }}</strong>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ user.count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted p-3">No activity data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Errors</h5>
+                <a href="{% url 'core:system_events' %}?level=ERROR" class="btn btn-sm btn-outline-danger">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_errors %}
+                <div class="list-group list-group-flush">
+                    {% for error in recent_errors %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <span class="badge bg-{{ error.level|lower }} me-2">{{ error.level }}</span>
+                                {{ error.event_name }}
+                            </h6>
+                            <small class="text-muted">{{ error.timestamp|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1 small">{{ error.message|truncatewords:20 }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-success p-3">
+                    <i class="bi bi-check-circle"></i> No recent errors
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Events Summary -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Events by Level (Last {{ days }} days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for event in events_by_level %}
+                    <div class="col-md-2">
+                        <div class="text-center p-3">
+                            <h3 class="mb-0">{{ event.count }}</h3>
+                            <span class="badge bg-{{ event.level|lower }}">{{ event.level }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'core:activity_logs' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-list-ul"></i> View Activity Logs
+                    </a>
+                    <a href="{% url 'core:audit_logs' %}" class="btn btn-outline-info">
+                        <i class="bi bi-shield-check"></i> View Audit Logs
+                    </a>
+                    <a href="{% url 'core:system_events' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-exclamation-triangle"></i> View System Events
+                    </a>
+                    <a href="{% url 'core:export_activity_logs' %}?format=excel&days={{ days }}" class="btn btn-outline-success">
+                        <i class="bi bi-download"></i> Export Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_js %}
+<script>
+// Activities by Type Chart
+const activitiesCtx = document.getElementById('activitiesChart').getContext('2d');
+new Chart(activitiesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [
+            {% for activity in activities_by_type %}
+            '{{ activity.activity_type }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            data: [
+                {% for activity in activities_by_type %}
+                {{ activity.count }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: [
+                '#007bff', '#28a745', '#ffc107', '#17a2b8',
+                '#6f42c1', '#e83e8c', '#fd7e14', '#20c997'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Actions by Type Chart
+const actionsCtx = document.getElementById('actionsChart').getContext('2d');
+new Chart(actionsCtx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for action in actions_by_type %}
+            '{{ action.action }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Actions',
+            data: [
+                {% for action in actions_by_type %}
+                {{ action.count }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: '#007bff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
