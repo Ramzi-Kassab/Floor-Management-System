@@ -1,0 +1,67 @@
+{% extends "hr/emails/base_email.html" %}
+
+{% block title %}Welcome to the Team - Floor Management System{% endblock %}
+
+{% block header_title %}Welcome to the Team!{% endblock %}
+
+{% block content %}
+<p>Dear {{ employee_name }},</p>
+
+<p>Welcome to {{ company_name }}! We are excited to have you join our team.</p>
+
+<div class="success-box">
+    <h3 style="margin-top: 0;">🎉 Your Employee Account Has Been Created</h3>
+    <p>You can now access the Floor Management System.</p>
+</div>
+
+<table class="details-table">
+    <tr>
+        <th>Employee Code:</th>
+        <td><strong>{{ employee_code }}</strong></td>
+    </tr>
+    <tr>
+        <th>Department:</th>
+        <td>{{ department }}</td>
+    </tr>
+    <tr>
+        <th>Position:</th>
+        <td>{{ position }}</td>
+    </tr>
+    <tr>
+        <th>Start Date:</th>
+        <td>{{ hire_date|date:"F d, Y" }}</td>
+    </tr>
+    {% if manager_name %}
+    <tr>
+        <th>Reporting To:</th>
+        <td>{{ manager_name }}</td>
+    </tr>
+    {% endif %}
+</table>
+
+{% if has_user_account %}
+<div class="info-box">
+    <h4 style="margin-top: 0;">System Access</h4>
+    <p><strong>Username:</strong> {{ username }}</p>
+    <p>Your temporary password has been sent in a separate email. Please change it upon first login.</p>
+    <p style="text-align: center; margin: 15px 0;">
+        <a href="{{ login_url }}" class="button">Login to System</a>
+    </p>
+</div>
+{% endif %}
+
+<h3>Next Steps:</h3>
+<ol>
+    <li>Complete your employee profile</li>
+    <li>Review company policies and procedures</li>
+    <li>Attend orientation session (date to be confirmed)</li>
+    <li>Meet with your manager on your first day</li>
+</ol>
+
+<p>If you have any questions before your start date, please don't hesitate to contact HR.</p>
+
+<p>We look forward to working with you!</p>
+
+<p>Best regards,<br>
+{{ company_name }} HR Department</p>
+{% endblock %}

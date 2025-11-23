@@ -1,0 +1,56 @@
+{% extends "hr/emails/base_email.html" %}
+
+{% block title %}Leave Request Rejected - Floor Management System{% endblock %}
+
+{% block header_title %}Leave Request Update{% endblock %}
+
+{% block content %}
+<p>Dear {{ employee_name }},</p>
+
+<div class="warning-box">
+    <h3 style="margin-top: 0;">Leave Request Not Approved</h3>
+    <p style="margin-bottom: 0;">Unfortunately, your leave request could not be approved at this time.</p>
+</div>
+
+<table class="details-table">
+    <tr>
+        <th>Leave Type:</th>
+        <td>{{ leave_type }}</td>
+    </tr>
+    <tr>
+        <th>Start Date:</th>
+        <td>{{ start_date|date:"F d, Y" }}</td>
+    </tr>
+    <tr>
+        <th>End Date:</th>
+        <td>{{ end_date|date:"F d, Y" }}</td>
+    </tr>
+    <tr>
+        <th>Duration:</th>
+        <td>{{ total_days }} day{{ total_days|pluralize }}</td>
+    </tr>
+    <tr>
+        <th>Reviewed By:</th>
+        <td>{{ approved_by }}</td>
+    </tr>
+    <tr>
+        <th>Reviewed On:</th>
+        <td>{{ approved_date|date:"F d, Y H:i" }}</td>
+    </tr>
+    {% if rejection_reason %}
+    <tr>
+        <th>Reason:</th>
+        <td><strong>{{ rejection_reason }}</strong></td>
+    </tr>
+    {% endif %}
+</table>
+
+<p>If you have any questions or would like to discuss this decision, please contact your manager or HR department.</p>
+
+<p style="text-align: center; margin: 25px 0;">
+    <a href="{{ request_url }}" class="button">View Request Details</a>
+</p>
+
+<p>Best regards,<br>
+Floor Management System</p>
+{% endblock %}
