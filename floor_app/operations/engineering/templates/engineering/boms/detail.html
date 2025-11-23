@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ bom.bom_number }} - BOM Detail - Engineering{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-list-columns me-2"></i> {{ bom.bom_number }}
+            </h1>
+            <p class="page-subtitle">Bill of Materials for {{ bom.bit_design_revision.bit_design.design_number }}</p>
+        </div>
+        <div>
+            <a href="{% url 'engineering:bom_edit' bom.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-2"></i> Edit
+            </a>
+            <a href="{% url 'engineering:bom_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- BOM Header Info -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">BOM Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">BOM Number</label>
+                        <div class="fw-bold">{{ bom.bom_number }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Status</label>
+                        <div>
+                            {% if bom.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Bit Design</label>
+                        <div>
+                            <a href="{% url 'engineering:bit_design_detail' bom.bit_design_revision.bit_design.pk %}">
+                                {{ bom.bit_design_revision.bit_design.design_number }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Revision</label>
+                        <div>
+                            <a href="{% url 'engineering:revision_detail' bom.bit_design_revision.pk %}">
+                                {{ bom.bit_design_revision.revision_number }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Description</label>
+                        <div>{{ bom.description|default:"-" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Created</label>
+                        <div>{{ bom.created_at|date:"Y-m-d H:i" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Last Modified</label>
+                        <div>{{ bom.updated_at|date:"Y-m-d H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOM Lines -->
+        <div class="card border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-list-ul me-2"></i> BOM Lines
+                </h5>
+                <span class="badge bg-info">{{ bom.lines.count }} items</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th>SKU</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in bom.lines.all %}
+                            <tr>
+                                <td>{{ line.line_number }}</td>
+                                <td>{{ line.item.name }}</td>
+                                <td>
+                                    <code>{{ line.item.sku }}</code>
+                                </td>
+                                <td>{{ line.quantity }}</td>
+                                <td>{{ line.item.uom.code }}</td>
+                                <td>{{ line.notes|default:"-"|truncatewords:10 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">
+                                    No BOM lines defined yet
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">Total Items</label>
+                    <h4>{{ total_items }}</h4>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Status</label>
+                    <div>
+                        {% if bom.is_active %}
+                        <span class="badge bg-success fs-6">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary fs-6">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Info -->
+        <div class="card border-0 mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Related</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'engineering:bit_design_detail' bom.bit_design_revision.bit_design.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-diagram-3 me-2"></i> View Bit Design
+                    </a>
+                    <a href="{% url 'engineering:revision_detail' bom.bit_design_revision.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-file-earmark-text me-2"></i> View Revision
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

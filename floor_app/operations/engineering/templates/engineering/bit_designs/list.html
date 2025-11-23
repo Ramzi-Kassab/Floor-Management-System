@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bit Designs - Engineering - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-diagram-3 me-2"></i> Bit Designs
+            </h1>
+            <p class="page-subtitle">All bit designs and specifications</p>
+        </div>
+        <div>
+            <a href="{% url 'engineering:bit_design_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Design
+            </a>
+            <a href="{% url 'engineering:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase small">Total Designs</h6>
+                <h3>{{ stats.total_designs }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase small">Total Revisions</h6>
+                <h3>{{ stats.total_revisions }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search designs..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for type in design_types %}
+                    <option value="{{ type.id }}" {% if request.GET.type == type.id|stringformat:"s" %}selected{% endif %}>
+                        {{ type.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="level" class="form-select">
+                    <option value="">All Levels</option>
+                    {% for level in design_levels %}
+                    <option value="{{ level.id }}" {% if request.GET.level == level.id|stringformat:"s" %}selected{% endif %}>
+                        {{ level.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Designs List -->
+<div class="card border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Design Number</th>
+                        <th>Type</th>
+                        <th>Level</th>
+                        <th>Description</th>
+                        <th>Revisions</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for design in designs %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'engineering:bit_design_detail' design.pk %}" class="fw-bold">
+                                {{ design.design_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ design.design_type.name }}
+                            </span>
+                        </td>
+                        <td>{{ design.design_level.name }}</td>
+                        <td>{{ design.description|truncatewords:10 }}</td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ design.revisions.count }}
+                            </span>
+                        </td>
+                        <td>{{ design.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <a href="{% url 'engineering:bit_design_detail' design.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'engineering:bit_design_edit' design.pk %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            No designs found. <a href="{% url 'engineering:bit_design_create' %}">Create one</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

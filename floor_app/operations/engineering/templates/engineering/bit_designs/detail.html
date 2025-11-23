@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ design.design_number }} - Bit Designs - Engineering{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-diagram-3 me-2"></i> {{ design.design_number }}
+            </h1>
+            <p class="page-subtitle">{{ design.description }}</p>
+        </div>
+        <div>
+            <a href="{% url 'engineering:bit_design_edit' design.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-2"></i> Edit
+            </a>
+            <a href="{% url 'engineering:revision_create' %}?design={{ design.pk %}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Revision
+            </a>
+            <a href="{% url 'engineering:bit_design_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Design Details -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Design Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Design Number</label>
+                        <div class="fw-bold">{{ design.design_number }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Type</label>
+                        <div>
+                            <span class="badge bg-secondary">{{ design.design_type.name }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Level</label>
+                        <div>{{ design.design_level.name }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Created</label>
+                        <div>{{ design.created_at|date:"Y-m-d H:i" }}</div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="text-muted small">Description</label>
+                        <div>{{ design.description }}</div>
+                    </div>
+                    {% if design.specifications %}
+                    <div class="col-12">
+                        <label class="text-muted small">Specifications</label>
+                        <div class="border p-3 bg-light">{{ design.specifications|linebreaks }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Revisions -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-file-earmark-text me-2"></i> Revisions
+                </h5>
+                <a href="{% url 'engineering:revision_create' %}?design={{ design.pk }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i> New Revision
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Revision</th>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for revision in revisions %}
+                            <tr>
+                                <td class="fw-bold">{{ revision.revision_number }}</td>
+                                <td>{{ revision.revision_date|date:"Y-m-d" }}</td>
+                                <td>{{ revision.description|truncatewords:15 }}</td>
+                                <td>
+                                    <a href="{% url 'engineering:revision_detail' revision.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    No revisions yet. <a href="{% url 'engineering:revision_create' %}?design={{ design.pk }}">Create one</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOMs -->
+        <div class="card border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-list-columns me-2"></i> BOMs
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>BOM Number</th>
+                                <th>Revision</th>
+                                <th>Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bom in boms %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'engineering:bom_detail' bom.pk %}">
+                                        {{ bom.bom_number }}
+                                    </a>
+                                </td>
+                                <td>{{ bom.bit_design_revision.revision_number }}</td>
+                                <td>
+                                    {% if bom.is_active %}
+                                    <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'engineering:bom_detail' bom.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No BOMs defined for this design</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Info -->
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Quick Info</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">Total Revisions</label>
+                    <h4>{{ revisions.count }}</h4>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Total BOMs</label>
+                    <h4>{{ boms.count }}</h4>
+                </div>
+                {% if latest_revision %}
+                <div class="mb-3">
+                    <label class="text-muted small">Latest Revision</label>
+                    <div class="fw-bold">{{ latest_revision.revision_number }}</div>
+                    <small class="text-muted">{{ latest_revision.revision_date|date:"Y-m-d" }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
