@@ -16,7 +16,7 @@
     <!-- Filter Bar -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3" role="search" aria-label="Filter audit logs">
+            <form method="get" class="row g-3" role="search" aria-label="Filter audit logs" id="auditLogFilter">
                 <div class="col-md-3 col-sm-6">
                     <label for="days" class="form-label">Time Range</label>
                     <select class="form-select" id="days" name="days" aria-label="Select time range">
@@ -217,4 +217,88 @@
     </nav>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('auditLogFilter');
+    const tableBody = document.querySelector('.table tbody');
+    const resultsCount = document.querySelector('[role="status"]');
+
+    if (filterForm) {
+        // Add AJAX filtering on form change
+        filterForm.addEventListener('change', function(e) {
+            if (e.target.name === 'days' || e.target.name === 'action') {
+                submitFilterForm();
+            }
+        });
+
+        // Add AJAX filtering on submit
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitFilterForm();
+        });
+
+        // Debounce for text inputs
+        const textInputs = filterForm.querySelectorAll('input[type="text"]');
+        textInputs.forEach(input => {
+            let debounceTimer;
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    submitFilterForm();
+                }, 500);
+            });
+        });
+    }
+
+    function submitFilterForm() {
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData);
+
+        // Show loading state
+        FloorMS.loading.show(tableBody);
+
+        // Fetch filtered results
+        FloorMS.ajax.get(window.location.pathname + '?' + params.toString())
+            .then(response => {
+                // Parse the HTML response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(response, 'text/html');
+
+                // Update table body
+                const newTableBody = doc.querySelector('.table tbody');
+                if (newTableBody) {
+                    tableBody.innerHTML = newTableBody.innerHTML;
+                }
+
+                // Update results count
+                const newResultsCount = doc.querySelector('[role="status"]');
+                if (newResultsCount && resultsCount) {
+                    resultsCount.innerHTML = newResultsCount.innerHTML;
+                }
+
+                // Update pagination if present
+                const pagination = document.querySelector('nav[aria-label="Audit log pagination"]');
+                const newPagination = doc.querySelector('nav[aria-label="Audit log pagination"]');
+                if (pagination && newPagination) {
+                    pagination.innerHTML = newPagination.innerHTML;
+                }
+
+                // Update URL without reload
+                const newURL = window.location.pathname + '?' + params.toString();
+                window.history.pushState({}, '', newURL);
+
+                FloorMS.loading.hide(tableBody);
+                FloorMS.notify.success('Filters applied successfully');
+            })
+            .catch(error => {
+                FloorMS.loading.hide(tableBody);
+                FloorMS.notify.error('Failed to apply filters');
+                console.error('Filter error:', error);
+            });
+    }
+});
+</script>
 {% endblock %}

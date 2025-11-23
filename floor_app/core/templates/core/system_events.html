@@ -52,7 +52,7 @@
     <!-- Filter Bar -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3" role="search" aria-label="Filter system events">
+            <form method="get" class="row g-3" role="search" aria-label="Filter system events" id="systemEventsFilter">
                 <div class="col-md-2 col-sm-6">
                     <label for="days" class="form-label">Time Range</label>
                     <select class="form-select" id="days" name="days" aria-label="Select time range">
@@ -271,4 +271,112 @@
     </nav>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('systemEventsFilter');
+    const tableBody = document.querySelector('.table tbody');
+    const resultsCount = document.querySelector('[role="status"]');
+
+    if (filterForm) {
+        // Add AJAX filtering on form change
+        filterForm.addEventListener('change', function(e) {
+            if (e.target.name === 'days' || e.target.name === 'level' ||
+                e.target.name === 'category' || e.target.name === 'resolved') {
+                submitFilterForm();
+            }
+        });
+
+        // Add AJAX filtering on submit
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitFilterForm();
+        });
+
+        // Add resolve event handlers
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('button[type="submit"]') &&
+                e.target.closest('form[action*="resolve_event"]')) {
+                e.preventDefault();
+                const form = e.target.closest('form');
+                resolveEvent(form);
+            }
+        });
+    }
+
+    function submitFilterForm() {
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData);
+
+        // Show loading state
+        FloorMS.loading.show(tableBody);
+
+        // Fetch filtered results
+        FloorMS.ajax.get(window.location.pathname + '?' + params.toString())
+            .then(response => {
+                // Parse the HTML response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(response, 'text/html');
+
+                // Update table body
+                const newTableBody = doc.querySelector('.table tbody');
+                if (newTableBody) {
+                    tableBody.innerHTML = newTableBody.innerHTML;
+                }
+
+                // Update results count
+                const newResultsCount = doc.querySelector('[role="status"]');
+                if (newResultsCount && resultsCount) {
+                    resultsCount.innerHTML = newResultsCount.innerHTML;
+                }
+
+                // Update summary cards
+                const summaryCards = document.querySelectorAll('.card .card-body h2');
+                const newSummaryCards = doc.querySelectorAll('.card .card-body h2');
+                summaryCards.forEach((card, index) => {
+                    if (newSummaryCards[index]) {
+                        card.textContent = newSummaryCards[index].textContent;
+                    }
+                });
+
+                // Update pagination if present
+                const pagination = document.querySelector('nav[aria-label="System events pagination"]');
+                const newPagination = doc.querySelector('nav[aria-label="System events pagination"]');
+                if (pagination && newPagination) {
+                    pagination.innerHTML = newPagination.innerHTML;
+                }
+
+                // Update URL without reload
+                const newURL = window.location.pathname + '?' + params.toString();
+                window.history.pushState({}, '', newURL);
+
+                FloorMS.loading.hide(tableBody);
+                FloorMS.notify.success('Filters applied successfully');
+            })
+            .catch(error => {
+                FloorMS.loading.hide(tableBody);
+                FloorMS.notify.error('Failed to apply filters');
+                console.error('Filter error:', error);
+            });
+    }
+
+    function resolveEvent(form) {
+        const formData = new FormData(form);
+        const actionUrl = form.getAttribute('action');
+
+        FloorMS.ajax.post(actionUrl, Object.fromEntries(formData))
+            .then(response => {
+                FloorMS.notify.success('Event marked as resolved');
+                // Refresh the table
+                submitFilterForm();
+            })
+            .catch(error => {
+                FloorMS.notify.error('Failed to resolve event');
+                console.error('Resolve error:', error);
+            });
+    }
+});
+</script>
 {% endblock %}

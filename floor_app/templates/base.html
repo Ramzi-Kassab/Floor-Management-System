@@ -31,6 +31,9 @@
     <!-- Theme System CSS -->
     <link rel="stylesheet" href="{% static 'core/css/themes.css' %}">
 
+    <!-- Core Custom CSS Framework -->
+    <link rel="stylesheet" href="{% static 'core/css/core.css' %}">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body class="theme-{{ theme|default:'light' }} ui-font-{{ font_size|default:'normal' }} table-density-{{ table_density|default:'normal' }}">
@@ -1005,6 +1008,13 @@
 
     <!-- Data Table Component JS -->
     <script src="{% static 'core/js/data-table.js' %}"></script>
+
+    <!-- Core JavaScript Libraries -->
+    <script src="{% static 'core/js/core.js' %}"></script>
+    <script src="{% static 'core/js/theme.js' %}"></script>
+    <script src="{% static 'core/js/notifications.js' %}"></script>
+    <script src="{% static 'core/js/validation.js' %}"></script>
+    <script src="{% static 'core/js/shortcuts.js' %}"></script>
 
     <!-- Custom JavaScript -->
     <script>
