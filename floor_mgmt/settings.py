@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'floor_app.apps.FloorAppConfig',
     # Operations apps
     'floor_app.operations.hr.apps.HRConfig',
+    'floor_app.operations.hr_portal.apps.HrPortalConfig',
     'floor_app.operations.inventory.apps.InventoryConfig',
     'floor_app.operations.engineering.apps.EngineeringConfig',  # Engineering - Design & BOM
     'floor_app.operations.finance.apps.FinanceConfig',  # Finance - Cost & Impact Tracking

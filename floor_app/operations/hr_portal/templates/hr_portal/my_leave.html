@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Leave - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-calendar-event me-2"></i> My Leave
+    </h1>
+    <p class="page-subtitle">View your leave balance and history</p>
+</div>
+
+<div class="row mb-4">
+    {% for balance in leave_balances %}
+    <div class="col-md-4">
+        <div class="card border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">{{ balance.leave_type.name }}</h6>
+                <h3 class="mb-0">{{ balance.available_days }} days</h3>
+                <small class="text-muted">Used: {{ balance.used_days }} / {{ balance.total_entitlement }}</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card border-0">
+    <div class="card-header bg-white">
+        <h5 class="mb-0 fw-bold">Leave History</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave in leave_requests %}
+                    <tr>
+                        <td>{{ leave.leave_type.name }}</td>
+                        <td>{{ leave.start_date }}</td>
+                        <td>{{ leave.end_date }}</td>
+                        <td>{{ leave.total_days }}</td>
+                        <td>
+                            <span class="badge bg-{{ leave.status }}">{{ leave.get_status_display }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No leave history.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Requests - Floor Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-inbox me-2"></i> My Requests
+            </h1>
+            <p class="page-subtitle">Track your submitted requests</p>
+        </div>
+        <div>
+            <a href="{% url 'hr_portal:submit_request' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Request
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Request #</th>
+                        <th>Type</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                    <tr>
+                        <td><strong>{{ request.request_number }}</strong></td>
+                        <td>{{ request.get_request_type_display }}</td>
+                        <td>{{ request.subject }}</td>
+                        <td>
+                            <span class="badge
+                                {% if request.status == 'submitted' %}bg-info
+                                {% elif request.status == 'under_review' %}bg-warning
+                                {% elif request.status == 'approved' or request.status == 'completed' %}bg-success
+                                {% else %}bg-secondary{% endif %}">
+                                {{ request.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ request.submitted_date|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No requests yet. <a href="{% url 'hr_portal:submit_request' %}">Submit your first request</a>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

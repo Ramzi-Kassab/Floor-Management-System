@@ -24,6 +24,10 @@ urlpatterns = [
     # All HR URLs under "/hr/" and namespaced as "hr"
     path("hr/", include(("floor_app.operations.hr.urls", "hr"), namespace="hr")),
 
+    # === HR Employee Portal ===
+    # Employee self-service portal under "/portal/"
+    path("portal/", include(("floor_app.operations.hr_portal.urls", "hr_portal"), namespace="hr_portal")),
+
     # === Inventory / Materials Management ===
     path("inventory/", include(("floor_app.operations.inventory.urls", "inventory"), namespace="inventory")),
 
