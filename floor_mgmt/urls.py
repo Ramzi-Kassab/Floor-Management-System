@@ -31,6 +31,9 @@ urlpatterns = [
     # === Inventory / Materials Management ===
     path("inventory/", include(("floor_app.operations.inventory.urls", "inventory"), namespace="inventory")),
 
+    # === Engineering / Design & BOM ===
+    path("engineering/", include(("floor_app.operations.engineering.urls", "engineering"), namespace="engineering")),
+
     # === Production & Evaluation ===
     path("production/", include(("floor_app.operations.production.urls", "production"), namespace="production")),
 

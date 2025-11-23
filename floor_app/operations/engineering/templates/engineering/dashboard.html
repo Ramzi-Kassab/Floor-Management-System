@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Engineering Dashboard - Floor Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-gear me-2"></i> Engineering
+            </h1>
+            <p class="page-subtitle">Bit designs, BOMs, and engineering specifications</p>
+        </div>
+        <div>
+            <a href="{% url 'engineering:bit_design_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> New Bit Design
+            </a>
+            <a href="{% url 'engineering:bom_create' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list-columns me-2"></i> New BOM
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(99, 102, 241, 0.1);">
+                            <i class="bi bi-diagram-3 fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Bit Designs</h6>
+                        <h3 class="mb-0">{{ total_bit_designs }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(16, 185, 129, 0.1);">
+                            <i class="bi bi-file-earmark-text fs-4 text-success"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Revisions</h6>
+                        <h3 class="mb-0">{{ total_revisions }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(249, 115, 22, 0.1);">
+                            <i class="bi bi-list-columns fs-4 text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">BOMs</h6>
+                        <h3 class="mb-0">{{ total_boms }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(139, 92, 246, 0.1);">
+                            <i class="bi bi-gear-wide-connected fs-4 text-purple"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Roller Cone</h6>
+                        <h3 class="mb-0">{{ total_roller_cone_designs }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Designs by Type -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-bar-chart me-2"></i> Designs by Type
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th class="text-end">Count</th>
+                                <th style="width: 40%;">Distribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in designs_by_type %}
+                            <tr>
+                                <td>{{ item.design_type__name }}</td>
+                                <td class="text-end">{{ item.count }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar"
+                                             style="width: {% widthratio item.count total_bit_designs 100 %}%"
+                                             aria-valuenow="{{ item.count }}" aria-valuemin="0" aria-valuemax="{{ total_bit_designs }}">
+                                            {% widthratio item.count total_bit_designs 100 %}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No design data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Designs -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-clock-history me-2"></i> Recent Designs
+                </h5>
+                <a href="{% url 'engineering:bit_design_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Design Number</th>
+                                <th>Type</th>
+                                <th>Level</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for design in recent_designs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'engineering:bit_design_detail' design.pk %}">
+                                        {{ design.design_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ design.design_type.name }}
+                                    </span>
+                                </td>
+                                <td>{{ design.design_level.name }}</td>
+                                <td>{{ design.created_at|date:"Y-m-d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No recent designs</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Revisions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-clock-history me-2"></i> Recent Revisions
+                </h5>
+                <a href="{% url 'engineering:revision_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Design</th>
+                                <th>Revision</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for revision in recent_revisions %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'engineering:bit_design_detail' revision.bit_design.pk %}">
+                                        {{ revision.bit_design.design_number }}
+                                    </a>
+                                </td>
+                                <td>{{ revision.revision_number }}</td>
+                                <td>{{ revision.revision_date|date:"Y-m-d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">No recent revisions</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent BOMs -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-clock-history me-2"></i> Recent BOMs
+                </h5>
+                <a href="{% url 'engineering:bom_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>BOM Number</th>
+                                <th>Design</th>
+                                <th>Active</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bom in recent_boms %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'engineering:bom_detail' bom.pk %}">
+                                        {{ bom.bom_number }}
+                                    </a>
+                                </td>
+                                <td>{{ bom.bit_design_revision.bit_design.design_number }}</td>
+                                <td>
+                                    {% if bom.is_active %}
+                                    <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">No recent BOMs</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
