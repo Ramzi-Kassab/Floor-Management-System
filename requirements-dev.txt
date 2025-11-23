@@ -1,0 +1,28 @@
+# Development Dependencies
+# Includes all production requirements plus development tools
+
+-r requirements.txt
+
+# Development Server
+django-extensions>=3.2.3
+
+# Testing Tools
+pytest-watch>=4.2.0
+pytest-mock>=3.12.0
+model-bakery>=1.17.0
+
+# Code Quality & Linting
+autopep8>=2.0.4
+mypy>=1.7.1
+django-stubs>=4.2.7
+pre-commit>=3.6.0
+
+# Debugging
+ipython>=8.18.1
+ipdb>=0.13.13
+
+# Documentation
+sphinx-autobuild>=2021.3.14
+
+# Database Tools
+django-silk>=5.0.4  # SQL query profiling
