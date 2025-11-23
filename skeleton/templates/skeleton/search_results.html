@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Results - Floor Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-search me-2"></i> Search Results
+    </h1>
+    {% if query %}
+    <p class="page-subtitle">
+        Showing results for: <strong>"{{ query }}"</strong>
+    </p>
+    {% endif %}
+</div>
+
+<!-- Search Box -->
+<div class="row mb-4">
+    <div class="col-lg-8 mx-auto">
+        <form action="{% url 'skeleton:global_search' %}" method="get">
+            <div class="input-group input-group-lg">
+                <input type="search"
+                       name="q"
+                       class="form-control"
+                       placeholder="Search employees, items, locations, job cards..."
+                       value="{{ query }}"
+                       autofocus>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-2"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if query %}
+<!-- Results -->
+<div class="row">
+    <!-- Employees -->
+    {% if results.employees %}
+    <div class="col-12 mb-4">
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-people me-2"></i> Employees ({{ results.employees|length }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for employee in results.employees %}
+                    <a href="{% url 'hr:employee-detail' employee.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-3" style="width: 40px; height: 40px;">
+                                {{ employee.person.first_name|slice:":1" }}{{ employee.person.last_name|slice:":1" }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ employee.person.full_name }}</h6>
+                                <small class="text-muted">{{ employee.employee_code }} - {{ employee.position.title }}</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary">{{ employee.department.name }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Items -->
+    {% if results.items %}
+    <div class="col-12 mb-4">
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-box-seam me-2"></i> Items ({{ results.items|length }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for item in results.items %}
+                    <a href="{% url 'inventory:item-detail' item.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box fs-4 text-primary me-3"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ item.name }}</h6>
+                                <small class="text-muted">{{ item.item_code }} - {{ item.category.name }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Locations -->
+    {% if results.locations %}
+    <div class="col-12 mb-4">
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-geo-alt me-2"></i> Locations ({{ results.locations|length }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for location in results.locations %}
+                    <a href="{% url 'inventory:location-detail' location.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-pin-map fs-4 text-success me-3"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ location.name }}</h6>
+                                <small class="text-muted">{{ location.code }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Job Cards -->
+    {% if results.job_cards %}
+    <div class="col-12 mb-4">
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-card-checklist me-2"></i> Job Cards ({{ results.job_cards|length }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for job_card in results.job_cards %}
+                    <a href="{% url 'production:job-card-detail' job_card.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-file-earmark-text fs-4 text-warning me-3"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ job_card.jobcard_number }}</h6>
+                                <small class="text-muted">Status: {{ job_card.status }}</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-{{ job_card.status_badge_color }}">{{ job_card.status }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- No Results -->
+    {% if not results.employees and not results.items and not results.locations and not results.job_cards %}
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">No results found</h5>
+                <p class="text-muted">Try searching with different keywords or check your spelling.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">Start Searching</h5>
+                <p class="text-muted">Enter a search term above to find employees, items, locations, and more.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

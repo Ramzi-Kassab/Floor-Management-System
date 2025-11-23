@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings - Floor Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-gear me-2"></i> Settings
+    </h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'skeleton:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Settings</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- User Preferences -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">User Preferences</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'skeleton:account_settings' %}">
+                    {% csrf_token %}
+
+                    <!-- Theme -->
+                    <div class="mb-3">
+                        <label for="theme" class="form-label">
+                            <i class="bi bi-palette me-1"></i> Theme
+                        </label>
+                        <select class="form-select" id="theme" name="theme">
+                            <option value="light" {% if user_preference.theme == 'light' %}selected{% endif %}>Light Mode</option>
+                            <option value="dark" {% if user_preference.theme == 'dark' %}selected{% endif %}>Dark Mode</option>
+                            <option value="high_contrast" {% if user_preference.theme == 'high_contrast' %}selected{% endif %}>High Contrast</option>
+                        </select>
+                        <div class="form-text">Choose your preferred color scheme</div>
+                    </div>
+
+                    <!-- Font Size -->
+                    <div class="mb-3">
+                        <label for="font_size" class="form-label">
+                            <i class="bi bi-fonts me-1"></i> Font Size
+                        </label>
+                        <select class="form-select" id="font_size" name="font_size">
+                            <option value="small" {% if user_preference.font_size == 'small' %}selected{% endif %}>Small</option>
+                            <option value="normal" {% if user_preference.font_size == 'normal' %}selected{% endif %}>Normal</option>
+                            <option value="large" {% if user_preference.font_size == 'large' %}selected{% endif %}>Large</option>
+                        </select>
+                        <div class="form-text">Adjust text size for better readability</div>
+                    </div>
+
+                    <!-- Table Density -->
+                    <div class="mb-3">
+                        <label for="table_density" class="form-label">
+                            <i class="bi bi-table me-1"></i> Table Density
+                        </label>
+                        <select class="form-select" id="table_density" name="table_density">
+                            <option value="compact" {% if user_preference.table_density == 'compact' %}selected{% endif %}>Compact</option>
+                            <option value="normal" {% if user_preference.table_density == 'normal' %}selected{% endif %}>Normal</option>
+                            <option value="relaxed" {% if user_preference.table_density == 'relaxed' %}selected{% endif %}>Relaxed</option>
+                        </select>
+                        <div class="form-text">Adjust row spacing in tables</div>
+                    </div>
+
+                    <!-- Default Landing Page -->
+                    <div class="mb-3">
+                        <label for="default_landing_page" class="form-label">
+                            <i class="bi bi-house-door me-1"></i> Default Landing Page
+                        </label>
+                        <select class="form-select" id="default_landing_page" name="default_landing_page">
+                            <option value="dashboard" {% if user_preference.default_landing_page == 'dashboard' %}selected{% endif %}>Dashboard</option>
+                            <option value="hr" {% if user_preference.default_landing_page == 'hr' %}selected{% endif %}>HR Management</option>
+                            <option value="inventory" {% if user_preference.default_landing_page == 'inventory' %}selected{% endif %}>Inventory</option>
+                            <option value="production" {% if user_preference.default_landing_page == 'production' %}selected{% endif %}>Production</option>
+                        </select>
+                        <div class="form-text">Page to show after login</div>
+                    </div>
+
+                    <!-- Sidebar Collapsed -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sidebar_collapsed" name="sidebar_collapsed"
+                                   {% if user_preference.sidebar_collapsed %}checked{% endif %}>
+                            <label class="form-check-label" for="sidebar_collapsed">
+                                <i class="bi bi-layout-sidebar-inset me-1"></i> Keep sidebar collapsed by default
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i> Save Preferences
+                    </button>
+                    <a href="{% url 'skeleton:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-2"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="card border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">Security</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-1">Password</h6>
+                        <p class="text-muted mb-0 small">Last changed: {{ user.last_login|date:"F d, Y"|default:"Never" }}</p>
+                    </div>
+                    <a href="{% url 'skeleton:password_change' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-shield-lock me-2"></i> Change Password
+                    </a>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">Account Status</h6>
+                        <p class="text-muted mb-0 small">Your account is {% if user.is_active %}active{% else %}inactive{% endif %}</p>
+                    </div>
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

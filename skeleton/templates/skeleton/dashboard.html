@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Floor Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+            </h1>
+            <p class="page-subtitle mb-0">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+        </div>
+        <div>
+            <span class="badge bg-primary">{{ user.get_full_name|default:user.username }}</span>
+            {% if user.is_staff %}
+            <span class="badge bg-success ms-2">Staff</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <!-- Active Employees KPI -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(99, 102, 241, 0.1);">
+                            <i class="bi bi-people-fill fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Active Employees</h6>
+                        <h3 class="mb-0">{{ kpis.active_employees|default:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Leaves KPI -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(249, 115, 22, 0.1);">
+                            <i class="bi bi-calendar-event fs-4 text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Pending Leaves</h6>
+                        <h3 class="mb-0">{{ kpis.pending_leaves|default:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Open Job Cards KPI -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(16, 185, 129, 0.1);">
+                            <i class="bi bi-card-checklist fs-4 text-success"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Open Job Cards</h6>
+                        <h3 class="mb-0">{{ kpis.open_job_cards|default:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Items KPI -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background-color: rgba(239, 68, 68, 0.1);">
+                            <i class="bi bi-box-seam fs-4 text-danger"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Low Stock Items</h6>
+                        <h3 class="mb-0">{{ kpis.low_stock_items|default:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Module Cards -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h5 class="mb-3 fw-bold">Quick Access Modules</h5>
+    </div>
+
+    <!-- HR Management Module -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card h-100 border-0 hover-shadow" style="transition: all 0.3s;">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="bi bi-people-fill fs-4 text-white"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-2">HR Management</h5>
+                        <p class="card-text text-muted small mb-3">
+                            Manage employees, leaves, attendance, training, and HR operations
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'hr:dashboard' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                            <a href="{% url 'hr:employee-list' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-person-lines-fill me-1"></i> Employees
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Module -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card h-100 border-0 hover-shadow" style="transition: all 0.3s;">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <i class="bi bi-box-seam fs-4 text-white"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-2">Inventory</h5>
+                        <p class="card-text text-muted small mb-3">
+                            Track items, stock levels, locations, and inventory transactions
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'inventory:dashboard' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                            <a href="{% url 'inventory:item-list' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-list-ul me-1"></i> Items
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engineering Module -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card h-100 border-0 hover-shadow" style="transition: all 0.3s;">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <i class="bi bi-gear-wide-connected fs-4 text-white"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-2">Engineering</h5>
+                        <p class="card-text text-muted small mb-3">
+                            Manage bit designs, MAT numbers, BOMs, and engineering data
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'engineering:dashboard' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                            <a href="{% url 'engineering:bit-design-list' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-diagram-2 me-1"></i> Designs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Production Module -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card h-100 border-0 hover-shadow" style="transition: all 0.3s;">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <i class="bi bi-gear fs-4 text-white"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-2">Production</h5>
+                        <p class="card-text text-muted small mb-3">
+                            Manage job cards, work orders, schedules, and production operations
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'production:dashboard' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                            <a href="{% url 'production:job-card-list' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-card-checklist me-1"></i> Job Cards
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evaluation Module -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card h-100 border-0 hover-shadow" style="transition: all 0.3s;">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                        <i class="bi bi-clipboard-data fs-4 text-white"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-2">Evaluation & QC</h5>
+                        <p class="card-text text-muted small mb-3">
+                            NDT, thread inspection, cutter evaluation, and quality control
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'evaluation:dashboard' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                            <a href="{% url 'evaluation:session-list' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-text me-1"></i> Sessions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Module -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card h-100 border-0 hover-shadow" style="transition: all 0.3s;">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                        <i class="bi bi-patch-check fs-4" style="color: #10b981;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-2">Quality Management</h5>
+                        <p class="card-text text-muted small mb-3">
+                            NCRs, calibration records, defect tracking, and quality assurance
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'quality:dashboard' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-exclamation-triangle me-1"></i> NCRs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+{% if recent_activity %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-clock-history me-2"></i> Recent Activity
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Description</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activity %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 0.875rem;">
+                                            {{ activity.user.username|slice:":1"|upper }}
+                                        </div>
+                                        <span>{{ activity.user.username }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge
+                                        {% if activity.action == 'CREATE' %}bg-success
+                                        {% elif activity.action == 'UPDATE' %}bg-info
+                                        {% elif activity.action == 'DELETE' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ activity.action }}
+                                    </span>
+                                </td>
+                                <td>{{ activity.description|truncatewords:10 }}</td>
+                                <td class="text-muted">
+                                    <small>{{ activity.created_at|timesince }} ago</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

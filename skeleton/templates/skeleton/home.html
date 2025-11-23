@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Floor Management System - Drilling Bit Production & Repair Workshop</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-section {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+        }
+
+        .hero-logo {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: #6366f1;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .cta-buttons .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            margin: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-light:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-outline-light {
+            border-width: 2px;
+        }
+
+        .btn-outline-light:hover {
+            transform: translateY(-2px);
+            background-color: white;
+            color: #6366f1;
+        }
+
+        .features {
+            margin-top: 4rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            width: 200px;
+            text-align: center;
+        }
+
+        .feature i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature h6 {
+            font-weight: 600;
+            margin: 0;
+        }
+
+        @media (max-width: 767.98px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .cta-buttons .btn {
+                display: block;
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+
+            .features {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero-section">
+            <div class="hero-logo">
+                <i class="bi bi-building-fill"></i>
+            </div>
+
+            <h1 class="hero-title">Floor Management System</h1>
+
+            <p class="hero-subtitle">
+                Comprehensive Management Solution for Drilling Bit Production & Repair Workshop
+            </p>
+
+            <div class="cta-buttons">
+                <a href="{% url 'skeleton:login' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> Login to System
+                </a>
+                <a href="#features" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-info-circle me-2"></i> Learn More
+                </a>
+            </div>
+
+            <div class="features" id="features">
+                <div class="feature">
+                    <i class="bi bi-people-fill"></i>
+                    <h6>HR Management</h6>
+                </div>
+
+                <div class="feature">
+                    <i class="bi bi-box-seam"></i>
+                    <h6>Inventory</h6>
+                </div>
+
+                <div class="feature">
+                    <i class="bi bi-gear-wide-connected"></i>
+                    <h6>Engineering</h6>
+                </div>
+
+                <div class="feature">
+                    <i class="bi bi-gear"></i>
+                    <h6>Production</h6>
+                </div>
+
+                <div class="feature">
+                    <i class="bi bi-clipboard-data"></i>
+                    <h6>Evaluation</h6>
+                </div>
+
+                <div class="feature">
+                    <i class="bi bi-patch-check"></i>
+                    <h6>Quality Control</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

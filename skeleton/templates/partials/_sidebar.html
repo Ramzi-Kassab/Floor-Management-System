@@ -1,0 +1,297 @@
+{% load static %}
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h6>Navigation</h6>
+    </div>
+
+    <nav class="sidebar-nav">
+        <!-- Dashboard Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'skeleton:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'skeleton:global_search' %}" class="nav-link {% if request.resolver_match.url_name == 'global_search' %}active{% endif %}">
+                        <i class="bi bi-search"></i>
+                        <span>Global Search</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- HR & Administration Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">HR & Administration</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'hr:dashboard' %}" class="nav-link {% if 'hr:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-people"></i>
+                        <span>HR Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-person-badge"></i>
+                        <span>Employee Portal</span>
+                        <span class="badge bg-info text-white ms-auto">New</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'hr:employee-list' %}" class="nav-link">
+                        <i class="bi bi-person-lines-fill"></i>
+                        <span>Employees</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'hr:department-list' %}" class="nav-link">
+                        <i class="bi bi-diagram-3"></i>
+                        <span>Departments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'hr:leave-request-list' %}" class="nav-link">
+                        <i class="bi bi-calendar-event"></i>
+                        <span>Leaves</span>
+                        {% if pending_leaves_count|default:0 > 0 %}
+                        <span class="nav-badge">{{ pending_leaves_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'hr:attendance-list' %}" class="nav-link">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Attendance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'hr:training-session-list' %}" class="nav-link">
+                        <i class="bi bi-mortarboard"></i>
+                        <span>Training</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Inventory & Materials Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Inventory</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'inventory:dashboard' %}" class="nav-link {% if 'inventory:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Inventory</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'inventory:item-list' %}" class="nav-link">
+                        <i class="bi bi-list-ul"></i>
+                        <span>Items</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'inventory:location-list' %}" class="nav-link">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>Locations</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'inventory:stock-level-list' %}" class="nav-link">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Stock Levels</span>
+                        {% if low_stock_count|default:0 > 0 %}
+                        <span class="nav-badge">{{ low_stock_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-arrow-left-right"></i>
+                        <span>Transactions</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Engineering & Design Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Engineering</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'engineering:dashboard' %}" class="nav-link {% if 'engineering:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-gear-wide-connected"></i>
+                        <span>Engineering</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'engineering:bit-design-list' %}" class="nav-link">
+                        <i class="bi bi-diagram-2"></i>
+                        <span>Bit Designs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'engineering:bom-list' %}" class="nav-link">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                        <span>BOMs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-columns-gap"></i>
+                        <span>MAT Numbers</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Production Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Production</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'production:dashboard' %}" class="nav-link {% if 'production:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-gear"></i>
+                        <span>Production</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'production:job-card-list' %}" class="nav-link">
+                        <i class="bi bi-card-checklist"></i>
+                        <span>Job Cards</span>
+                        {% if open_job_cards_count|default:0 > 0 %}
+                        <span class="nav-badge">{{ open_job_cards_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'production:work-order-list' %}" class="nav-link">
+                        <i class="bi bi-clipboard-check"></i>
+                        <span>Work Orders</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-calendar3"></i>
+                        <span>Schedule</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Evaluation & QC Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Quality Control</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'evaluation:dashboard' %}" class="nav-link {% if 'evaluation:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-clipboard-data"></i>
+                        <span>Evaluation</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'evaluation:session-list' %}" class="nav-link">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span>Eval Sessions</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'quality:dashboard' %}" class="nav-link">
+                        <i class="bi bi-patch-check"></i>
+                        <span>Quality</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>NCRs</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Planning & Analytics Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Planning & Analytics</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'planning:dashboard' %}" class="nav-link {% if 'planning:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Planning</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'analytics:dashboard' %}" class="nav-link {% if 'analytics:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-bar-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-file-earmark-bar-graph"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Sales & Operations Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Sales & Operations</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'sales:dashboard' %}" class="nav-link {% if 'sales:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-cart3"></i>
+                        <span>Sales</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Customers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-building"></i>
+                        <span>Rigs & Wells</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Utilities Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">Utilities</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'qrcodes:dashboard' %}" class="nav-link {% if 'qrcodes:' in request.resolver_match.namespace %}active{% endif %}">
+                        <i class="bi bi-qr-code"></i>
+                        <span>QR Codes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'knowledge:article-list' %}" class="nav-link">
+                        <i class="bi bi-book"></i>
+                        <span>Knowledge Base</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-wrench"></i>
+                        <span>Maintenance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="bi bi-cart"></i>
+                        <span>Purchasing</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>
