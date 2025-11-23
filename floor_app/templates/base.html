@@ -26,10 +26,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Enhanced Responsive Theme System CSS (Mobile-first, WCAG AA) -->
+    {% if debug %}
     <link rel="stylesheet" href="{% static 'css/responsive-theme-system.css' %}">
+    {% else %}
+    <link rel="stylesheet" href="{% static 'css/responsive-theme-system.min.css' %}">
+    {% endif %}
 
     <!-- Custom CSS (Legacy styles - loaded after for compatibility) -->
+    {% if debug %}
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% else %}
+    <link rel="stylesheet" href="{% static 'css/app.min.css' %}">
+    {% endif %}
 
     <!-- Theme System CSS (Core themes) -->
     <link rel="stylesheet" href="{% static 'core/css/themes.css' %}">
@@ -1194,13 +1202,25 @@
     </script>
 
     <!-- Global Application JavaScript -->
+    {% if debug %}
     <script src="{% static 'js/app.js' %}"></script>
+    {% else %}
+    <script src="{% static 'js/app.min.js' %}"></script>
+    {% endif %}
 
     <!-- Navigation & Sidebar JavaScript -->
+    {% if debug %}
     <script src="{% static 'js/navigation.js' %}"></script>
+    {% else %}
+    <script src="{% static 'js/navigation.min.js' %}"></script>
+    {% endif %}
 
     <!-- Theme System JavaScript -->
+    {% if debug %}
     <script src="{% static 'js/theme.js' %}"></script>
+    {% else %}
+    <script src="{% static 'js/theme.min.js' %}"></script>
+    {% endif %}
 
     <!--
     ====================================================================
